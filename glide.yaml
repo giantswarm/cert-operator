@@ -1,0 +1,5 @@
+package: github.com/giantswarm/cert-operator
+import:
+- package: github.com/spf13/cobra
+- package: github.com/giantswarm/microkit
+  version: 1a406a702faf8f2312fdf2f83bf5b228510a01be
