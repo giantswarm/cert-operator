@@ -8,6 +8,7 @@ import (
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
 
+	"github.com/giantswarm/cert-operator/service/create"
 	"github.com/giantswarm/cert-operator/service/version"
 )
 
@@ -50,6 +51,18 @@ func New(config Config) (*Service, error) {
 
 	var err error
 
+	var createService *create.Service
+	{
+		createConfig := create.DefaultConfig()
+
+		createConfig.Logger = config.Logger
+
+		createService, err = create.New(createConfig)
+		if err != nil {
+			return nil, microerror.MaskAny(err)
+		}
+	}
+
 	var versionService *version.Service
 	{
 		versionConfig := version.DefaultConfig()
@@ -67,6 +80,7 @@ func New(config Config) (*Service, error) {
 
 	newService := &Service{
 		// Dependencies.
+		Create:  createService,
 		Version: versionService,
 
 		// Internals
@@ -78,6 +92,7 @@ func New(config Config) (*Service, error) {
 
 type Service struct {
 	// Dependencies.
+	Create  *create.Service
 	Version *version.Service
 
 	// Internals.
@@ -86,6 +101,6 @@ type Service struct {
 
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		//s.Operator.Boot()
+		s.Create.Boot()
 	})
 }
