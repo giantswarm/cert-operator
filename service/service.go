@@ -8,6 +8,7 @@ import (
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
 
+	k8sutil "github.com/giantswarm/cert-operator/client/k8s"
 	"github.com/giantswarm/cert-operator/service/create"
 	"github.com/giantswarm/cert-operator/service/version"
 )
@@ -17,7 +18,8 @@ type Config struct {
 	// Dependencies.
 	Logger micrologger.Logger
 
-	// Settings.
+	// Sub-dependencies configs.
+	K8sConfig k8sutil.Config
 
 	Description string
 	GitCommit   string
@@ -32,7 +34,8 @@ func DefaultConfig() Config {
 		// Dependencies.
 		Logger: nil,
 
-		// Settings.
+		// Sub-dependencies configs.
+		K8sConfig: k8sutil.Config{},
 
 		Description: "",
 		GitCommit:   "",

@@ -7,6 +7,7 @@ import (
 	"github.com/giantswarm/microkit/logger"
 	microserver "github.com/giantswarm/microkit/server"
 
+	k8sclient "github.com/giantswarm/cert-operator/client/k8s"
 	"github.com/giantswarm/cert-operator/server"
 	"github.com/giantswarm/cert-operator/service"
 )
@@ -17,6 +18,21 @@ var (
 	name        string = "cert-operator"
 	source      string = "https://github.com/giantswarm/cert-operator"
 )
+
+// Flags is the global flag structure used to apply certain configuration to it.
+// This is used to bundle configuration for the command, server and service
+// initialisation.
+var Flags = struct {
+	Kubernetes struct {
+		Address   string
+		InCluster bool
+		TLS       struct {
+			CAFile  string
+			CrtFile string
+			KeyFile string
+		}
+	}
+}{}
 
 func main() {
 	var err error
@@ -41,6 +57,17 @@ func main() {
 			serviceConfig := service.DefaultConfig()
 
 			serviceConfig.Logger = newLogger
+
+			k8sTlsClientConfig := k8sclient.TLSClientConfig{
+				CertFile: Flags.Kubernetes.TLS.CrtFile,
+				KeyFile:  Flags.Kubernetes.TLS.KeyFile,
+				CAFile:   Flags.Kubernetes.TLS.CAFile,
+			}
+			serviceConfig.K8sConfig = k8sclient.Config{
+				Address:         Flags.Kubernetes.Address,
+				InCluster:       Flags.Kubernetes.InCluster,
+				TLSClientConfig: k8sTlsClientConfig,
+			}
 
 			serviceConfig.Description = description
 			serviceConfig.GitCommit = gitCommit
@@ -90,6 +117,14 @@ func main() {
 			panic(err)
 		}
 	}
+
+	daemonCommand := newCommand.DaemonCommand().CobraCommand()
+
+	daemonCommand.PersistentFlags().StringVar(&Flags.Kubernetes.Address, "kubernetes.Address", "", "Address used to connect to Kubernetes. When empty in-cluster config is created.")
+	daemonCommand.PersistentFlags().BoolVar(&Flags.Kubernetes.InCluster, "kubernetes.inCluster", true, "Whether to use the in-cluster config to authenticate with Kubernetes.")
+	daemonCommand.PersistentFlags().StringVar(&Flags.Kubernetes.TLS.CAFile, "kubernetes.tls.caFile", "", "Certificate authority file path to use to authenticate with Kubernetes.")
+	daemonCommand.PersistentFlags().StringVar(&Flags.Kubernetes.TLS.CrtFile, "kubernetes.tls.crtFile", "", "Certificate file path to use to authenticate with Kubernetes.")
+	daemonCommand.PersistentFlags().StringVar(&Flags.Kubernetes.TLS.KeyFile, "kubernetes.tls.keyFile", "", "Key file path to use to authenticate with Kubernetes.")
 
 	newCommand.CobraCommand().Execute()
 }
