@@ -3,11 +3,13 @@ package service
 
 import (
 	"fmt"
+	"net/http"
 	"sync"
 
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
 
+	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/service/create"
 	"github.com/giantswarm/cert-operator/service/version"
 )
@@ -17,7 +19,8 @@ type Config struct {
 	// Dependencies.
 	Logger micrologger.Logger
 
-	// Settings.
+	// Sub-dependencies configs.
+	VaultConfig vaultutil.Config
 
 	Description string
 	GitCommit   string
@@ -32,7 +35,13 @@ func DefaultConfig() Config {
 		// Dependencies.
 		Logger: nil,
 
-		// Settings.
+		// Sub-dependencies config.
+		VaultConfig: vaultutil.Config{
+			HTTPClient: http.DefaultClient,
+
+			Address: "http://127.0.0.1:8200",
+			Token:   "admin-token",
+		},
 
 		Description: "",
 		GitCommit:   "",
