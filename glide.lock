@@ -1,5 +1,5 @@
-hash: f4f0f26193daca1837d82c7dfbfc7219ba0b76363a310ab35498ab15430d07a1
-updated: 2017-03-14T09:45:24.72962529+01:00
+hash: 63dd01ea8a2ae6c852967642ca36165e3b85e07086e2dbd7746bf57c651e61cf
+updated: 2017-03-14T16:18:49.56354734+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -17,6 +17,8 @@ imports:
   - pkg/pathutil
   - pkg/tlsutil
   - pkg/types
+- name: github.com/fatih/structs
+  version: a720dfa8df582c51dee1b36feabb906bde1588bd
 - name: github.com/fsnotify/fsnotify
   version: 7d7316ed6e1ed2de075aab8dfc76de5d158d66e1
 - name: github.com/ghodss/yaml
@@ -70,6 +72,14 @@ imports:
   - runtime
   - runtime/internal
   - utilities
+- name: github.com/hashicorp/errwrap
+  version: 7554cd9344cec97297fa6649b055a8c98c2a1e55
+- name: github.com/hashicorp/go-cleanhttp
+  version: 3573b8b52aa7b37b9358d966a898feb387f62437
+- name: github.com/hashicorp/go-multierror
+  version: ed905158d87462226a13fe39ddf685ea65f1c11f
+- name: github.com/hashicorp/go-rootcerts
+  version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
 - name: github.com/hashicorp/hcl
   version: 630949a3c5fa3c613328e1b8256052cbc2327c9b
   subpackages:
@@ -81,6 +91,12 @@ imports:
   - json/parser
   - json/scanner
   - json/token
+- name: github.com/hashicorp/vault
+  version: 5d8d702f33b5fd965cbe8d6d0728295de813a196
+  subpackages:
+  - api
+  - helper/compressutil
+  - helper/jsonutil
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/errgo
@@ -93,6 +109,8 @@ imports:
   version: c12348ce28de40eed0136aa2b644d0ee0650e56c
   subpackages:
   - pbutil
+- name: github.com/mitchellh/go-homedir
+  version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/mitchellh/mapstructure
   version: 53818660ed4955e899c0bcafa97299a388bd7c8e
 - name: github.com/pelletier/go-buffruneio
@@ -118,6 +136,8 @@ imports:
   version: a1dba9ce8baed984a2495b658c82687f8157b98f
   subpackages:
   - xfs
+- name: github.com/sethgrid/pester
+  version: 2c5fb962da6113d0968907fd81dba3ca35151d1c
 - name: github.com/spf13/afero
   version: 9be650865eab0c12963d8753212f4f9c66cdcf12
   subpackages:
