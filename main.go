@@ -7,6 +7,7 @@ import (
 	"github.com/giantswarm/microkit/logger"
 	microserver "github.com/giantswarm/microkit/server"
 
+	vaultclient "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/server"
 	"github.com/giantswarm/cert-operator/service"
 )
@@ -17,6 +18,16 @@ var (
 	name        string = "cert-operator"
 	source      string = "https://github.com/giantswarm/cert-operator"
 )
+
+// Flags is the global flag structure used to apply certain configuration to it.
+// This is used to bundle configuration for the command, server and service
+// initialisation.
+var Flags = struct {
+	Vault struct {
+		Address string
+		Token   string
+	}
+}{}
 
 func main() {
 	var err error
@@ -41,6 +52,11 @@ func main() {
 			serviceConfig := service.DefaultConfig()
 
 			serviceConfig.Logger = newLogger
+
+			serviceConfig.VaultConfig = vaultclient.Config{
+				Address: Flags.Vault.Address,
+				Token:   Flags.Vault.Token,
+			}
 
 			serviceConfig.Description = description
 			serviceConfig.GitCommit = gitCommit
@@ -90,6 +106,11 @@ func main() {
 			panic(err)
 		}
 	}
+
+	daemonCommand := newCommand.DaemonCommand().CobraCommand()
+
+	daemonCommand.PersistentFlags().StringVar(&Flags.Vault.Address, "vault.address", "", "Address and port of the Vault API server")
+	daemonCommand.PersistentFlags().StringVar(&Flags.Vault.Token, "vault.token", "", "Admin token for the Vault API")
 
 	newCommand.CobraCommand().Execute()
 }
