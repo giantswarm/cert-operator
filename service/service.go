@@ -7,8 +7,10 @@ import (
 
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
+	"github.com/spf13/viper"
 
 	k8sutil "github.com/giantswarm/cert-operator/client/k8s"
+	"github.com/giantswarm/cert-operator/flag"
 	"github.com/giantswarm/cert-operator/service/create"
 	"github.com/giantswarm/cert-operator/service/version"
 )
@@ -17,6 +19,10 @@ import (
 type Config struct {
 	// Dependencies.
 	Logger micrologger.Logger
+
+	// Settings.
+	Flag  *flag.Flag
+	Viper *viper.Viper
 
 	// Sub-dependencies configs.
 	K8sConfig k8sutil.Config
@@ -33,6 +39,10 @@ func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
 		Logger: nil,
+
+		// Settings.
+		Flag:  nil,
+		Viper: nil,
 
 		// Sub-dependencies configs.
 		K8sConfig: k8sutil.Config{},

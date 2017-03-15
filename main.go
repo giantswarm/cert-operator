@@ -6,17 +6,20 @@ import (
 	"github.com/giantswarm/microkit/command"
 	"github.com/giantswarm/microkit/logger"
 	microserver "github.com/giantswarm/microkit/server"
+	"github.com/spf13/viper"
 
 	k8sclient "github.com/giantswarm/cert-operator/client/k8s"
+	"github.com/giantswarm/cert-operator/flag"
 	"github.com/giantswarm/cert-operator/server"
 	"github.com/giantswarm/cert-operator/service"
 )
 
 var (
-	description string = "The cert-operator handles certificates for Kubernetes clusters running on Giantnetes."
-	gitCommit   string = "n/a"
-	name        string = "cert-operator"
-	source      string = "https://github.com/giantswarm/cert-operator"
+	description string     = "The cert-operator handles certificates for Kubernetes clusters running on Giantnetes."
+	f           *flag.Flag = flag.New()
+	gitCommit   string     = "n/a"
+	name        string     = "cert-operator"
+	source      string     = "https://github.com/giantswarm/cert-operator"
 )
 
 // Flags is the global flag structure used to apply certain configuration to it.
@@ -50,13 +53,15 @@ func main() {
 
 	// We define a server factory to create the custom server once all command
 	// line flags are parsed and all microservice configuration is storted out.
-	newServerFactory := func() microserver.Server {
+	newServerFactory := func(v *viper.Viper) microserver.Server {
 		// Create a new custom service which implements business logic.
 		var newService *service.Service
 		{
 			serviceConfig := service.DefaultConfig()
 
+			serviceConfig.Flag = f
 			serviceConfig.Logger = newLogger
+			serviceConfig.Viper = v
 
 			k8sTlsClientConfig := k8sclient.TLSClientConfig{
 				CertFile: Flags.Kubernetes.TLS.CrtFile,
@@ -120,11 +125,11 @@ func main() {
 
 	daemonCommand := newCommand.DaemonCommand().CobraCommand()
 
-	daemonCommand.PersistentFlags().StringVar(&Flags.Kubernetes.Address, "kubernetes.Address", "", "Address used to connect to Kubernetes. When empty in-cluster config is created.")
-	daemonCommand.PersistentFlags().BoolVar(&Flags.Kubernetes.InCluster, "kubernetes.inCluster", true, "Whether to use the in-cluster config to authenticate with Kubernetes.")
-	daemonCommand.PersistentFlags().StringVar(&Flags.Kubernetes.TLS.CAFile, "kubernetes.tls.caFile", "", "Certificate authority file path to use to authenticate with Kubernetes.")
-	daemonCommand.PersistentFlags().StringVar(&Flags.Kubernetes.TLS.CrtFile, "kubernetes.tls.crtFile", "", "Certificate file path to use to authenticate with Kubernetes.")
-	daemonCommand.PersistentFlags().StringVar(&Flags.Kubernetes.TLS.KeyFile, "kubernetes.tls.keyFile", "", "Key file path to use to authenticate with Kubernetes.")
+	daemonCommand.PersistentFlags().String(f.Kubernetes.Address, "", "Address used to connect to Kubernetes. When empty in-cluster config is created.")
+	daemonCommand.PersistentFlags().Bool(f.Kubernetes.InCluster, true, "Whether to use the in-cluster config to authenticate with Kubernetes.")
+	daemonCommand.PersistentFlags().String(f.Kubernetes.TLS.CaFile, "", "Certificate authority file path to use to authenticate with Kubernetes.")
+	daemonCommand.PersistentFlags().String(f.Kubernetes.TLS.CrtFile, "", "Certificate file path to use to authenticate with Kubernetes.")
+	daemonCommand.PersistentFlags().String(f.Kubernetes.TLS.KeyFile, "", "Key file path to use to authenticate with Kubernetes.")
 
 	newCommand.CobraCommand().Execute()
 }
