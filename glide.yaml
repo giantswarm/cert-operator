@@ -1,9 +1,11 @@
 package: github.com/giantswarm/cert-operator
 import:
 - package: github.com/spf13/cobra
-- package: github.com/giantswarm/microkit
-  version: 1a406a702faf8f2312fdf2f83bf5b228510a01be
 - package: github.com/hashicorp/vault
   version: 0.6.5
   subpackages:
   - api
+- package: github.com/giantswarm/microkit
+- package: github.com/spf13/viper
+- package: k8s.io/client-go
+  version: ~2.0.0-alpha.0

@@ -2,50 +2,10 @@ package flag
 
 import (
 	"testing"
+
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
-
-func Test_toCase(t *testing.T) {
-	testCases := []struct {
-		Input    string
-		Expected string
-	}{
-		{
-			Input:    "alllower",
-			Expected: "alllower",
-		},
-		{
-			Input:    "Title",
-			Expected: "title",
-		},
-		{
-			Input:    "weirD",
-			Expected: "weirD",
-		},
-		{
-			Input:    "ALLUPPER",
-			Expected: "allupper",
-		},
-		{
-			Input:    "FIRSTlower",
-			Expected: "firstlower",
-		},
-		{
-			Input:    "FIRSTlowerSuffix",
-			Expected: "firstlowerSuffix",
-		},
-		{
-			Input:    "FIRSTlowerUPPERSuffix",
-			Expected: "firstlowerUPPERSuffix",
-		},
-	}
-
-	for i, testCase := range testCases {
-		expected := toCase(testCase.Input)
-		if expected != testCase.Expected {
-			t.Fatal("case", i+1, "expected", testCase.Expected, "got", expected)
-		}
-	}
-}
 
 func Test_Init(t *testing.T) {
 	e := ""
@@ -110,17 +70,17 @@ func Test_Init(t *testing.T) {
 		if s != e {
 			t.Fatal("expected", e, "got", s)
 		}
-		e = "server.tls.caFile"
+		e = "server.tls.cafile"
 		s = f.Server.TLS.CaFile
 		if s != e {
 			t.Fatal("expected", e, "got", s)
 		}
-		e = "server.tls.crtFile"
+		e = "server.tls.crtfile"
 		s = f.Server.TLS.CrtFile
 		if s != e {
 			t.Fatal("expected", e, "got", s)
 		}
-		e = "server.tls.keyFile"
+		e = "server.tls.keyfile"
 		s = f.Server.TLS.KeyFile
 		if s != e {
 			t.Fatal("expected", e, "got", s)
@@ -130,6 +90,31 @@ func Test_Init(t *testing.T) {
 		if s != e {
 			t.Fatal("expected", e, "got", s)
 		}
+	}
+}
+
+func Test_Parse(t *testing.T) {
+	f := testFlag{}
+	Init(&f)
+
+	v := viper.New()
+
+	fs := pflag.NewFlagSet("test-flag-set", pflag.ContinueOnError)
+	expectedAddress := "http://127.0.0.1:8000"
+	fs.String(f.Server.Listen.Address, expectedAddress, "Test help usage.")
+	expectedFoo := 74
+	fs.Int(f.Foo, expectedFoo, "Test help usage.")
+
+	Parse(v, fs)
+
+	address := v.GetString(f.Server.Listen.Address)
+	if address != expectedAddress {
+		t.Fatal("expected", expectedAddress, "got", address)
+	}
+
+	foo := v.GetInt(f.Foo)
+	if foo != expectedFoo {
+		t.Fatal("expected", expectedFoo, "got", foo)
 	}
 }
 
