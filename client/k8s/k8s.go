@@ -1,8 +1,15 @@
 package k8s
 
 import (
+	"net/url"
+
+	microerror "github.com/giantswarm/microkit/error"
+	micrologger "github.com/giantswarm/microkit/logger"
+	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
+	"github.com/giantswarm/cert-operator/flag"
 )
 
 const (
@@ -12,36 +19,23 @@ const (
 	MaxBurst = 100
 )
 
-type TLSClientConfig struct {
-	// Files containing keys/certificates.
-	CertFile string
-	KeyFile  string
-	CAFile   string
-}
-
 type Config struct {
-	InCluster bool
-	Address   string
-	TLSClientConfig
-	inClusterConfigProvider func() (*rest.Config, error)
-}
+	// Dependencies.
+	Logger micrologger.Logger
 
-func getInClusterConfig(config Config) (*rest.Config, error) {
-	if config.inClusterConfigProvider == nil {
-		config.inClusterConfigProvider = rest.InClusterConfig
-	}
-
-	return config.inClusterConfigProvider()
+	// Settings.
+	Flag  *flag.Flag
+	Viper *viper.Viper
 }
 
 func newRawClientConfig(config Config) *rest.Config {
 	tlsClientConfig := rest.TLSClientConfig{
-		CertFile: config.CertFile,
-		KeyFile:  config.KeyFile,
-		CAFile:   config.CAFile,
+		CertFile: config.Viper.GetString(config.Flag.Kubernetes.TLS.CertFile),
+		KeyFile:  config.Viper.GetString(config.Flag.Kubernetes.TLS.KeyFile),
+		CAFile:   config.Viper.GetString(config.Flag.Kubernetes.TLS.CAFile),
 	}
 	rawClientConfig := &rest.Config{
-		Host:            config.Address,
+		Host:            config.Viper.GetString(config.Flag.Kubernetes.Address),
 		QPS:             MaxQPS,
 		Burst:           MaxBurst,
 		TLSClientConfig: tlsClientConfig,
@@ -54,12 +48,33 @@ func getRawClientConfig(config Config) (*rest.Config, error) {
 	var rawClientConfig *rest.Config
 	var err error
 
-	if config.InCluster {
-		rawClientConfig, err = getInClusterConfig(config)
+	address := config.Viper.GetString(config.Flag.Kubernetes.Address)
+
+	if config.Viper.GetBool(config.Flag.Kubernetes.InCluster) {
+		config.Logger.Log("debug", "creating in-cluster config")
+		rawClientConfig, err = rest.InClusterConfig()
 		if err != nil {
-			return nil, err
+			return nil, microerror.MaskAny(err)
 		}
+
+		if address != "" {
+			config.Logger.Log("debug", "using explicit api server")
+			rawClientConfig.Host = address
+		}
+
 	} else {
+		if address == "" {
+			return nil, microerror.MaskAnyf(invalidConfigError, "kubernetes address must not be empty")
+		}
+
+		config.Logger.Log("debug", "creating out-cluster config")
+
+		// Kubernetes listen URL.
+		_, err := url.Parse(address)
+		if err != nil {
+			return nil, microerror.MaskAny(err)
+		}
+
 		rawClientConfig = newRawClientConfig(config)
 	}
 
