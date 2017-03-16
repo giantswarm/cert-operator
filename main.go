@@ -100,8 +100,8 @@ func main() {
 
 	daemonCommand.PersistentFlags().String(f.Kubernetes.Address, "", "Address used to connect to Kubernetes. When empty in-cluster config is created.")
 	daemonCommand.PersistentFlags().Bool(f.Kubernetes.InCluster, true, "Whether to use the in-cluster config to authenticate with Kubernetes.")
-	daemonCommand.PersistentFlags().String(f.Kubernetes.TLS.CaFile, "", "Certificate authority file path to use to authenticate with Kubernetes.")
-	daemonCommand.PersistentFlags().String(f.Kubernetes.TLS.CrtFile, "", "Certificate file path to use to authenticate with Kubernetes.")
+	daemonCommand.PersistentFlags().String(f.Kubernetes.TLS.CAFile, "", "Certificate authority file path to use to authenticate with Kubernetes.")
+	daemonCommand.PersistentFlags().String(f.Kubernetes.TLS.CertFile, "", "Certificate file path to use to authenticate with Kubernetes.")
 	daemonCommand.PersistentFlags().String(f.Kubernetes.TLS.KeyFile, "", "Key file path to use to authenticate with Kubernetes.")
 
 	newCommand.CobraCommand().Execute()
