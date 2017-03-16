@@ -7,7 +7,11 @@ import (
 
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
+	"github.com/spf13/viper"
+	"k8s.io/client-go/kubernetes"
 
+	k8sutil "github.com/giantswarm/cert-operator/client/k8s"
+	"github.com/giantswarm/cert-operator/flag"
 	"github.com/giantswarm/cert-operator/service/create"
 	"github.com/giantswarm/cert-operator/service/version"
 )
@@ -15,9 +19,12 @@ import (
 // Config represents the configuration used to create a new service.
 type Config struct {
 	// Dependencies.
-	Logger micrologger.Logger
+	KubernetesClient *kubernetes.Clientset
+	Logger           micrologger.Logger
 
 	// Settings.
+	Flag  *flag.Flag
+	Viper *viper.Viper
 
 	Description string
 	GitCommit   string
@@ -30,9 +37,12 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
-		Logger: nil,
+		KubernetesClient: nil,
+		Logger:           nil,
 
 		// Settings.
+		Flag:  nil,
+		Viper: nil,
 
 		Description: "",
 		GitCommit:   "",
@@ -47,15 +57,32 @@ func New(config Config) (*Service, error) {
 	if config.Logger == nil {
 		return nil, microerror.MaskAnyf(invalidConfigError, "logger must not be empty")
 	}
+
 	config.Logger.Log("debug", fmt.Sprintf("creating cert-operator with config: %#v", config))
 
 	var err error
 
+	var k8sClient kubernetes.Interface
+	{
+		k8sConfig := k8sutil.Config{
+			Logger: config.Logger,
+			Flag:   config.Flag,
+			Viper:  config.Viper,
+		}
+
+		k8sClient, err = k8sutil.NewClient(k8sConfig)
+		if err != nil {
+			return nil, microerror.MaskAny(err)
+		}
+	}
+
 	var createService *create.Service
 	{
 		createConfig := create.DefaultConfig()
-
+		createConfig.Flag = config.Flag
+		createConfig.K8sClient = k8sClient
 		createConfig.Logger = config.Logger
+		createConfig.Viper = config.Viper
 
 		createService, err = create.New(createConfig)
 		if err != nil {

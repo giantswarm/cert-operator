@@ -9,3 +9,10 @@ import:
 - package: github.com/spf13/viper
 - package: k8s.io/client-go
   version: ~2.0.0-alpha.0
+- package: github.com/blang/semver
+- package: github.com/golang/protobuf
+  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
+  subpackages:
+  - jsonpb
+- package: github.com/stretchr/testify
+  version: v1.1.4
