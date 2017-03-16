@@ -104,6 +104,8 @@ func main() {
 	daemonCommand.PersistentFlags().String(f.Kubernetes.TLS.CAFile, "", "Certificate authority file path to use to authenticate with Kubernetes.")
 	daemonCommand.PersistentFlags().String(f.Kubernetes.TLS.CertFile, "", "Certificate file path to use to authenticate with Kubernetes.")
 	daemonCommand.PersistentFlags().String(f.Kubernetes.TLS.KeyFile, "", "Key file path to use to authenticate with Kubernetes.")
+	daemonCommand.PersistentFlags().String(f.Vault.Address, "", "Address used to connect to Vault.")
+	daemonCommand.PersistentFlags().String(f.Vault.Token, "", "Token used to authenticate against Vault.")
 
 	newCommand.CobraCommand().Execute()
 }
