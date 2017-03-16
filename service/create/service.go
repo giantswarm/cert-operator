@@ -3,11 +3,11 @@ package create
 import (
 	"sync"
 
-	"github.com/spf13/viper"
-	"k8s.io/client-go/kubernetes"
-
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
+	vaultapi "github.com/hashicorp/vault/api"
+	"github.com/spf13/viper"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/giantswarm/cert-operator/flag"
 )
@@ -15,8 +15,9 @@ import (
 // Config represents the configuration used to create a create service.
 type Config struct {
 	// Dependencies.
-	K8sClient kubernetes.Interface
-	Logger    micrologger.Logger
+	K8sClient   kubernetes.Interface
+	Logger      micrologger.Logger
+	VaultClient *vaultapi.Client
 
 	// Settings.
 	Flag  *flag.Flag
@@ -28,8 +29,9 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
-		K8sClient: nil,
-		Logger:    nil,
+		K8sClient:   nil,
+		Logger:      nil,
+		VaultClient: nil,
 
 		// Settings.
 		Flag:  nil,

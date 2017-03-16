@@ -7,10 +7,12 @@ import (
 
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
+	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
 
 	k8sutil "github.com/giantswarm/cert-operator/client/k8s"
+	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
 	"github.com/giantswarm/cert-operator/service/create"
 	"github.com/giantswarm/cert-operator/service/version"
@@ -21,6 +23,7 @@ type Config struct {
 	// Dependencies.
 	KubernetesClient *kubernetes.Clientset
 	Logger           micrologger.Logger
+	VaultClient      *vaultapi.Client
 
 	// Settings.
 	Flag  *flag.Flag
@@ -39,6 +42,7 @@ func DefaultConfig() Config {
 		// Dependencies.
 		KubernetesClient: nil,
 		Logger:           nil,
+		VaultClient:      nil,
 
 		// Settings.
 		Flag:  nil,
@@ -76,12 +80,26 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
+	var vaultClient *vaultapi.Client
+	{
+		vaultConfig := vaultutil.Config{
+			Flag:  config.Flag,
+			Viper: config.Viper,
+		}
+
+		vaultClient, err = vaultutil.NewClient(vaultConfig)
+		if err != nil {
+			return nil, microerror.MaskAny(err)
+		}
+	}
+
 	var createService *create.Service
 	{
 		createConfig := create.DefaultConfig()
 		createConfig.Flag = config.Flag
 		createConfig.K8sClient = k8sClient
 		createConfig.Logger = config.Logger
+		createConfig.VaultClient = vaultClient
 		createConfig.Viper = config.Viper
 
 		createService, err = create.New(createConfig)
