@@ -26,9 +26,6 @@ type Config struct {
 	Flag  *flag.Flag
 	Viper *viper.Viper
 
-	// Sub-dependencies configs.
-	K8sConfig k8sutil.Config
-
 	Description string
 	GitCommit   string
 	Name        string
@@ -40,14 +37,12 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
-		Logger: nil,
+		KubernetesClient: nil,
+		Logger:           nil,
 
 		// Settings.
 		Flag:  nil,
 		Viper: nil,
-
-		// Sub-dependencies configs.
-		K8sConfig: k8sutil.Config{},
 
 		Description: "",
 		GitCommit:   "",
@@ -69,7 +64,13 @@ func New(config Config) (*Service, error) {
 
 	var k8sClient kubernetes.Interface
 	{
-		k8sClient, err = k8sutil.NewClient(config.K8sConfig)
+		k8sConfig := k8sutil.Config{
+			Logger: config.Logger,
+			Flag:   config.Flag,
+			Viper:  config.Viper,
+		}
+
+		k8sClient, err = k8sutil.NewClient(k8sConfig)
 		if err != nil {
 			return nil, microerror.MaskAny(err)
 		}
@@ -78,9 +79,10 @@ func New(config Config) (*Service, error) {
 	var createService *create.Service
 	{
 		createConfig := create.DefaultConfig()
-
+		createConfig.Flag = config.Flag
 		createConfig.K8sClient = k8sClient
 		createConfig.Logger = config.Logger
+		createConfig.Viper = config.Viper
 
 		createService, err = create.New(createConfig)
 		if err != nil {

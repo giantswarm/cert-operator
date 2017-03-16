@@ -66,6 +66,7 @@ func main() {
 
 			serverConfig.MicroServerConfig.Logger = newLogger
 			serverConfig.MicroServerConfig.ServiceName = name
+			serverConfig.MicroServerConfig.Viper = v
 			serverConfig.Service = newService
 
 			newServer, err = server.New(serverConfig)

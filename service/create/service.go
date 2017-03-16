@@ -3,40 +3,61 @@ package create
 import (
 	"sync"
 
+	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
 
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
+
+	"github.com/giantswarm/cert-operator/flag"
 )
 
-// Config represents the configuration used to create a version service.
+// Config represents the configuration used to create a create service.
 type Config struct {
 	// Dependencies.
 	K8sClient kubernetes.Interface
 	Logger    micrologger.Logger
+
+	// Settings.
+	Flag  *flag.Flag
+	Viper *viper.Viper
 }
 
-// DefaultConfig provides a default configuration to create a new version service
+// DefaultConfig provides a default configuration to create a new create service
 // by best effort.
 func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
 		K8sClient: nil,
 		Logger:    nil,
+
+		// Settings.
+		Flag:  nil,
+		Viper: nil,
 	}
 }
 
 // New creates a new configured version service.
 func New(config Config) (*Service, error) {
 	// Dependencies.
+	if config.K8sClient == nil {
+		return nil, microerror.MaskAnyf(invalidConfigError, "kubernetes client must not be empty")
+	}
+
 	if config.Logger == nil {
 		return nil, microerror.MaskAnyf(invalidConfigError, "logger must not be empty")
 	}
 
+	// Settings.
+	if config.Flag == nil {
+		return nil, microerror.MaskAnyf(invalidConfigError, "flag must not be empty")
+	}
+	if config.Viper == nil {
+		return nil, microerror.MaskAnyf(invalidConfigError, "viper must not be empty")
+	}
+
 	newService := &Service{
-		// Dependencies.
-		k8sClient: config.K8sClient,
-		logger:    config.Logger,
+		Config: config,
 
 		// Internals
 		bootOnce: sync.Once{},
@@ -47,9 +68,7 @@ func New(config Config) (*Service, error) {
 
 // Service implements the version service interface.
 type Service struct {
-	// Dependencies.
-	k8sClient kubernetes.Interface
-	logger    micrologger.Logger
+	Config
 
 	// Internals.
 	bootOnce sync.Once
@@ -58,7 +77,7 @@ type Service struct {
 // Boot starts the service
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		s.logger.Log("info", "booted cert-operator")
+		s.Config.Logger.Log("info", "booted cert-operator")
 
 		// TODO Add watch for certificate TPR
 	})
