@@ -56,11 +56,9 @@ func New(config Config) (*Service, error) {
 	if config.K8sClient == nil {
 		return nil, microerror.MaskAnyf(invalidConfigError, "kubernetes client must not be empty")
 	}
-
 	if config.Logger == nil {
 		return nil, microerror.MaskAnyf(invalidConfigError, "logger must not be empty")
 	}
-
 	if config.VaultClient == nil {
 		return nil, microerror.MaskAnyf(invalidConfigError, "vault client must not be empty")
 	}
