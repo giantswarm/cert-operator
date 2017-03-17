@@ -10,3 +10,10 @@ var invalidConfigError = errgo.New("invalid config")
 func IsInvalidConfig(err error) bool {
 	return errgo.Cause(err) == invalidConfigError
 }
+
+var keyPairNotFoundError = errgo.New("key pair not found")
+
+// IsKeyPairNotFound asserts keyPairNotFoundError.
+func IsKeyPairNotFound(err error) bool {
+	return errgo.Cause(err) == keyPairNotFoundError
+}
