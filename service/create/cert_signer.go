@@ -1,73 +1,40 @@
 package create
 
 import (
-	"fmt"
 	"strings"
 
+	"github.com/giantswarm/certctl/service/cert-signer"
+	"github.com/giantswarm/certctl/service/spec"
 	microerror "github.com/giantswarm/microkit/error"
 )
 
-type issueResponse struct {
-	Certificate  string
-	PrivateKey   string
-	IssuingCA    string
-	SerialNumber string
-}
-
 // Issue generates a certificate using the PKI backend signed by the certificate
 // authority associated with the configured cluster ID.
-func (s *Service) Issue(config CertificateSpec) (issueResponse, error) {
-	logicalStore := s.Config.VaultClient.Logical()
+func (s *Service) Issue(config CertificateSpec) (spec.IssueResponse, error) {
+	var issueResp spec.IssueResponse
 
-	data := map[string]interface{}{
-		"ttl":         config.TTL,
-		"common_name": config.CommonName,
-		"ip_sans":     strings.Join(config.IPSANs, ","),
-		"alt_names":   strings.Join(config.AltNames, ","),
-	}
+	// Create a certificate signer to generate a new signed certificate.
+	newCertSignerConfig := certsigner.DefaultConfig()
+	newCertSignerConfig.VaultClient = s.Config.VaultClient
 
-	secret, err := logicalStore.Write(s.SignedPath(config.ClusterID), data)
+	newCertSigner, err := certsigner.New(newCertSignerConfig)
 	if err != nil {
-		return issueResponse{}, microerror.MaskAny(err)
+		return issueResp, microerror.MaskAny(err)
 	}
 
-	// Collect the certificate data from the secret response.
-	vCrt, ok := secret.Data["certificate"]
-	if !ok {
-		return issueResponse{}, microerror.MaskAnyf(keyPairNotFoundError, "certificate missing")
-	}
-	crt := vCrt.(string)
-
-	vKey, ok := secret.Data["private_key"]
-	if !ok {
-		return issueResponse{}, microerror.MaskAnyf(keyPairNotFoundError, "private key missing")
-	}
-	key := vKey.(string)
-
-	vCA, ok := secret.Data["issuing_ca"]
-	if !ok {
-		return issueResponse{}, microerror.MaskAnyf(keyPairNotFoundError, "issuing CA missing")
-	}
-	ca := vCA.(string)
-
-	vSerial, ok := secret.Data["serial_number"]
-	if !ok {
-		return issueResponse{}, microerror.MaskAnyf(keyPairNotFoundError, "serial number missing")
-	}
-	serial := vSerial.(string)
-
-	newIssueResponse := issueResponse{
-		Certificate:  crt,
-		PrivateKey:   key,
-		IssuingCA:    ca,
-		SerialNumber: serial,
+	// Generate a new signed certificate.
+	newIssueConfig := spec.IssueConfig{
+		ClusterID:  config.ClusterID,
+		CommonName: config.CommonName,
+		IPSANs:     strings.Join(config.IPSANs, ","),
+		AltNames:   strings.Join(config.AltNames, ","),
+		TTL:        config.TTL,
 	}
 
-	return newIssueResponse, nil
-}
+	newIssueResponse, err := newCertSigner.Issue(newIssueConfig)
+	if err != nil {
+		return issueResp, microerror.MaskAny(err)
+	}
 
-// Path management.
-
-func (s *Service) SignedPath(clusterID string) string {
-	return fmt.Sprintf("pki-%s/issue/role-%s", clusterID, clusterID)
+	return newIssueResponse, err
 }
