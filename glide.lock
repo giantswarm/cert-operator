@@ -1,5 +1,5 @@
-hash: f69c8b9e0490d3b57bcab83d99173113da35171ebb97b018ae868720b481d13d
-updated: 2017-03-16T12:43:06.459922761+01:00
+hash: 34717b55b8be9b62bcd8ce1da901cc9e987a1a8ee5fe95a156d6684945d5e528
+updated: 2017-03-17T14:27:14.527035372+01:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -58,6 +58,11 @@ imports:
   version: 7d7316ed6e1ed2de075aab8dfc76de5d158d66e1
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
+- name: github.com/giantswarm/certctl
+  version: 472d82d6de0a80534e4614a77399683a2a2f7433
+  subpackages:
+  - service/cert-signer
+  - service/spec
 - name: github.com/giantswarm/microkit
   version: cf9f13e8b2a258bb89aa89a2487b22611cc37e62
   subpackages:
