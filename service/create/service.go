@@ -61,6 +61,10 @@ func New(config Config) (*Service, error) {
 		return nil, microerror.MaskAnyf(invalidConfigError, "logger must not be empty")
 	}
 
+	if config.VaultClient == nil {
+		return nil, microerror.MaskAnyf(invalidConfigError, "vault client must not be empty")
+	}
+
 	// Settings.
 	if config.Flag == nil {
 		return nil, microerror.MaskAnyf(invalidConfigError, "flag must not be empty")
