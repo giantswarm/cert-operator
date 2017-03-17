@@ -1,6 +1,7 @@
 package create
 
 import (
+	"fmt"
 	"sync"
 
 	microerror "github.com/giantswarm/microkit/error"
@@ -11,6 +12,16 @@ import (
 
 	"github.com/giantswarm/cert-operator/flag"
 )
+
+// TODO Replace with Certificate TPR
+type CertificateSpec struct {
+	ClusterID        string
+	CommonName       string
+	IPSANs           []string
+	AltNames         []string
+	AllowBareDomains bool
+	TTL              string
+}
 
 // Config represents the configuration used to create a create service.
 type Config struct {
@@ -45,9 +56,11 @@ func New(config Config) (*Service, error) {
 	if config.K8sClient == nil {
 		return nil, microerror.MaskAnyf(invalidConfigError, "kubernetes client must not be empty")
 	}
-
 	if config.Logger == nil {
 		return nil, microerror.MaskAnyf(invalidConfigError, "logger must not be empty")
+	}
+	if config.VaultClient == nil {
+		return nil, microerror.MaskAnyf(invalidConfigError, "vault client must not be empty")
 	}
 
 	// Settings.
@@ -79,8 +92,26 @@ type Service struct {
 // Boot starts the service
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		s.Config.Logger.Log("info", "booted cert-operator")
+		s.Config.Logger.Log("info", "Booted cert-operator")
 
-		// TODO Add watch for certificate TPR
+		s.Config.Logger.Log("info", "Test issuing a cert")
+
+		cert := CertificateSpec{
+			ClusterID:        "cert-test",
+			CommonName:       "api.cert-test.giantswarm.io",
+			IPSANs:           []string{"10.0.0.4", "10.0.0.5"},
+			AltNames:         []string{"api.k8s.cert-test.giantswarm.io"},
+			AllowBareDomains: false,
+			TTL:              "720h",
+		}
+
+		issueResp, err := s.Issue(cert)
+		if err == nil {
+			s.Config.Logger.Log("info", "Cert issued")
+			s.Config.Logger.Log("info", cert.CommonName)
+			s.Config.Logger.Log("info", issueResp.SerialNumber)
+		} else {
+			s.Config.Logger.Log("error", fmt.Sprintf("Failed to issue cert - %v", err))
+		}
 	})
 }
