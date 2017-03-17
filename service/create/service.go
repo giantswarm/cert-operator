@@ -94,10 +94,16 @@ func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
 		s.Config.Logger.Log("info", "Booted cert-operator")
 
+		clusterID := "cert-test"
+		s.Config.Logger.Log("info", "Check if PKI is valid")
+
+		validPKI := s.CheckPKIBackend(clusterID)
+		s.Config.Logger.Log("info", fmt.Sprintf("Cluster %s PKI status is %v", clusterID, validPKI))
+
 		s.Config.Logger.Log("info", "Test issuing a cert")
 
 		cert := CertificateSpec{
-			ClusterID:        "cert-test",
+			ClusterID:        clusterID,
 			CommonName:       "api.cert-test.giantswarm.io",
 			IPSANs:           []string{"10.0.0.4", "10.0.0.5"},
 			AltNames:         []string{"api.k8s.cert-test.giantswarm.io"},
