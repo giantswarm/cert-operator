@@ -14,12 +14,11 @@ type issueResponse struct {
 	SerialNumber string
 }
 
+// Issue generates a certificate using the PKI backend signed by the certificate
+// authority associated with the configured cluster ID.
 func (s *Service) Issue(config CertificateSpec) (issueResponse, error) {
-	// Create a client for issuing a new signed certificate.
 	logicalStore := s.Config.VaultClient.Logical()
 
-	// Generate a certificate for the PKI backend signed by the certificate
-	// authority associated with the configured cluster ID.
 	data := map[string]interface{}{
 		"ttl":         config.TTL,
 		"common_name": config.CommonName,
@@ -66,6 +65,8 @@ func (s *Service) Issue(config CertificateSpec) (issueResponse, error) {
 
 	return newIssueResponse, nil
 }
+
+// Path management.
 
 func (s *Service) SignedPath(clusterID string) string {
 	return fmt.Sprintf("pki-%s/issue/role-%s", clusterID, clusterID)
