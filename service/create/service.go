@@ -17,8 +17,8 @@ import (
 type CertificateSpec struct {
 	ClusterID        string
 	CommonName       string
-	IPSANs           string
-	AltNames         string
+	IPSANs           []string
+	AltNames         []string
 	AllowBareDomains bool
 	TTL              string
 }
@@ -97,8 +97,8 @@ func (s *Service) Boot() {
 		cert := CertificateSpec{
 			ClusterID:        "cert-test",
 			CommonName:       "api.cert-test.giantswarm.io",
-			IPSANs:           "10.0.0.4,10.0.0.5",
-			AltNames:         "api.k8s.cert-test.giantswarm.io",
+			IPSANs:           []string{"10.0.0.4", "10.0.0.5"},
+			AltNames:         []string{"api.k8s.cert-test.giantswarm.io"},
 			AllowBareDomains: false,
 			TTL:              "720h",
 		}

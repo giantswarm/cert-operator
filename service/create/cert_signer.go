@@ -2,6 +2,7 @@ package create
 
 import (
 	"fmt"
+	"strings"
 
 	microerror "github.com/giantswarm/microkit/error"
 )
@@ -22,8 +23,8 @@ func (s *Service) Issue(config CertificateSpec) (issueResponse, error) {
 	data := map[string]interface{}{
 		"ttl":         config.TTL,
 		"common_name": config.CommonName,
-		"ip_sans":     config.IPSANs,
-		"alt_names":   config.AltNames,
+		"ip_sans":     strings.Join(config.IPSANs, ","),
+		"alt_names":   strings.Join(config.AltNames, ","),
 	}
 
 	secret, err := logicalStore.Write(s.SignedPath(config.ClusterID), data)
