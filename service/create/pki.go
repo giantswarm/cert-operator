@@ -3,39 +3,61 @@ package create
 import (
 	"strings"
 
+	microerror "github.com/giantswarm/microkit/error"
+
 	"github.com/giantswarm/certctl/service/pki"
 	"github.com/giantswarm/certctl/service/token"
 )
 
-// CheckPKIBackend checks if there is a valid PKI backend in Vault
-// for the configured cluster ID.
-func (s *Service) CheckPKIBackend(clusterID string) bool {
-	pkiService, err := s.getPKIService()
-	if err != nil {
-		return false
-	}
+const (
+	// TODO Choose a sensible value and move to ConfigMap for V1
+	CertificateAuthorityTTL = "1440h"
+)
 
-	tokenService, err := s.getTokenService()
+func (s *Service) checkPKIBackend(clusterID string) bool {
+	service, err := s.getPKIService()
 	if err != nil {
 		return false
 	}
 
 	// Check PKI config.
-	mounted, err := pkiService.IsMounted(clusterID)
+	mounted, err := service.IsMounted(clusterID)
 	if !mounted || err != nil {
 		return false
 	}
-	caGenerated, err := pkiService.IsCAGenerated(clusterID)
+	caGenerated, err := service.IsCAGenerated(clusterID)
 	if !caGenerated || err != nil {
 		return false
 	}
-	roleCreated, err := pkiService.IsRoleCreated(clusterID)
+	roleCreated, err := service.IsRoleCreated(clusterID)
 	if !roleCreated || err != nil {
 		return false
 	}
 
-	// Check token config.
-	policyCreated, err := tokenService.IsPolicyCreated(clusterID)
+	// PKI config is valid.
+	return true
+}
+
+func (s *Service) createPKIBackend(cert CertificateSpec) error {
+	var err error
+
+	service, err := s.getPKIService()
+	if err != nil {
+		return microerror.MaskAny(err)
+	}
+
+	// Create PKI backend
+	config := pki.CreateConfig{
+		ClusterID:        cert.ClusterID,
+		CommonName:       s.getClusterCA(cert),
+		AllowedDomains:   s.getAllowedDomainsForCA(cert),
+		AllowBareDomains: cert.AllowBareDomains,
+		TTL:              CertificateAuthorityTTL, // TTL must be longer than for the issued certs.
+	}
+
+	return service.Create(config)
+}
+
 func (s *Service) checkPKIPolicy(clusterID string) bool {
 	service, err := s.getTokenService()
 	if err != nil {
