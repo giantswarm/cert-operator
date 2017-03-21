@@ -36,12 +36,30 @@ func (s *Service) CheckPKIBackend(clusterID string) bool {
 
 	// Check token config.
 	policyCreated, err := tokenService.IsPolicyCreated(clusterID)
+func (s *Service) checkPKIPolicy(clusterID string) bool {
+	service, err := s.getTokenService()
+	if err != nil {
+		return false
+	}
+
+	// Check if there is a PKI policy.
+	policyCreated, err := service.IsPolicyCreated(clusterID)
 	if !policyCreated || err != nil {
 		return false
 	}
 
-	// PKI config is valid.
+	// PKI policy is valid.
 	return true
+}
+
+func (s *Service) createPKIPolicy(cert CertificateSpec) error {
+	service, err := s.getTokenService()
+	if err != nil {
+		return microerror.MaskAny(err)
+	}
+
+	// Create PKI policy TODO Use latest certctl with CreateConfig object.
+	return service.CreatePolicy(cert.ClusterID)
 }
 
 // Get the common name for the Cluster CA by removing the prefix
