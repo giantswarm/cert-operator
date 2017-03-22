@@ -1,5 +1,5 @@
-hash: 34717b55b8be9b62bcd8ce1da901cc9e987a1a8ee5fe95a156d6684945d5e528
-updated: 2017-03-17T14:27:14.527035372+01:00
+hash: bd3bb558eb767c022c08b6ca20b7733673f5e920f77cbdfcec9b99c2881a479a
+updated: 2017-03-22T20:35:35.463796756+01:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -13,7 +13,7 @@ imports:
 - name: github.com/blang/semver
   version: 31b736133b98f26d5e078ec9eb591666edfd091f
 - name: github.com/coreos/etcd
-  version: 21fdcc6443f3267111051240f0eca839acc96a39
+  version: 41e52ebc22add2f9b91a59f90db8e31f7e5c0538
   subpackages:
   - auth/authpb
   - client
@@ -55,16 +55,22 @@ imports:
 - name: github.com/fatih/structs
   version: a720dfa8df582c51dee1b36feabb906bde1588bd
 - name: github.com/fsnotify/fsnotify
-  version: 7d7316ed6e1ed2de075aab8dfc76de5d158d66e1
+  version: ff7bc41d4007f67e5456703c34342df4e0113f64
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/giantswarm/certctl
-  version: 472d82d6de0a80534e4614a77399683a2a2f7433
+  version: 350bd8e6c1098d0c20166ef7e286c8c7afe6e517
   subpackages:
   - service/cert-signer
+  - service/pki
   - service/spec
+  - service/token
+- name: github.com/giantswarm/go-uuid
+  version: ed3ca8a15a931b141440a7e98e4f716eec255f7d
+  subpackages:
+  - uuid
 - name: github.com/giantswarm/microkit
-  version: cf9f13e8b2a258bb89aa89a2487b22611cc37e62
+  version: 8081cd79373ce7175be0f13ddef5b546521c2a06
   subpackages:
   - command
   - command/daemon
@@ -149,11 +155,9 @@ imports:
   - json/scanner
   - json/token
 - name: github.com/hashicorp/vault
-  version: 5d8d702f33b5fd965cbe8d6d0728295de813a196
+  version: f627c01df8d7bebb403cf899ca1beb24f5fc84cd
   subpackages:
   - api
-  - helper/compressutil
-  - helper/jsonutil
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jonboulle/clockwork
@@ -165,7 +169,7 @@ imports:
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/magiconair/properties
-  version: b3b15ef068fd0b17ddf408a23669f20811d194d2
+  version: 51463bfca2576e06c62a8504b5c0f06d61312647
 - name: github.com/mailru/easyjson
   version: d5b7844b561a7bc640052f1b935f7b800330d7e0
   subpackages:
@@ -185,7 +189,7 @@ imports:
 - name: github.com/pelletier/go-buffruneio
   version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
-  version: 13d49d4606eb801b8f01ae542b4afc4c6ee3d84a
+  version: 25e50242f65c230a826c3ab0d6480c58a973dcae
 - name: github.com/prometheus/client_golang
   version: c5b7fccd204277076155f10851dad72b76a49317
   subpackages:
@@ -209,8 +213,6 @@ imports:
   version: 8a290539e2e8629dbc4e6bad948158f790ec31f4
 - name: github.com/PuerkitoBio/urlesc
   version: 5bd2802263f21d8788851d5305584c82a5c75d7e
-- name: github.com/sethgrid/pester
-  version: 2c5fb962da6113d0968907fd81dba3ca35151d1c
 - name: github.com/spf13/afero
   version: 9be650865eab0c12963d8753212f4f9c66cdcf12
   subpackages:
@@ -218,17 +220,13 @@ imports:
 - name: github.com/spf13/cast
   version: ce135a4ebeee6cfe9a26c93ee0d37825f26113c7
 - name: github.com/spf13/cobra
-  version: 16c014f1a19d865b765b420e74508f80eb831ada
+  version: 7be4beda01ec05d0b93d80b3facd2b6f44080d94
 - name: github.com/spf13/jwalterweatherman
   version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag
-  version: 9ff6c6923cfffbcd502984b8e0c80539a94968b7
+  version: 5ccb023bc27df288a957c5e994cd44fd19619465
 - name: github.com/spf13/viper
-  version: 7538d73b4eb9511d85a9f1dfef202eeb8ac260f4
-- name: github.com/stretchr/testify
-  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
-  subpackages:
-  - assert
+  version: 84f94806c67f59dd7ae87bc5351f7a9c94a4558d
 - name: github.com/tylerb/graceful
   version: 4654dfbb6ad53cb5e27f37d99b02e16c1872fbbb
 - name: github.com/ugorji/go
@@ -410,3 +408,7 @@ testImports:
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
+- name: github.com/stretchr/testify
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  subpackages:
+  - assert
