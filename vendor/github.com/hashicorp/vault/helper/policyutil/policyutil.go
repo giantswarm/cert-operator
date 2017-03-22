@@ -7,11 +7,6 @@ import (
 	"github.com/hashicorp/vault/helper/strutil"
 )
 
-const (
-	AddDefaultPolicy      = true
-	DoNotAddDefaultPolicy = false
-)
-
 // ParsePolicies parses a comma-delimited list of policies.
 // The resulting collection will have no duplicate elements.
 // If 'root' policy was present in the list of policies, then
@@ -64,7 +59,7 @@ func SanitizePolicies(policies []string, addDefault bool) []string {
 	return strutil.RemoveDuplicates(policies)
 }
 
-// EquivalentPolicies checks whether the given policy sets are equivalent, as in,
+// ComparePolicies checks whether the given policy sets are equivalent, as in,
 // they contain the same values. The benefit of this method is that it leaves
 // the "default" policy out of its comparisons as it may be added later by core
 // after a set of policies has been saved by a backend.

@@ -2,10 +2,8 @@ package mssql
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -66,7 +64,7 @@ func (b *backend) pathCredsCreateRead(
 		return nil, err
 	}
 
-	// Get our handle
+	// Get our connection
 	db, err := b.DB(req.Storage)
 	if err != nil {
 		return nil, err
@@ -84,20 +82,14 @@ func (b *backend) pathCredsCreateRead(
 	roleSQL := fmt.Sprintf("USE [%s]; %s", b.defaultDb, role.SQL)
 
 	// Execute each query
-	for _, query := range strutil.ParseArbitraryStringSlice(roleSQL, ";") {
-		query = strings.TrimSpace(query)
-		if len(query) == 0 {
-			continue
-		}
-
-		stmt, err := tx.Prepare(Query(query, map[string]string{
+	for _, query := range SplitSQL(roleSQL) {
+		stmt, err := db.Prepare(Query(query, map[string]string{
 			"name":     username,
 			"password": password,
 		}))
 		if err != nil {
 			return nil, err
 		}
-		defer stmt.Close()
 		if _, err := stmt.Exec(); err != nil {
 			return nil, err
 		}

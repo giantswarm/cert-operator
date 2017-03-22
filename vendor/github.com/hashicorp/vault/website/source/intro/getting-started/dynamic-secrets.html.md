@@ -68,7 +68,7 @@ $ vault read aws/config/root
 Error reading aws/config/root: Error making API request.
 
 URL: GET http://127.0.0.1:8200/v1/aws/config/root
-Code: 405. Errors:
+Code: 500. Errors:
 
 * unsupported operation
 ```
@@ -84,7 +84,7 @@ API permissions.
 
 The AWS backend requires an IAM policy to associate created credentials
 with. For this example, we'll write just one policy, but you can associate
-many policies with the backend. Save a file named `policy.json` with the following contents:
+many policies with the backend. Save a file named "policy.json" with the following contents:
 
 ```javascript
 {

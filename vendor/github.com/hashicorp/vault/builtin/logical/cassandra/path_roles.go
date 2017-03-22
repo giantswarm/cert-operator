@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/fatih/structs"
-	"github.com/gocql/gocql"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -54,12 +53,6 @@ template values are '{{username}}' and
 				Type:        framework.TypeString,
 				Default:     "4h",
 				Description: "The lease length; defaults to 4 hours",
-			},
-
-			"consistency": &framework.FieldSchema{
-				Type:        framework.TypeString,
-				Default:     "Quorum",
-				Description: "The consistency level for the operations; defaults to Quorum.",
 			},
 		},
 
@@ -131,18 +124,10 @@ func (b *backend) pathRoleCreate(
 			"Error parsing lease value of %s: %s", leaseRaw, err)), nil
 	}
 
-	consistencyStr := data.Get("consistency").(string)
-	_, err = gocql.ParseConsistencyWrapper(consistencyStr)
-	if err != nil {
-		return logical.ErrorResponse(fmt.Sprintf(
-			"Error parsing consistency value of %q: %v", consistencyStr, err)), nil
-	}
-
 	entry := &roleEntry{
 		Lease:       lease,
 		CreationCQL: creationCQL,
 		RollbackCQL: rollbackCQL,
-		Consistency: consistencyStr,
 	}
 
 	// Store it
@@ -161,7 +146,6 @@ type roleEntry struct {
 	CreationCQL string        `json:"creation_cql" structs:"creation_cql"`
 	Lease       time.Duration `json:"lease" structs:"lease"`
 	RollbackCQL string        `json:"rollback_cql" structs:"rollback_cql"`
-	Consistency string        `json:"consistency" structs:"consistency"`
 }
 
 const pathRoleHelpSyn = `

@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 
@@ -71,7 +72,9 @@ func listCommands(commands map[string]cli.CommandFactory, maxKeyLen int) string 
 
 		command, err := commandFunc()
 		if err != nil {
-			panic(fmt.Sprintf("command '%s' failed to load: %s", key, err))
+			log.Printf("[ERR] cli: Command '%s' failed to load: %s",
+				key, err)
+			continue
 		}
 
 		key = fmt.Sprintf("%s%s", key, strings.Repeat(" ", maxKeyLen-len(key)))

@@ -1,11 +1,9 @@
 package physical
 
 import (
+	"log"
 	"os"
 	"testing"
-
-	"github.com/hashicorp/vault/helper/logformat"
-	log "github.com/mgutz/logxi/v1"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -30,8 +28,7 @@ func TestMySQLBackend(t *testing.T) {
 	password := os.Getenv("MYSQL_PASSWORD")
 
 	// Run vault tests
-	logger := logformat.NewVaultLogger(log.LevelTrace)
-
+	logger := log.New(os.Stderr, "", log.LstdFlags)
 	b, err := NewBackend("mysql", logger, map[string]string{
 		"address":  address,
 		"database": database,

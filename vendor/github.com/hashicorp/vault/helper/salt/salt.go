@@ -26,6 +26,7 @@ type Salt struct {
 	config    *Config
 	salt      string
 	generated bool
+	hmacType  string
 }
 
 type HashFunc func([]byte) []byte
@@ -61,10 +62,6 @@ func NewSalt(view logical.Storage, config *Config) (*Salt, error) {
 	if config.HashFunc == nil {
 		config.HashFunc = SHA256Hash
 	}
-	if config.HMAC == nil {
-		config.HMAC = sha256.New
-		config.HMACType = "hmac-sha256"
-	}
 
 	// Create the salt
 	s := &Salt{
@@ -72,13 +69,9 @@ func NewSalt(view logical.Storage, config *Config) (*Salt, error) {
 	}
 
 	// Look for the salt
-	var raw *logical.StorageEntry
-	var err error
-	if view != nil {
-		raw, err = view.Get(config.Location)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read salt: %v", err)
-		}
+	raw, err := view.Get(config.Location)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read salt: %v", err)
 	}
 
 	// Restore the salt if it exists
@@ -108,6 +101,7 @@ func NewSalt(view logical.Storage, config *Config) (*Salt, error) {
 		if len(config.HMACType) == 0 {
 			return nil, fmt.Errorf("HMACType must be defined")
 		}
+		s.hmacType = config.HMACType
 	}
 
 	return s, nil
@@ -130,7 +124,7 @@ func (s *Salt) GetHMAC(data string) string {
 // GetIdentifiedHMAC is used to apply a salt and hash function to data to make
 // sure it is not reversible, with an additional HMAC, and ID prepended
 func (s *Salt) GetIdentifiedHMAC(data string) string {
-	return s.config.HMACType + ":" + s.GetHMAC(data)
+	return s.hmacType + ":" + s.GetHMAC(data)
 }
 
 // DidGenerate returns if the underlying salt value was generated

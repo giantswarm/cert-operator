@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-
-	"github.com/hashicorp/vault/helper/jsonutil"
 )
 
 // Keyring is used to manage multiple encryption keys used by
@@ -45,7 +43,7 @@ func (k *Key) Serialize() ([]byte, error) {
 // DeserializeKey is used to deserialize and return a new key
 func DeserializeKey(buf []byte) (*Key, error) {
 	k := new(Key)
-	if err := jsonutil.DecodeJSON(buf, k); err != nil {
+	if err := json.Unmarshal(buf, k); err != nil {
 		return nil, fmt.Errorf("deserialization failed: %v", err)
 	}
 	return k, nil
@@ -167,7 +165,7 @@ func (k *Keyring) Serialize() ([]byte, error) {
 func DeserializeKeyring(buf []byte) (*Keyring, error) {
 	// Deserialize the keyring
 	var enc EncodedKeyring
-	if err := jsonutil.DecodeJSON(buf, &enc); err != nil {
+	if err := json.Unmarshal(buf, &enc); err != nil {
 		return nil, fmt.Errorf("deserialization failed: %v", err)
 	}
 

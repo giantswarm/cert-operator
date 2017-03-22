@@ -104,15 +104,6 @@
 					<a href="/docs/http/index.html">API & Libraries</a>
 				</li>
 
-				<li<%= sidebar_current("docs-guides") %>>
-					<a href="/docs/guides/index.html">Guides</a>
-					<ul class="nav">
-						<li<%= sidebar_current("docs-guides-generate-root") %>>
-							<a href="/docs/guides/generate-root.html">Root Token Generation</a>
-						</li>
-					</ul>
-				</li>
-
 				<hr>
 
 				<li<%= sidebar_current("docs-secrets") %>>
@@ -138,10 +129,6 @@
 							<a href="/docs/secrets/generic/index.html">Generic</a>
 						</li>
 
-						<li<%= sidebar_current("docs-secrets-mongodb") %>>
-							<a href="/docs/secrets/mongodb/index.html">MongoDB</a>
-						</li>
-
 						<li<%= sidebar_current("docs-secrets-mssql") %>>
 							<a href="/docs/secrets/mssql/index.html">MSSQL</a>
 						</li>
@@ -152,15 +139,11 @@
 
 						<li<%= sidebar_current("docs-secrets-pki") %>>
 							<a href="/docs/secrets/pki/index.html">PKI (Certificates)</a>
-						</li>
+            </li>
 
 						<li<%= sidebar_current("docs-secrets-postgresql") %>>
 							<a href="/docs/secrets/postgresql/index.html">PostgreSQL</a>
-						</li>
-
-						<li<%= sidebar_current("docs-secrets-rabbitmq") %>>
-							<a href="/docs/secrets/rabbitmq/index.html">RabbitMQ</a>
-						</li>
+            </li>
 
 						<li<%= sidebar_current("docs-secrets-ssh") %>>
 							<a href="/docs/secrets/ssh/index.html">SSH</a>
@@ -168,6 +151,11 @@
 
 						<li<%= sidebar_current("docs-secrets-transit") %>>
 							<a href="/docs/secrets/transit/index.html">Transit</a>
+						</li>
+            
+            
+						<li<%= sidebar_current("docs-secrets-rabbitmq") %>>
+							<a href="/docs/secrets/rabbitmq/index.html">RabbitMQ</a>
 						</li>
 
 						<li<%= sidebar_current("docs-secrets-custom") %>>
@@ -183,14 +171,6 @@
 							<a href="/docs/auth/app-id.html">App ID</a>
 						</li>
 
-						<li<%= sidebar_current("docs-auth-approle") %>>
-							<a href="/docs/auth/approle.html">AppRole</a>
-						</li>
-
-						<li<%= sidebar_current("docs-auth-aws-ec2") %>>
-							<a href="/docs/auth/aws-ec2.html">AWS EC2</a>
-						</li>
-
 						<li<%= sidebar_current("docs-auth-github") %>>
 							<a href="/docs/auth/github.html">GitHub</a>
 						</li>
@@ -199,24 +179,24 @@
 							<a href="/docs/auth/ldap.html">LDAP</a>
 						</li>
 
-						<li<%= sidebar_current("docs-auth-radius") %>>
-							<a href="/docs/auth/radius.html">RADIUS</a>
-						</li>
-
 						<li<%= sidebar_current("docs-auth-mfa") %>>
 							<a href="/docs/auth/mfa.html">MFA</a>
 						</li>
 
 						<li<%= sidebar_current("docs-auth-cert") %>>
 							<a href="/docs/auth/cert.html">TLS Certificates</a>
-						</li>
+            </li>
 
 						<li<%= sidebar_current("docs-auth-token") %>>
-							<a href="/docs/auth/token.html">Tokens</a>
+              <a href="/docs/auth/token.html">Tokens</a>
 						</li>
 
 						<li<%= sidebar_current("docs-auth-userpass") %>>
 							<a href="/docs/auth/userpass.html">Username &amp; Password</a>
+						</li>
+
+						<li<%= sidebar_current("docs-auth-aws-ec2") %>>
+							<a href="/docs/auth/aws-ec2.html">AWS EC2 Auth</a>
 						</li>
 					</ul>
 				</li>
@@ -230,10 +210,6 @@
 
 						<li<%= sidebar_current("docs-audit-syslog") %>>
 							<a href="/docs/audit/syslog.html">Syslog</a>
-						</li>
-
-						<li<%= sidebar_current("docs-audit-socket") %>>
-							<a href="/docs/audit/socket.html">Socket</a>
 						</li>
 					</ul>
 				</li>

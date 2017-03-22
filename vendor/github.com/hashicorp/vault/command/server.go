@@ -1,8 +1,9 @@
 package command
 
 import (
-	"encoding/base64"
+	"encoding/hex"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -12,24 +13,17 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
-	colorable "github.com/mattn/go-colorable"
-	log "github.com/mgutz/logxi/v1"
-
-	"google.golang.org/grpc/grpclog"
-
 	"github.com/armon/go-metrics"
-	"github.com/armon/go-metrics/circonus"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/logutils"
 	"github.com/hashicorp/vault/audit"
 	"github.com/hashicorp/vault/command/server"
 	"github.com/hashicorp/vault/helper/flag-slice"
 	"github.com/hashicorp/vault/helper/gated-writer"
-	"github.com/hashicorp/vault/helper/logformat"
 	"github.com/hashicorp/vault/helper/mlock"
 	vaulthttp "github.com/hashicorp/vault/http"
 	"github.com/hashicorp/vault/logical"
@@ -48,20 +42,15 @@ type ServerCommand struct {
 	ShutdownCh chan struct{}
 	SighupCh   chan struct{}
 
-	WaitGroup *sync.WaitGroup
-
 	meta.Meta
 
-	logger log.Logger
+	logger *log.Logger
 
-	cleanupGuard sync.Once
-
-	reloadFuncsLock *sync.RWMutex
-	reloadFuncs     *map[string][]vault.ReloadFunc
+	ReloadFuncs map[string][]server.ReloadFunc
 }
 
 func (c *ServerCommand) Run(args []string) int {
-	var dev, verifyOnly, devHA bool
+	var dev, verifyOnly bool
 	var configPath []string
 	var logLevel, devRootTokenID, devListenAddress string
 	flags := c.Meta.FlagSet("server", meta.FlagSetDefault)
@@ -70,49 +59,11 @@ func (c *ServerCommand) Run(args []string) int {
 	flags.StringVar(&devListenAddress, "dev-listen-address", "", "")
 	flags.StringVar(&logLevel, "log-level", "info", "")
 	flags.BoolVar(&verifyOnly, "verify-only", false, "")
-	flags.BoolVar(&devHA, "dev-ha", false, "")
-	flags.Usage = func() { c.Ui.Output(c.Help()) }
+	flags.Usage = func() { c.Ui.Error(c.Help()) }
 	flags.Var((*sliceflag.StringFlag)(&configPath), "config", "config")
 	if err := flags.Parse(args); err != nil {
 		return 1
 	}
-
-	// Create a logger. We wrap it in a gated writer so that it doesn't
-	// start logging too early.
-	logGate := &gatedwriter.Writer{Writer: colorable.NewColorable(os.Stderr)}
-	var level int
-	switch logLevel {
-	case "trace":
-		level = log.LevelTrace
-	case "debug":
-		level = log.LevelDebug
-	case "info":
-		level = log.LevelInfo
-	case "notice":
-		level = log.LevelNotice
-	case "warn":
-		level = log.LevelWarn
-	case "err":
-		level = log.LevelError
-	default:
-		c.Ui.Output(fmt.Sprintf("Unknown log level %s", logLevel))
-		return 1
-	}
-
-	logFormat := os.Getenv("VAULT_LOG_FORMAT")
-	if logFormat == "" {
-		logFormat = os.Getenv("LOGXI_FORMAT")
-	}
-	switch strings.ToLower(logFormat) {
-	case "vault", "vault_json", "vault-json", "vaultjson", "json", "":
-		c.logger = logformat.NewVaultLoggerWithWriter(logGate, level)
-	default:
-		c.logger = log.NewLogger(logGate, "vault")
-		c.logger.SetLevel(level)
-	}
-	grpclog.SetLogger(&grpclogFaker{
-		logger: c.logger,
-	})
 
 	if os.Getenv("VAULT_DEV_ROOT_TOKEN_ID") != "" && devRootTokenID == "" {
 		devRootTokenID = os.Getenv("VAULT_DEV_ROOT_TOKEN_ID")
@@ -122,19 +73,19 @@ func (c *ServerCommand) Run(args []string) int {
 		devListenAddress = os.Getenv("VAULT_DEV_LISTEN_ADDRESS")
 	}
 
-	if devHA {
-		dev = true
-	}
-
 	// Validation
 	if !dev {
 		switch {
 		case len(configPath) == 0:
-			c.Ui.Output("At least one config path must be specified with -config")
+			c.Ui.Error("At least one config path must be specified with -config")
 			flags.Usage()
 			return 1
 		case devRootTokenID != "":
-			c.Ui.Output("Root token ID can only be specified with -dev")
+			c.Ui.Error("Root token ID can only be specified with -dev")
+			flags.Usage()
+			return 1
+		case devListenAddress != "":
+			c.Ui.Error("Development address can only be specified with -dev")
 			flags.Usage()
 			return 1
 		}
@@ -143,15 +94,15 @@ func (c *ServerCommand) Run(args []string) int {
 	// Load the configuration
 	var config *server.Config
 	if dev {
-		config = server.DevConfig(devHA)
+		config = server.DevConfig()
 		if devListenAddress != "" {
 			config.Listeners[0].Config["address"] = devListenAddress
 		}
 	}
 	for _, path := range configPath {
-		current, err := server.LoadConfig(path, c.logger)
+		current, err := server.LoadConfig(path)
 		if err != nil {
-			c.Ui.Output(fmt.Sprintf(
+			c.Ui.Error(fmt.Sprintf(
 				"Error loading configuration from %s: %s", path, err))
 			return 1
 		}
@@ -165,13 +116,13 @@ func (c *ServerCommand) Run(args []string) int {
 
 	// Ensure at least one config was found.
 	if config == nil {
-		c.Ui.Output("No configuration files found.")
+		c.Ui.Error("No configuration files found.")
 		return 1
 	}
 
 	// Ensure that a backend is provided
 	if config.Backend == nil {
-		c.Ui.Output("A physical backend must be specified")
+		c.Ui.Error("A physical backend must be specified")
 		return 1
 	}
 
@@ -184,8 +135,18 @@ func (c *ServerCommand) Run(args []string) int {
 		c.Ui.Output("  Vault on an mlockall(2) enabled system is much more secure.\n")
 	}
 
+	// Create a logger. We wrap it in a gated writer so that it doesn't
+	// start logging too early.
+	logGate := &gatedwriter.Writer{Writer: os.Stderr}
+	c.logger = log.New(&logutils.LevelFilter{
+		Levels: []logutils.LogLevel{
+			"TRACE", "DEBUG", "INFO", "WARN", "ERR"},
+		MinLevel: logutils.LogLevel(strings.ToUpper(logLevel)),
+		Writer:   logGate,
+	}, "", log.LstdFlags)
+
 	if err := c.setupTelemetry(config); err != nil {
-		c.Ui.Output(fmt.Sprintf("Error initializing telemetry: %s", err))
+		c.Ui.Error(fmt.Sprintf("Error initializing telemetry: %s", err))
 		return 1
 	}
 
@@ -193,7 +154,7 @@ func (c *ServerCommand) Run(args []string) int {
 	backend, err := physical.NewBackend(
 		config.Backend.Type, c.logger, config.Backend.Config)
 	if err != nil {
-		c.Ui.Output(fmt.Sprintf(
+		c.Ui.Error(fmt.Sprintf(
 			"Error initializing backend of type %s: %s",
 			config.Backend.Type, err))
 		return 1
@@ -206,22 +167,15 @@ func (c *ServerCommand) Run(args []string) int {
 
 	// Ensure that the seal finalizer is called, even if using verify-only
 	defer func() {
-		if seal != nil {
-			err = seal.Finalize()
-			if err != nil {
-				c.Ui.Error(fmt.Sprintf("Error finalizing seals: %v", err))
-			}
+		err = seal.Finalize()
+		if err != nil {
+			c.Ui.Error(fmt.Sprintf("Error finalizing seals: %v", err))
 		}
 	}()
 
-	if seal == nil {
-		c.Ui.Error(fmt.Sprintf("Could not create seal"))
-		return 1
-	}
-
 	coreConfig := &vault.CoreConfig{
 		Physical:           backend,
-		RedirectAddr:       config.Backend.RedirectAddr,
+		AdvertiseAddr:      config.Backend.AdvertiseAddr,
 		HAPhysical:         nil,
 		Seal:               seal,
 		AuditBackends:      c.AuditBackends,
@@ -232,11 +186,7 @@ func (c *ServerCommand) Run(args []string) int {
 		DisableMlock:       config.DisableMlock,
 		MaxLeaseTTL:        config.MaxLeaseTTL,
 		DefaultLeaseTTL:    config.DefaultLeaseTTL,
-		ClusterName:        config.ClusterName,
-		CacheSize:          config.CacheSize,
 	}
-
-	var disableClustering bool
 
 	// Initialize the separate HA physical backend, if it exists
 	var ok bool
@@ -244,306 +194,59 @@ func (c *ServerCommand) Run(args []string) int {
 		habackend, err := physical.NewBackend(
 			config.HABackend.Type, c.logger, config.HABackend.Config)
 		if err != nil {
-			c.Ui.Output(fmt.Sprintf(
+			c.Ui.Error(fmt.Sprintf(
 				"Error initializing backend of type %s: %s",
 				config.HABackend.Type, err))
 			return 1
 		}
 
 		if coreConfig.HAPhysical, ok = habackend.(physical.HABackend); !ok {
-			c.Ui.Output("Specified HA backend does not support HA")
+			c.Ui.Error("Specified HA backend does not support HA")
 			return 1
 		}
-
-		if !coreConfig.HAPhysical.HAEnabled() {
-			c.Ui.Output("Specified HA backend has HA support disabled; please consult documentation")
-			return 1
-		}
-
-		coreConfig.RedirectAddr = config.HABackend.RedirectAddr
-		disableClustering = config.HABackend.DisableClustering
-		if !disableClustering {
-			coreConfig.ClusterAddr = config.HABackend.ClusterAddr
-		}
+		coreConfig.AdvertiseAddr = config.HABackend.AdvertiseAddr
 	} else {
 		if coreConfig.HAPhysical, ok = backend.(physical.HABackend); ok {
-			coreConfig.RedirectAddr = config.Backend.RedirectAddr
-			disableClustering = config.Backend.DisableClustering
-			if !disableClustering {
-				coreConfig.ClusterAddr = config.Backend.ClusterAddr
-			}
+			coreConfig.AdvertiseAddr = config.Backend.AdvertiseAddr
 		}
 	}
 
-	if envRA := os.Getenv("VAULT_REDIRECT_ADDR"); envRA != "" {
-		coreConfig.RedirectAddr = envRA
-	} else if envAA := os.Getenv("VAULT_ADVERTISE_ADDR"); envAA != "" {
-		coreConfig.RedirectAddr = envAA
+	if envAA := os.Getenv("VAULT_ADVERTISE_ADDR"); envAA != "" {
+		coreConfig.AdvertiseAddr = envAA
 	}
 
-	// Attempt to detect the redirect address, if possible
-	var detect physical.RedirectDetect
-	if coreConfig.HAPhysical != nil && coreConfig.HAPhysical.HAEnabled() {
-		detect, ok = coreConfig.HAPhysical.(physical.RedirectDetect)
+	// Attempt to detect the advertise address, if possible
+	var detect physical.AdvertiseDetect
+	if coreConfig.HAPhysical != nil {
+		detect, ok = coreConfig.HAPhysical.(physical.AdvertiseDetect)
 	} else {
-		detect, ok = coreConfig.Physical.(physical.RedirectDetect)
+		detect, ok = coreConfig.Physical.(physical.AdvertiseDetect)
 	}
-	if ok && coreConfig.RedirectAddr == "" {
-		redirect, err := c.detectRedirect(detect, config)
+	if ok && coreConfig.AdvertiseAddr == "" {
+		advertise, err := c.detectAdvertise(detect, config)
 		if err != nil {
-			c.Ui.Output(fmt.Sprintf("Error detecting redirect address: %s", err))
-		} else if redirect == "" {
-			c.Ui.Output("Failed to detect redirect address.")
+			c.Ui.Error(fmt.Sprintf("Error detecting advertise address: %s", err))
+		} else if advertise == "" {
+			c.Ui.Error("Failed to detect advertise address.")
 		} else {
-			coreConfig.RedirectAddr = redirect
+			coreConfig.AdvertiseAddr = advertise
 		}
-	}
-
-	// After the redirect bits are sorted out, if no cluster address was
-	// explicitly given, derive one from the redirect addr
-	if disableClustering {
-		coreConfig.ClusterAddr = ""
-	} else if envCA := os.Getenv("VAULT_CLUSTER_ADDR"); envCA != "" {
-		coreConfig.ClusterAddr = envCA
-	} else if coreConfig.ClusterAddr == "" && coreConfig.RedirectAddr != "" {
-		u, err := url.ParseRequestURI(coreConfig.RedirectAddr)
-		if err != nil {
-			c.Ui.Output(fmt.Sprintf("Error parsing redirect address %s: %v", coreConfig.RedirectAddr, err))
-			return 1
-		}
-		host, port, err := net.SplitHostPort(u.Host)
-		nPort, nPortErr := strconv.Atoi(port)
-		if err != nil {
-			// assume it's due to there not being a port specified, in which case
-			// use 443
-			host = u.Host
-			nPort = 443
-		}
-		if nPortErr != nil {
-			c.Ui.Output(fmt.Sprintf("Cannot parse %s as a numeric port: %v", port, nPortErr))
-			return 1
-		}
-		u.Host = net.JoinHostPort(host, strconv.Itoa(nPort+1))
-		// Will always be TLS-secured
-		u.Scheme = "https"
-		coreConfig.ClusterAddr = u.String()
-	}
-	if coreConfig.ClusterAddr != "" {
-		// Force https as we'll always be TLS-secured
-		u, err := url.ParseRequestURI(coreConfig.ClusterAddr)
-		if err != nil {
-			c.Ui.Output(fmt.Sprintf("Error parsing cluster address %s: %v", coreConfig.RedirectAddr, err))
-			return 1
-		}
-		u.Scheme = "https"
-		coreConfig.ClusterAddr = u.String()
 	}
 
 	// Initialize the core
 	core, newCoreError := vault.NewCore(coreConfig)
 	if newCoreError != nil {
 		if !errwrap.ContainsType(newCoreError, new(vault.NonFatalError)) {
-			c.Ui.Output(fmt.Sprintf("Error initializing core: %s", newCoreError))
+			c.Ui.Error(fmt.Sprintf("Error initializing core: %s", newCoreError))
 			return 1
 		}
 	}
-
-	// Copy the reload funcs pointers back
-	c.reloadFuncs = coreConfig.ReloadFuncs
-	c.reloadFuncsLock = coreConfig.ReloadFuncsLock
-
-	// Compile server information for output later
-	info["backend"] = config.Backend.Type
-	info["log level"] = logLevel
-	info["mlock"] = fmt.Sprintf(
-		"supported: %v, enabled: %v",
-		mlock.Supported(), !config.DisableMlock && mlock.Supported())
-	infoKeys = append(infoKeys, "log level", "mlock", "backend")
-
-	if config.HABackend != nil {
-		info["HA backend"] = config.HABackend.Type
-		info["redirect address"] = coreConfig.RedirectAddr
-		infoKeys = append(infoKeys, "HA backend", "redirect address")
-		if coreConfig.ClusterAddr != "" {
-			info["cluster address"] = coreConfig.ClusterAddr
-			infoKeys = append(infoKeys, "cluster address")
-		}
-	} else {
-		// If the backend supports HA, then note it
-		if coreConfig.HAPhysical != nil {
-			if coreConfig.HAPhysical.HAEnabled() {
-				info["backend"] += " (HA available)"
-				info["redirect address"] = coreConfig.RedirectAddr
-				infoKeys = append(infoKeys, "redirect address")
-				if coreConfig.ClusterAddr != "" {
-					info["cluster address"] = coreConfig.ClusterAddr
-					infoKeys = append(infoKeys, "cluster address")
-				}
-			} else {
-				info["backend"] += " (HA disabled)"
-			}
-		}
-	}
-
-	clusterAddrs := []*net.TCPAddr{}
-
-	// Initialize the listeners
-	c.reloadFuncsLock.Lock()
-	lns := make([]net.Listener, 0, len(config.Listeners))
-	for i, lnConfig := range config.Listeners {
-		if lnConfig.Type == "atlas" {
-			if config.ClusterName == "" {
-				c.Ui.Output("cluster_name is not set in the config and is a required value")
-				return 1
-			}
-
-			lnConfig.Config["cluster_name"] = config.ClusterName
-		}
-
-		ln, props, reloadFunc, err := server.NewListener(lnConfig.Type, lnConfig.Config, logGate)
-		if err != nil {
-			c.Ui.Output(fmt.Sprintf(
-				"Error initializing listener of type %s: %s",
-				lnConfig.Type, err))
-			return 1
-		}
-
-		lns = append(lns, ln)
-
-		if reloadFunc != nil {
-			relSlice := (*c.reloadFuncs)["listener|"+lnConfig.Type]
-			relSlice = append(relSlice, reloadFunc)
-			(*c.reloadFuncs)["listener|"+lnConfig.Type] = relSlice
-		}
-
-		if !disableClustering && lnConfig.Type == "tcp" {
-			var addr string
-			var ok bool
-			if addr, ok = lnConfig.Config["cluster_address"]; ok {
-				tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
-				if err != nil {
-					c.Ui.Output(fmt.Sprintf(
-						"Error resolving cluster_address: %s",
-						err))
-					return 1
-				}
-				clusterAddrs = append(clusterAddrs, tcpAddr)
-			} else {
-				tcpAddr, ok := ln.Addr().(*net.TCPAddr)
-				if !ok {
-					c.Ui.Output("Failed to parse tcp listener")
-					return 1
-				}
-				clusterAddrs = append(clusterAddrs, &net.TCPAddr{
-					IP:   tcpAddr.IP,
-					Port: tcpAddr.Port + 1,
-				})
-			}
-			props["cluster address"] = addr
-		}
-
-		// Store the listener props for output later
-		key := fmt.Sprintf("listener %d", i+1)
-		propsList := make([]string, 0, len(props))
-		for k, v := range props {
-			propsList = append(propsList, fmt.Sprintf(
-				"%s: %q", k, v))
-		}
-		sort.Strings(propsList)
-		infoKeys = append(infoKeys, key)
-		info[key] = fmt.Sprintf(
-			"%s (%s)", lnConfig.Type, strings.Join(propsList, ", "))
-
-	}
-	c.reloadFuncsLock.Unlock()
-	if !disableClustering {
-		if c.logger.IsTrace() {
-			c.logger.Trace("cluster listener addresses synthesized", "cluster_addresses", clusterAddrs)
-		}
-	}
-
-	// Make sure we close all listeners from this point on
-	listenerCloseFunc := func() {
-		for _, ln := range lns {
-			ln.Close()
-		}
-	}
-
-	defer c.cleanupGuard.Do(listenerCloseFunc)
-
-	infoKeys = append(infoKeys, "version")
-	verInfo := version.GetVersion()
-	info["version"] = verInfo.FullVersionNumber(false)
-	if verInfo.Revision != "" {
-		info["version sha"] = strings.Trim(verInfo.Revision, "'")
-		infoKeys = append(infoKeys, "version sha")
-	}
-	infoKeys = append(infoKeys, "cgo")
-	info["cgo"] = "disabled"
-	if version.CgoEnabled {
-		info["cgo"] = "enabled"
-	}
-
-	// Server configuration output
-	padding := 24
-	sort.Strings(infoKeys)
-	c.Ui.Output("==> Vault server configuration:\n")
-	for _, k := range infoKeys {
-		c.Ui.Output(fmt.Sprintf(
-			"%s%s: %s",
-			strings.Repeat(" ", padding-len(k)),
-			strings.Title(k),
-			info[k]))
-	}
-	c.Ui.Output("")
-
-	if verifyOnly {
-		return 0
-	}
-
-	// Perform service discovery registrations and initialization of
-	// HTTP server after the verifyOnly check.
-
-	// Instantiate the wait group
-	c.WaitGroup = &sync.WaitGroup{}
-
-	// If the backend supports service discovery, run service discovery
-	if coreConfig.HAPhysical != nil && coreConfig.HAPhysical.HAEnabled() {
-		sd, ok := coreConfig.HAPhysical.(physical.ServiceDiscovery)
-		if ok {
-			activeFunc := func() bool {
-				if isLeader, _, err := core.Leader(); err == nil {
-					return isLeader
-				}
-				return false
-			}
-
-			sealedFunc := func() bool {
-				if sealed, err := core.Sealed(); err == nil {
-					return sealed
-				}
-				return true
-			}
-
-			if err := sd.RunServiceDiscovery(c.WaitGroup, c.ShutdownCh, coreConfig.RedirectAddr, activeFunc, sealedFunc); err != nil {
-				c.Ui.Output(fmt.Sprintf("Error initializing service discovery: %v", err))
-				return 1
-			}
-		}
-	}
-
-	handler := vaulthttp.Handler(core)
-
-	// This needs to happen before we first unseal, so before we trigger dev
-	// mode if it's set
-	core.SetClusterListenerAddrs(clusterAddrs)
-	core.SetClusterSetupFuncs(vault.WrapHandlerForClustering(handler, c.logger))
 
 	// If we're in dev mode, then initialize the core
 	if dev {
 		init, err := c.enableDev(core, devRootTokenID)
 		if err != nil {
-			c.Ui.Output(fmt.Sprintf(
+			c.Ui.Error(fmt.Sprintf(
 				"Error initializing dev mode: %s", err))
 			return 1
 		}
@@ -567,14 +270,119 @@ func (c *ServerCommand) Run(args []string) int {
 				"The unseal key and root token are reproduced below in case you\n"+
 				"want to seal/unseal the Vault or play with authentication.\n\n"+
 				"Unseal Key: %s\nRoot Token: %s\n",
-			base64.StdEncoding.EncodeToString(init.SecretShares[0]),
+			hex.EncodeToString(init.SecretShares[0]),
 			init.RootToken,
 		))
 	}
 
+	// Compile server information for output later
+	info["backend"] = config.Backend.Type
+	info["log level"] = logLevel
+	info["mlock"] = fmt.Sprintf(
+		"supported: %v, enabled: %v",
+		mlock.Supported(), !config.DisableMlock)
+	infoKeys = append(infoKeys, "log level", "mlock", "backend")
+
+	if config.HABackend != nil {
+		info["HA backend"] = config.HABackend.Type
+		info["advertise address"] = coreConfig.AdvertiseAddr
+		infoKeys = append(infoKeys, "HA backend", "advertise address")
+	} else {
+		// If the backend supports HA, then note it
+		if coreConfig.HAPhysical != nil {
+			info["backend"] += " (HA available)"
+			info["advertise address"] = coreConfig.AdvertiseAddr
+			infoKeys = append(infoKeys, "advertise address")
+		}
+	}
+
+	// If the backend supports service discovery, run service discovery
+	if coreConfig.HAPhysical != nil {
+		sd, ok := coreConfig.HAPhysical.(physical.ServiceDiscovery)
+		if ok {
+			activeFunc := func() bool {
+				if isLeader, _, err := core.Leader(); err == nil {
+					return isLeader
+				}
+				return false
+			}
+
+			sealedFunc := func() bool {
+				if sealed, err := core.Sealed(); err == nil {
+					return sealed
+				}
+				return true
+			}
+
+			if err := sd.RunServiceDiscovery(c.ShutdownCh, coreConfig.AdvertiseAddr, activeFunc, sealedFunc); err != nil {
+				c.Ui.Error(fmt.Sprintf("Error initializing service discovery: %v", err))
+				return 1
+			}
+		}
+	}
+
+	// Initialize the listeners
+	lns := make([]net.Listener, 0, len(config.Listeners))
+	for i, lnConfig := range config.Listeners {
+		ln, props, reloadFunc, err := server.NewListener(lnConfig.Type, lnConfig.Config, logGate)
+		if err != nil {
+			c.Ui.Error(fmt.Sprintf(
+				"Error initializing listener of type %s: %s",
+				lnConfig.Type, err))
+			return 1
+		}
+
+		// Store the listener props for output later
+		key := fmt.Sprintf("listener %d", i+1)
+		propsList := make([]string, 0, len(props))
+		for k, v := range props {
+			propsList = append(propsList, fmt.Sprintf(
+				"%s: %q", k, v))
+		}
+		sort.Strings(propsList)
+		infoKeys = append(infoKeys, key)
+		info[key] = fmt.Sprintf(
+			"%s (%s)", lnConfig.Type, strings.Join(propsList, ", "))
+
+		lns = append(lns, ln)
+
+		if reloadFunc != nil {
+			relSlice := c.ReloadFuncs["listener|"+lnConfig.Type]
+			relSlice = append(relSlice, reloadFunc)
+			c.ReloadFuncs["listener|"+lnConfig.Type] = relSlice
+		}
+	}
+
+	// Make sure we close all listeners from this point on
+	defer func() {
+		for _, ln := range lns {
+			ln.Close()
+		}
+	}()
+
+	infoKeys = append(infoKeys, "version")
+	info["version"] = version.GetVersion().String()
+
+	// Server configuration output
+	padding := 24
+	sort.Strings(infoKeys)
+	c.Ui.Output("==> Vault server configuration:\n")
+	for _, k := range infoKeys {
+		c.Ui.Output(fmt.Sprintf(
+			"%s%s: %s",
+			strings.Repeat(" ", padding-len(k)),
+			strings.Title(k),
+			info[k]))
+	}
+	c.Ui.Output("")
+
+	if verifyOnly {
+		return 0
+	}
+
 	// Initialize the HTTP server
 	server := &http.Server{}
-	server.Handler = handler
+	server.Handler = vaulthttp.Handler(core)
 	for _, ln := range lns {
 		go server.Serve(ln)
 	}
@@ -592,46 +400,31 @@ func (c *ServerCommand) Run(args []string) int {
 
 	// Wait for shutdown
 	shutdownTriggered := false
-
 	for !shutdownTriggered {
 		select {
 		case <-c.ShutdownCh:
 			c.Ui.Output("==> Vault shutdown triggered")
-
-			// Stop the listners so that we don't process further client requests.
-			c.cleanupGuard.Do(listenerCloseFunc)
-
-			// Shutdown will wait until after Vault is sealed, which means the
-			// request forwarding listeners will also be closed (and also
-			// waited for).
 			if err := core.Shutdown(); err != nil {
-				c.Ui.Output(fmt.Sprintf("Error with core shutdown: %s", err))
+				c.Ui.Error(fmt.Sprintf("Error with core shutdown: %s", err))
 			}
-
 			shutdownTriggered = true
-
 		case <-c.SighupCh:
 			c.Ui.Output("==> Vault reload triggered")
 			if err := c.Reload(configPath); err != nil {
-				c.Ui.Output(fmt.Sprintf("Error(s) were encountered during reload: %s", err))
+				c.Ui.Error(fmt.Sprintf("Error(s) were encountered during reload: %s", err))
 			}
 		}
 	}
 
-	// Wait for dependent goroutines to complete
-	c.WaitGroup.Wait()
 	return 0
 }
 
 func (c *ServerCommand) enableDev(core *vault.Core, rootTokenID string) (*vault.InitResult, error) {
 	// Initialize it with a basic single key
-	init, err := core.Initialize(&vault.InitParams{
-		BarrierConfig: &vault.SealConfig{
-			SecretShares:    1,
-			SecretThreshold: 1,
-		},
-		RecoveryConfig: nil,
-	})
+	init, err := core.Initialize(&vault.SealConfig{
+		SecretShares:    1,
+		SecretThreshold: 1,
+	}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -649,30 +442,8 @@ func (c *ServerCommand) enableDev(core *vault.Core, rootTokenID string) (*vault.
 		return nil, fmt.Errorf("failed to unseal Vault for dev mode")
 	}
 
-	isLeader, _, err := core.Leader()
-	if err != nil && err != vault.ErrHANotEnabled {
-		return nil, fmt.Errorf("failed to check active status: %v", err)
-	}
-	if err == nil {
-		leaderCount := 5
-		for !isLeader {
-			if leaderCount == 0 {
-				buf := make([]byte, 1<<16)
-				runtime.Stack(buf, true)
-				return nil, fmt.Errorf("failed to get active status after five seconds; call stack is\n%s\n", buf)
-			}
-			time.Sleep(1 * time.Second)
-			isLeader, _, err = core.Leader()
-			if err != nil {
-				return nil, fmt.Errorf("failed to check active status: %v", err)
-			}
-			leaderCount--
-		}
-	}
-
 	if rootTokenID != "" {
 		req := &logical.Request{
-			ID:          "dev-gen-root",
 			Operation:   logical.UpdateOperation,
 			ClientToken: init.RootToken,
 			Path:        "auth/token/create",
@@ -696,7 +467,6 @@ func (c *ServerCommand) enableDev(core *vault.Core, rootTokenID string) (*vault.
 
 		init.RootToken = resp.Auth.ClientToken
 
-		req.ID = "dev-revoke-init-root"
 		req.Path = "auth/token/revoke-self"
 		req.Data = nil
 		resp, err = core.HandleRequest(req)
@@ -717,8 +487,8 @@ func (c *ServerCommand) enableDev(core *vault.Core, rootTokenID string) (*vault.
 	return init, nil
 }
 
-// detectRedirect is used to attempt redirect address detection
-func (c *ServerCommand) detectRedirect(detect physical.RedirectDetect,
+// detectAdvertise is used to attempt advertise address detection
+func (c *ServerCommand) detectAdvertise(detect physical.AdvertiseDetect,
 	config *server.Config) (string, error) {
 	// Get the hostname
 	host, err := detect.DetectHostAddr()
@@ -825,39 +595,6 @@ func (c *ServerCommand) setupTelemetry(config *server.Config) error {
 		fanout = append(fanout, sink)
 	}
 
-	// Configure the Circonus sink
-	if telConfig.CirconusAPIToken != "" || telConfig.CirconusCheckSubmissionURL != "" {
-		cfg := &circonus.Config{}
-		cfg.Interval = telConfig.CirconusSubmissionInterval
-		cfg.CheckManager.API.TokenKey = telConfig.CirconusAPIToken
-		cfg.CheckManager.API.TokenApp = telConfig.CirconusAPIApp
-		cfg.CheckManager.API.URL = telConfig.CirconusAPIURL
-		cfg.CheckManager.Check.SubmissionURL = telConfig.CirconusCheckSubmissionURL
-		cfg.CheckManager.Check.ID = telConfig.CirconusCheckID
-		cfg.CheckManager.Check.ForceMetricActivation = telConfig.CirconusCheckForceMetricActivation
-		cfg.CheckManager.Check.InstanceID = telConfig.CirconusCheckInstanceID
-		cfg.CheckManager.Check.SearchTag = telConfig.CirconusCheckSearchTag
-		cfg.CheckManager.Check.DisplayName = telConfig.CirconusCheckDisplayName
-		cfg.CheckManager.Check.Tags = telConfig.CirconusCheckTags
-		cfg.CheckManager.Broker.ID = telConfig.CirconusBrokerID
-		cfg.CheckManager.Broker.SelectTag = telConfig.CirconusBrokerSelectTag
-
-		if cfg.CheckManager.API.TokenApp == "" {
-			cfg.CheckManager.API.TokenApp = "vault"
-		}
-
-		if cfg.CheckManager.Check.SearchTag == "" {
-			cfg.CheckManager.Check.SearchTag = "service:vault"
-		}
-
-		sink, err := circonus.NewCirconusSink(cfg)
-		if err != nil {
-			return err
-		}
-		sink.Start()
-		fanout = append(fanout, sink)
-	}
-
 	// Initialize the global sink
 	if len(fanout) > 0 {
 		fanout = append(fanout, inm)
@@ -870,18 +607,14 @@ func (c *ServerCommand) setupTelemetry(config *server.Config) error {
 }
 
 func (c *ServerCommand) Reload(configPath []string) error {
-	c.reloadFuncsLock.RLock()
-	defer c.reloadFuncsLock.RUnlock()
-
-	var reloadErrors *multierror.Error
-
 	// Read the new config
 	var config *server.Config
 	for _, path := range configPath {
-		current, err := server.LoadConfig(path, c.logger)
+		current, err := server.LoadConfig(path)
 		if err != nil {
-			reloadErrors = multierror.Append(reloadErrors, fmt.Errorf("Error loading configuration from %s: %s", path, err))
-			goto audit
+			retErr := fmt.Errorf("Error loading configuration from %s: %s", path, err)
+			c.Ui.Error(retErr.Error())
+			return retErr
 		}
 
 		if config == nil {
@@ -893,32 +626,19 @@ func (c *ServerCommand) Reload(configPath []string) error {
 
 	// Ensure at least one config was found.
 	if config == nil {
-		reloadErrors = multierror.Append(reloadErrors, fmt.Errorf("No configuration files found"))
-		goto audit
+		retErr := fmt.Errorf("No configuration files found")
+		c.Ui.Error(retErr.Error())
+		return retErr
 	}
 
+	var reloadErrors *multierror.Error
 	// Call reload on the listeners. This will call each listener with each
 	// config block, but they verify the address.
 	for _, lnConfig := range config.Listeners {
-		for _, relFunc := range (*c.reloadFuncs)["listener|"+lnConfig.Type] {
+		for _, relFunc := range c.ReloadFuncs["listener|"+lnConfig.Type] {
 			if err := relFunc(lnConfig.Config); err != nil {
-				reloadErrors = multierror.Append(reloadErrors, fmt.Errorf("Error encountered reloading configuration: %s", err))
-				goto audit
-			}
-		}
-	}
-
-audit:
-	// file audit reload funcs
-	for k, relFuncs := range *c.reloadFuncs {
-		if !strings.HasPrefix(k, "audit_file|") {
-			continue
-		}
-		for _, relFunc := range relFuncs {
-			if relFunc != nil {
-				if err := relFunc(nil); err != nil {
-					reloadErrors = multierror.Append(reloadErrors, fmt.Errorf("Error encountered reloading file audit backend at path %s: %v", strings.TrimPrefix(k, "audit_file|"), err))
-				}
+				retErr := fmt.Errorf("Error encountered reloading configuration: %s", err)
+				reloadErrors = multierror.Append(retErr)
 			}
 		}
 	}
@@ -983,8 +703,10 @@ func MakeShutdownCh() chan struct{} {
 	shutdownCh := make(chan os.Signal, 4)
 	signal.Notify(shutdownCh, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		<-shutdownCh
-		close(resultCh)
+		for {
+			<-shutdownCh
+			resultCh <- struct{}{}
+		}
 	}()
 	return resultCh
 }
@@ -1004,35 +726,4 @@ func MakeSighupCh() chan struct{} {
 		}
 	}()
 	return resultCh
-}
-
-type grpclogFaker struct {
-	logger log.Logger
-}
-
-func (g *grpclogFaker) Fatal(args ...interface{}) {
-	g.logger.Error(fmt.Sprint(args...))
-	os.Exit(1)
-}
-
-func (g *grpclogFaker) Fatalf(format string, args ...interface{}) {
-	g.logger.Error(fmt.Sprintf(format, args...))
-	os.Exit(1)
-}
-
-func (g *grpclogFaker) Fatalln(args ...interface{}) {
-	g.logger.Error(fmt.Sprintln(args...))
-	os.Exit(1)
-}
-
-func (g *grpclogFaker) Print(args ...interface{}) {
-	g.logger.Warn(fmt.Sprint(args...))
-}
-
-func (g *grpclogFaker) Printf(format string, args ...interface{}) {
-	g.logger.Warn(fmt.Sprintf(format, args...))
-}
-
-func (g *grpclogFaker) Println(args ...interface{}) {
-	g.logger.Warn(fmt.Sprintln(args...))
 }

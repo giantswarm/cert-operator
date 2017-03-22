@@ -14,12 +14,11 @@ import (
 type NoopBackend struct {
 	sync.Mutex
 
-	Root          []string
-	Login         []string
-	Paths         []string
-	Requests      []*logical.Request
-	Response      *logical.Response
-	Invalidations []string
+	Root     []string
+	Login    []string
+	Paths    []string
+	Requests []*logical.Request
+	Response *logical.Response
 }
 
 func (n *NoopBackend) HandleRequest(req *logical.Request) (*logical.Response, error) {
@@ -50,20 +49,12 @@ func (n *NoopBackend) SpecialPaths() *logical.Paths {
 func (n *NoopBackend) System() logical.SystemView {
 	return logical.StaticSystemView{
 		DefaultLeaseTTLVal: time.Hour * 24,
-		MaxLeaseTTLVal:     time.Hour * 24 * 32,
+		MaxLeaseTTLVal:     time.Hour * 24 * 30,
 	}
 }
 
 func (n *NoopBackend) Cleanup() {
 	// noop
-}
-
-func (n *NoopBackend) InvalidateKey(string) {
-	// noop
-}
-
-func (n *NoopBackend) Initialize() error {
-	return nil
 }
 
 func TestRouter_Mount(t *testing.T) {
@@ -76,7 +67,7 @@ func TestRouter_Mount(t *testing.T) {
 		t.Fatal(err)
 	}
 	n := &NoopBackend{}
-	err = r.Mount(n, "prod/aws/", &MountEntry{Path: "prod/aws/", UUID: meUUID}, view)
+	err = r.Mount(n, "prod/aws/", &MountEntry{UUID: meUUID}, view)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
@@ -106,14 +97,6 @@ func TestRouter_Mount(t *testing.T) {
 		t.Fatalf("bad: %s", v)
 	}
 
-	mount, prefix, ok := r.MatchingStoragePrefix("logical/foo")
-	if !ok {
-		t.Fatalf("missing storage prefix")
-	}
-	if mount != "prod/aws/" || prefix != "logical/" {
-		t.Fatalf("Bad: %v - %v", mount, prefix)
-	}
-
 	req := &logical.Request{
 		Path: "prod/aws/foo",
 	}
@@ -141,7 +124,7 @@ func TestRouter_Unmount(t *testing.T) {
 		t.Fatal(err)
 	}
 	n := &NoopBackend{}
-	err = r.Mount(n, "prod/aws/", &MountEntry{Path: "prod/aws/", UUID: meUUID}, view)
+	err = r.Mount(n, "prod/aws/", &MountEntry{UUID: meUUID}, view)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
@@ -158,10 +141,6 @@ func TestRouter_Unmount(t *testing.T) {
 	if !strings.Contains(err.Error(), "unsupported path") {
 		t.Fatalf("err: %v", err)
 	}
-
-	if _, _, ok := r.MatchingStoragePrefix("logical/foo"); ok {
-		t.Fatalf("should not have matching storage prefix")
-	}
 }
 
 func TestRouter_Remount(t *testing.T) {
@@ -174,13 +153,11 @@ func TestRouter_Remount(t *testing.T) {
 		t.Fatal(err)
 	}
 	n := &NoopBackend{}
-	me := &MountEntry{Path: "prod/aws/", UUID: meUUID}
-	err = r.Mount(n, "prod/aws/", me, view)
+	err = r.Mount(n, "prod/aws/", &MountEntry{UUID: meUUID}, view)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
 
-	me.Path = "stage/aws/"
 	err = r.Remount("prod/aws/", "stage/aws/")
 	if err != nil {
 		t.Fatalf("err: %v", err)
@@ -210,15 +187,6 @@ func TestRouter_Remount(t *testing.T) {
 	// Verify the path
 	if len(n.Paths) != 1 || n.Paths[0] != "foo" {
 		t.Fatalf("bad: %v", n.Paths)
-	}
-
-	// Check the resolve from storage still works
-	mount, prefix, _ := r.MatchingStoragePrefix("logical/foobar")
-	if mount != "stage/aws/" {
-		t.Fatalf("bad mount: %s", mount)
-	}
-	if prefix != "logical/" {
-		t.Fatalf("Bad prefix: %s", prefix)
 	}
 }
 

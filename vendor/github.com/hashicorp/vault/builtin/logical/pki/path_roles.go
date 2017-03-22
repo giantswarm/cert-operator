@@ -1,7 +1,6 @@
 package pki
 
 import (
-	"crypto/x509"
 	"fmt"
 	"strings"
 	"time"
@@ -19,8 +18,8 @@ func pathListRoles(b *backend) *framework.Path {
 			logical.ListOperation: b.pathRoleList,
 		},
 
-		HelpSynopsis:    pathListRolesHelpSyn,
-		HelpDescription: pathListRolesHelpDesc,
+		HelpSynopsis:    pathRoleHelpSyn,
+		HelpDescription: pathRoleHelpDesc,
 	}
 }
 
@@ -148,17 +147,6 @@ certainly want to change this if you adjust
 the key_type.`,
 			},
 
-			"key_usage": &framework.FieldSchema{
-				Type:    framework.TypeString,
-				Default: "DigitalSignature,KeyAgreement,KeyEncipherment",
-				Description: `A comma-separated set of key usages (not extended
-key usages). Valid values can be found at
-https://golang.org/pkg/crypto/x509/#KeyUsage
--- simply drop the "KeyUsage" part of the name.
-To remove all key usages from being set, set
-this value to an empty string.`,
-			},
-
 			"use_csr_common_name": &framework.FieldSchema{
 				Type:    framework.TypeBool,
 				Default: true,
@@ -166,13 +154,6 @@ this value to an empty string.`,
 the common name in the CSR will be used. This
 does *not* include any requested Subject Alternative
 Names. Defaults to true.`,
-			},
-
-			"ou": &framework.FieldSchema{
-				Type:    framework.TypeString,
-				Default: "",
-				Description: `If set, the OU (OrganizationalUnit) will be set to
-this value in certificates issued by this role.`,
 			},
 		},
 
@@ -334,8 +315,6 @@ func (b *backend) pathRoleCreate(
 		KeyType:             data.Get("key_type").(string),
 		KeyBits:             data.Get("key_bits").(int),
 		UseCSRCommonName:    data.Get("use_csr_common_name").(bool),
-		KeyUsage:            data.Get("key_usage").(string),
-		OU:                  data.Get("ou").(string),
 	}
 
 	if entry.KeyType == "rsa" && entry.KeyBits < 2048 {
@@ -397,35 +376,6 @@ func (b *backend) pathRoleCreate(
 	return nil, nil
 }
 
-func parseKeyUsages(input string) int {
-	var parsedKeyUsages x509.KeyUsage
-	splitKeyUsage := strings.Split(input, ",")
-	for _, k := range splitKeyUsage {
-		switch strings.ToLower(strings.TrimSpace(k)) {
-		case "digitalsignature":
-			parsedKeyUsages |= x509.KeyUsageDigitalSignature
-		case "contentcommitment":
-			parsedKeyUsages |= x509.KeyUsageContentCommitment
-		case "keyencipherment":
-			parsedKeyUsages |= x509.KeyUsageKeyEncipherment
-		case "dataencipherment":
-			parsedKeyUsages |= x509.KeyUsageDataEncipherment
-		case "keyagreement":
-			parsedKeyUsages |= x509.KeyUsageKeyAgreement
-		case "certsign":
-			parsedKeyUsages |= x509.KeyUsageCertSign
-		case "crlsign":
-			parsedKeyUsages |= x509.KeyUsageCRLSign
-		case "encipheronly":
-			parsedKeyUsages |= x509.KeyUsageEncipherOnly
-		case "decipheronly":
-			parsedKeyUsages |= x509.KeyUsageDecipherOnly
-		}
-	}
-
-	return int(parsedKeyUsages)
-}
-
 type roleEntry struct {
 	LeaseMax              string `json:"lease_max" structs:"lease_max" mapstructure:"lease_max"`
 	Lease                 string `json:"lease" structs:"lease" mapstructure:"lease"`
@@ -449,14 +399,12 @@ type roleEntry struct {
 	KeyType               string `json:"key_type" structs:"key_type" mapstructure:"key_type"`
 	KeyBits               int    `json:"key_bits" structs:"key_bits" mapstructure:"key_bits"`
 	MaxPathLength         *int   `json:",omitempty" structs:",omitempty"`
-	KeyUsage              string `json:"key_usage" structs:"key_usage" mapstructure:"key_usage"`
-	OU                    string `json:"ou" structs:"ou" mapstructure:"ou"`
 }
 
-const pathListRolesHelpSyn = `List the existing roles in this backend`
+const pathRoleHelpSyn = `
+Manage the roles that can be created with this backend.
+`
 
-const pathListRolesHelpDesc = `Roles will be listed by the role name.`
-
-const pathRoleHelpSyn = `Manage the roles that can be created with this backend.`
-
-const pathRoleHelpDesc = `This path lets you manage the roles that can be created with this backend.`
+const pathRoleHelpDesc = `
+This path lets you manage the roles that can be created with this backend.
+`

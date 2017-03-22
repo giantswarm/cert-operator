@@ -12,13 +12,13 @@ Access control policies in Vault control what a user can access. In
 the last section, we learned about _authentication_. This section is
 about _authorization_.
 
-For authentication Vault has multiple options or backends that
-can be enabled and used. For authorization and access control policies Vault always
-uses the same format. All authentication backends must map identities back to
+Whereas for authentication Vault has multiple options or backends that
+can be enabled and used, the authorization or policies of Vault are always
+the same format. All authentication backends must map identities back to
 the core policies that are configured with Vault.
 
 When initializing Vault, there is always one special policy created
-that can't be removed: the `root` policy. This policy is a special policy
+that can't be removed: the "root" policy. This policy is a special policy
 that gives superuser access to everything in Vault. An identity mapped to
 the root policy can do anything.
 
@@ -54,7 +54,7 @@ to `secret/foo`, where only read access is allowed. Policies default to
 deny, so any access to an unspecified path is not allowed. The policy
 language changed slightly in Vault 0.2, [see this page for details](/docs/concepts/policies.html).
 
-Save the above policy in a file called `acl.hcl`.
+Save the above policy as `acl.hcl`.
 
 ## Writing the Policy
 
@@ -80,7 +80,7 @@ $ vault token-create -policy="secret"
 Key            	Value
 token           d97ef000-48cf-45d9-1907-3ea6ce298a29
 token_accessor  71770cc5-14da-f0af-c6ce-17a0ae398d67
-token_duration  2764800
+token_duration  2592000
 token_renewable true
 token_policies  [default secret]
 
@@ -102,7 +102,7 @@ $ vault write secret/foo value=yes
 Error writing data to secret/foo: Error making API request.
 
 URL: PUT http://127.0.0.1:8200/v1/secret/foo
-Code: 403. Errors:
+Code: 400. Errors:
 
 * permission denied
 ```
@@ -116,7 +116,7 @@ Vault is the single policy authority, unlike auth where you can mount
 multiple backends. Any mounted auth backend must map identities to these
 core policies.
 
-We use the `vault path-help` system with your auth backend to determine how the
+Use the `vault path-help` system with your auth backend to determine how the
 mapping is done, since it is specific to each backend. For example,
 with GitHub, it is done by team using the `map/teams/<team>` path:
 
@@ -125,7 +125,7 @@ $ vault write auth/github/map/teams/default value=secret
 Success! Data written to: auth/github/map/teams/default
 ```
 
-For GitHub, the `default` team is the default policy set that everyone
+For GitHub, the "default" team is the default policy set that everyone
 is assigned to no matter what team they're on.
 
 Other auth backends use alternate, but likely similar mechanisms for

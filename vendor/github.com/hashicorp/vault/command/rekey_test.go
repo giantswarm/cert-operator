@@ -16,33 +16,22 @@ import (
 )
 
 func TestRekey(t *testing.T) {
-	core, keys, _ := vault.TestCoreUnsealed(t)
+	core, key, _ := vault.TestCoreUnsealed(t)
 	ln, addr := http.TestServer(t, core)
 	defer ln.Close()
 
 	ui := new(cli.MockUi)
+	c := &RekeyCommand{
+		Key:         hex.EncodeToString(key),
+		RecoveryKey: false,
+		Meta: meta.Meta{
+			Ui: ui,
+		},
+	}
 
-	for i, key := range keys {
-		c := &RekeyCommand{
-			Key:         hex.EncodeToString(key),
-			RecoveryKey: false,
-			Meta: meta.Meta{
-				Ui: ui,
-			},
-		}
-
-		if i > 0 {
-			conf, err := core.RekeyConfig(false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			c.Nonce = conf.Nonce
-		}
-
-		args := []string{"-address", addr}
-		if code := c.Run(args); code != 0 {
-			t.Fatalf("bad: %d\n\n%s", code, ui.ErrorWriter.String())
-		}
+	args := []string{"-address", addr}
+	if code := c.Run(args); code != 0 {
+		t.Fatalf("bad: %d\n\n%s", code, ui.ErrorWriter.String())
 	}
 
 	config, err := core.SealAccess().BarrierConfig()
@@ -55,32 +44,21 @@ func TestRekey(t *testing.T) {
 }
 
 func TestRekey_arg(t *testing.T) {
-	core, keys, _ := vault.TestCoreUnsealed(t)
+	core, key, _ := vault.TestCoreUnsealed(t)
 	ln, addr := http.TestServer(t, core)
 	defer ln.Close()
 
 	ui := new(cli.MockUi)
+	c := &RekeyCommand{
+		RecoveryKey: false,
+		Meta: meta.Meta{
+			Ui: ui,
+		},
+	}
 
-	for i, key := range keys {
-		c := &RekeyCommand{
-			RecoveryKey: false,
-			Meta: meta.Meta{
-				Ui: ui,
-			},
-		}
-
-		if i > 0 {
-			conf, err := core.RekeyConfig(false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			c.Nonce = conf.Nonce
-		}
-
-		args := []string{"-address", addr, hex.EncodeToString(key)}
-		if code := c.Run(args); code != 0 {
-			t.Fatalf("bad: %d\n\n%s", code, ui.ErrorWriter.String())
-		}
+	args := []string{"-address", addr, hex.EncodeToString(key)}
+	if code := c.Run(args); code != 0 {
+		t.Fatalf("bad: %d\n\n%s", code, ui.ErrorWriter.String())
 	}
 
 	config, err := core.SealAccess().BarrierConfig()
@@ -93,13 +71,13 @@ func TestRekey_arg(t *testing.T) {
 }
 
 func TestRekey_init(t *testing.T) {
-	core, _, _ := vault.TestCoreUnsealed(t)
+	core, key, _ := vault.TestCoreUnsealed(t)
 	ln, addr := http.TestServer(t, core)
 	defer ln.Close()
 
 	ui := new(cli.MockUi)
-
 	c := &RekeyCommand{
+		Key: hex.EncodeToString(key),
 		Meta: meta.Meta{
 			Ui: ui,
 		},
@@ -128,13 +106,13 @@ func TestRekey_init(t *testing.T) {
 }
 
 func TestRekey_cancel(t *testing.T) {
-	core, keys, _ := vault.TestCoreUnsealed(t)
+	core, key, _ := vault.TestCoreUnsealed(t)
 	ln, addr := http.TestServer(t, core)
 	defer ln.Close()
 
 	ui := new(cli.MockUi)
 	c := &RekeyCommand{
-		Key: hex.EncodeToString(keys[0]),
+		Key: hex.EncodeToString(key),
 		Meta: meta.Meta{
 			Ui: ui,
 		},
@@ -160,13 +138,13 @@ func TestRekey_cancel(t *testing.T) {
 }
 
 func TestRekey_status(t *testing.T) {
-	core, keys, _ := vault.TestCoreUnsealed(t)
+	core, key, _ := vault.TestCoreUnsealed(t)
 	ln, addr := http.TestServer(t, core)
 	defer ln.Close()
 
 	ui := new(cli.MockUi)
 	c := &RekeyCommand{
-		Key: hex.EncodeToString(keys[0]),
+		Key: hex.EncodeToString(key),
 		Meta: meta.Meta{
 			Ui: ui,
 		},
@@ -188,7 +166,7 @@ func TestRekey_status(t *testing.T) {
 }
 
 func TestRekey_init_pgp(t *testing.T) {
-	core, keys, token := vault.TestCoreUnsealed(t)
+	core, key, token := vault.TestCoreUnsealed(t)
 	ln, addr := http.TestServer(t, core)
 	defer ln.Close()
 
@@ -196,16 +174,14 @@ func TestRekey_init_pgp(t *testing.T) {
 		Logger: nil,
 		System: logical.StaticSystemView{
 			DefaultLeaseTTLVal: time.Hour * 24,
-			MaxLeaseTTLVal:     time.Hour * 24 * 32,
+			MaxLeaseTTLVal:     time.Hour * 24 * 30,
 		},
 	}
-	sysBackend, err := vault.NewSystemBackend(core, bc)
-	if err != nil {
-		t.Fatal(err)
-	}
+	sysBackend := vault.NewSystemBackend(core, bc)
 
 	ui := new(cli.MockUi)
 	c := &RekeyCommand{
+		Key: hex.EncodeToString(key),
 		Meta: meta.Meta{
 			Ui: ui,
 		},
@@ -241,27 +217,17 @@ func TestRekey_init_pgp(t *testing.T) {
 		t.Fatal("should rekey")
 	}
 
-	for _, key := range keys {
-		c = &RekeyCommand{
-			Key: hex.EncodeToString(key),
-			Meta: meta.Meta{
-				Ui: ui,
-			},
-		}
+	c.Nonce = config.Nonce
 
-		c.Nonce = config.Nonce
-
-		args = []string{
-			"-address", addr,
-		}
-		if code := c.Run(args); code != 0 {
-			t.Fatalf("bad: %d\n\n%s", code, ui.ErrorWriter.String())
-		}
+	args = []string{
+		"-address", addr,
+	}
+	if code := c.Run(args); code != 0 {
+		t.Fatalf("bad: %d\n\n%s", code, ui.ErrorWriter.String())
 	}
 
 	type backupStruct struct {
-		Keys    map[string][]string
-		KeysB64 map[string][]string
+		Keys map[string][]string
 	}
 	backupVals := &backupStruct{}
 
@@ -281,7 +247,6 @@ func TestRekey_init_pgp(t *testing.T) {
 	}
 
 	backupVals.Keys = resp.Data["keys"].(map[string][]string)
-	backupVals.KeysB64 = resp.Data["keys_base64"].(map[string][]string)
 
 	// Now delete and try again; the values should be inaccessible
 	req = logical.TestRequest(t, logical.DeleteOperation, "rekey/backup")
@@ -304,8 +269,7 @@ func TestRekey_init_pgp(t *testing.T) {
 	// Sort, because it'll be tested with DeepEqual later
 	for k, _ := range backupVals.Keys {
 		sort.Strings(backupVals.Keys[k])
-		sort.Strings(backupVals.KeysB64[k])
 	}
 
-	parseDecryptAndTestUnsealKeys(t, ui.OutputWriter.String(), token, true, backupVals.Keys, backupVals.KeysB64, core)
+	parseDecryptAndTestUnsealKeys(t, ui.OutputWriter.String(), token, true, backupVals.Keys, core)
 }

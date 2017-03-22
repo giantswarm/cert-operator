@@ -128,9 +128,8 @@ func (c *Core) GenerateRootInit(otp, pgpKey string) error {
 		PGPFingerprint: fingerprint,
 	}
 
-	if c.logger.IsInfo() {
-		c.logger.Info("core: root generation initialized", "nonce", c.generateRootConfig.Nonce)
-	}
+	c.logger.Printf("[INFO] core: root generation initialized (nonce: %s)",
+		c.generateRootConfig.Nonce)
 	return nil
 }
 
@@ -191,7 +190,7 @@ func (c *Core) GenerateRootUpdate(key []byte, nonce string) (*GenerateRootResult
 	// Check if we already have this piece
 	for _, existing := range c.generateRootProgress {
 		if bytes.Equal(existing, key) {
-			return nil, fmt.Errorf("given key has already been provided during this generation operation")
+			return nil, nil
 		}
 	}
 
@@ -201,9 +200,8 @@ func (c *Core) GenerateRootUpdate(key []byte, nonce string) (*GenerateRootResult
 
 	// Check if we don't have enough keys to unlock
 	if len(c.generateRootProgress) < config.SecretThreshold {
-		if c.logger.IsDebug() {
-			c.logger.Debug("core: cannot generate root, not enough keys", "keys", progress, "threshold", config.SecretThreshold)
-		}
+		c.logger.Printf("[DEBUG] core: cannot generate root, have %d of %d keys",
+			progress, config.SecretThreshold)
 		return &GenerateRootResult{
 			Progress:       progress,
 			Required:       config.SecretThreshold,
@@ -227,35 +225,35 @@ func (c *Core) GenerateRootUpdate(key []byte, nonce string) (*GenerateRootResult
 	// Verify the master key
 	if c.seal.RecoveryKeySupported() {
 		if err := c.seal.VerifyRecoveryKey(masterKey); err != nil {
-			c.logger.Error("core: root generation aborted, recovery key verification failed", "error", err)
+			c.logger.Printf("[ERR] core: root generation aborted, recovery key verification failed: %v", err)
 			return nil, err
 		}
 	} else {
 		if err := c.barrier.VerifyMaster(masterKey); err != nil {
-			c.logger.Error("core: root generation aborted, master key verification failed", "error", err)
+			c.logger.Printf("[ERR] core: root generation aborted, master key verification failed: %v", err)
 			return nil, err
 		}
 	}
 
 	te, err := c.tokenStore.rootToken()
 	if err != nil {
-		c.logger.Error("core: root token generation failed", "error", err)
+		c.logger.Printf("[ERR] core: root token generation failed: %v", err)
 		return nil, err
 	}
 	if te == nil {
-		c.logger.Error("core: got nil token entry back from root generation")
+		c.logger.Printf("[ERR] core: got nil token entry back from root generation")
 		return nil, fmt.Errorf("got nil token entry back from root generation")
 	}
 
 	uuidBytes, err := uuid.ParseUUID(te.ID)
 	if err != nil {
 		c.tokenStore.Revoke(te.ID)
-		c.logger.Error("core: error getting generated token bytes", "error", err)
+		c.logger.Printf("[ERR] core: error getting generated token bytes: %v", err)
 		return nil, err
 	}
 	if uuidBytes == nil {
 		c.tokenStore.Revoke(te.ID)
-		c.logger.Error("core: got nil parsed UUID bytes")
+		c.logger.Printf("[ERR] core: got nil parsed UUID bytes")
 		return nil, fmt.Errorf("got nil parsed UUID bytes")
 	}
 
@@ -269,7 +267,7 @@ func (c *Core) GenerateRootUpdate(key []byte, nonce string) (*GenerateRootResult
 		tokenBytes, err = xor.XORBase64(c.generateRootConfig.OTP, base64.StdEncoding.EncodeToString(uuidBytes))
 		if err != nil {
 			c.tokenStore.Revoke(te.ID)
-			c.logger.Error("core: xor of root token failed", "error", err)
+			c.logger.Printf("[ERR] core: xor of root token failed: %v", err)
 			return nil, err
 		}
 
@@ -277,7 +275,7 @@ func (c *Core) GenerateRootUpdate(key []byte, nonce string) (*GenerateRootResult
 		_, tokenBytesArr, err := pgpkeys.EncryptShares([][]byte{[]byte(te.ID)}, []string{c.generateRootConfig.PGPKey})
 		if err != nil {
 			c.tokenStore.Revoke(te.ID)
-			c.logger.Error("core: error encrypting new root token", "error", err)
+			c.logger.Printf("[ERR] core: error encrypting new root token: %v", err)
 			return nil, err
 		}
 		tokenBytes = tokenBytesArr[0]
@@ -294,9 +292,8 @@ func (c *Core) GenerateRootUpdate(key []byte, nonce string) (*GenerateRootResult
 		PGPFingerprint:   c.generateRootConfig.PGPFingerprint,
 	}
 
-	if c.logger.IsInfo() {
-		c.logger.Info("core: root generation finished", "nonce", c.generateRootConfig.Nonce)
-	}
+	c.logger.Printf("[INFO] core: root generation finished (nonce: %s)",
+		c.generateRootConfig.Nonce)
 
 	c.generateRootProgress = nil
 	c.generateRootConfig = nil

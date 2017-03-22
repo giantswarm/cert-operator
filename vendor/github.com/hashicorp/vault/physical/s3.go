@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"sort"
 	"strings"
 	"time"
-
-	log "github.com/mgutz/logxi/v1"
 
 	"github.com/armon/go-metrics"
 	"github.com/aws/aws-sdk-go/aws"
@@ -24,13 +23,13 @@ import (
 type S3Backend struct {
 	bucket string
 	client *s3.S3
-	logger log.Logger
+	logger *log.Logger
 }
 
 // newS3Backend constructs a S3 backend using a pre-existing
 // bucket. Credentials can be provided to the backend, sourced
 // from the environment, AWS credential files or by IAM role.
-func newS3Backend(conf map[string]string, logger log.Logger) (Backend, error) {
+func newS3Backend(conf map[string]string, logger *log.Logger) (Backend, error) {
 
 	bucket := os.Getenv("AWS_S3_BUCKET")
 	if bucket == "" {
@@ -168,31 +167,28 @@ func (s *S3Backend) Delete(key string) error {
 func (s *S3Backend) List(prefix string) ([]string, error) {
 	defer metrics.MeasureSince([]string{"s3", "list"}, time.Now())
 
-	params := &s3.ListObjectsV2Input{
+	resp, err := s.client.ListObjects(&s3.ListObjectsInput{
 		Bucket: aws.String(s.bucket),
 		Prefix: aws.String(prefix),
+	})
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil {
+		return nil, fmt.Errorf("nil response from S3 but no error")
 	}
 
 	keys := []string{}
+	for _, key := range resp.Contents {
+		key := strings.TrimPrefix(*key.Key, prefix)
 
-	err := s.client.ListObjectsV2Pages(params,
-		func(page *s3.ListObjectsV2Output, lastPage bool) bool {
-			for _, key := range page.Contents {
-				key := strings.TrimPrefix(*key.Key, prefix)
-
-				if i := strings.Index(key, "/"); i == -1 {
-					// Add objects only from the current 'folder'
-					keys = append(keys, key)
-				} else if i != -1 {
-					// Add truncated 'folder' paths
-					keys = appendIfMissing(keys, key[:i+1])
-				}
-			}
-			return true
-		})
-
-	if err != nil {
-		return nil, err
+		if i := strings.Index(key, "/"); i == -1 {
+			// Add objects only from the current 'folder'
+			keys = append(keys, key)
+		} else if i != -1 {
+			// Add truncated 'folder' paths
+			keys = appendIfMissing(keys, key[:i+1])
+		}
 	}
 
 	sort.Strings(keys)

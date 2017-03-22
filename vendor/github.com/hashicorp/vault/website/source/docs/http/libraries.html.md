@@ -29,38 +29,13 @@ These libraries are officially maintained by HashiCorp.
 
 These libraries are provided by the community.
 
-### Ansible
-
-* [Ansible Modules Hashivault](https://pypi.python.org/pypi/ansible-modules-hashivault)
-  * `pip install ansible-modules-hashivault`
-
 ### C&#35;
 
-* [VaultSharp](https://github.com/rajanadar/VaultSharp) (.NET Standard = 1.4 (.NET Core >= 1.0.0) and also .NET 4.5.x, .NET 4.6.x)
+* [VaultSharp](https://github.com/rajanadar/VaultSharp)
   * `Install-Package VaultSharp`
-* [Vault.NET](https://github.com/Chatham/Vault.NET)
-  * `Install-Package Vault`
-
-### Clojure
-
-* [vault-clj](https://github.com/amperity/vault-clj)
-
-### Elixir
-
-* [vaultex](https://hex.pm/packages/vaultex)
-
-### Go
-
-* [vc](https://github.com/adfinis-sygroup/vault-client)
-
-### Haskell
-
-* [vault-tool](https://hackage.haskell.org/package/vault-tool)
-  * `cabal install vault-tool`
 
 ### Java
 
-* [Spring Vault](https://github.com/spring-projects/spring-vault)
 * [vault-java](https://github.com/jhaals/vault-java)
 * [vault-java-driver](https://github.com/BetterCloud/vault-java-driver)
 
@@ -84,10 +59,6 @@ These libraries are provided by the community.
 
 * [HVAC](https://github.com/ianunruh/hvac)
   * `pip install hvac`
-
-### Rust
-
-* [HashicorpVault](https://crates.io/crates/hashicorp_vault)
 
 ### Scala
  * [scala-vault](https://github.com/janstenpickle/scala-vault)

@@ -1,7 +1,6 @@
 package logical
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -28,57 +27,54 @@ const (
 	HTTPStatusCode = "http_status_code"
 )
 
-type ResponseWrapInfo struct {
+type WrapInfo struct {
 	// Setting to non-zero specifies that the response should be wrapped.
 	// Specifies the desired TTL of the wrapping token.
-	TTL time.Duration `json:"ttl" structs:"ttl" mapstructure:"ttl"`
+	TTL time.Duration
 
 	// The token containing the wrapped response
-	Token string `json:"token" structs:"token" mapstructure:"token"`
+	Token string
 
 	// The creation time. This can be used with the TTL to figure out an
 	// expected expiration.
-	CreationTime time.Time `json:"creation_time" structs:"creation_time" mapstructure:"cration_time"`
+	CreationTime time.Time
 
 	// If the contained response is the output of a token creation call, the
 	// created token's accessor will be accessible here
-	WrappedAccessor string `json:"wrapped_accessor" structs:"wrapped_accessor" mapstructure:"wrapped_accessor"`
-
-	// The format to use. This doesn't get returned, it's only internal.
-	Format string `json:"format" structs:"format" mapstructure:"format"`
+	WrappedAccessor string
 }
 
 // Response is a struct that stores the response of a request.
 // It is used to abstract the details of the higher level request protocol.
 type Response struct {
 	// Secret, if not nil, denotes that this response represents a secret.
-	Secret *Secret `json:"secret" structs:"secret" mapstructure:"secret"`
+	Secret *Secret
 
 	// Auth, if not nil, contains the authentication information for
 	// this response. This is only checked and means something for
 	// credential backends.
-	Auth *Auth `json:"auth" structs:"auth" mapstructure:"auth"`
+	Auth *Auth
 
 	// Response data is an opaque map that must have string keys. For
 	// secrets, this data is sent down to the user as-is. To store internal
 	// data that you don't want the user to see, store it in
 	// Secret.InternalData.
-	Data map[string]interface{} `json:"data" structs:"data" mapstructure:"data"`
+	Data map[string]interface{}
 
 	// Redirect is an HTTP URL to redirect to for further authentication.
 	// This is only valid for credential backends. This will be blanked
 	// for any logical backend and ignored.
-	Redirect string `json:"redirect" structs:"redirect" mapstructure:"redirect"`
+	Redirect string
 
 	// Warnings allow operations or backends to return warnings in response
 	// to user actions without failing the action outright.
 	// Making it private helps ensure that it is easy for various parts of
 	// Vault (backend, core, etc.) to add warnings without accidentally
 	// replacing what exists.
-	warnings []string `json:"warnings" structs:"warnings" mapstructure:"warnings"`
+	warnings []string
 
 	// Information for wrapping the response in a cubbyhole
-	WrapInfo *ResponseWrapInfo `json:"wrap_info" structs:"wrap_info" mapstructure:"wrap_info"`
+	WrapInfo *WrapInfo
 }
 
 func init() {
@@ -109,7 +105,7 @@ func init() {
 			if err != nil {
 				return nil, fmt.Errorf("error copying Data: %v", err)
 			}
-			ret.Data = *(retData.(*map[string]interface{}))
+			ret.Data = retData.(map[string]interface{})
 		}
 
 		if input.Warnings() != nil {
@@ -123,7 +119,7 @@ func init() {
 			if err != nil {
 				return nil, fmt.Errorf("error copying WrapInfo: %v", err)
 			}
-			ret.WrapInfo = retWrapInfo.(*ResponseWrapInfo)
+			ret.WrapInfo = retWrapInfo.(*WrapInfo)
 		}
 
 		return &ret, nil
@@ -155,20 +151,7 @@ func (r *Response) CloneWarnings(other *Response) {
 
 // IsError returns true if this response seems to indicate an error.
 func (r *Response) IsError() bool {
-	return r != nil && r.Data != nil && len(r.Data) == 1 && r.Data["error"] != nil
-}
-
-func (r *Response) Error() error {
-	if !r.IsError() {
-		return nil
-	}
-	switch r.Data["error"].(type) {
-	case string:
-		return errors.New(r.Data["error"].(string))
-	case error:
-		return r.Data["error"].(error)
-	}
-	return nil
+	return r != nil && len(r.Data) == 1 && r.Data["error"] != nil
 }
 
 // HelpResponse is used to format a help response

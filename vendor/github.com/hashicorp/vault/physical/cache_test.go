@@ -1,26 +1,23 @@
 package physical
 
 import (
+	"log"
+	"os"
 	"testing"
-
-	"github.com/hashicorp/vault/helper/logformat"
-	log "github.com/mgutz/logxi/v1"
 )
 
 func TestCache(t *testing.T) {
-	logger := logformat.NewVaultLogger(log.LevelTrace)
-
+	logger := log.New(os.Stderr, "", log.LstdFlags)
 	inm := NewInmem(logger)
-	cache := NewCache(inm, 0, logger)
+	cache := NewCache(inm, 0)
 	testBackend(t, cache)
 	testBackend_ListPrefix(t, cache)
 }
 
 func TestCache_Purge(t *testing.T) {
-	logger := logformat.NewVaultLogger(log.LevelTrace)
-
+	logger := log.New(os.Stderr, "", log.LstdFlags)
 	inm := NewInmem(logger)
-	cache := NewCache(inm, 0, logger)
+	cache := NewCache(inm, 0)
 
 	ent := &Entry{
 		Key:   "foo",

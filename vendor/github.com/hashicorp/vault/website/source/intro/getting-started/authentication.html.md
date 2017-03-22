@@ -11,14 +11,13 @@ description: |-
 Now that we know how to use the basics of Vault, it is important to understand
 how to authenticate to Vault itself. Up to this point, we haven't had to
 authenticate because starting the Vault server in dev mode automatically logs
-us in as the root user. In practice, you'll almost always have to manually authenticate.
+us in as root. In practice, you'll almost always have to manually authenticate.
 
-On this page, we'll talk specifically about _authentication_. On the
-next page, we talk about
-[_authorization_](/intro/getting-started/acl.html). Authentication is the
-mechanism of assigning an identity to a Vault user. The access control
-and permissions associated with an identity are authorization, and will
-not be covered on this page.
+On this page, we'll talk specifically about _authentication_. On the next
+page, we talk about _authorization_.
+Authentication is the mechanism of assigning an identity to a Vault user.
+The access control and permissions associated with an identity are
+authorization, and will not be covered on this page.
 
 Vault has pluggable authentication backends, making it easy to authenticate
 with Vault using whatever form works best for your organization. On this page
@@ -82,13 +81,15 @@ what access policies the token is associated with. If you want to test
 
 ## Auth Backends
 
-In addition to tokens, other authentication, or _auth_, backends can be enabled.
-Auth backends enable alternate methods of identifying with
-Vault.  These identities are tied back to a set of access policies, just
-like tokens. For example, for desktop environments, private key or
-GitHub based authentication are available. For server environments, some
-shared secret may be best. Auth backends give you flexibility
-to choose what authentication you want to use.
+In addition to tokens, other authentication backends can be enabled.
+Authentication backends enable alternate methods of identifying with Vault.
+These identities are tied back to a set of access policies, just like tokens.
+
+Vault supports other authentication backends in order to make authentication
+easiest for your environment. For example, for desktop environments,
+private key or GitHub based authentication may be easiest. For server
+environments, some shared secret may be best. Auth backends give you
+flexibility to choose what authentication you want to use.
 
 As an example, let's authenticate using GitHub. First, enable the
 GitHub authentication backend:
@@ -103,43 +104,41 @@ backends are always prefixed with `auth/`. So the GitHub backend we just
 mounted can be accessed at `auth/github`. You can use `vault path-help` to
 learn more about it.
 
-With the GitHub backend enabled, we first have to configure it. For GitHub,
+With the backend enabled, we first have to configure it. For GitHub,
 we tell it what organization users must be a part of, and map a team to a policy:
 
 ```
 $ vault write auth/github/config organization=hashicorp
 Success! Data written to: auth/github/config
 
-$ vault write auth/github/map/teams/default value=default
+$ vault write auth/github/map/teams/default value=root
 Success! Data written to: auth/github/map/teams/default
 ```
 
 The above configured our GitHub backend to only accept users from the
-`hashicorp` organization (you should fill in your own organization)
-and to map any team to the `default` policy, which is a built-in policy and is
-the only policy (other than `root`) we have right now until the next section.
+"hashicorp" organization (you should fill in your own organization)
+and to map any team to the "root" policy, which is the only policy we have
+right now until the next section.
 
-With GitHub enabled, we can now authenticate using `vault auth`:
+With GitHub enabled, we can authenticate using `vault auth`:
 
 ```
 $ vault auth -method=github token=e6919b17dd654f2b64e67b6369d61cddc0bcc7d5
 Successfully authenticated! The policies that are associated
 with this token are listed below:
 
-default
+root
 ```
 
-Success! We've authenticated using GitHub. The `default` policy was associated
-with my identity since we mapped that earlier. The value for `token` should be
-your own [personal access
-token](https://help.github.com/articles/creating-an-access-token-for-command-line-use/).
-
-At this point, if you're following along, re-authenticate with the root token
-from earlier (using `vault auth <token>`) to run the next commands.
+Success! We've authenticated using GitHub. The "root" policy was associated
+with my identity since we mapped that earlier. The value for "token" should be your own
+[personal access token](https://help.github.com/articles/creating-an-access-token-for-command-line-use/).
 
 You can revoke authentication from any authentication backend using
 `vault token-revoke` as well, which can revoke any path prefix. For
 example, to revoke all GitHub tokens, you could run the following.
+**Don't run this unless you have access to another root token or you'll
+get locked out.**
 
 ```
 $ vault token-revoke -mode=path auth/github
@@ -154,6 +153,11 @@ $ vault auth-disable github
 Disabled auth provider at path 'github'!
 ```
 
+If you ran the above, you'll probably find you can't access your Vault
+anymore unless you have another root token, since it invalidated your
+own session since we authenticated with GitHub above. Since we're still
+operating in development mode, just restart the dev server to fix this.
+
 ## Next
 
 In this page you learned about how Vault authenticates users. You learned
@@ -165,4 +169,4 @@ The multiple authentication backends Vault provides let you choose the
 most appropriate authentication mechanism for your organization.
 
 In this next section, we'll learn about
-[authorization and access control policies](/intro/getting-started/acl.html).
+[access control policies](/intro/getting-started/acl.html).

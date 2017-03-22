@@ -2,13 +2,12 @@ package kvbuilder
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
-
-	"github.com/hashicorp/vault/helper/jsonutil"
 )
 
 // Builder is a struct to build a key/value mapping based on a list
@@ -112,5 +111,6 @@ func (b *Builder) add(raw string) error {
 }
 
 func (b *Builder) addReader(r io.Reader) error {
-	return jsonutil.DecodeJSONFromReader(r, &b.result)
+	dec := json.NewDecoder(r)
+	return dec.Decode(&b.result)
 }

@@ -267,7 +267,7 @@ func testCubbyholeBackend() logical.Backend {
 		Logger: nil,
 		System: logical.StaticSystemView{
 			DefaultLeaseTTLVal: time.Hour * 24,
-			MaxLeaseTTLVal:     time.Hour * 24 * 32,
+			MaxLeaseTTLVal:     time.Hour * 24 * 30,
 		},
 	})
 	return b

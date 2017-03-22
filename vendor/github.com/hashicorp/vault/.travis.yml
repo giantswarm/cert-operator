@@ -1,13 +1,12 @@
-sudo: required
-dist: trusty
+sudo: false
 
 language: go
 
-services:
-  - docker
-
 go:
-  - 1.8rc2
+  - 1.6.2
+# tip is currently using go1.4.1, which we're not compatible with, so always
+# fails
+#  - tip
 
 matrix:
   allow_failures:
@@ -18,6 +17,10 @@ branches:
     - master
     - travis-testing
 
+# Having an install function stops Travis from trying to do automagic things
+# with godep
+install:
+  - true
+
 script:
-  - make bootstrap
   - make test testrace

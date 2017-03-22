@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/keybase/go-crypto/openpgp"
-	"github.com/keybase/go-crypto/openpgp/packet"
+	"golang.org/x/crypto/openpgp"
+	"golang.org/x/crypto/openpgp/packet"
 )
 
 func TestFetchKeybasePubkeys(t *testing.T) {

@@ -3,8 +3,6 @@ package ldap
 import (
 	"strings"
 
-	"github.com/hashicorp/vault/helper/policyutil"
-	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -34,11 +32,6 @@ func pathUsers(b *backend) *framework.Path {
 			"groups": &framework.FieldSchema{
 				Type:        framework.TypeString,
 				Description: "Comma-separated list of additional groups associated with the user.",
-			},
-
-			"policies": &framework.FieldSchema{
-				Type:        framework.TypeString,
-				Description: "Comma-separated list of policies associated with the user.",
 			},
 		},
 
@@ -92,8 +85,7 @@ func (b *backend) pathUserRead(
 
 	return &logical.Response{
 		Data: map[string]interface{}{
-			"groups":   strings.Join(user.Groups, ","),
-			"policies": strings.Join(user.Policies, ","),
+			"groups": strings.Join(user.Groups, ","),
 		},
 	}, nil
 }
@@ -101,16 +93,14 @@ func (b *backend) pathUserRead(
 func (b *backend) pathUserWrite(
 	req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	name := d.Get("name").(string)
-	groups := strutil.ParseDedupAndSortStrings(d.Get("groups").(string), ",")
-	policies := policyutil.ParsePolicies(d.Get("policies").(string))
+	groups := strings.Split(d.Get("groups").(string), ",")
 	for i, g := range groups {
 		groups[i] = strings.TrimSpace(g)
 	}
 
 	// Store it
 	entry, err := logical.StorageEntryJSON("user/"+name, &UserEntry{
-		Groups:   groups,
-		Policies: policies,
+		Groups: groups,
 	})
 	if err != nil {
 		return nil, err
@@ -132,8 +122,7 @@ func (b *backend) pathUserList(
 }
 
 type UserEntry struct {
-	Groups   []string
-	Policies []string
+	Groups []string
 }
 
 const pathUserHelpSyn = `

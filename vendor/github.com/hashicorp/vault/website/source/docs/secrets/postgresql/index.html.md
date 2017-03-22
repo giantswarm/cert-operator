@@ -116,6 +116,7 @@ subpath for interactive help output.
   <dt>Description</dt>
   <dd>
     Configures the connection string used to communicate with PostgreSQL.
+    This is a root protected endpoint.
   </dd>
 
   <dt>Method</dt>
@@ -240,21 +241,9 @@ subpath for interactive help output.
       <li>
         <span class="param">sql</span>
         <span class="param-flags">required</span>
-        The SQL statements executed to create and configure the role. Must be
-        a semicolon-separated string, a base64-encoded semicolon-separated
-        string, a serialized JSON string array, or a base64-encoded serialized
-        JSON string array. The '{{name}}', '{{password}}' and '{{expiration}}'
-        values will be substituted.
-      </li>
-    </ul>
-    <ul>
-      <li>
-        <span class="param">revocation_sql</span>
-        <span class="param-flags">optional</span>
-        SQL statements to be executed to revoke a user. Must be a semicolon-separated
-        string, a base64-encoded semicolon-separated string, a serialized JSON string
-        array, or a base64-encoded serialized JSON string array. The '{{name}}' value
-        will be substituted.
+        The SQL statements executed to create and configure the role.
+        Must be semi-colon separated. The '{{name}}', '{{password}}' and
+        '{{expiration}}' values will be substituted.
       </li>
     </ul>
   </dd>
@@ -308,10 +297,10 @@ subpath for interactive help output.
   </dd>
 
   <dt>Method</dt>
-  <dd>LIST/GET</dd>
+  <dd>GET</dd>
 
   <dt>URL</dt>
-  <dd>`/postgresql/roles` (LIST) or `/postgresql/roles/?list=true` (GET)</dd>
+  <dd>`/roles/?list=true`</dd>
 
   <dt>Parameters</dt>
   <dd>
@@ -327,7 +316,7 @@ subpath for interactive help output.
     "data": {
       "keys": ["dev", "prod"]
     },
-    "lease_duration": 2764800,
+    "lease_duration": 2592000,
     "lease_id": "",
     "renewable": false
   }

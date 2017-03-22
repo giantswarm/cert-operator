@@ -48,7 +48,7 @@ func (b *backend) pathLogin(
 
 	ttl, _, err := b.SanitizeTTLStr(config.TTL.String(), config.MaxTTL.String())
 	if err != nil {
-		return logical.ErrorResponse(fmt.Sprintf("error sanitizing TTLs: %s", err)), nil
+		return logical.ErrorResponse(fmt.Sprintf("[ERR]:%s", err)), nil
 	}
 
 	return &logical.Response{
@@ -107,7 +107,7 @@ func (b *backend) verifyCredentials(req *logical.Request, token string) (*verify
 	if err != nil {
 		return nil, nil, err
 	}
-	if config.Organization == "" {
+	if config.Org == "" {
 		return nil, logical.ErrorResponse(
 			"configure the github credential backend first"), nil
 	}
@@ -138,7 +138,7 @@ func (b *backend) verifyCredentials(req *logical.Request, token string) (*verify
 		PerPage: 100,
 	}
 
-	var allOrgs []*github.Organization
+	var allOrgs []github.Organization
 	for {
 		orgs, resp, err := client.Organizations.List("", orgOpt)
 		if err != nil {
@@ -152,8 +152,8 @@ func (b *backend) verifyCredentials(req *logical.Request, token string) (*verify
 	}
 
 	for _, o := range allOrgs {
-		if strings.ToLower(*o.Login) == strings.ToLower(config.Organization) {
-			org = o
+		if strings.ToLower(*o.Login) == strings.ToLower(config.Org) {
+			org = &o
 			break
 		}
 	}
@@ -168,7 +168,7 @@ func (b *backend) verifyCredentials(req *logical.Request, token string) (*verify
 		PerPage: 100,
 	}
 
-	var allTeams []*github.Team
+	var allTeams []github.Team
 	for {
 		teams, resp, err := client.Organizations.ListUserTeams(teamOpt)
 		if err != nil {
@@ -194,22 +194,14 @@ func (b *backend) verifyCredentials(req *logical.Request, token string) (*verify
 		}
 	}
 
-	groupPoliciesList, err := b.TeamMap.Policies(req.Storage, teamNames...)
-
+	policiesList, err := b.Map.Policies(req.Storage, teamNames...)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	userPoliciesList, err := b.UserMap.Policies(req.Storage, []string{*user.Login}...)
-
-	if err != nil {
-		return nil, nil, err
-	}
-
 	return &verifyCredentialsResp{
 		User:     user,
 		Org:      org,
-		Policies: append(groupPoliciesList, userPoliciesList...),
+		Policies: policiesList,
 	}, nil, nil
 }
 

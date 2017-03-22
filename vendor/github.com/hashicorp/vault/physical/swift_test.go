@@ -2,14 +2,12 @@ package physical
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"testing"
 	"time"
 
-	log "github.com/mgutz/logxi/v1"
-
 	"github.com/hashicorp/go-cleanhttp"
-	"github.com/hashicorp/vault/helper/logformat"
 	"github.com/ncw/swift"
 )
 
@@ -60,8 +58,7 @@ func TestSwiftBackend(t *testing.T) {
 		}
 	}()
 
-	logger := logformat.NewVaultLogger(log.LevelTrace)
-
+	logger := log.New(os.Stderr, "", log.LstdFlags)
 	b, err := NewBackend("swift", logger, map[string]string{
 		"username":  username,
 		"password":  password,

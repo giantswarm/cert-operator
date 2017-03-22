@@ -1,0 +1,11 @@
+package: github.com/giantswarm/certctl
+import:
+- package: github.com/giantswarm/go-uuid
+  subpackages:
+  - uuid
+- package: github.com/hashicorp/vault
+  version: 0.6.0
+  subpackages:
+  - api
+- package: github.com/juju/errgo
+- package: github.com/spf13/cobra

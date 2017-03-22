@@ -23,23 +23,26 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/hashicorp/vault/helper/certutil"
-	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 	logicaltest "github.com/hashicorp/vault/logical/testing"
 	"github.com/mitchellh/mapstructure"
 )
 
 var (
-	stepCount               = 0
-	serialUnderTest         string
-	parsedKeyUsageUnderTest int
+	stepCount       = 0
+	serialUnderTest string
 )
 
 // Performs basic tests on CA functionality
 // Uses the RSA CA key
 func TestBackend_RSAKey(t *testing.T) {
+	if os.Getenv(logicaltest.TestEnvVar) == "" {
+		t.Skip(fmt.Sprintf("Acceptance tests skipped unless env '%s' set", logicaltest.TestEnvVar))
+		return
+	}
+
 	defaultLeaseTTLVal := time.Hour * 24
-	maxLeaseTTLVal := time.Hour * 24 * 32
+	maxLeaseTTLVal := time.Hour * 24 * 30
 	b, err := Factory(&logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
@@ -52,8 +55,9 @@ func TestBackend_RSAKey(t *testing.T) {
 	}
 
 	testCase := logicaltest.TestCase{
-		Backend: b,
-		Steps:   []logicaltest.TestStep{},
+		AcceptanceTest: true,
+		Backend:        b,
+		Steps:          []logicaltest.TestStep{},
 	}
 
 	stepCount = len(testCase.Steps)
@@ -68,8 +72,13 @@ func TestBackend_RSAKey(t *testing.T) {
 // Performs basic tests on CA functionality
 // Uses the EC CA key
 func TestBackend_ECKey(t *testing.T) {
+	if os.Getenv(logicaltest.TestEnvVar) == "" {
+		t.Skip(fmt.Sprintf("Acceptance tests skipped unless env '%s' set", logicaltest.TestEnvVar))
+		return
+	}
+
 	defaultLeaseTTLVal := time.Hour * 24
-	maxLeaseTTLVal := time.Hour * 24 * 32
+	maxLeaseTTLVal := time.Hour * 24 * 30
 	b, err := Factory(&logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
@@ -82,8 +91,9 @@ func TestBackend_ECKey(t *testing.T) {
 	}
 
 	testCase := logicaltest.TestCase{
-		Backend: b,
-		Steps:   []logicaltest.TestStep{},
+		AcceptanceTest: true,
+		Backend:        b,
+		Steps:          []logicaltest.TestStep{},
 	}
 
 	stepCount = len(testCase.Steps)
@@ -96,8 +106,13 @@ func TestBackend_ECKey(t *testing.T) {
 }
 
 func TestBackend_CSRValues(t *testing.T) {
+	if os.Getenv(logicaltest.TestEnvVar) == "" {
+		t.Skip(fmt.Sprintf("Acceptance tests skipped unless env '%s' set", logicaltest.TestEnvVar))
+		return
+	}
+
 	defaultLeaseTTLVal := time.Hour * 24
-	maxLeaseTTLVal := time.Hour * 24 * 32
+	maxLeaseTTLVal := time.Hour * 24 * 30
 	b, err := Factory(&logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
@@ -110,8 +125,9 @@ func TestBackend_CSRValues(t *testing.T) {
 	}
 
 	testCase := logicaltest.TestCase{
-		Backend: b,
-		Steps:   []logicaltest.TestStep{},
+		AcceptanceTest: true,
+		Backend:        b,
+		Steps:          []logicaltest.TestStep{},
 	}
 
 	stepCount = len(testCase.Steps)
@@ -124,8 +140,13 @@ func TestBackend_CSRValues(t *testing.T) {
 }
 
 func TestBackend_URLsCRUD(t *testing.T) {
+	if os.Getenv(logicaltest.TestEnvVar) == "" {
+		t.Skip(fmt.Sprintf("Acceptance tests skipped unless env '%s' set", logicaltest.TestEnvVar))
+		return
+	}
+
 	defaultLeaseTTLVal := time.Hour * 24
-	maxLeaseTTLVal := time.Hour * 24 * 32
+	maxLeaseTTLVal := time.Hour * 24 * 30
 	b, err := Factory(&logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
@@ -138,8 +159,9 @@ func TestBackend_URLsCRUD(t *testing.T) {
 	}
 
 	testCase := logicaltest.TestCase{
-		Backend: b,
-		Steps:   []logicaltest.TestStep{},
+		AcceptanceTest: true,
+		Backend:        b,
+		Steps:          []logicaltest.TestStep{},
 	}
 
 	stepCount = len(testCase.Steps)
@@ -155,8 +177,13 @@ func TestBackend_URLsCRUD(t *testing.T) {
 // of role flags to ensure that they are properly restricted
 // Uses the RSA CA key
 func TestBackend_RSARoles(t *testing.T) {
+	if os.Getenv(logicaltest.TestEnvVar) == "" {
+		t.Skip(fmt.Sprintf("Acceptance tests skipped unless env '%s' set", logicaltest.TestEnvVar))
+		return
+	}
+
 	defaultLeaseTTLVal := time.Hour * 24
-	maxLeaseTTLVal := time.Hour * 24 * 32
+	maxLeaseTTLVal := time.Hour * 24 * 30
 	b, err := Factory(&logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
@@ -169,7 +196,8 @@ func TestBackend_RSARoles(t *testing.T) {
 	}
 
 	testCase := logicaltest.TestCase{
-		Backend: b,
+		AcceptanceTest: true,
+		Backend:        b,
 		Steps: []logicaltest.TestStep{
 			logicaltest.TestStep{
 				Operation: logical.UpdateOperation,
@@ -197,8 +225,13 @@ func TestBackend_RSARoles(t *testing.T) {
 // of role flags to ensure that they are properly restricted
 // Uses the RSA CA key
 func TestBackend_RSARoles_CSR(t *testing.T) {
+	if os.Getenv(logicaltest.TestEnvVar) == "" {
+		t.Skip(fmt.Sprintf("Acceptance tests skipped unless env '%s' set", logicaltest.TestEnvVar))
+		return
+	}
+
 	defaultLeaseTTLVal := time.Hour * 24
-	maxLeaseTTLVal := time.Hour * 24 * 32
+	maxLeaseTTLVal := time.Hour * 24 * 30
 	b, err := Factory(&logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
@@ -211,13 +244,14 @@ func TestBackend_RSARoles_CSR(t *testing.T) {
 	}
 
 	testCase := logicaltest.TestCase{
-		Backend: b,
+		AcceptanceTest: true,
+		Backend:        b,
 		Steps: []logicaltest.TestStep{
 			logicaltest.TestStep{
 				Operation: logical.UpdateOperation,
 				Path:      "config/ca",
 				Data: map[string]interface{}{
-					"pem_bundle": rsaCAKey + rsaCACert + rsaCAChain,
+					"pem_bundle": rsaCAKey + rsaCACert,
 				},
 			},
 		},
@@ -239,8 +273,13 @@ func TestBackend_RSARoles_CSR(t *testing.T) {
 // of role flags to ensure that they are properly restricted
 // Uses the EC CA key
 func TestBackend_ECRoles(t *testing.T) {
+	if os.Getenv(logicaltest.TestEnvVar) == "" {
+		t.Skip(fmt.Sprintf("Acceptance tests skipped unless env '%s' set", logicaltest.TestEnvVar))
+		return
+	}
+
 	defaultLeaseTTLVal := time.Hour * 24
-	maxLeaseTTLVal := time.Hour * 24 * 32
+	maxLeaseTTLVal := time.Hour * 24 * 30
 	b, err := Factory(&logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
@@ -253,7 +292,8 @@ func TestBackend_ECRoles(t *testing.T) {
 	}
 
 	testCase := logicaltest.TestCase{
-		Backend: b,
+		AcceptanceTest: true,
+		Backend:        b,
 		Steps: []logicaltest.TestStep{
 			logicaltest.TestStep{
 				Operation: logical.UpdateOperation,
@@ -281,8 +321,13 @@ func TestBackend_ECRoles(t *testing.T) {
 // of role flags to ensure that they are properly restricted
 // Uses the EC CA key
 func TestBackend_ECRoles_CSR(t *testing.T) {
+	if os.Getenv(logicaltest.TestEnvVar) == "" {
+		t.Skip(fmt.Sprintf("Acceptance tests skipped unless env '%s' set", logicaltest.TestEnvVar))
+		return
+	}
+
 	defaultLeaseTTLVal := time.Hour * 24
-	maxLeaseTTLVal := time.Hour * 24 * 32
+	maxLeaseTTLVal := time.Hour * 24 * 30
 	b, err := Factory(&logical.BackendConfig{
 		Logger: nil,
 		System: &logical.StaticSystemView{
@@ -295,7 +340,8 @@ func TestBackend_ECRoles_CSR(t *testing.T) {
 	}
 
 	testCase := logicaltest.TestCase{
-		Backend: b,
+		AcceptanceTest: true,
+		Backend:        b,
 		Steps: []logicaltest.TestStep{
 			logicaltest.TestStep{
 				Operation: logical.UpdateOperation,
@@ -320,7 +366,7 @@ func TestBackend_ECRoles_CSR(t *testing.T) {
 }
 
 // Performs some validity checking on the returned bundles
-func checkCertsAndPrivateKey(keyType string, key crypto.Signer, usage x509.KeyUsage, extUsage x509.ExtKeyUsage, validity time.Duration, certBundle *certutil.CertBundle) (*certutil.ParsedCertBundle, error) {
+func checkCertsAndPrivateKey(keyType string, key crypto.Signer, usage certUsage, validity time.Duration, certBundle *certutil.CertBundle) (*certutil.ParsedCertBundle, error) {
 	parsedCertBundle, err := certBundle.ToParsedCertBundle()
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing cert bundle: %s", err)
@@ -345,7 +391,7 @@ func checkCertsAndPrivateKey(keyType string, key crypto.Signer, usage x509.KeyUs
 	switch {
 	case parsedCertBundle.Certificate == nil:
 		return nil, fmt.Errorf("Did not find a certificate in the cert bundle")
-	case len(parsedCertBundle.CAChain) == 0 || parsedCertBundle.CAChain[0].Certificate == nil:
+	case parsedCertBundle.IssuingCA == nil:
 		return nil, fmt.Errorf("Did not find a CA in the cert bundle")
 	case parsedCertBundle.PrivateKey == nil:
 		return nil, fmt.Errorf("Did not find a private key in the cert bundle")
@@ -361,32 +407,27 @@ func checkCertsAndPrivateKey(keyType string, key crypto.Signer, usage x509.KeyUs
 	}
 
 	cert := parsedCertBundle.Certificate
-
-	if usage != cert.KeyUsage {
-		return nil, fmt.Errorf("Expected usage of %#v, got %#v; ext usage is %#v", usage, cert.KeyUsage, cert.ExtKeyUsage)
-	}
-
-	// There should only be one ext usage type, because only one is requested
+	// There should only be one usage type, because only one is requested
 	// in the tests
 	if len(cert.ExtKeyUsage) != 1 {
-		return nil, fmt.Errorf("Got wrong size key usage in generated cert; expected 1, values are %#v", cert.ExtKeyUsage)
+		return nil, fmt.Errorf("Got wrong size key usage in generated cert; values are %#v", cert.ExtKeyUsage)
 	}
-	switch extUsage {
-	case x509.ExtKeyUsageEmailProtection:
+	switch usage {
+	case emailProtectionUsage:
 		if cert.ExtKeyUsage[0] != x509.ExtKeyUsageEmailProtection {
-			return nil, fmt.Errorf("Bad extended key usage")
+			return nil, fmt.Errorf("Bad key usage")
 		}
-	case x509.ExtKeyUsageServerAuth:
+	case serverUsage:
 		if cert.ExtKeyUsage[0] != x509.ExtKeyUsageServerAuth {
-			return nil, fmt.Errorf("Bad extended key usage")
+			return nil, fmt.Errorf("Bad key usage")
 		}
-	case x509.ExtKeyUsageClientAuth:
+	case clientUsage:
 		if cert.ExtKeyUsage[0] != x509.ExtKeyUsageClientAuth {
-			return nil, fmt.Errorf("Bad extended key usage")
+			return nil, fmt.Errorf("Bad key usage")
 		}
-	case x509.ExtKeyUsageCodeSigning:
+	case codeSigningUsage:
 		if cert.ExtKeyUsage[0] != x509.ExtKeyUsageCodeSigning {
-			return nil, fmt.Errorf("Bad extended key usage")
+			return nil, fmt.Errorf("Bad key usage")
 		}
 	}
 
@@ -987,7 +1028,7 @@ func generateCATestingSteps(t *testing.T, caCert, caKey, otherCaCert string, int
 				if len(revokedList) != 1 {
 					t.Fatalf("length of revoked list not 1; %d", len(revokedList))
 				}
-				revokedString := certutil.GetHexFormatted(revokedList[0].SerialNumber.Bytes(), ":")
+				revokedString := certutil.GetOctalFormatted(revokedList[0].SerialNumber.Bytes(), ":")
 				if revokedString != reqdata["serial_number"].(string) {
 					t.Fatalf("got serial %s, expecting %s", revokedString, reqdata["serial_number"].(string))
 				}
@@ -1145,7 +1186,7 @@ func generateCATestingSteps(t *testing.T, caCert, caKey, otherCaCert string, int
 				}
 				found := false
 				for _, revEntry := range revokedList {
-					revokedString := certutil.GetHexFormatted(revEntry.SerialNumber.Bytes(), ":")
+					revokedString := certutil.GetOctalFormatted(revEntry.SerialNumber.Bytes(), ":")
 					if revokedString == reqdata["serial_number"].(string) {
 						found = true
 					}
@@ -1260,7 +1301,7 @@ func generateCATestingSteps(t *testing.T, caCert, caKey, otherCaCert string, int
 				foundRsa := false
 				foundEc := false
 				for _, revEntry := range revokedList {
-					revokedString := certutil.GetHexFormatted(revEntry.SerialNumber.Bytes(), ":")
+					revokedString := certutil.GetOctalFormatted(revEntry.SerialNumber.Bytes(), ":")
 					if revokedString == reqdata["rsa_int_serial_number"].(string) {
 						foundRsa = true
 					}
@@ -1405,9 +1446,6 @@ func generateRoleSteps(t *testing.T, useCSRs bool) []logicaltest.TestStep {
 		}
 	}
 
-	generatedRSAKeys := map[int]crypto.Signer{}
-	generatedECKeys := map[int]crypto.Signer{}
-
 	/*
 		// For the number of tests being run, a seed of 1 has been tested
 		// to hit all of the various values below. However, for normal
@@ -1439,9 +1477,9 @@ func generateRoleSteps(t *testing.T, useCSRs bool) []logicaltest.TestStep {
 
 	// Adds tests with the currently configured issue/role information
 	addTests := func(testCheck logicaltest.TestCheckFunc) {
-		stepCount++
+		stepCount += 1
 		//t.Logf("test step %d\nrole vals: %#v\n", stepCount, roleVals)
-		stepCount++
+		stepCount += 1
 		//t.Logf("test step %d\nissue vals: %#v\n", stepCount, issueTestStep)
 		roleTestStep.Data = structs.New(roleVals).Map()
 		ret = append(ret, roleTestStep)
@@ -1457,37 +1495,16 @@ func generateRoleSteps(t *testing.T, useCSRs bool) []logicaltest.TestStep {
 		ret = append(ret, issueTestStep)
 	}
 
-	getOuCheck := func(role roleEntry) logicaltest.TestCheckFunc {
-		var certBundle certutil.CertBundle
-		return func(resp *logical.Response) error {
-			err := mapstructure.Decode(resp.Data, &certBundle)
-			if err != nil {
-				return err
-			}
-			parsedCertBundle, err := certBundle.ToParsedCertBundle()
-			if err != nil {
-				return fmt.Errorf("Error checking generated certificate: %s", err)
-			}
-			cert := parsedCertBundle.Certificate
-
-			expected := strutil.ParseDedupAndSortStrings(role.OU, ",")
-			if !reflect.DeepEqual(cert.Subject.OrganizationalUnit, expected) {
-				return fmt.Errorf("Error: returned certificate has OU of %s but %s was specified in the role.", cert.Subject.OrganizationalUnit, expected)
-			}
-			return nil
-		}
-	}
-
 	// Returns a TestCheckFunc that performs various validity checks on the
 	// returned certificate information, mostly within checkCertsAndPrivateKey
-	getCnCheck := func(name string, role roleEntry, key crypto.Signer, usage x509.KeyUsage, extUsage x509.ExtKeyUsage, validity time.Duration) logicaltest.TestCheckFunc {
+	getCnCheck := func(name string, role roleEntry, key crypto.Signer, usage certUsage, validity time.Duration) logicaltest.TestCheckFunc {
 		var certBundle certutil.CertBundle
 		return func(resp *logical.Response) error {
 			err := mapstructure.Decode(resp.Data, &certBundle)
 			if err != nil {
 				return err
 			}
-			parsedCertBundle, err := checkCertsAndPrivateKey(role.KeyType, key, usage, extUsage, validity, &certBundle)
+			parsedCertBundle, err := checkCertsAndPrivateKey(role.KeyType, key, usage, validity, &certBundle)
 			if err != nil {
 				return fmt.Errorf("Error checking generated certificate: %s", err)
 			}
@@ -1550,57 +1567,20 @@ func generateRoleSteps(t *testing.T, useCSRs bool) []logicaltest.TestStep {
 			roleVals.ClientFlag = false
 			roleVals.CodeSigningFlag = false
 			roleVals.EmailProtectionFlag = false
-
-			var usage string
-			if mathRand.Int()%2 == 1 {
-				usage = usage + ",DigitalSignature"
-			}
-			if mathRand.Int()%2 == 1 {
-				usage = usage + ",ContentCoMmitment"
-			}
-			if mathRand.Int()%2 == 1 {
-				usage = usage + ",KeyEncipherment"
-			}
-			if mathRand.Int()%2 == 1 {
-				usage = usage + ",DataEncipherment"
-			}
-			if mathRand.Int()%2 == 1 {
-				usage = usage + ",KeyAgreemEnt"
-			}
-			if mathRand.Int()%2 == 1 {
-				usage = usage + ",CertSign"
-			}
-			if mathRand.Int()%2 == 1 {
-				usage = usage + ",CRLSign"
-			}
-			if mathRand.Int()%2 == 1 {
-				usage = usage + ",EncipherOnly"
-			}
-			if mathRand.Int()%2 == 1 {
-				usage = usage + ",DecipherOnly"
-			}
-
-			roleVals.KeyUsage = usage
-			parsedKeyUsage := parseKeyUsages(roleVals.KeyUsage)
-			if parsedKeyUsage == 0 && usage != "" {
-				panic("parsed key usages was zero")
-			}
-			parsedKeyUsageUnderTest = parsedKeyUsage
-
-			var extUsage x509.ExtKeyUsage
-			i := mathRand.Int() % 4
+			var usage certUsage
+			i := mathRand.Int()
 			switch {
-			case i == 0:
-				extUsage = x509.ExtKeyUsageEmailProtection
+			case i%5 == 0:
+				usage = emailProtectionUsage
 				roleVals.EmailProtectionFlag = true
-			case i == 1:
-				extUsage = x509.ExtKeyUsageServerAuth
+			case i%3 == 0:
+				usage = serverUsage
 				roleVals.ServerFlag = true
-			case i == 2:
-				extUsage = x509.ExtKeyUsageClientAuth
+			case i%2 == 0:
+				usage = clientUsage
 				roleVals.ClientFlag = true
 			default:
-				extUsage = x509.ExtKeyUsageCodeSigning
+				usage = codeSigningUsage
 				roleVals.CodeSigningFlag = true
 			}
 
@@ -1623,7 +1603,6 @@ func generateRoleSteps(t *testing.T, useCSRs bool) []logicaltest.TestStep {
 				ecKeyBits := []int{224, 256, 384, 521}
 
 				var privKey crypto.Signer
-				var ok bool
 				switch roleVals.KeyType {
 				case "rsa":
 					roleVals.KeyBits = rsaKeyBits[mathRand.Int()%2]
@@ -1640,11 +1619,7 @@ func generateRoleSteps(t *testing.T, useCSRs bool) []logicaltest.TestStep {
 						issueTestStep.ErrorOk = true
 					}
 
-					privKey, ok = generatedRSAKeys[testBitSize]
-					if !ok {
-						privKey, _ = rsa.GenerateKey(rand.Reader, testBitSize)
-						generatedRSAKeys[testBitSize] = privKey
-					}
+					privKey, _ = rsa.GenerateKey(rand.Reader, testBitSize)
 
 				case "ec":
 					roleVals.KeyBits = ecKeyBits[mathRand.Int()%4]
@@ -1674,11 +1649,7 @@ func generateRoleSteps(t *testing.T, useCSRs bool) []logicaltest.TestStep {
 						issueTestStep.ErrorOk = true
 					}
 
-					privKey, ok = generatedECKeys[testBitSize]
-					if !ok {
-						privKey, _ = ecdsa.GenerateKey(curve, rand.Reader)
-						generatedECKeys[testBitSize] = privKey
-					}
+					privKey, _ = ecdsa.GenerateKey(curve, rand.Reader)
 				}
 				templ := &x509.CertificateRequest{
 					Subject: pkix.Name{
@@ -1695,9 +1666,9 @@ func generateRoleSteps(t *testing.T, useCSRs bool) []logicaltest.TestStep {
 				}
 				issueVals.CSR = strings.TrimSpace(string(pem.EncodeToMemory(&block)))
 
-				addTests(getCnCheck(issueVals.CommonName, roleVals, privKey, x509.KeyUsage(parsedKeyUsage), extUsage, validity))
+				addTests(getCnCheck(issueVals.CommonName, roleVals, privKey, usage, validity))
 			} else {
-				addTests(getCnCheck(issueVals.CommonName, roleVals, nil, x509.KeyUsage(parsedKeyUsage), extUsage, validity))
+				addTests(getCnCheck(issueVals.CommonName, roleVals, nil, usage, validity))
 			}
 		}
 	}
@@ -1746,14 +1717,6 @@ func generateRoleSteps(t *testing.T, useCSRs bool) []logicaltest.TestStep {
 		// toggled any longer
 		keybitSizeRandOff = true
 		addCnTests()
-	}
-	// OU tests
-	{
-		roleVals.OU = "foo"
-		addTests(getOuCheck(roleVals))
-
-		roleVals.OU = "foo,bar"
-		addTests(getOuCheck(roleVals))
 	}
 	// IP SAN tests
 	{
@@ -1950,98 +1913,52 @@ func TestBackend_PathFetchCertList(t *testing.T) {
 
 const (
 	rsaCAKey string = `-----BEGIN RSA PRIVATE KEY-----
-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
+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
 -----END RSA PRIVATE KEY-----
 `
 	rsaCACert string = `-----BEGIN CERTIFICATE-----
-MIIDljCCAn6gAwIBAgIUQVapfgyAeDH9rAmpw3PQrhMcjRMwDQYJKoZIhvcNAQEL
-BQAwMzExMC8GA1UEAxMoVmF1bHQgVGVzdGluZyBJbnRlcm1lZGlhdGUgU3ViIEF1
-dGhvcml0eTAeFw0xNjA4MDcyMjUzNTRaFw0yNjA3MjQxMDU0MjRaMDcxNTAzBgNV
-BAMTLFZhdWx0IFRlc3RpbmcgSW50ZXJtZWRpYXRlIFN1YiBTdWIgQXV0aG9yaXR5
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmPQlK7xD5p+E8iLQ8XlV
-mll5uU2NKMxKY3UF5tbh+0vkc+FyXmutLxxXAyYRPoztZ1g7ocr8XBFYsQPK26TF
-c3TzrLL7bBEYHQArd8M+VUHjziB7zwwpbV7tG8WPqIScDKMNncavDcT8sDg3DUqb
-8/zWkBD8WEYmsVr1VfKY5pFdxIZUkHP3/MkDpGmfrED9K5qPu17dIHTL2VYi4KxK
-htIryapZTk6vDwRNfIYJD23QbQntSi1j0X9MTRUf3BIcd0Ch60aGvv0VSL+1NTaf
-sZQD+z1RY/zNp9IUHz5bNIiePZ6lJrlddodAAXZ4sN1CMetf4bA2RXssxBEIb5Fy
-iQIDAQABo4GdMIGaMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0G
-A1UdDgQWBBRMeQTX9VkLqb1wzrvN/vFG09yhUTAfBgNVHSMEGDAWgBR0Oq2VTUBE
-dOm6a1sKJTvdZMV5LjA3BgNVHREEMDAugixWYXVsdCBUZXN0aW5nIEludGVybWVk
-aWF0ZSBTdWIgU3ViIEF1dGhvcml0eTANBgkqhkiG9w0BAQsFAAOCAQEAagYM7uFa
-tUziraBkuU7cIyX83y7lYFsDhUse2hkpqmgO14oEOwFsDox1Jg2QGt4FEfJoCOXf
-oCZZN8XmaWdSrfgs1nDmtE0xwXiX1z7JuJZ+Ygt3dcRHO1zs5tmuHLxrvMnKfIfG
-bsGmES4mknt0qQ7tGhpyC+KgEmcVL1QQJXNjzCrw5iQ9sgvQt+oCqV28pxOUSYkq
-FdrozmNdJwMgVADywiY/FqYJWgkixlFHQkPR7eiXwpahON+zRMk1JSgr/8N8fRDj
-aqVBRppPzVU9joUME0vOc8cK3VozNe4iRkKNZFelHU2NPPJSDjRLVH9tJ7jPVOEA
-/k6w2PwdoRom7Q==
------END CERTIFICATE-----
-`
-
-	rsaCAChain string = `-----BEGIN CERTIFICATE-----
-MIIDijCCAnKgAwIBAgIUOiGo/1EOhRhuupTRGDYnqdALk/swDQYJKoZIhvcNAQEL
-BQAwLzEtMCsGA1UEAxMkVmF1bHQgVGVzdGluZyBJbnRlcm1lZGlhdGUgQXV0aG9y
-aXR5MB4XDTE2MDgwNzIyNTA1MloXDTI2MDcyODE0NTEyMlowMzExMC8GA1UEAxMo
-VmF1bHQgVGVzdGluZyBJbnRlcm1lZGlhdGUgU3ViIEF1dGhvcml0eTCCASIwDQYJ
-KoZIhvcNAQEBBQADggEPADCCAQoCggEBAMTPRQREwW3BEifNcm0XElMRB0GNTXHr
-XCuNoFVsVBlIEsNVQkka+SHZcmNBdEcZLBXP/W3tBT82B48GVN8jyxAGfYZ5hoOQ
-ed3GVft1A7lAnxcGvf5e9kfecKDcBB4G4rBhqdDNcAtklS2hV4uZUcVcEJKggpsQ
-a1wZkCn8eg6sqEYG/SxPouwL52PblxIN+Dd57sBeqx4qdL297XR8LuLkxqftwUCZ
-l2iFBnSDID/06ZmHDXA38I0n3jT2ZGjgPGFnIFKxRGq1vpVc3F5ga8qk+u66ybBu
-xWHzINQrrryjELbl2YBTr6i0R9HnZle6OPcXMWp0JuGjtDC1xb5NmnkCAwEAAaOB
-mTCBljAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQU
-dDqtlU1ARHTpumtbCiU73WTFeS4wHwYDVR0jBBgwFoAU+UO/nrlKr4COZCxLZSY/
-ul+YMvMwMwYDVR0RBCwwKoIoVmF1bHQgVGVzdGluZyBJbnRlcm1lZGlhdGUgU3Vi
-IEF1dGhvcml0eTANBgkqhkiG9w0BAQsFAAOCAQEAjgCuTXsLFkf0DVkfSsKReNwI
-U/yBcP8Ttbx/ltanJGIVfD5TZoCnNTWm6RkML29ohfxI27sHTUhj+/6Ba0MRiLeI
-FXdclXmHOU2dTHlrmUa0m/4cb5uYoiiEnpmyWL5k94fqPOZAvJcFHnP3db4vsaUW
-47YcOvJbPSJqFXZHadqnsf3Fur5NCeTkIk6yZSvwTaZJT0JIWcqfE5LK3mYAMMC3
-iPaIa1cYqOZhWx9ilQfW6u6WxWeOphGuDIusP7Q4qc2Dr9sekyD59dfIYsroK5TP
-QVJb69nIYINpYdg3l3VNmmkY4G30N9QNs6acaH49rYzLcRX6tLBgPklO6d+TPA==
------END CERTIFICATE-----
------BEGIN CERTIFICATE-----
-MIIDejCCAmKgAwIBAgIUULdIdrdK4Y8d+XM9fuOpDlNcJIYwDQYJKoZIhvcNAQEL
-BQAwJzElMCMGA1UEAxMcVmF1bHQgVGVzdGluZyBSb290IEF1dGhvcml0eTAeFw0x
-NjA4MDcyMjUwNTFaFw0yNjA4MDExODUxMjFaMC8xLTArBgNVBAMTJFZhdWx0IFRl
-c3RpbmcgSW50ZXJtZWRpYXRlIEF1dGhvcml0eTCCASIwDQYJKoZIhvcNAQEBBQAD
-ggEPADCCAQoCggEBANXa6U+MDiUrryeZeGxgkmAZdrm9wCKz/6SmxYSebKr8aZwD
-nfbsPLRFxU6BXp9Nc6pP7e8HLBv6PtFTQG389zxOBwAHxZQvUsFESumUd64oTLRG
-J+AErTh7rtSWbLZsgDtQVvpx+6mKkvm53f/aKcq+DbqAFOg6slYOaQix0ZvP/qL0
-iWGIPr1JZk9uBJOUuIUBJdbsgTk+KQqJL9M6up8bCnM0noCafwrNKwZWtsbkfOZE
-OLSycdzCEBeHejpHTIU0vgAkdj63oEy2AbK3hMPxKzNthL3DX6W0tssoVgL//92i
-oSfpDTxiXqqdr+J3accpsAvA+F+D2TqaxdAfjLcCAwEAAaOBlTCBkjAOBgNVHQ8B
-Af8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQU+UO/nrlKr4COZCxL
-ZSY/ul+YMvMwHwYDVR0jBBgwFoAUA3jY4OUWi1Y7zQgM7S9QeXjNgIQwLwYDVR0R
-BCgwJoIkVmF1bHQgVGVzdGluZyBJbnRlcm1lZGlhdGUgQXV0aG9yaXR5MA0GCSqG
-SIb3DQEBCwUAA4IBAQA9VJt92LsOOegtAx35rr41LSSfPWB2SCKg0fphL2gMPO5y
-fE2u8O5TF5dJWJ1fF3cg9/XK30Ohdl1/ujfHbVcX+O6Sb3cgwKTQQOhTdsAZKFRT
-RPHaf/Ja8uqAXMITApxOp7YiYQwukwZr+OsKi66s+zhlfI790PoQbC3UJvgmNDmv
-V5oP63mw4yhqRNPn4NOjzoC/hJSIM0AIdRB1nx2rsSUw0P354R1j9gO43L/Lj33S
-NEaPmw+SC3Tbcx4yxeKnTvGdu3sw/ndmZkCjaq5jxgTy9FONqT45TPJOyk29o5gl
-+AVQz5fD2M3C1L/sZIPH2OQbXxePHcsvUZVgaKyk
+MIIDUTCCAjmgAwIBAgIJAKM+z4MSfw2mMA0GCSqGSIb3DQEBCwUAMBsxGTAXBgNV
+BAMMEFZhdWx0IFRlc3RpbmcgQ0EwHhcNMTUwNjAxMjA1MTUzWhcNMjUwNTI5MjA1
+MTUzWjAbMRkwFwYDVQQDDBBWYXVsdCBUZXN0aW5nIENBMIIBIjANBgkqhkiG9w0B
+AQEFAAOCAQ8AMIIBCgKCAQEA1eKB2nFbRqTFs7KyZjbzB5VRCBbnLZfEXVP1c3bH
+e+YGjlfl34cy52dmancUzOf1/Jfo+VglocjTLVy5wHSGJwQYs8b6pEuuvAVo/6wU
+L5Z7ZlQDR4kDe5Q+xgoRT6Bi/Bs57E+fNYgyUq/YAUY5WLuC+ZliCbJkLnb15Itu
+P1yVUTDXTYORRE3qJS5RRol8D3QvteG9LyPEc7C+jsm5iBCagyxluzU0dnEOib5q
+7xwZncoMbQz+rZH3QnwOij41FOGRPazrD5Mv6xLBkFnE5VAJ+GIgvd4bpOwvYMuo
+fvF4PS7SFzxkGssMLlICap6PFpKz86DpAoDxPuoZeOhU4QIDAQABo4GXMIGUMB0G
+A1UdDgQWBBTknN5eFxxo5aTlfq+G4ZXs3AsxWTAfBgNVHSMEGDAWgBTknN5eFxxo
+5aTlfq+G4ZXs3AsxWTAxBgNVHR8EKjAoMCagJKAihiBodHRwOi8vbG9jYWxob3N0
+OjgyMDAvdjEvcGtpL2NybDAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIB
+BjANBgkqhkiG9w0BAQsFAAOCAQEAsINcA4PZm+OyldgNrwRVgxoSrhV1I9zszhc9
+VV340ZWlpTTxFKVb/K5Hg+jMF9tv70X1HwlYdlutE6KdrsA3gks5zanh4/3zlrYk
+ABNBmSD6SSU2HKX1bFCBAAS3YHONE5o1K5tzwLsMl5uilNf+Wid3NjFnQ4KfuYI5
+loN/opnM6+a/O3Zua8RAuMMAv9wyqwn88aVuLvVzDNSMe5qC5kkuLGmRkNgY06rI
+S/fXIHIOldeQxgYCqhdVmcDWJ1PtVaDfBsKVpRg1GRU8LUGw2E4AY+twd+J2FBfa
+G/7g4koczXLoUM3OQXd5Aq2cs4SS1vODrYmgbioFsQ3eDHd1fg==
 -----END CERTIFICATE-----
 `
 

@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -80,7 +79,7 @@ func handleSysGenerateRootAttemptGet(core *vault.Core, w http.ResponseWriter, r 
 func handleSysGenerateRootAttemptPut(core *vault.Core, w http.ResponseWriter, r *http.Request) {
 	// Parse the request
 	var req GenerateRootInitRequest
-	if err := parseRequest(r, w, &req); err != nil {
+	if err := parseRequest(r, &req); err != nil {
 		respondError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -113,7 +112,7 @@ func handleSysGenerateRootUpdate(core *vault.Core) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Parse the request
 		var req GenerateRootUpdateRequest
-		if err := parseRequest(r, w, &req); err != nil {
+		if err := parseRequest(r, &req); err != nil {
 			respondError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -124,20 +123,13 @@ func handleSysGenerateRootUpdate(core *vault.Core) http.Handler {
 			return
 		}
 
-		// Decode the key, which is base64 or hex encoded
-		min, max := core.BarrierKeyLength()
+		// Decode the key, which is hex encoded
 		key, err := hex.DecodeString(req.Key)
-		// We check min and max here to ensure that a string that is base64
-		// encoded but also valid hex will not be valid and we instead base64
-		// decode it
-		if err != nil || len(key) < min || len(key) > max {
-			key, err = base64.StdEncoding.DecodeString(req.Key)
-			if err != nil {
-				respondError(
-					w, http.StatusBadRequest,
-					errors.New("'key' must be a valid hex or base64 string"))
-				return
-			}
+		if err != nil {
+			respondError(
+				w, http.StatusBadRequest,
+				errors.New("'key' must be a valid hex-string"))
+			return
 		}
 
 		// Use the key to make progress on root generation

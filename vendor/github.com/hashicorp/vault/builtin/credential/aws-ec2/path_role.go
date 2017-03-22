@@ -16,69 +16,42 @@ func pathRole(b *backend) *framework.Path {
 	return &framework.Path{
 		Pattern: "role/" + framework.GenericNameRegex("role"),
 		Fields: map[string]*framework.FieldSchema{
-			"role": {
+			"role": &framework.FieldSchema{
 				Type:        framework.TypeString,
 				Description: "Name of the role.",
 			},
-			"bound_ami_id": {
+
+			"bound_ami_id": &framework.FieldSchema{
 				Type: framework.TypeString,
 				Description: `If set, defines a constraint on the EC2 instances that they should be
 using the AMI ID specified by this parameter.`,
 			},
-			"bound_account_id": {
-				Type: framework.TypeString,
-				Description: `If set, defines a constraint on the EC2 instances that the account ID
-in its identity document to match the one specified by this parameter.`,
-			},
-			"bound_iam_role_arn": {
-				Type: framework.TypeString,
-				Description: `If set, defines a constraint on the authenticating EC2 instance
-that it must match the IAM role ARN specified by this parameter.
-The value is prefix-matched (as though it were a glob ending in
-'*').  The configured IAM user or EC2 instance role must be allowed
-to execute the 'iam:GetInstanceProfile' action if this is
-specified.`,
-			},
-			"bound_iam_instance_profile_arn": {
-				Type: framework.TypeString,
-				Description: `If set, defines a constraint on the EC2 instances to be associated
-with an IAM instance profile ARN which has a prefix that matches
-the value specified by this parameter. The value is prefix-matched
-(as though it were a glob ending in '*').`,
-			},
-			"role_tag": {
+
+			"role_tag": &framework.FieldSchema{
 				Type:        framework.TypeString,
 				Default:     "",
 				Description: "If set, enables the role tags for this role. The value set for this field should be the 'key' of the tag on the EC2 instance. The 'value' of the tag should be generated using 'role/<role>/tag' endpoint. Defaults to an empty string, meaning that role tags are disabled.",
 			},
-			"period": &framework.FieldSchema{
-				Type:    framework.TypeDurationSecond,
-				Default: 0,
-				Description: `
-If set, indicates that the token generated using this role should never expire. The token should be renewed within the duration specified by this value. At each renewal, the token's TTL will be set to the value of this parameter.`,
-			},
-			"ttl": {
-				Type:    framework.TypeDurationSecond,
-				Default: 0,
-				Description: `Duration in seconds after which the issued token should expire. Defaults
-to 0, in which case the value will fallback to the system/mount defaults.`,
-			},
-			"max_ttl": {
+
+			"max_ttl": &framework.FieldSchema{
 				Type:        framework.TypeDurationSecond,
 				Default:     0,
 				Description: "The maximum allowed lifetime of tokens issued using this role.",
 			},
-			"policies": {
+
+			"policies": &framework.FieldSchema{
 				Type:        framework.TypeString,
 				Default:     "default",
 				Description: "Policies to be set on tokens issued using this role.",
 			},
-			"allow_instance_migration": {
+
+			"allow_instance_migration": &framework.FieldSchema{
 				Type:        framework.TypeBool,
 				Default:     false,
 				Description: "If set, allows migration of the underlying instance where the client resides. This keys off of pendingTime in the metadata document, so essentially, this disables the client nonce check whenever the instance is migrated to a new host and pendingTime is newer than the previously-remembered time. Use with caution.",
 			},
-			"disallow_reauthentication": {
+
+			"disallow_reauthentication": &framework.FieldSchema{
 				Type:        framework.TypeBool,
 				Default:     false,
 				Description: "If set, only allows a single token to be granted per instance ID. In order to perform a fresh login, the entry in whitelist for the instance ID needs to be cleared using 'auth/aws-ec2/identity-whitelist/<instance_id>' endpoint.",
@@ -135,70 +108,16 @@ func (b *backend) pathRoleExistenceCheck(req *logical.Request, data *framework.F
 	return entry != nil, nil
 }
 
-// lockedAWSRole returns the properties set on the given role. This method
-// acquires the read lock before reading the role from the storage.
-func (b *backend) lockedAWSRole(s logical.Storage, roleName string) (*awsRoleEntry, error) {
-	if roleName == "" {
-		return nil, fmt.Errorf("missing role name")
-	}
-
+// awsRole is used to get the information registered for the given AMI ID.
+func (b *backend) lockedAWSRole(s logical.Storage, role string) (*awsRoleEntry, error) {
 	b.roleMutex.RLock()
 	defer b.roleMutex.RUnlock()
 
-	return b.nonLockedAWSRole(s, roleName)
+	return b.nonLockedAWSRole(s, role)
 }
 
-// lockedSetAWSRole creates or updates a role in the storage. This method
-// acquires the write lock before creating or updating the role at the storage.
-func (b *backend) lockedSetAWSRole(s logical.Storage, roleName string, roleEntry *awsRoleEntry) error {
-	if roleName == "" {
-		return fmt.Errorf("missing role name")
-	}
-
-	if roleEntry == nil {
-		return fmt.Errorf("nil role entry")
-	}
-
-	b.roleMutex.Lock()
-	defer b.roleMutex.Unlock()
-
-	return b.nonLockedSetAWSRole(s, roleName, roleEntry)
-}
-
-// nonLockedSetAWSRole creates or updates a role in the storage. This method
-// does not acquire the write lock before reading the role from the storage. If
-// locking is desired, use lockedSetAWSRole instead.
-func (b *backend) nonLockedSetAWSRole(s logical.Storage, roleName string,
-	roleEntry *awsRoleEntry) error {
-	if roleName == "" {
-		return fmt.Errorf("missing role name")
-	}
-
-	if roleEntry == nil {
-		return fmt.Errorf("nil role entry")
-	}
-
-	entry, err := logical.StorageEntryJSON("role/"+strings.ToLower(roleName), roleEntry)
-	if err != nil {
-		return err
-	}
-
-	if err := s.Put(entry); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// nonLockedAWSRole returns the properties set on the given role. This method
-// does not acquire the read lock before reading the role from the storage. If
-// locking is desired, use lockedAWSRole instead.
-func (b *backend) nonLockedAWSRole(s logical.Storage, roleName string) (*awsRoleEntry, error) {
-	if roleName == "" {
-		return nil, fmt.Errorf("missing role name")
-	}
-
-	entry, err := s.Get("role/" + strings.ToLower(roleName))
+func (b *backend) nonLockedAWSRole(s logical.Storage, role string) (*awsRoleEntry, error) {
+	entry, err := s.Get("role/" + strings.ToLower(role))
 	if err != nil {
 		return nil, err
 	}
@@ -210,21 +129,6 @@ func (b *backend) nonLockedAWSRole(s logical.Storage, roleName string) (*awsRole
 	if err := entry.DecodeJSON(&result); err != nil {
 		return nil, err
 	}
-
-	// Check if the value held by role ARN field is actually an instance profile ARN
-	if result.BoundIamRoleARN != "" && strings.Contains(result.BoundIamRoleARN, ":instance-profile/") {
-		// If yes, move it to the correct field
-		result.BoundIamInstanceProfileARN = result.BoundIamRoleARN
-
-		// Reset the old field
-		result.BoundIamRoleARN = ""
-
-		// Save the update
-		if err = b.nonLockedSetAWSRole(s, roleName, &result); err != nil {
-			return nil, fmt.Errorf("failed to move instance profile ARN to bound_iam_instance_profile_arn field")
-		}
-	}
-
 	return &result, nil
 }
 
@@ -272,8 +176,6 @@ func (b *backend) pathRoleRead(
 	// HMAC key belonging to the role should NOT be exported.
 	delete(respData, "hmac_key")
 
-	// Display the ttl in seconds.
-	respData["ttl"] = roleEntry.TTL / time.Second
 	// Display the max_ttl in seconds.
 	respData["max_ttl"] = roleEntry.MaxTTL / time.Second
 
@@ -302,33 +204,17 @@ func (b *backend) pathRoleCreateUpdate(
 		roleEntry = &awsRoleEntry{}
 	}
 
-	// Fetch and set the bound parameters. There can't be default values
-	// for these.
-	if boundAmiIDRaw, ok := data.GetOk("bound_ami_id"); ok {
-		roleEntry.BoundAmiID = boundAmiIDRaw.(string)
+	// Set the bound parameters only if they are supplied.
+	// There are no default values for bound parameters.
+	boundAmiIDStr, ok := data.GetOk("bound_ami_id")
+	if ok {
+		roleEntry.BoundAmiID = boundAmiIDStr.(string)
 	}
 
-	if boundAccountIDRaw, ok := data.GetOk("bound_account_id"); ok {
-		roleEntry.BoundAccountID = boundAccountIDRaw.(string)
-	}
-
-	if boundIamRoleARNRaw, ok := data.GetOk("bound_iam_role_arn"); ok {
-		roleEntry.BoundIamRoleARN = boundIamRoleARNRaw.(string)
-	}
-
-	if boundIamInstanceProfileARNRaw, ok := data.GetOk("bound_iam_instance_profile_arn"); ok {
-		roleEntry.BoundIamInstanceProfileARN = boundIamInstanceProfileARNRaw.(string)
-	}
-
-	// Ensure that at least one bound is set on the role
-	switch {
-	case roleEntry.BoundAccountID != "":
-	case roleEntry.BoundAmiID != "":
-	case roleEntry.BoundIamInstanceProfileARN != "":
-	case roleEntry.BoundIamRoleARN != "":
-	default:
-
-		return logical.ErrorResponse("at least be one bound parameter should be specified on the role"), nil
+	// At least one bound parameter should be set. Currently, only
+	// 'bound_ami_id' is supported. Check if that is set.
+	if roleEntry.BoundAmiID == "" {
+		return logical.ErrorResponse("role is not bounded to any resource; set bound_ami_id"), nil
 	}
 
 	policiesStr, ok := data.GetOk("policies")
@@ -354,24 +240,12 @@ func (b *backend) pathRoleCreateUpdate(
 
 	var resp logical.Response
 
-	ttlRaw, ok := data.GetOk("ttl")
-	if ok {
-		ttl := time.Duration(ttlRaw.(int)) * time.Second
-		defaultLeaseTTL := b.System().DefaultLeaseTTL()
-		if ttl > defaultLeaseTTL {
-			resp.AddWarning(fmt.Sprintf("Given ttl of %d seconds greater than current mount/system default of %d seconds; ttl will be capped at login time", ttl/time.Second, defaultLeaseTTL/time.Second))
-		}
-		roleEntry.TTL = ttl
-	} else if req.Operation == logical.CreateOperation {
-		roleEntry.TTL = time.Duration(data.Get("ttl").(int)) * time.Second
-	}
-
 	maxTTLInt, ok := data.GetOk("max_ttl")
 	if ok {
 		maxTTL := time.Duration(maxTTLInt.(int)) * time.Second
 		systemMaxTTL := b.System().MaxLeaseTTL()
 		if maxTTL > systemMaxTTL {
-			resp.AddWarning(fmt.Sprintf("Given max_ttl of %d seconds greater than current mount/system default of %d seconds; max_ttl will be capped at login time", maxTTL/time.Second, systemMaxTTL/time.Second))
+			resp.AddWarning(fmt.Sprintf("Given TTL of %d seconds greater than current mount/system default of %d seconds; TTL will be capped at login time", maxTTL/time.Second, systemMaxTTL/time.Second))
 		}
 
 		if maxTTL < time.Duration(0) {
@@ -381,21 +255,6 @@ func (b *backend) pathRoleCreateUpdate(
 		roleEntry.MaxTTL = maxTTL
 	} else if req.Operation == logical.CreateOperation {
 		roleEntry.MaxTTL = time.Duration(data.Get("max_ttl").(int)) * time.Second
-	}
-
-	if roleEntry.MaxTTL != 0 && roleEntry.MaxTTL < roleEntry.TTL {
-		return logical.ErrorResponse("ttl should be shorter than max_ttl"), nil
-	}
-
-	periodRaw, ok := data.GetOk("period")
-	if ok {
-		roleEntry.Period = time.Second * time.Duration(periodRaw.(int))
-	} else if req.Operation == logical.CreateOperation {
-		roleEntry.Period = time.Second * time.Duration(data.Get("period").(int))
-	}
-
-	if roleEntry.Period > b.System().MaxLeaseTTL() {
-		return logical.ErrorResponse(fmt.Sprintf("'period' of '%s' is greater than the backend's maximum lease TTL of '%s'", roleEntry.Period.String(), b.System().MaxLeaseTTL().String())), nil
 	}
 
 	roleTagStr, ok := data.GetOk("role_tag")
@@ -417,7 +276,12 @@ func (b *backend) pathRoleCreateUpdate(
 		}
 	}
 
-	if err := b.nonLockedSetAWSRole(req.Storage, roleName, roleEntry); err != nil {
+	entry, err := logical.StorageEntryJSON("role/"+roleName, roleEntry)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := req.Storage.Put(entry); err != nil {
 		return nil, err
 	}
 
@@ -430,18 +294,13 @@ func (b *backend) pathRoleCreateUpdate(
 
 // Struct to hold the information associated with an AMI ID in Vault.
 type awsRoleEntry struct {
-	BoundAmiID                 string        `json:"bound_ami_id" structs:"bound_ami_id" mapstructure:"bound_ami_id"`
-	BoundAccountID             string        `json:"bound_account_id" structs:"bound_account_id" mapstructure:"bound_account_id"`
-	BoundIamRoleARN            string        `json:"bound_iam_role_arn" structs:"bound_iam_role_arn" mapstructure:"bound_iam_role_arn"`
-	BoundIamInstanceProfileARN string        `json:"bound_iam_instance_profile_arn" structs:"bound_iam_instance_profile_arn" mapstructure:"bound_iam_instance_profile_arn"`
-	RoleTag                    string        `json:"role_tag" structs:"role_tag" mapstructure:"role_tag"`
-	AllowInstanceMigration     bool          `json:"allow_instance_migration" structs:"allow_instance_migration" mapstructure:"allow_instance_migration"`
-	TTL                        time.Duration `json:"ttl" structs:"ttl" mapstructure:"ttl"`
-	MaxTTL                     time.Duration `json:"max_ttl" structs:"max_ttl" mapstructure:"max_ttl"`
-	Policies                   []string      `json:"policies" structs:"policies" mapstructure:"policies"`
-	DisallowReauthentication   bool          `json:"disallow_reauthentication" structs:"disallow_reauthentication" mapstructure:"disallow_reauthentication"`
-	HMACKey                    string        `json:"hmac_key" structs:"hmac_key" mapstructure:"hmac_key"`
-	Period                     time.Duration `json:"period" mapstructure:"period" structs:"period"`
+	BoundAmiID               string        `json:"bound_ami_id" structs:"bound_ami_id" mapstructure:"bound_ami_id"`
+	RoleTag                  string        `json:"role_tag" structs:"role_tag" mapstructure:"role_tag"`
+	AllowInstanceMigration   bool          `json:"allow_instance_migration" structs:"allow_instance_migration" mapstructure:"allow_instance_migration"`
+	MaxTTL                   time.Duration `json:"max_ttl" structs:"max_ttl" mapstructure:"max_ttl"`
+	Policies                 []string      `json:"policies" structs:"policies" mapstructure:"policies"`
+	DisallowReauthentication bool          `json:"disallow_reauthentication" structs:"disallow_reauthentication" mapstructure:"disallow_reauthentication"`
+	HMACKey                  string        `json:"hmac_key" structs:"hmac_key" mapstructure:"hmac_key"`
 }
 
 const pathRoleSyn = `

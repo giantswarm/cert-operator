@@ -296,7 +296,7 @@ username@<IP of remote host>:~$
 <dl class="api">
   <dt>Description</dt>
   <dd>
-    Creates or updates a named key.
+    Creates or updates a named key. This is a root protected endpoint.
   </dd>
 
   <dt>Method</dt>
@@ -327,7 +327,7 @@ username@<IP of remote host>:~$
 <dl class="api">
   <dt>Description</dt>
   <dd>
-    Deletes a named key.
+    Deletes a named key. This is a root protected endpoint.
   </dd>
 
   <dt>Method</dt>
@@ -517,10 +517,10 @@ username@<IP of remote host>:~$
   </dd>
 
   <dt>Method</dt>
-  <dd>LIST/GET</dd>
+  <dd>GET</dd>
 
   <dt>URL</dt>
-  <dd>`/ssh/roles` (LIST) or `/ssh/roles?list=true` (GET)</dd>
+  <dd>`/roles/?list=true`</dd>
 
   <dt>Parameters</dt>
   <dd>
@@ -536,7 +536,7 @@ username@<IP of remote host>:~$
     "data": {
       "keys": ["dev", "prod"]
     },
-    "lease_duration": 2764800,
+    "lease_duration": 2592000,
     "lease_id": "",
     "renewable": false
   }
@@ -728,7 +728,7 @@ username@<IP of remote host>:~$
 {
   "lease_id": "sshs/creds/c3c2e60c-5a48-415a-9d5a-a41e0e6cdec5/3ee6ad28-383f-d482-2427-70498eba4d96",
   "renewable": false,
-  "lease_duration": 2764800,
+  "lease_duration": 2592000,
   "data": {
             "ip": "127.0.0.1",
             "key": "6d6411fd-f622-ea0a-7e2c-989a745cbbb2",
@@ -834,4 +834,4 @@ username@<IP of remote host>:~$
 
   </dd>
 
-  <dd>A `400` BadRequest response code with 'OTP not found' message, for an invalid OTP.</dd>
+  <dd>A `204` response code with an empty response body, for an invalid OTP.</dd>

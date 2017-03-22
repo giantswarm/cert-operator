@@ -2,9 +2,7 @@ package mssql
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -114,12 +112,7 @@ func (b *backend) pathRoleCreate(
 	}
 
 	// Test the query by trying to prepare it
-	for _, query := range strutil.ParseArbitraryStringSlice(sql, ";") {
-		query = strings.TrimSpace(query)
-		if len(query) == 0 {
-			continue
-		}
-
+	for _, query := range SplitSQL(sql) {
 		stmt, err := db.Prepare(Query(query, map[string]string{
 			"name":     "foo",
 			"password": "bar",

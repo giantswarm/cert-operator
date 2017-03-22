@@ -1,12 +1,11 @@
 package vault
 
 import (
+	"log"
+	"os"
 	"reflect"
 	"testing"
 
-	log "github.com/mgutz/logxi/v1"
-
-	"github.com/hashicorp/vault/helper/logformat"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/physical"
 )
@@ -15,7 +14,7 @@ func TestCore_Init(t *testing.T) {
 	c, conf := testCore_NewTestCore(t, nil)
 	testCore_Init_Common(t, c, conf, &SealConfig{SecretShares: 5, SecretThreshold: 3}, nil)
 
-	c, conf = testCore_NewTestCore(t, newTestSeal(t))
+	c, conf = testCore_NewTestCore(t, &TestSeal{})
 	bc, rc := TestSealDefConfigs()
 	rc.SecretShares = 4
 	rc.SecretThreshold = 2
@@ -23,8 +22,7 @@ func TestCore_Init(t *testing.T) {
 }
 
 func testCore_NewTestCore(t *testing.T, seal Seal) (*Core, *CoreConfig) {
-	logger := logformat.NewVaultLogger(log.LevelTrace)
-
+	logger := log.New(os.Stderr, "", log.LstdFlags)
 	inm := physical.NewInmem(logger)
 	conf := &CoreConfig{
 		Physical:     inm,
@@ -69,10 +67,7 @@ func testCore_Init_Common(t *testing.T, c *Core, conf *CoreConfig, barrierConf, 
 		}
 	}
 
-	res, err := c.Initialize(&InitParams{
-		BarrierConfig:  barrierConf,
-		RecoveryConfig: recoveryConf,
-	})
+	res, err := c.Initialize(barrierConf, recoveryConf)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
@@ -90,10 +85,7 @@ func testCore_Init_Common(t *testing.T, c *Core, conf *CoreConfig, barrierConf, 
 		t.Fatalf("Bad: %#v", res)
 	}
 
-	_, err = c.Initialize(&InitParams{
-		BarrierConfig:  barrierConf,
-		RecoveryConfig: recoveryConf,
-	})
+	_, err = c.Initialize(barrierConf, recoveryConf)
 	if err != ErrAlreadyInit {
 		t.Fatalf("err: %v", err)
 	}
@@ -131,10 +123,7 @@ func testCore_Init_Common(t *testing.T, c *Core, conf *CoreConfig, barrierConf, 
 		t.Fatalf("err: %v", err)
 	}
 
-	_, err = c2.Initialize(&InitParams{
-		BarrierConfig:  barrierConf,
-		RecoveryConfig: recoveryConf,
-	})
+	_, err = c2.Initialize(barrierConf, recoveryConf)
 	if err != ErrAlreadyInit {
 		t.Fatalf("err: %v", err)
 	}

@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/golang-lru"
-	log "github.com/mgutz/logxi/v1"
 )
 
 const (
@@ -23,12 +22,9 @@ type Cache struct {
 
 // NewCache returns a physical cache of the given size.
 // If no size is provided, the default size is used.
-func NewCache(b Backend, size int, logger log.Logger) *Cache {
+func NewCache(b Backend, size int) *Cache {
 	if size <= 0 {
 		size = DefaultCacheSize
-	}
-	if logger.IsTrace() {
-		logger.Trace("physical/cache: creating LRU cache", "size", size)
 	}
 	cache, _ := lru.New2Q(size)
 	c := &Cache{
@@ -45,9 +41,7 @@ func (c *Cache) Purge() {
 
 func (c *Cache) Put(entry *Entry) error {
 	err := c.backend.Put(entry)
-	if err == nil {
-		c.lru.Add(entry.Key, entry)
-	}
+	c.lru.Add(entry.Key, entry)
 	return err
 }
 
@@ -80,9 +74,7 @@ func (c *Cache) Get(key string) (*Entry, error) {
 
 func (c *Cache) Delete(key string) error {
 	err := c.backend.Delete(key)
-	if err == nil {
-		c.lru.Remove(key)
-	}
+	c.lru.Remove(key)
 	return err
 }
 

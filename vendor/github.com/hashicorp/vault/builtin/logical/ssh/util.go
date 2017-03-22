@@ -14,7 +14,6 @@ import (
 
 	"github.com/hashicorp/vault/logical"
 
-	log "github.com/mgutz/logxi/v1"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -23,7 +22,7 @@ import (
 func generateRSAKeys(keyBits int) (publicKeyRsa string, privateKeyRsa string, err error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, keyBits)
 	if err != nil {
-		return "", "", fmt.Errorf("error generating RSA key-pair: %v", err)
+		return "", "", fmt.Errorf("error generating RSA key-pair: %s", err)
 	}
 
 	privateKeyRsa = string(pem.EncodeToMemory(&pem.Block{
@@ -33,7 +32,7 @@ func generateRSAKeys(keyBits int) (publicKeyRsa string, privateKeyRsa string, er
 
 	sshPublicKey, err := ssh.NewPublicKey(privateKey.Public())
 	if err != nil {
-		return "", "", fmt.Errorf("error generating RSA key-pair: %v", err)
+		return "", "", fmt.Errorf("error generating RSA key-pair: %s", err)
 	}
 	publicKeyRsa = "ssh-rsa " + base64.StdEncoding.EncodeToString(sshPublicKey.Marshal())
 	return
@@ -53,7 +52,7 @@ func (b *backend) installPublicKeyInTarget(adminUser, username, ip string, port 
 		return err
 	}
 
-	comm, err := createSSHComm(b.Logger(), adminUser, ip, port, hostkey)
+	comm, err := createSSHComm(adminUser, ip, port, hostkey)
 	if err != nil {
 		return err
 	}
@@ -61,7 +60,7 @@ func (b *backend) installPublicKeyInTarget(adminUser, username, ip string, port 
 
 	err = comm.Upload(publicKeyFileName, bytes.NewBufferString(dynamicPublicKey), nil)
 	if err != nil {
-		return fmt.Errorf("error uploading public key: %v", err)
+		return fmt.Errorf("error uploading public key: %s", err)
 	}
 
 	// Transfer the script required to install or uninstall the key to the remote
@@ -70,14 +69,14 @@ func (b *backend) installPublicKeyInTarget(adminUser, username, ip string, port 
 	scriptFileName := fmt.Sprintf("%s.sh", publicKeyFileName)
 	err = comm.Upload(scriptFileName, bytes.NewBufferString(installScript), nil)
 	if err != nil {
-		return fmt.Errorf("error uploading install script: %v", err)
+		return fmt.Errorf("error uploading install script: %s", err)
 	}
 
 	// Create a session to run remote command that triggers the script to install
 	// or uninstall the key.
 	session, err := comm.NewSession()
 	if err != nil {
-		return fmt.Errorf("unable to create SSH Session using public keys: %v", err)
+		return fmt.Errorf("unable to create SSH Session using public keys: %s", err)
 	}
 	if session == nil {
 		return fmt.Errorf("invalid session object")
@@ -116,15 +115,15 @@ func roleContainsIP(s logical.Storage, roleName string, ip string) (bool, error)
 
 	roleEntry, err := s.Get(fmt.Sprintf("roles/%s", roleName))
 	if err != nil {
-		return false, fmt.Errorf("error retrieving role %v", err)
+		return false, fmt.Errorf("error retrieving role '%s'", err)
 	}
 	if roleEntry == nil {
-		return false, fmt.Errorf("role %q not found", roleName)
+		return false, fmt.Errorf("role '%s' not found", roleName)
 	}
 
 	var role sshRole
 	if err := roleEntry.DecodeJSON(&role); err != nil {
-		return false, fmt.Errorf("error decoding role %q", roleName)
+		return false, fmt.Errorf("error decoding role '%s'", roleName)
 	}
 
 	if matched, err := cidrListContainsIP(ip, role.CIDRList); err != nil {
@@ -132,6 +131,58 @@ func roleContainsIP(s logical.Storage, roleName string, ip string) (bool, error)
 	} else {
 		return matched, nil
 	}
+}
+
+// Checks if the comma separated list of CIDR blocks are all valid and they
+// dont conflict with each other.
+func validateCIDRList(cidrList string) (string, error) {
+	// Check if the blocks are parsable
+	c := strings.Split(cidrList, ",")
+	for _, item := range c {
+		_, _, err := net.ParseCIDR(item)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	var overlaps string
+	for i := 0; i < len(c)-1; i++ {
+		for j := i + 1; j < len(c); j++ {
+			overlap, err := cidrOverlap(c[i], c[j])
+			if err != nil {
+				return "", err
+			}
+			if overlap {
+				overlaps = fmt.Sprintf("%s [%s,%s]", overlaps, c[i], c[j])
+			}
+		}
+	}
+
+	return overlaps, nil
+}
+
+// Tells if the CIDR blocks overlap with eath other. Applying the mask of bigger
+// block to both addresses and checking for its equality to detect an overlap.
+func cidrOverlap(c1, c2 string) (bool, error) {
+	ip1, net1, err := net.ParseCIDR(c1)
+	if err != nil {
+		return false, err
+	}
+	maskLen1, _ := net1.Mask.Size()
+
+	ip2, net2, err := net.ParseCIDR(c2)
+	if err != nil {
+		return false, err
+	}
+	maskLen2, _ := net2.Mask.Size()
+
+	// Choose the mask of bigger block
+	mask := net1.Mask
+	if maskLen2 < maskLen1 {
+		mask = net2.Mask
+	}
+
+	return bytes.Equal(ip1.Mask(mask), ip2.Mask(mask)), nil
 }
 
 // Returns true if the IP supplied by the user is part of the comma
@@ -143,7 +194,7 @@ func cidrListContainsIP(ip, cidrList string) (bool, error) {
 	for _, item := range strings.Split(cidrList, ",") {
 		_, cidrIPNet, err := net.ParseCIDR(item)
 		if err != nil {
-			return false, fmt.Errorf("invalid CIDR entry %q", item)
+			return false, fmt.Errorf("invalid CIDR entry '%s'", item)
 		}
 		if cidrIPNet.Contains(net.ParseIP(ip)) {
 			return true, nil
@@ -152,7 +203,7 @@ func cidrListContainsIP(ip, cidrList string) (bool, error) {
 	return false, nil
 }
 
-func createSSHComm(logger log.Logger, username, ip string, port int, hostkey string) (*comm, error) {
+func createSSHComm(username, ip string, port int, hostkey string) (*comm, error) {
 	signer, err := ssh.ParsePrivateKey([]byte(hostkey))
 	if err != nil {
 		return nil, err
@@ -183,7 +234,6 @@ func createSSHComm(logger log.Logger, username, ip string, port int, hostkey str
 		Connection:   connfunc,
 		Pty:          false,
 		DisableAgent: true,
-		Logger:       logger,
 	}
 
 	return SSHCommNew(fmt.Sprintf("%s:%d", ip, port), config)

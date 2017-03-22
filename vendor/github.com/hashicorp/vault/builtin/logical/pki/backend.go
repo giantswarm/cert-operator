@@ -15,7 +15,7 @@ func Factory(conf *logical.BackendConfig) (logical.Backend, error) {
 }
 
 // Backend returns a new Backend framework struct
-func Backend() *backend {
+func Backend() *framework.Backend {
 	var b backend
 	b.Backend = &framework.Backend{
 		Help: strings.TrimSpace(backendHelp),
@@ -24,7 +24,6 @@ func Backend() *backend {
 			Unauthenticated: []string{
 				"cert/*",
 				"ca/pem",
-				"ca_chain",
 				"ca",
 				"crl/pem",
 				"crl",
@@ -46,7 +45,6 @@ func Backend() *backend {
 			pathIssue(&b),
 			pathRotateCRL(&b),
 			pathFetchCA(&b),
-			pathFetchCAChain(&b),
 			pathFetchCRL(&b),
 			pathFetchCRLViaCertPath(&b),
 			pathFetchValid(&b),
@@ -62,7 +60,7 @@ func Backend() *backend {
 
 	b.crlLifetime = time.Hour * 72
 
-	return &b
+	return b.Backend
 }
 
 type backend struct {

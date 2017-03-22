@@ -10,7 +10,7 @@ func Factory(conf *logical.BackendConfig) (logical.Backend, error) {
 	return Backend().Setup(conf)
 }
 
-func Backend() *backend {
+func Backend() *framework.Backend {
 	var b backend
 	b.Backend = &framework.Backend{
 		Help: backendHelp,
@@ -35,7 +35,7 @@ func Backend() *backend {
 		AuthRenew: b.pathLoginRenew,
 	}
 
-	return &b
+	return b.Backend
 }
 
 type backend struct {

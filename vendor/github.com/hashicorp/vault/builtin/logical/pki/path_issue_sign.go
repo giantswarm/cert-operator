@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/vault/helper/certutil"
-	"github.com/hashicorp/vault/helper/errutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -24,6 +23,7 @@ func pathIssue(b *backend) *framework.Path {
 	}
 
 	ret.Fields = addNonCACommonFields(map[string]*framework.FieldSchema{})
+
 	return ret
 }
 
@@ -52,7 +52,7 @@ func pathSign(b *backend) *framework.Path {
 
 func pathSignVerbatim(b *backend) *framework.Path {
 	ret := &framework.Path{
-		Pattern: "sign-verbatim" + framework.OptionalParamRegex("role"),
+		Pattern: "sign-verbatim/" + framework.GenericNameRegex("role"),
 
 		Callbacks: map[logical.Operation]framework.OperationFunc{
 			logical.UpdateOperation: b.pathSignVerbatim,
@@ -124,7 +124,6 @@ func (b *backend) pathSignVerbatim(
 		AllowIPSANs:      true,
 		EnforceHostnames: false,
 		KeyType:          "any",
-		UseCSRCommonName: true,
 	}
 
 	return b.pathIssueSignCert(req, data, role, true, true)
@@ -141,11 +140,11 @@ func (b *backend) pathIssueSignCert(
 	var caErr error
 	signingBundle, caErr := fetchCAInfo(req)
 	switch caErr.(type) {
-	case errutil.UserError:
-		return nil, errutil.UserError{Err: fmt.Sprintf(
+	case certutil.UserError:
+		return nil, certutil.UserError{Err: fmt.Sprintf(
 			"Could not fetch the CA certificate (was one set?): %s", caErr)}
-	case errutil.InternalError:
-		return nil, errutil.InternalError{Err: fmt.Sprintf(
+	case certutil.InternalError:
+		return nil, certutil.InternalError{Err: fmt.Sprintf(
 			"Error fetching CA certificate: %s", caErr)}
 	}
 
@@ -158,16 +157,11 @@ func (b *backend) pathIssueSignCert(
 	}
 	if err != nil {
 		switch err.(type) {
-		case errutil.UserError:
+		case certutil.UserError:
 			return logical.ErrorResponse(err.Error()), nil
-		case errutil.InternalError:
+		case certutil.InternalError:
 			return nil, err
 		}
-	}
-
-	signingCB, err := signingBundle.ToCertBundle()
-	if err != nil {
-		return nil, fmt.Errorf("Error converting raw signing bundle to cert bundle: %s", err)
 	}
 
 	cb, err := parsedBundle.ToCertBundle()
@@ -177,6 +171,8 @@ func (b *backend) pathIssueSignCert(
 
 	resp := b.Secret(SecretCertsType).Response(
 		map[string]interface{}{
+			"certificate":   cb.Certificate,
+			"issuing_ca":    cb.IssuingCA,
 			"serial_number": cb.SerialNumber,
 		},
 		map[string]interface{}{
@@ -185,39 +181,26 @@ func (b *backend) pathIssueSignCert(
 
 	switch format {
 	case "pem":
-		resp.Data["issuing_ca"] = signingCB.Certificate
+		resp.Data["issuing_ca"] = cb.IssuingCA
 		resp.Data["certificate"] = cb.Certificate
-		if cb.CAChain != nil && len(cb.CAChain) > 0 {
-			resp.Data["ca_chain"] = cb.CAChain
-		}
+
 		if !useCSR {
 			resp.Data["private_key"] = cb.PrivateKey
 			resp.Data["private_key_type"] = cb.PrivateKeyType
 		}
 
 	case "pem_bundle":
-		resp.Data["issuing_ca"] = signingCB.Certificate
-		resp.Data["certificate"] = cb.ToPEMBundle()
-		if cb.CAChain != nil && len(cb.CAChain) > 0 {
-			resp.Data["ca_chain"] = cb.CAChain
-		}
+		resp.Data["issuing_ca"] = cb.IssuingCA
+		resp.Data["certificate"] = fmt.Sprintf("%s\n%s", cb.Certificate, cb.IssuingCA)
 		if !useCSR {
 			resp.Data["private_key"] = cb.PrivateKey
 			resp.Data["private_key_type"] = cb.PrivateKeyType
+			resp.Data["certificate"] = fmt.Sprintf("%s\n%s\n%s", cb.PrivateKey, cb.Certificate, cb.IssuingCA)
 		}
 
 	case "der":
 		resp.Data["certificate"] = base64.StdEncoding.EncodeToString(parsedBundle.CertificateBytes)
-		resp.Data["issuing_ca"] = base64.StdEncoding.EncodeToString(signingBundle.CertificateBytes)
-
-		var caChain []string
-		for _, caCert := range parsedBundle.CAChain {
-			caChain = append(caChain, base64.StdEncoding.EncodeToString(caCert.Bytes))
-		}
-		if caChain != nil && len(caChain) > 0 {
-			resp.Data["ca_chain"] = caChain
-		}
-
+		resp.Data["issuing_ca"] = base64.StdEncoding.EncodeToString(parsedBundle.IssuingCABytes)
 		if !useCSR {
 			resp.Data["private_key"] = base64.StdEncoding.EncodeToString(parsedBundle.PrivateKeyBytes)
 		}
@@ -230,7 +213,7 @@ func (b *backend) pathIssueSignCert(
 		Value: parsedBundle.CertificateBytes,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Unable to store certificate locally: %v", err)
+		return nil, fmt.Errorf("Unable to store certificate locally")
 	}
 
 	return resp, nil

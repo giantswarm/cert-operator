@@ -21,10 +21,9 @@ but also a second copy in case the first is tampered with.
 ## Sensitive Information
 
 The audit logs contain the full request and response objects for every
-interaction with Vault. The request and response can be matched utilizing a
-unique identifier assigned to each request. The data in the request and the
-data in the response (including secrets and authentication tokens) will be
-hashed with a salt using HMAC-SHA256.
+interaction with Vault. The data in the request and the data in the
+response (including secrets and authentication tokens) will be hashed
+with a salt using HMAC-SHA256.
 
 The purpose of the hash is so that secrets aren't in plaintext within your
 audit logs. However, you're still able to check the value of secrets by
@@ -41,11 +40,11 @@ When enabling an audit backend, options can be passed to it to configure it.
 For example, the command below enables the file audit backend:
 
 ```
-$ vault audit-enable file file_path=/var/log/vault_audit.log
+$ vault audit-enable file path=/var/log/vault_audit.log
 ...
 ```
 
-In the command above, we passed the "file_path" parameter to specify the path
+In the command above, we passed the "path" parameter to specify the path
 where the audit log will be written to. Each audit backend has its own
 set of parameters. See the documentation to the left for more details.
 
@@ -100,7 +99,7 @@ block.
         <span class="param">options</span>
         <span class="param-flags">optional</span>
            Configuration options of the backend in JSON format.
-           Refer to `syslog`, `file` and `socket` audit backend options.
+           Refer to `syslog` and `file` audit backend options.
       </li>
     </ul>
   </dd>

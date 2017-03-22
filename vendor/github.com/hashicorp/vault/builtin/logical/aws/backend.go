@@ -12,7 +12,7 @@ func Factory(conf *logical.BackendConfig) (logical.Backend, error) {
 	return Backend().Setup(conf)
 }
 
-func Backend() *backend {
+func Backend() *framework.Backend {
 	var b backend
 	b.Backend = &framework.Backend{
 		Help: strings.TrimSpace(backendHelp),
@@ -21,7 +21,6 @@ func Backend() *backend {
 			pathConfigRoot(),
 			pathConfigLease(&b),
 			pathRoles(),
-			pathListRoles(&b),
 			pathUser(&b),
 			pathSTS(&b),
 		},
@@ -34,7 +33,7 @@ func Backend() *backend {
 		WALRollbackMinAge: 5 * time.Minute,
 	}
 
-	return &b
+	return b.Backend
 }
 
 type backend struct {

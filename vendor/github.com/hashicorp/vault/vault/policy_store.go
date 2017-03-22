@@ -19,76 +19,14 @@ const (
 	// policyCacheSize is the number of policies that are kept cached
 	policyCacheSize = 1024
 
-	// responseWrappingPolicyName is the name of the fixed policy
-	responseWrappingPolicyName = "response-wrapping"
+	// cubbyholeResponseWrappingPolicyName is the name of the fixed policy
+	cubbyholeResponseWrappingPolicyName = "response-wrapping"
 
-	// responseWrappingPolicy is the policy that ensures cubbyhole response
-	// wrapping can always succeed. Note that sys/wrapping/lookup isn't
-	// contained here because using it would revoke the token anyways, so there
-	// isn't much point.
-	responseWrappingPolicy = `
+	// cubbyholeResponseWrappingPolicy is the policy that ensures cubbyhole
+	// response wrapping can always succeed
+	cubbyholeResponseWrappingPolicy = `
 path "cubbyhole/response" {
     capabilities = ["create", "read"]
-}
-
-path "sys/wrapping/unwrap" {
-    capabilities = ["update"]
-}
-`
-
-	// defaultPolicy is the "default" policy
-	defaultPolicy = `
-# Allow tokens to look up their own properties
-path "auth/token/lookup-self" {
-    capabilities = ["read"]
-}
-
-# Allow tokens to renew themselves
-path "auth/token/renew-self" {
-    capabilities = ["update"]
-}
-
-# Allow tokens to revoke themselves
-path "auth/token/revoke-self" {
-    capabilities = ["update"]
-}
-
-# Allow a token to look up its own capabilities on a path
-path "sys/capabilities-self" {
-    capabilities = ["update"]
-}
-
-# Allow a token to renew a lease via lease_id in the request body
-path "sys/renew" {
-    capabilities = ["update"]
-}
-
-# Allow a token to manage its own cubbyhole
-path "cubbyhole/*" {
-    capabilities = ["create", "read", "update", "delete", "list"]
-}
-
-# Allow a token to list its cubbyhole (not covered by the splat above)
-path "cubbyhole" {
-    capabilities = ["list"]
-}
-
-# Allow a token to wrap arbitrary values in a response-wrapping token
-path "sys/wrapping/wrap" {
-    capabilities = ["update"]
-}
-
-# Allow a token to look up the creation time and TTL of a given
-# response-wrapping token
-path "sys/wrapping/lookup" {
-    capabilities = ["update"]
-}
-
-# Allow a token to unwrap a response-wrapping token. This is a convenience to
-# avoid client token swapping since this is also part of the response wrapping
-# policy.
-path "sys/wrapping/unwrap" {
-    capabilities = ["update"]
 }
 `
 )
@@ -96,10 +34,7 @@ path "sys/wrapping/unwrap" {
 var (
 	immutablePolicies = []string{
 		"root",
-		responseWrappingPolicyName,
-	}
-	nonAssignablePolicies = []string{
-		responseWrappingPolicyName,
+		cubbyholeResponseWrappingPolicyName,
 	}
 )
 
@@ -152,12 +87,12 @@ func (c *Core) setupPolicyStore() error {
 	}
 
 	// Ensure that the cubbyhole response wrapping policy exists
-	policy, err = c.policyStore.GetPolicy(responseWrappingPolicyName)
+	policy, err = c.policyStore.GetPolicy(cubbyholeResponseWrappingPolicyName)
 	if err != nil {
-		return errwrap.Wrapf("error fetching response-wrapping policy from store: {{err}}", err)
+		return errwrap.Wrapf("error fetching default policy from store: {{err}}", err)
 	}
-	if policy == nil || policy.Raw != responseWrappingPolicy {
-		err := c.policyStore.createResponseWrappingPolicy()
+	if policy == nil || policy.Raw != cubbyholeResponseWrappingPolicy {
+		err := c.policyStore.createCubbyholeResponseWrappingPolicy()
 		if err != nil {
 			return err
 		}
@@ -275,25 +210,7 @@ func (ps *PolicyStore) ListPolicies() ([]string, error) {
 	defer metrics.MeasureSince([]string{"policy", "list_policies"}, time.Now())
 	// Scan the view, since the policy names are the same as the
 	// key names.
-	keys, err := logical.CollectKeys(ps.view)
-
-	for _, nonAssignable := range nonAssignablePolicies {
-		deleteIndex := -1
-		//Find indices of non-assignable policies in keys
-		for index, key := range keys {
-			if key == nonAssignable {
-				// Delete collection outside the loop
-				deleteIndex = index
-				break
-			}
-		}
-		// Remove non-assignable policies when found
-		if deleteIndex != -1 {
-			keys = append(keys[:deleteIndex], keys[deleteIndex+1:]...)
-		}
-	}
-
-	return keys, err
+	return CollectKeys(ps.view)
 }
 
 // DeletePolicy is used to delete the named policy
@@ -338,7 +255,27 @@ func (ps *PolicyStore) ACL(names ...string) (*ACL, error) {
 }
 
 func (ps *PolicyStore) createDefaultPolicy() error {
-	policy, err := Parse(defaultPolicy)
+	policy, err := Parse(`
+path "auth/token/lookup-self" {
+    capabilities = ["read"]
+}
+
+path "auth/token/renew-self" {
+    capabilities = ["update"]
+}
+
+path "auth/token/revoke-self" {
+    capabilities = ["update"]
+}
+
+path "cubbyhole/*" {
+    capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+path "cubbyhole" {
+    capabilities = ["list"]
+}
+`)
 	if err != nil {
 		return errwrap.Wrapf("error parsing default policy: {{err}}", err)
 	}
@@ -351,16 +288,16 @@ func (ps *PolicyStore) createDefaultPolicy() error {
 	return ps.setPolicyInternal(policy)
 }
 
-func (ps *PolicyStore) createResponseWrappingPolicy() error {
-	policy, err := Parse(responseWrappingPolicy)
+func (ps *PolicyStore) createCubbyholeResponseWrappingPolicy() error {
+	policy, err := Parse(cubbyholeResponseWrappingPolicy)
 	if err != nil {
-		return errwrap.Wrapf(fmt.Sprintf("error parsing %s policy: {{err}}", responseWrappingPolicyName), err)
+		return errwrap.Wrapf(fmt.Sprintf("error parsing %s policy: {{err}}", cubbyholeResponseWrappingPolicyName), err)
 	}
 
 	if policy == nil {
-		return fmt.Errorf("parsing %s policy resulted in nil policy", responseWrappingPolicyName)
+		return fmt.Errorf("parsing %s policy resulted in nil policy", cubbyholeResponseWrappingPolicyName)
 	}
 
-	policy.Name = responseWrappingPolicyName
+	policy.Name = cubbyholeResponseWrappingPolicyName
 	return ps.setPolicyInternal(policy)
 }

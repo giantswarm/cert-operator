@@ -106,7 +106,7 @@ func (p *PathMap) Paths() []*Path {
 
 	return []*Path{
 		&Path{
-			Pattern: fmt.Sprintf("%s/%s/?$", p.Prefix, p.Name),
+			Pattern: fmt.Sprintf("%s/%s$", p.Prefix, p.Name),
 
 			Callbacks: map[logical.Operation]OperationFunc{
 				logical.ListOperation: p.pathList,
@@ -137,7 +137,7 @@ func (p *PathMap) Paths() []*Path {
 
 func (p *PathMap) pathList(
 	req *logical.Request, d *FieldData) (*logical.Response, error) {
-	keys, err := p.List(req.Storage, "")
+	keys, err := req.Storage.List(req.Path)
 	if err != nil {
 		return nil, err
 	}

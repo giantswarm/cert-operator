@@ -1,3 +1,5 @@
+// +build vault
+
 package vault
 
 import (
@@ -7,16 +9,10 @@ import (
 )
 
 type TestSeal struct {
-	defseal              *DefaultSeal
-	barrierKeys          [][]byte
-	recoveryKey          []byte
-	recoveryConfig       *SealConfig
-	storedKeysDisabled   bool
-	recoveryKeysDisabled bool
-}
-
-func newTestSeal(t *testing.T) Seal {
-	return &TestSeal{}
+	defseal        *DefaultSeal
+	barrierKeys    [][]byte
+	recoveryKey    []byte
+	recoveryConfig *SealConfig
 }
 
 func (d *TestSeal) checkCore() error {
@@ -45,11 +41,11 @@ func (d *TestSeal) BarrierType() string {
 }
 
 func (d *TestSeal) StoredKeysSupported() bool {
-	return !d.storedKeysDisabled
+	return true
 }
 
 func (d *TestSeal) RecoveryKeySupported() bool {
-	return !d.recoveryKeysDisabled
+	return true
 }
 
 func (d *TestSeal) SetStoredKeys(keys [][]byte) error {
@@ -99,10 +95,7 @@ func (d *TestSeal) SetRecoveryKey(key []byte) error {
 func TestCoreUnsealedWithConfigs(t *testing.T, barrierConf, recoveryConf *SealConfig) (*Core, [][]byte, [][]byte, string) {
 	seal := &TestSeal{}
 	core := TestCoreWithSeal(t, seal)
-	result, err := core.Initialize(&InitParams{
-		BarrierConfig:  barrierConf,
-		RecoveryConfig: recoveryConf,
-	})
+	result, err := core.Initialize(barrierConf, recoveryConf)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -112,7 +105,8 @@ func TestCoreUnsealedWithConfigs(t *testing.T, barrierConf, recoveryConf *SealCo
 	}
 	if sealed, _ := core.Sealed(); sealed {
 		for _, key := range result.SecretShares {
-			if _, err := core.Unseal(TestKeyCopy(key)); err != nil {
+			if _, err := core.Unseal(key); err != nil {
+
 				t.Fatalf("unseal err: %s", err)
 			}
 		}

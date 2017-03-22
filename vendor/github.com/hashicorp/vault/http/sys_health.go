@@ -2,13 +2,11 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/hashicorp/vault/vault"
-	"github.com/hashicorp/vault/version"
 )
 
 func handleSysHealth(core *vault.Core) http.Handler {
@@ -73,14 +71,9 @@ func getSysHealth(core *vault.Core, r *http.Request) (int, *HealthResponse, erro
 	// Check if being a standby is allowed for the purpose of a 200 OK
 	_, standbyOK := r.URL.Query()["standbyok"]
 
-	uninitCode := http.StatusNotImplemented
-	if code, found, ok := fetchStatusCode(r, "uninitcode"); !ok {
-		return http.StatusBadRequest, nil, nil
-	} else if found {
-		uninitCode = code
-	}
-
-	sealedCode := http.StatusServiceUnavailable
+	// FIXME: Change the sealed code to http.StatusServiceUnavailable at some
+	// point
+	sealedCode := http.StatusInternalServerError
 	if code, found, ok := fetchStatusCode(r, "sealedcode"); !ok {
 		return http.StatusBadRequest, nil, nil
 	} else if found {
@@ -113,25 +106,11 @@ func getSysHealth(core *vault.Core, r *http.Request) (int, *HealthResponse, erro
 	code := activeCode
 	switch {
 	case !init:
-		code = uninitCode
+		code = http.StatusInternalServerError
 	case sealed:
 		code = sealedCode
 	case !standbyOK && standby:
 		code = standbyCode
-	}
-
-	// Fetch the local cluster name and identifier
-	var clusterName, clusterID string
-	if !sealed {
-		cluster, err := core.Cluster()
-		if err != nil {
-			return http.StatusInternalServerError, nil, err
-		}
-		if cluster == nil {
-			return http.StatusInternalServerError, nil, fmt.Errorf("failed to fetch cluster details")
-		}
-		clusterName = cluster.Name
-		clusterID = cluster.ID
 	}
 
 	// Format the body
@@ -140,19 +119,13 @@ func getSysHealth(core *vault.Core, r *http.Request) (int, *HealthResponse, erro
 		Sealed:        sealed,
 		Standby:       standby,
 		ServerTimeUTC: time.Now().UTC().Unix(),
-		Version:       version.GetVersion().VersionNumber(),
-		ClusterName:   clusterName,
-		ClusterID:     clusterID,
 	}
 	return code, body, nil
 }
 
 type HealthResponse struct {
-	Initialized   bool   `json:"initialized"`
-	Sealed        bool   `json:"sealed"`
-	Standby       bool   `json:"standby"`
-	ServerTimeUTC int64  `json:"server_time_utc"`
-	Version       string `json:"version"`
-	ClusterName   string `json:"cluster_name,omitempty"`
-	ClusterID     string `json:"cluster_id,omitempty"`
+	Initialized   bool  `json:"initialized"`
+	Sealed        bool  `json:"sealed"`
+	Standby       bool  `json:"standby"`
+	ServerTimeUTC int64 `json:"server_time_utc"`
 }

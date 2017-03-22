@@ -60,10 +60,6 @@ func (c *ListCommand) Run(args []string) int {
 			"No value found at %s", path))
 		return 1
 	}
-	if secret.WrapInfo != nil && secret.WrapInfo.TTL != 0 {
-		return OutputSecret(c.Ui, format, secret)
-	}
-
 	if secret.Data["keys"] == nil {
 		c.Ui.Error("No entries found")
 		return 0

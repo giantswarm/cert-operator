@@ -6,12 +6,11 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"sort"
 	"strings"
 	"time"
-
-	log "github.com/mgutz/logxi/v1"
 
 	"github.com/armon/go-metrics"
 	mysql "github.com/go-sql-driver/mysql"
@@ -27,12 +26,12 @@ type MySQLBackend struct {
 	dbTable    string
 	client     *sql.DB
 	statements map[string]*sql.Stmt
-	logger     log.Logger
+	logger     *log.Logger
 }
 
 // newMySQLBackend constructs a MySQL backend using the given API client and
 // server address and credential for accessing mysql database.
-func newMySQLBackend(conf map[string]string, logger log.Logger) (Backend, error) {
+func newMySQLBackend(conf map[string]string, logger *log.Logger) (Backend, error) {
 	// Get the MySQL credentials to perform read/write operations.
 	username, ok := conf["username"]
 	if !ok || username == "" {
@@ -173,9 +172,6 @@ func (m *MySQLBackend) List(prefix string) ([]string, error) {
 	// Add the % wildcard to the prefix to do the prefix search
 	likePrefix := prefix + "%"
 	rows, err := m.statements["list"].Query(likePrefix)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute statement: %v", err)
-	}
 
 	var keys []string
 	for rows.Next() {
