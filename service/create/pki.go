@@ -10,32 +10,8 @@ import (
 	"github.com/giantswarm/certctl/service/token"
 )
 
-
-func (s *Service) checkPKIBackend(clusterID string) bool {
-	service, err := s.getPKIService()
-	if err != nil {
-		return false
-	}
-
-	// Check PKI config.
-	mounted, err := service.IsMounted(clusterID)
-	if !mounted || err != nil {
-		return false
-	}
-	caGenerated, err := service.IsCAGenerated(clusterID)
-	if !caGenerated || err != nil {
-		return false
-	}
-	roleCreated, err := service.IsRoleCreated(clusterID)
-	if !roleCreated || err != nil {
-		return false
-	}
-
-	// PKI config is valid.
-	return true
-}
-
-func (s *Service) createPKIBackend(cert CertificateSpec) error {
+// Creates a PKI backend if one does not exist for the cluster.
+func (s *Service) setupPKIBackend(cert CertificateSpec) error {
 	var err error
 
 	service, err := s.getPKIService()
@@ -43,47 +19,56 @@ func (s *Service) createPKIBackend(cert CertificateSpec) error {
 		return microerror.MaskAny(err)
 	}
 
-	// Create PKI backend
-	config := pki.CreateConfig{
-		ClusterID:        cert.ClusterID,
-		CommonName:       s.getCACommonName(cert),
-		AllowedDomains:   s.getAllowedDomainsForCA(cert),
-		AllowBareDomains: cert.AllowBareDomains,
-		TTL:              s.Config.Viper.GetString(s.Config.Flag.Vault.PKI.CATTL),
-	}
-
-	return service.Create(config)
-}
-
-func (s *Service) checkPKIPolicy(clusterID string) bool {
-	service, err := s.getTokenService()
+	isValid, err := service.VerifyPKISetup(cert.ClusterID)
 	if err != nil {
-		return false
+		return microerror.MaskAny(err)
 	}
+	if isValid {
+		s.Config.Logger.Log("debug", fmt.Sprintf("PKI backend already exists for cluster %s", cert.ClusterID))
+		return nil
+	} else {
+		caCommonName := s.Config.getCACommonName(cert)
 
-	// Check if there is a PKI policy.
-	policyCreated, err := service.IsPolicyCreated(clusterID)
-	if !policyCreated || err != nil {
-		return false
+		// Create PKI backend
+		config := pki.CreateConfig{
+			ClusterID:        cert.ClusterID,
+			CommonName:       caCommonName,
+			AllowedDomains:   getAllowedDomainsForCA(caCommonName, cert),
+			AllowBareDomains: cert.AllowBareDomains,
+			TTL:              s.Config.Viper.GetString(s.Config.Flag.Vault.PKI.CATTL),
+		}
+
+		s.Config.Logger.Log("debug", fmt.Sprintf("Creating PKI backend for cluster %s", cert.ClusterID))
+		return service.Create(config)
 	}
-
-	// PKI policy is valid.
-	return true
 }
 
-func (s *Service) createPKIPolicy(cert CertificateSpec) error {
+// Creates a PKI policy if one does not exist for the cluster.
+func (s *Service) setupPKIPolicy(cert CertificateSpec) error {
+	var err error
+
 	service, err := s.getTokenService()
 	if err != nil {
 		return microerror.MaskAny(err)
 	}
 
-	// Create PKI policy TODO Use latest certctl with CreateConfig object.
-	return service.CreatePolicy(cert.ClusterID)
+	// Check if there is a PKI policy.
+	isCreated, err := service.IsPolicyCreated(cert.ClusterID)
+	if err != nil {
+		return microerror.MaskAny(err)
+	}
+	if isCreated {
+		s.Config.Logger.Log("debug", fmt.Sprintf("PKI policy already exists for cluster %s", cert.ClusterID))
+		return nil
+	} else {
+		s.Config.Logger.Log("debug", fmt.Sprintf("Creating PKI policy for cluster %s", cert.ClusterID))
+		return service.CreatePolicy(cert.ClusterID)
+	}
 }
 
 // Get the Common Name for the Cluster CA.
-func (s *Service) getCACommonName(cert CertificateSpec) string {
-	commonNameFormat := s.Config.Viper.GetString(s.Config.Flag.Vault.PKI.CommonNameFormat)
+func (config Config) getCACommonName(cert CertificateSpec) string {
+	commonNameFormat := config.Viper.GetString(config.Flag.Vault.PKI.CommonNameFormat)
 	commonName := fmt.Sprintf(commonNameFormat, cert.ClusterID)
 
 	return commonName
@@ -91,10 +76,8 @@ func (s *Service) getCACommonName(cert CertificateSpec) string {
 
 // Get the allowed domains which are the Cluster CA common name and the
 // alt names specified for the certificate.
-func (s *Service) getAllowedDomainsForCA(cert CertificateSpec) string {
-	ca := s.getClusterCA(cert)
-
-	domains := []string{ca}
+func getAllowedDomainsForCA(caCommonName string, cert CertificateSpec) string {
+	domains := []string{caCommonName}
 	domains = append(domains, cert.AltNames...)
 
 	return strings.Join(domains, ",")
