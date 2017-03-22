@@ -1,6 +1,7 @@
 package create
 
 import (
+	"fmt"
 	"strings"
 
 	microerror "github.com/giantswarm/microkit/error"
@@ -9,10 +10,6 @@ import (
 	"github.com/giantswarm/certctl/service/token"
 )
 
-const (
-	// TODO Choose a sensible value and move to ConfigMap for V1
-	CertificateAuthorityTTL = "1440h"
-)
 
 func (s *Service) checkPKIBackend(clusterID string) bool {
 	service, err := s.getPKIService()
@@ -49,10 +46,10 @@ func (s *Service) createPKIBackend(cert CertificateSpec) error {
 	// Create PKI backend
 	config := pki.CreateConfig{
 		ClusterID:        cert.ClusterID,
-		CommonName:       s.getClusterCA(cert),
+		CommonName:       s.getCACommonName(cert),
 		AllowedDomains:   s.getAllowedDomainsForCA(cert),
 		AllowBareDomains: cert.AllowBareDomains,
-		TTL:              CertificateAuthorityTTL, // TTL must be longer than for the issued certs.
+		TTL:              s.Config.Viper.GetString(s.Config.Flag.Vault.PKI.CATTL),
 	}
 
 	return service.Create(config)
@@ -84,13 +81,12 @@ func (s *Service) createPKIPolicy(cert CertificateSpec) error {
 	return service.CreatePolicy(cert.ClusterID)
 }
 
-// Get the common name for the Cluster CA by removing the prefix
-// from the certificate common name.
-func (s *Service) getClusterCA(cert CertificateSpec) string {
-	url := strings.Split(cert.CommonName, ".")
-	prefix := url[0] + "."
+// Get the Common Name for the Cluster CA.
+func (s *Service) getCACommonName(cert CertificateSpec) string {
+	commonNameFormat := s.Config.Viper.GetString(s.Config.Flag.Vault.PKI.CommonNameFormat)
+	commonName := fmt.Sprintf(commonNameFormat, cert.ClusterID)
 
-	return strings.Replace(cert.CommonName, prefix, "", 1)
+	return commonName
 }
 
 // Get the allowed domains which are the Cluster CA common name and the

@@ -106,6 +106,8 @@ func main() {
 	daemonCommand.PersistentFlags().String(f.Kubernetes.TLS.KeyFile, "", "Key file path to use to authenticate with Kubernetes.")
 	daemonCommand.PersistentFlags().String(f.Vault.Address, "", "Address used to connect to Vault.")
 	daemonCommand.PersistentFlags().String(f.Vault.Token, "", "Token used to authenticate against Vault.")
+	daemonCommand.PersistentFlags().String(f.Vault.PKI.CATTL, "", "TTL used to generate a new Cluster CA.")
+	daemonCommand.PersistentFlags().String(f.Vault.PKI.CommonNameFormat, "", "Common name used to generate a new Cluster CA.")
 
 	newCommand.CobraCommand().Execute()
 }
