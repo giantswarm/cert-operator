@@ -10,7 +10,7 @@ import (
 	"github.com/giantswarm/certctl/service/token"
 )
 
-// Creates a PKI backend if one does not exist for the cluster.
+// setupPKIBackend creates a PKI backend if one does not exist for the cluster.
 func (s *Service) setupPKIBackend(cert CertificateSpec) error {
 	var err error
 
@@ -43,7 +43,7 @@ func (s *Service) setupPKIBackend(cert CertificateSpec) error {
 	}
 }
 
-// Creates a PKI policy if one does not exist for the cluster.
+// setupPKIPolicy creates a PKI policy if one does not exist for the cluster.
 func (s *Service) setupPKIPolicy(cert CertificateSpec) error {
 	var err error
 
@@ -52,7 +52,6 @@ func (s *Service) setupPKIPolicy(cert CertificateSpec) error {
 		return microerror.MaskAny(err)
 	}
 
-	// Check if there is a PKI policy.
 	isCreated, err := service.IsPolicyCreated(cert.ClusterID)
 	if err != nil {
 		return microerror.MaskAny(err)
@@ -66,7 +65,6 @@ func (s *Service) setupPKIPolicy(cert CertificateSpec) error {
 	}
 }
 
-// Get the Common Name for the Cluster CA.
 func (config Config) getCACommonName(cert CertificateSpec) string {
 	commonNameFormat := config.Viper.GetString(config.Flag.Vault.PKI.CommonNameFormat)
 	commonName := fmt.Sprintf(commonNameFormat, cert.ClusterID)
@@ -74,8 +72,6 @@ func (config Config) getCACommonName(cert CertificateSpec) string {
 	return commonName
 }
 
-// Get the allowed domains which are the Cluster CA common name and the
-// alt names specified for the certificate.
 func getAllowedDomainsForCA(caCommonName string, cert CertificateSpec) string {
 	domains := []string{caCommonName}
 	domains = append(domains, cert.AltNames...)

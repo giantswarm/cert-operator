@@ -111,11 +111,9 @@ func (s *Service) Boot() {
 		// Ensure a PKI backend exists for the cluster.
 		err := s.setupPKIBackend(cert)
 		if err == nil {
-
 			// Ensure a PKI policy exists for the cluster.
 			err := s.setupPKIPolicy(cert)
 			if err == nil {
-
 				// PKI setup is OK so attempt to issue a certificate.
 				issueResp, err := s.Issue(cert)
 				if err == nil {
