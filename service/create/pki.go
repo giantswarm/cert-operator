@@ -26,21 +26,21 @@ func (s *Service) setupPKIBackend(cert CertificateSpec) error {
 	if isValid {
 		s.Config.Logger.Log("debug", fmt.Sprintf("PKI backend already exists for cluster %s", cert.ClusterID))
 		return nil
-	} else {
-		caCommonName := s.Config.getCACommonName(cert)
-
-		// Create PKI backend
-		config := pki.CreateConfig{
-			ClusterID:        cert.ClusterID,
-			CommonName:       caCommonName,
-			AllowedDomains:   getAllowedDomainsForCA(caCommonName, cert),
-			AllowBareDomains: cert.AllowBareDomains,
-			TTL:              s.Config.Viper.GetString(s.Config.Flag.Vault.PKI.CATTL),
-		}
-
-		s.Config.Logger.Log("debug", fmt.Sprintf("Creating PKI backend for cluster %s", cert.ClusterID))
-		return service.Create(config)
 	}
+
+	caCommonName := s.Config.getCACommonName(cert)
+
+	// Create PKI backend
+	config := pki.CreateConfig{
+		ClusterID:        cert.ClusterID,
+		CommonName:       caCommonName,
+		AllowedDomains:   getAllowedDomainsForCA(caCommonName, cert),
+		AllowBareDomains: cert.AllowBareDomains,
+		TTL:              s.Config.Viper.GetString(s.Config.Flag.Vault.PKI.CATTL),
+	}
+
+	s.Config.Logger.Log("debug", fmt.Sprintf("Creating PKI backend for cluster %s", cert.ClusterID))
+	return service.Create(config)
 }
 
 // setupPKIPolicy creates a PKI policy if one does not exist for the cluster.
@@ -59,10 +59,10 @@ func (s *Service) setupPKIPolicy(cert CertificateSpec) error {
 	if isCreated {
 		s.Config.Logger.Log("debug", fmt.Sprintf("PKI policy already exists for cluster %s", cert.ClusterID))
 		return nil
-	} else {
-		s.Config.Logger.Log("debug", fmt.Sprintf("Creating PKI policy for cluster %s", cert.ClusterID))
-		return service.CreatePolicy(cert.ClusterID)
 	}
+
+	s.Config.Logger.Log("debug", fmt.Sprintf("Creating PKI policy for cluster %s", cert.ClusterID))
+	return service.CreatePolicy(cert.ClusterID)
 }
 
 func (config Config) getCACommonName(cert CertificateSpec) string {
