@@ -8,6 +8,7 @@ import (
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
+// createTPR ensures certificatetpr exists on the cluster.
 func (s *Service) createTPR() error {
 	tpr := &v1beta1.ThirdPartyResource{
 		ObjectMeta: v1.ObjectMeta{
@@ -19,7 +20,9 @@ func (s *Service) createTPR() error {
 		Description: "Managed certificates on Kubernetes clusters",
 	}
 	_, err := s.Config.K8sClient.Extensions().ThirdPartyResources().Create(tpr)
-	if err != nil && !errors.IsAlreadyExists(err) {
+	if errors.IsAlreadyExists(err) {
+		return nil
+	} else if err != nil {
 		return microerror.MaskAny(err)
 	}
 
