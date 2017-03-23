@@ -17,6 +17,7 @@ Download the latest docker image from here: https://hub.docker.com/r/giantswarm/
 #### Dependencies
 
 - [github.com/giantswarm/microkit](https://github.com/giantswarm/microkit)
+- [github.com/giantswarm/certificatetpr](https://github.com/giantswarm/certificatetpr)
 
 #### Building the standard way
 
