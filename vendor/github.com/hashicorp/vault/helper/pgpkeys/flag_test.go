@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/keybase/go-crypto/openpgp"
-	"github.com/keybase/go-crypto/openpgp/packet"
+	"golang.org/x/crypto/openpgp"
+	"golang.org/x/crypto/openpgp/packet"
 )
 
 func TestPubKeyFilesFlag_implements(t *testing.T) {

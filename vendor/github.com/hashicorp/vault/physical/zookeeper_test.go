@@ -2,12 +2,10 @@ package physical
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"testing"
 	"time"
-
-	"github.com/hashicorp/vault/helper/logformat"
-	log "github.com/mgutz/logxi/v1"
 
 	"github.com/samuel/go-zookeeper/zk"
 )
@@ -33,9 +31,6 @@ func TestZookeeperBackend(t *testing.T) {
 	}
 
 	defer func() {
-		client.Delete(randPath+"/foo/nested1/nested2/nested3", -1)
-		client.Delete(randPath+"/foo/nested1/nested2", -1)
-		client.Delete(randPath+"/foo/nested1", -1)
 		client.Delete(randPath+"/foo/bar/baz", -1)
 		client.Delete(randPath+"/foo/bar", -1)
 		client.Delete(randPath+"/foo", -1)
@@ -43,8 +38,7 @@ func TestZookeeperBackend(t *testing.T) {
 		client.Close()
 	}()
 
-	logger := logformat.NewVaultLogger(log.LevelTrace)
-
+	logger := log.New(os.Stderr, "", log.LstdFlags)
 	b, err := NewBackend("zookeeper", logger, map[string]string{
 		"address": addr + "," + addr,
 		"path":    randPath,
@@ -83,8 +77,7 @@ func TestZookeeperHABackend(t *testing.T) {
 		client.Close()
 	}()
 
-	logger := logformat.NewVaultLogger(log.LevelTrace)
-
+	logger := log.New(os.Stderr, "", log.LstdFlags)
 	b, err := NewBackend("zookeeper", logger, map[string]string{
 		"address": addr + "," + addr,
 		"path":    randPath,

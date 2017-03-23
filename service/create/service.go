@@ -94,24 +94,40 @@ func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
 		s.Config.Logger.Log("info", "Booted cert-operator")
 
-		s.Config.Logger.Log("info", "Test issuing a cert")
-
 		cert := CertificateSpec{
-			ClusterID:        "cert-test",
-			CommonName:       "api.cert-test.giantswarm.io",
-			IPSANs:           []string{"10.0.0.4", "10.0.0.5"},
-			AltNames:         []string{"api.k8s.cert-test.giantswarm.io"},
-			AllowBareDomains: false,
+			ClusterID:  "cert-test",
+			CommonName: "api.cert-test.g8s.eu-west-1.aws.test.private.giantswarm.io",
+			IPSANs:     []string{"10.0.0.4", "10.0.0.5"},
+			AltNames: []string{
+				"kubernetes",
+				"kubernetes.default",
+				"kubernetes.default.svc",
+				"kubernetes.default.svc.cluster.local",
+			},
+			AllowBareDomains: true,
 			TTL:              "720h",
 		}
 
-		issueResp, err := s.Issue(cert)
+		// Ensure a PKI backend exists for the cluster.
+		err := s.setupPKIBackend(cert)
 		if err == nil {
-			s.Config.Logger.Log("info", "Cert issued")
-			s.Config.Logger.Log("info", cert.CommonName)
-			s.Config.Logger.Log("info", issueResp.SerialNumber)
+			// Ensure a PKI policy exists for the cluster.
+			err := s.setupPKIPolicy(cert)
+			if err == nil {
+				// PKI setup is OK so attempt to issue a certificate.
+				issueResp, err := s.Issue(cert)
+				if err == nil {
+					s.Config.Logger.Log("info", fmt.Sprintf("cert issued %s %s", cert.CommonName, issueResp.SerialNumber))
+				} else {
+					s.Config.Logger.Log("error", fmt.Sprintf("could not issue cert '%#v'", err))
+				}
+
+			} else {
+				s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki policy '%#v'", err))
+			}
+
 		} else {
-			s.Config.Logger.Log("error", fmt.Sprintf("Failed to issue cert - %v", err))
+			s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki backend '%#v'", err))
 		}
 	})
 }

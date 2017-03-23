@@ -4,24 +4,20 @@ import (
 	"os"
 
 	auditFile "github.com/hashicorp/vault/builtin/audit/file"
-	auditSocket "github.com/hashicorp/vault/builtin/audit/socket"
 	auditSyslog "github.com/hashicorp/vault/builtin/audit/syslog"
+	"github.com/hashicorp/vault/command/server"
 	"github.com/hashicorp/vault/version"
 
 	credAppId "github.com/hashicorp/vault/builtin/credential/app-id"
-	credAppRole "github.com/hashicorp/vault/builtin/credential/approle"
 	credAwsEc2 "github.com/hashicorp/vault/builtin/credential/aws-ec2"
 	credCert "github.com/hashicorp/vault/builtin/credential/cert"
 	credGitHub "github.com/hashicorp/vault/builtin/credential/github"
 	credLdap "github.com/hashicorp/vault/builtin/credential/ldap"
-	credOkta "github.com/hashicorp/vault/builtin/credential/okta"
-	credRadius "github.com/hashicorp/vault/builtin/credential/radius"
 	credUserpass "github.com/hashicorp/vault/builtin/credential/userpass"
 
 	"github.com/hashicorp/vault/builtin/logical/aws"
 	"github.com/hashicorp/vault/builtin/logical/cassandra"
 	"github.com/hashicorp/vault/builtin/logical/consul"
-	"github.com/hashicorp/vault/builtin/logical/mongodb"
 	"github.com/hashicorp/vault/builtin/logical/mssql"
 	"github.com/hashicorp/vault/builtin/logical/mysql"
 	"github.com/hashicorp/vault/builtin/logical/pki"
@@ -66,18 +62,14 @@ func Commands(metaPtr *meta.Meta) map[string]cli.CommandFactory {
 				AuditBackends: map[string]audit.Factory{
 					"file":   auditFile.Factory,
 					"syslog": auditSyslog.Factory,
-					"socket": auditSocket.Factory,
 				},
 				CredentialBackends: map[string]logical.Factory{
-					"approle":  credAppRole.Factory,
 					"cert":     credCert.Factory,
 					"aws-ec2":  credAwsEc2.Factory,
 					"app-id":   credAppId.Factory,
 					"github":   credGitHub.Factory,
 					"userpass": credUserpass.Factory,
 					"ldap":     credLdap.Factory,
-					"okta":     credOkta.Factory,
-					"radius":   credRadius.Factory,
 				},
 				LogicalBackends: map[string]logical.Factory{
 					"aws":        aws.Factory,
@@ -86,14 +78,14 @@ func Commands(metaPtr *meta.Meta) map[string]cli.CommandFactory {
 					"cassandra":  cassandra.Factory,
 					"pki":        pki.Factory,
 					"transit":    transit.Factory,
-					"mongodb":    mongodb.Factory,
 					"mssql":      mssql.Factory,
 					"mysql":      mysql.Factory,
 					"ssh":        ssh.Factory,
 					"rabbitmq":   rabbitmq.Factory,
 				},
-				ShutdownCh: command.MakeShutdownCh(),
-				SighupCh:   command.MakeSighupCh(),
+				ShutdownCh:  command.MakeShutdownCh(),
+				SighupCh:    command.MakeSighupCh(),
+				ReloadFuncs: map[string][]server.ReloadFunc{},
 			}, nil
 		},
 
@@ -114,11 +106,9 @@ func Commands(metaPtr *meta.Meta) map[string]cli.CommandFactory {
 				Meta: *metaPtr,
 				Handlers: map[string]command.AuthHandler{
 					"github":   &credGitHub.CLIHandler{},
-					"userpass": &credUserpass.CLIHandler{DefaultMount: "userpass"},
+					"userpass": &credUserpass.CLIHandler{},
 					"ldap":     &credLdap.CLIHandler{},
-					"okta":     &credOkta.CLIHandler{},
 					"cert":     &credCert.CLIHandler{},
-					"radius":   &credUserpass.CLIHandler{DefaultMount: "radius"},
 				},
 			}, nil
 		},

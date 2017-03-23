@@ -147,6 +147,35 @@ func (s *service) IsRoleCreated(clusterID string) (bool, error) {
 	return false, nil
 }
 
+func (s *service) VerifyPKISetup(clusterID string) (bool, error) {
+	mounted, err := s.IsMounted(clusterID)
+	if err != nil {
+		return false, maskAny(err)
+	}
+	if !mounted {
+		return false, nil
+	}
+
+	caGenerated, err := s.IsCAGenerated(clusterID)
+	if err != nil {
+		return false, maskAny(err)
+	}
+	if !caGenerated {
+		return false, nil
+	}
+
+	roleCreated, err := s.IsRoleCreated(clusterID)
+	if !roleCreated || err != nil {
+		return false, maskAny(err)
+	}
+	if !roleCreated {
+		return false, nil
+	}
+
+	// PKI setup is valid.
+	return true, nil
+}
+
 func (s *service) RoleName(clusterID string) string {
 	return fmt.Sprintf("role-%s", clusterID)
 }

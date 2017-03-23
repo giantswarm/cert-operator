@@ -1,7 +1,6 @@
 package pki
 
 import (
-	"bytes"
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
@@ -17,24 +16,22 @@ import (
 	"time"
 
 	"github.com/hashicorp/vault/helper/certutil"
-	"github.com/hashicorp/vault/helper/errutil"
-	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
 
-type certExtKeyUsage int
+type certUsage int
 
 const (
-	serverExtKeyUsage certExtKeyUsage = 1 << iota
-	clientExtKeyUsage
-	codeSigningExtKeyUsage
-	emailProtectionExtKeyUsage
+	serverUsage certUsage = 1 << iota
+	clientUsage
+	codeSigningUsage
+	emailProtectionUsage
+	caUsage
 )
 
 type creationBundle struct {
 	CommonName     string
-	OU             []string
 	DNSNames       []string
 	EmailAddresses []string
 	IPAddresses    []net.IP
@@ -43,8 +40,7 @@ type creationBundle struct {
 	KeyBits        int
 	SigningBundle  *caInfoBundle
 	TTL            time.Duration
-	KeyUsage       x509.KeyUsage
-	ExtKeyUsage    certExtKeyUsage
+	Usage          certUsage
 
 	// Only used when signing a CA cert
 	UseCSRValues bool
@@ -59,25 +55,6 @@ type creationBundle struct {
 type caInfoBundle struct {
 	certutil.ParsedCertBundle
 	URLs *urlEntries
-}
-
-func (b *caInfoBundle) GetCAChain() []*certutil.CertBlock {
-	chain := []*certutil.CertBlock{}
-
-	// Include issuing CA in Chain, not including Root Authority
-	if len(b.Certificate.AuthorityKeyId) > 0 &&
-		!bytes.Equal(b.Certificate.AuthorityKeyId, b.Certificate.SubjectKeyId) {
-
-		chain = append(chain, &certutil.CertBlock{
-			Certificate: b.Certificate,
-			Bytes:       b.CertificateBytes,
-		})
-		if b.CAChain != nil && len(b.CAChain) > 0 {
-			chain = append(chain, b.CAChain...)
-		}
-	}
-
-	return chain
 }
 
 var (
@@ -110,6 +87,7 @@ func validateKeyTypeLength(keyType string, keyBits int) *logical.Response {
 	switch keyType {
 	case "rsa":
 		switch keyBits {
+		case 1024:
 		case 2048:
 		case 4096:
 		case 8192:
@@ -140,31 +118,31 @@ func validateKeyTypeLength(keyType string, keyBits int) *logical.Response {
 func fetchCAInfo(req *logical.Request) (*caInfoBundle, error) {
 	bundleEntry, err := req.Storage.Get("config/ca_bundle")
 	if err != nil {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("unable to fetch local CA certificate/key: %v", err)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("unable to fetch local CA certificate/key: %v", err)}
 	}
 	if bundleEntry == nil {
-		return nil, errutil.UserError{Err: "backend must be configured with a CA certificate/key"}
+		return nil, certutil.UserError{Err: "backend must be configured with a CA certificate/key"}
 	}
 
 	var bundle certutil.CertBundle
 	if err := bundleEntry.DecodeJSON(&bundle); err != nil {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("unable to decode local CA certificate/key: %v", err)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("unable to decode local CA certificate/key: %v", err)}
 	}
 
 	parsedBundle, err := bundle.ToParsedCertBundle()
 	if err != nil {
-		return nil, errutil.InternalError{Err: err.Error()}
+		return nil, certutil.InternalError{Err: err.Error()}
 	}
 
 	if parsedBundle.Certificate == nil {
-		return nil, errutil.InternalError{Err: "stored CA information not able to be parsed"}
+		return nil, certutil.InternalError{Err: "stored CA information not able to be parsed"}
 	}
 
 	caInfo := &caInfoBundle{*parsedBundle, nil}
 
 	entries, err := getURLs(req)
 	if err != nil {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("unable to fetch URL information: %v", err)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("unable to fetch URL information: %v", err)}
 	}
 	if entries == nil {
 		entries = &urlEntries{
@@ -198,14 +176,14 @@ func fetchCertBySerial(req *logical.Request, prefix, serial string) (*logical.St
 
 	certEntry, err := req.Storage.Get(path)
 	if err != nil {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("error fetching certificate %s: %s", serial, err)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("error fetching certificate %s: %s", serial, err)}
 	}
 	if certEntry == nil {
 		return nil, nil
 	}
 
 	if certEntry.Value == nil || len(certEntry.Value) == 0 {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("returned certificate bytes for serial %s were empty", serial)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("returned certificate bytes for serial %s were empty", serial)}
 	}
 
 	return certEntry, nil
@@ -379,7 +357,7 @@ func generateCert(b *backend,
 	data *framework.FieldData) (*certutil.ParsedCertBundle, error) {
 
 	if role.KeyType == "rsa" && role.KeyBits < 2048 {
-		return nil, errutil.UserError{Err: "RSA keys < 2048 bits are unsafe and not supported"}
+		return nil, certutil.UserError{Err: "RSA keys < 2048 bits are unsafe and not supported"}
 	}
 
 	creationBundle, err := generateCreationBundle(b, role, signingBundle, nil, req, data)
@@ -394,7 +372,7 @@ func generateCert(b *backend,
 			// Generating a self-signed root certificate
 			entries, err := getURLs(req)
 			if err != nil {
-				return nil, errutil.InternalError{Err: fmt.Sprintf("unable to fetch URL information: %v", err)}
+				return nil, certutil.InternalError{Err: fmt.Sprintf("unable to fetch URL information: %v", err)}
 			}
 			if entries == nil {
 				entries = &urlEntries{
@@ -452,40 +430,40 @@ func signCert(b *backend,
 
 	csrString := data.Get("csr").(string)
 	if csrString == "" {
-		return nil, errutil.UserError{Err: fmt.Sprintf("\"csr\" is empty")}
+		return nil, certutil.UserError{Err: fmt.Sprintf("\"csr\" is empty")}
 	}
 
 	pemBytes := []byte(csrString)
 	pemBlock, pemBytes := pem.Decode(pemBytes)
 	if pemBlock == nil {
-		return nil, errutil.UserError{Err: "csr contains no data"}
+		return nil, certutil.UserError{Err: "csr contains no data"}
 	}
 	csr, err := x509.ParseCertificateRequest(pemBlock.Bytes)
 	if err != nil {
-		return nil, errutil.UserError{Err: "certificate request could not be parsed"}
+		return nil, certutil.UserError{Err: "certificate request could not be parsed"}
 	}
 
 	switch role.KeyType {
 	case "rsa":
 		// Verify that the key matches the role type
 		if csr.PublicKeyAlgorithm != x509.RSA {
-			return nil, errutil.UserError{Err: fmt.Sprintf(
+			return nil, certutil.UserError{Err: fmt.Sprintf(
 				"role requires keys of type %s",
 				role.KeyType)}
 		}
 		pubKey, ok := csr.PublicKey.(*rsa.PublicKey)
 		if !ok {
-			return nil, errutil.UserError{Err: "could not parse CSR's public key"}
+			return nil, certutil.UserError{Err: "could not parse CSR's public key"}
 		}
 
 		// Verify that the key is at least 2048 bits
 		if pubKey.N.BitLen() < 2048 {
-			return nil, errutil.UserError{Err: "RSA keys < 2048 bits are unsafe and not supported"}
+			return nil, certutil.UserError{Err: "RSA keys < 2048 bits are unsafe and not supported"}
 		}
 
 		// Verify that the bit size is at least the size specified in the role
 		if pubKey.N.BitLen() < role.KeyBits {
-			return nil, errutil.UserError{Err: fmt.Sprintf(
+			return nil, certutil.UserError{Err: fmt.Sprintf(
 				"role requires a minimum of a %d-bit key, but CSR's key is %d bits",
 				role.KeyBits,
 				pubKey.N.BitLen())}
@@ -494,18 +472,18 @@ func signCert(b *backend,
 	case "ec":
 		// Verify that the key matches the role type
 		if csr.PublicKeyAlgorithm != x509.ECDSA {
-			return nil, errutil.UserError{Err: fmt.Sprintf(
+			return nil, certutil.UserError{Err: fmt.Sprintf(
 				"role requires keys of type %s",
 				role.KeyType)}
 		}
 		pubKey, ok := csr.PublicKey.(*ecdsa.PublicKey)
 		if !ok {
-			return nil, errutil.UserError{Err: "could not parse CSR's public key"}
+			return nil, certutil.UserError{Err: "could not parse CSR's public key"}
 		}
 
 		// Verify that the bit size is at least the size specified in the role
 		if pubKey.Params().BitSize < role.KeyBits {
-			return nil, errutil.UserError{Err: fmt.Sprintf(
+			return nil, certutil.UserError{Err: fmt.Sprintf(
 				"role requires a minimum of a %d-bit key, but CSR's key is %d bits",
 				role.KeyBits,
 				pubKey.Params().BitSize)}
@@ -521,10 +499,10 @@ func signCert(b *backend,
 		// Run RSA < 2048 bit checks
 		pubKey, ok := csr.PublicKey.(*rsa.PublicKey)
 		if !ok {
-			return nil, errutil.UserError{Err: "could not parse CSR's public key"}
+			return nil, certutil.UserError{Err: "could not parse CSR's public key"}
 		}
 		if pubKey.N.BitLen() < 2048 {
-			return nil, errutil.UserError{Err: "RSA keys < 2048 bits are unsafe and not supported"}
+			return nil, certutil.UserError{Err: "RSA keys < 2048 bits are unsafe and not supported"}
 		}
 
 	}
@@ -568,16 +546,8 @@ func generateCreationBundle(b *backend,
 		if cn == "" {
 			cn = data.Get("common_name").(string)
 			if cn == "" {
-				return nil, errutil.UserError{Err: `the common_name field is required, or must be provided in a CSR with "use_csr_common_name" set to true`}
+				return nil, certutil.UserError{Err: `the common_name field is required, or must be provided in a CSR with "use_csr_common_name" set to true`}
 			}
-		}
-	}
-
-	// Set OU (organizationalUnit) values if specified in the role
-	ou := []string{}
-	{
-		if role.OU != "" {
-			ou = strutil.ParseDedupAndSortStrings(role.OU, ",")
 		}
 	}
 
@@ -603,7 +573,7 @@ func generateCreationBundle(b *backend,
 			if len(cnAlt) != 0 {
 				for _, v := range strings.Split(cnAlt, ",") {
 					if strings.Contains(v, "@") {
-						emailAddresses = append(emailAddresses, v)
+						emailAddresses = append(emailAddresses, cn)
 					} else {
 						dnsNames = append(dnsNames, v)
 					}
@@ -614,19 +584,19 @@ func generateCreationBundle(b *backend,
 		// Check for bad email and/or DNS names
 		badName, err := validateNames(req, dnsNames, role)
 		if len(badName) != 0 {
-			return nil, errutil.UserError{Err: fmt.Sprintf(
+			return nil, certutil.UserError{Err: fmt.Sprintf(
 				"name %s not allowed by this role", badName)}
 		} else if err != nil {
-			return nil, errutil.InternalError{Err: fmt.Sprintf(
+			return nil, certutil.InternalError{Err: fmt.Sprintf(
 				"error validating name %s: %s", badName, err)}
 		}
 
 		badName, err = validateNames(req, emailAddresses, role)
 		if len(badName) != 0 {
-			return nil, errutil.UserError{Err: fmt.Sprintf(
+			return nil, certutil.UserError{Err: fmt.Sprintf(
 				"email %s not allowed by this role", badName)}
 		} else if err != nil {
-			return nil, errutil.InternalError{Err: fmt.Sprintf(
+			return nil, certutil.InternalError{Err: fmt.Sprintf(
 				"error validating name %s: %s", badName, err)}
 		}
 	}
@@ -640,13 +610,13 @@ func generateCreationBundle(b *backend,
 			ipAlt := ipAltInt.(string)
 			if len(ipAlt) != 0 {
 				if !role.AllowIPSANs {
-					return nil, errutil.UserError{Err: fmt.Sprintf(
+					return nil, certutil.UserError{Err: fmt.Sprintf(
 						"IP Subject Alternative Names are not allowed in this role, but was provided %s", ipAlt)}
 				}
 				for _, v := range strings.Split(ipAlt, ",") {
 					parsedIP := net.ParseIP(v)
 					if parsedIP == nil {
-						return nil, errutil.UserError{Err: fmt.Sprintf(
+						return nil, certutil.UserError{Err: fmt.Sprintf(
 							"the value '%s' is not a valid IP address", v)}
 					}
 					ipAddresses = append(ipAddresses, parsedIP)
@@ -673,7 +643,7 @@ func generateCreationBundle(b *backend,
 		} else {
 			ttl, err = time.ParseDuration(ttlField)
 			if err != nil {
-				return nil, errutil.UserError{Err: fmt.Sprintf(
+				return nil, certutil.UserError{Err: fmt.Sprintf(
 					"invalid requested ttl: %s", err)}
 			}
 		}
@@ -683,7 +653,7 @@ func generateCreationBundle(b *backend,
 		} else {
 			maxTTL, err = time.ParseDuration(role.MaxTTL)
 			if err != nil {
-				return nil, errutil.UserError{Err: fmt.Sprintf(
+				return nil, certutil.UserError{Err: fmt.Sprintf(
 					"invalid ttl: %s", err)}
 			}
 		}
@@ -694,7 +664,7 @@ func generateCreationBundle(b *backend,
 			if len(ttlField) == 0 {
 				ttl = maxTTL
 			} else {
-				return nil, errutil.UserError{Err: fmt.Sprintf(
+				return nil, certutil.UserError{Err: fmt.Sprintf(
 					"ttl is larger than maximum allowed (%d)", maxTTL/time.Second)}
 			}
 		}
@@ -703,31 +673,30 @@ func generateCreationBundle(b *backend,
 		// valid past the lifetime of the CA certificate
 		if signingBundle != nil &&
 			time.Now().Add(ttl).After(signingBundle.Certificate.NotAfter) {
-			return nil, errutil.UserError{Err: fmt.Sprintf(
+			return nil, certutil.UserError{Err: fmt.Sprintf(
 				"cannot satisfy request, as TTL is beyond the expiration of the CA certificate")}
 		}
 	}
 
 	// Build up usages
-	var extUsage certExtKeyUsage
+	var usage certUsage
 	{
 		if role.ServerFlag {
-			extUsage = extUsage | serverExtKeyUsage
+			usage = usage | serverUsage
 		}
 		if role.ClientFlag {
-			extUsage = extUsage | clientExtKeyUsage
+			usage = usage | clientUsage
 		}
 		if role.CodeSigningFlag {
-			extUsage = extUsage | codeSigningExtKeyUsage
+			usage = usage | codeSigningUsage
 		}
 		if role.EmailProtectionFlag {
-			extUsage = extUsage | emailProtectionExtKeyUsage
+			usage = usage | emailProtectionUsage
 		}
 	}
 
 	creationBundle := &creationBundle{
 		CommonName:     cn,
-		OU:             ou,
 		DNSNames:       dnsNames,
 		EmailAddresses: emailAddresses,
 		IPAddresses:    ipAddresses,
@@ -735,8 +704,7 @@ func generateCreationBundle(b *backend,
 		KeyBits:        role.KeyBits,
 		SigningBundle:  signingBundle,
 		TTL:            ttl,
-		KeyUsage:       x509.KeyUsage(parseKeyUsages(role.KeyUsage)),
-		ExtKeyUsage:    extUsage,
+		Usage:          usage,
 	}
 
 	// Don't deal with URLs or max path length if it's self-signed, as these
@@ -779,18 +747,16 @@ func addKeyUsages(creationInfo *creationBundle, certTemplate *x509.Certificate) 
 		return
 	}
 
-	certTemplate.KeyUsage = creationInfo.KeyUsage
-
-	if creationInfo.ExtKeyUsage&serverExtKeyUsage != 0 {
+	if creationInfo.Usage&serverUsage != 0 {
 		certTemplate.ExtKeyUsage = append(certTemplate.ExtKeyUsage, x509.ExtKeyUsageServerAuth)
 	}
-	if creationInfo.ExtKeyUsage&clientExtKeyUsage != 0 {
+	if creationInfo.Usage&clientUsage != 0 {
 		certTemplate.ExtKeyUsage = append(certTemplate.ExtKeyUsage, x509.ExtKeyUsageClientAuth)
 	}
-	if creationInfo.ExtKeyUsage&codeSigningExtKeyUsage != 0 {
+	if creationInfo.Usage&codeSigningUsage != 0 {
 		certTemplate.ExtKeyUsage = append(certTemplate.ExtKeyUsage, x509.ExtKeyUsageCodeSigning)
 	}
-	if creationInfo.ExtKeyUsage&emailProtectionExtKeyUsage != 0 {
+	if creationInfo.Usage&emailProtectionUsage != 0 {
 		certTemplate.ExtKeyUsage = append(certTemplate.ExtKeyUsage, x509.ExtKeyUsageEmailProtection)
 	}
 }
@@ -814,12 +780,11 @@ func createCertificate(creationInfo *creationBundle) (*certutil.ParsedCertBundle
 
 	subjKeyID, err := certutil.GetSubjKeyID(result.PrivateKey)
 	if err != nil {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("error getting subject key ID: %s", err)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("error getting subject key ID: %s", err)}
 	}
 
 	subject := pkix.Name{
-		CommonName:         creationInfo.CommonName,
-		OrganizationalUnit: creationInfo.OU,
+		CommonName: creationInfo.CommonName,
 	}
 
 	certTemplate := &x509.Certificate{
@@ -878,27 +843,21 @@ func createCertificate(creationInfo *creationBundle) (*certutil.ParsedCertBundle
 	}
 
 	if err != nil {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("unable to create certificate: %s", err)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("unable to create certificate: %s", err)}
 	}
 
 	result.CertificateBytes = certBytes
 	result.Certificate, err = x509.ParseCertificate(certBytes)
 	if err != nil {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("unable to parse created certificate: %s", err)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("unable to parse created certificate: %s", err)}
 	}
 
 	if creationInfo.SigningBundle != nil {
-		if len(creationInfo.SigningBundle.Certificate.AuthorityKeyId) > 0 &&
-			!bytes.Equal(creationInfo.SigningBundle.Certificate.AuthorityKeyId, creationInfo.SigningBundle.Certificate.SubjectKeyId) {
-
-			result.CAChain = []*certutil.CertBlock{
-				&certutil.CertBlock{
-					Certificate: creationInfo.SigningBundle.Certificate,
-					Bytes:       creationInfo.SigningBundle.CertificateBytes,
-				},
-			}
-			result.CAChain = append(result.CAChain, creationInfo.SigningBundle.CAChain...)
-		}
+		result.IssuingCABytes = creationInfo.SigningBundle.CertificateBytes
+		result.IssuingCA = creationInfo.SigningBundle.Certificate
+	} else {
+		result.IssuingCABytes = result.CertificateBytes
+		result.IssuingCA = result.Certificate
 	}
 
 	return result, nil
@@ -937,13 +896,13 @@ func createCSR(creationInfo *creationBundle) (*certutil.ParsedCSRBundle, error) 
 
 	csr, err := x509.CreateCertificateRequest(rand.Reader, csrTemplate, result.PrivateKey)
 	if err != nil {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("unable to create certificate: %s", err)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("unable to create certificate: %s", err)}
 	}
 
 	result.CSRBytes = csr
 	result.CSR, err = x509.ParseCertificateRequest(csr)
 	if err != nil {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("unable to parse created certificate: %s", err)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("unable to parse created certificate: %s", err)}
 	}
 
 	return result, nil
@@ -955,16 +914,16 @@ func signCertificate(creationInfo *creationBundle,
 	csr *x509.CertificateRequest) (*certutil.ParsedCertBundle, error) {
 	switch {
 	case creationInfo == nil:
-		return nil, errutil.UserError{Err: "nil creation info given to signCertificate"}
+		return nil, certutil.UserError{Err: "nil creation info given to signCertificate"}
 	case creationInfo.SigningBundle == nil:
-		return nil, errutil.UserError{Err: "nil signing bundle given to signCertificate"}
+		return nil, certutil.UserError{Err: "nil signing bundle given to signCertificate"}
 	case csr == nil:
-		return nil, errutil.UserError{Err: "nil csr given to signCertificate"}
+		return nil, certutil.UserError{Err: "nil csr given to signCertificate"}
 	}
 
 	err := csr.CheckSignature()
 	if err != nil {
-		return nil, errutil.UserError{Err: "request signature invalid"}
+		return nil, certutil.UserError{Err: "request signature invalid"}
 	}
 
 	result := &certutil.ParsedCertBundle{}
@@ -976,13 +935,12 @@ func signCertificate(creationInfo *creationBundle,
 
 	marshaledKey, err := x509.MarshalPKIXPublicKey(csr.PublicKey)
 	if err != nil {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("error marshalling public key: %s", err)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("error marshalling public key: %s", err)}
 	}
 	subjKeyID := sha1.Sum(marshaledKey)
 
 	subject := pkix.Name{
-		CommonName:         creationInfo.CommonName,
-		OrganizationalUnit: creationInfo.OU,
+		CommonName: creationInfo.CommonName,
 	}
 
 	certTemplate := &x509.Certificate{
@@ -1029,7 +987,7 @@ func signCertificate(creationInfo *creationBundle,
 
 		if creationInfo.SigningBundle.Certificate.MaxPathLen == 0 &&
 			creationInfo.SigningBundle.Certificate.MaxPathLenZero {
-			return nil, errutil.UserError{Err: "signing certificate has a max path length of zero, and cannot issue further CA certificates"}
+			return nil, certutil.UserError{Err: "signing certificate has a max path length of zero, and cannot issue further CA certificates"}
 		}
 
 		certTemplate.MaxPathLen = creationInfo.MaxPathLength
@@ -1041,16 +999,17 @@ func signCertificate(creationInfo *creationBundle,
 	certBytes, err = x509.CreateCertificate(rand.Reader, certTemplate, caCert, csr.PublicKey, creationInfo.SigningBundle.PrivateKey)
 
 	if err != nil {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("unable to create certificate: %s", err)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("unable to create certificate: %s", err)}
 	}
 
 	result.CertificateBytes = certBytes
 	result.Certificate, err = x509.ParseCertificate(certBytes)
 	if err != nil {
-		return nil, errutil.InternalError{Err: fmt.Sprintf("unable to parse created certificate: %s", err)}
+		return nil, certutil.InternalError{Err: fmt.Sprintf("unable to parse created certificate: %s", err)}
 	}
 
-	result.CAChain = creationInfo.SigningBundle.GetCAChain()
+	result.IssuingCABytes = creationInfo.SigningBundle.CertificateBytes
+	result.IssuingCA = creationInfo.SigningBundle.Certificate
 
 	return result, nil
 }

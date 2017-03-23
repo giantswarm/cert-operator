@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hashicorp/vault/helper/jsonutil"
 	"github.com/hashicorp/vault/logical"
 )
 
@@ -32,7 +31,7 @@ func (p *PathStruct) Get(s logical.Storage) (map[string]interface{}, error) {
 	}
 
 	var result map[string]interface{}
-	if err := jsonutil.DecodeJSON(entry.Value, &result); err != nil {
+	if err := json.Unmarshal(entry.Value, &result); err != nil {
 		return nil, err
 	}
 

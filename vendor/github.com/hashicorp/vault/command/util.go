@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"time"
 
 	"github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/command/token"
@@ -32,44 +31,27 @@ func DefaultTokenHelper() (token.TokenHelper, error) {
 
 func PrintRawField(ui cli.Ui, secret *api.Secret, field string) int {
 	var val interface{}
-	switch {
-	case secret.Auth != nil:
-		switch field {
-		case "token":
-			val = secret.Auth.ClientToken
-		case "token_accessor":
-			val = secret.Auth.Accessor
-		case "token_duration":
-			val = secret.Auth.LeaseDuration
-		case "token_renewable":
-			val = secret.Auth.Renewable
-		case "token_policies":
-			val = secret.Auth.Policies
-		default:
-			val = secret.Data[field]
-		}
-
-	case secret.WrapInfo != nil:
-		switch field {
-		case "wrapping_token":
+	switch field {
+	case "wrapping_token":
+		if secret.WrapInfo != nil {
 			val = secret.WrapInfo.Token
-		case "wrapping_token_ttl":
+		}
+	case "wrapping_token_ttl":
+		if secret.WrapInfo != nil {
 			val = secret.WrapInfo.TTL
-		case "wrapping_token_creation_time":
-			val = secret.WrapInfo.CreationTime.Format(time.RFC3339Nano)
-		case "wrapped_accessor":
+		}
+	case "wrapping_token_creation_time":
+		if secret.WrapInfo != nil {
+			val = secret.WrapInfo.CreationTime.String()
+		}
+	case "wrapped_accessor":
+		if secret.WrapInfo != nil {
 			val = secret.WrapInfo.WrappedAccessor
-		default:
-			val = secret.Data[field]
 		}
-
+	case "refresh_interval":
+		val = secret.LeaseDuration
 	default:
-		switch field {
-		case "refresh_interval":
-			val = secret.LeaseDuration
-		default:
-			val = secret.Data[field]
-		}
+		val = secret.Data[field]
 	}
 
 	if val != nil {
@@ -79,7 +61,7 @@ func PrintRawField(ui cli.Ui, secret *api.Secret, field string) int {
 		// directly print the message. If mitchellh/cli exposes method
 		// to print without CR, this check needs to be removed.
 		if reflect.TypeOf(ui).String() == "*cli.BasicUi" {
-			fmt.Fprintf(os.Stdout, "%v", val)
+			fmt.Fprintf(os.Stdout, fmt.Sprintf("%v", val))
 		} else {
 			ui.Output(fmt.Sprintf("%v", val))
 		}

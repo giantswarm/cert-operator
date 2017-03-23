@@ -43,7 +43,7 @@ func (c *AuthDisableCommand) Run(args []string) int {
 	}
 
 	c.Ui.Output(fmt.Sprintf(
-		"Disabled auth provider at path '%s' if it was enabled", path))
+		"Disabled auth provider at path '%s'!", path))
 
 	return 0
 }

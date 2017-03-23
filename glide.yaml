@@ -1,20 +1,39 @@
 package: github.com/giantswarm/cert-operator
 import:
-- package: github.com/spf13/cobra
-- package: github.com/hashicorp/vault
-  version: 0.6.5
-  subpackages:
-  - api
-- package: github.com/giantswarm/microkit
-- package: github.com/spf13/viper
-- package: k8s.io/client-go
-  version: ~2.0.0-alpha.0
-- package: github.com/blang/semver
 - package: github.com/golang/protobuf
   version: 8ee79997227bf9b34611aee7946ae64735e6fd93
-  subpackages:
-  - jsonpb
-- package: github.com/stretchr/testify
-  version: v1.1.4
-- package: github.com/fatih/structs
 - package: github.com/giantswarm/certctl
+  version: 350bd8e6c1098d0c20166ef7e286c8c7afe6e517
+  subpackages:
+  - service/cert-signer
+  - service/pki
+  - service/spec
+  - service/token
+- package: github.com/giantswarm/microkit
+  subpackages:
+  - command
+  - error
+  - flag
+  - logger
+  - server
+- package: github.com/go-kit/kit
+  version: ~0.3.0
+  subpackages:
+  - endpoint
+  - transport/http
+- package: github.com/hashicorp/vault
+  version: 0.6.0
+  subpackages:
+  - api
+- package: github.com/juju/errgo
+- package: golang.org/x/net/context
+- package: k8s.io/client-go
+  version: ^2.0.0
+  subpackages:
+  - kubernetes
+  - rest
+testImport:
+- package: github.com/stretchr/testify
+  version: ^1.1.4
+  subpackages:
+  - assert

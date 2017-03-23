@@ -1,481 +1,4 @@
-## 0.6.5 (February 7th, 2017)
-
-FEATURES:
-
- * **Okta Authentication**: A new Okta authentication backend allows you to use
-   Okta usernames and passwords to authenticate to Vault. If provided with an
-   appropriate Okta API token, group membership can be queried to assign
-   policies; users and groups can be defined locally as well.
- * **RADIUS Authentication**: A new RADIUS authentication backend allows using
-   a RADIUS server to authenticate to Vault. Policies can be configured for
-   specific users or for any authenticated user.
- * **Exportable Transit Keys**: Keys in `transit` can now be marked as
-   `exportable` at creation time. This allows a properly ACL'd user to retrieve
-   the associated signing key, encryption key, or HMAC key. The `exportable`
-   value is returned on a key policy read and cannot be changed, so if a key is
-   marked `exportable` it will always be exportable, and if it is not it will
-   never be exportable.
- * **Batch Transit Operations**: `encrypt`, `decrypt` and `rewrap` operations
-   in the transit backend now support processing multiple input items in one
-   call, returning the output of each item in the response.
- * **Configurable Audited HTTP Headers**: You can now specify headers that you
-   want to have included in each audit entry, along with whether each header
-   should be HMAC'd or kept plaintext. This can be useful for adding additional
-   client or network metadata to the audit logs. 
- * **Transit Backend UI (Enterprise)**: Vault Enterprise UI now supports the transit
-   backend, allowing creation, viewing and editing of named keys as well as using
-   those keys to perform supported transit operations directly in the UI.
-
-IMPROVEMENTS:
-
- * auth/aws-ec2: Add support for cross-account auth using STS [GH-2148]
- * auth/aws-ec2: Support issuing periodic tokens [GH-2324]
- * auth/github: Support listing teams and users [GH-2261]
- * auth/ldap: Support adding policies to local users directly, in addition to
-   local groups [GH-2152]
- * command/server: Add ability to select and prefer server cipher suites
-   [GH-2293]
- * core: Add a nonce to unseal operations as a check (useful mostly for
-   support, not as a security principle) [GH-2276]
- * duo: Added ability to supply extra context to Duo pushes [GH-2118]
- * physical/consul: Add option for setting consistency mode on Consul gets
-   [GH-2282]
- * physical/etcd: Full v3 API support; code will autodetect which API version
-   to use. The v3 code path is significantly less complicated and may be much
-   more stable. [GH-2168]
- * secret/pki: Allow specifying OU entries in generated certificate subjects
-   [GH-2251]
- * secret mount ui (Enterprise): the secret mount list now shows all mounted
-   backends even if the UI cannot browse them. Additional backends can now be
-   mounted from the UI as well.
-
-BUG FIXES:
-
- * auth/token: Fix regression in 0.6.4 where using token store roles as a
-   blacklist (with only `disallowed_policies` set) would not work in most
-   circumstances [GH-2286]
- * physical/s3: Page responses in client so list doesn't truncate [GH-2224]
- * secret/cassandra: Stop a connection leak that could occur on active node
-   failover [GH-2313]
- * secret/pki: When using `sign-verbatim`, don't require a role and use the
-   CSR's common name [GH-2243]
-
-## 0.6.4 (December 16, 2016)
-
-SECURITY:
-
-Further details about these security issues can be found in the 0.6.4 upgrade
-guide.
-
- * `default` Policy Privilege Escalation: If a parent token did not have the
-   `default` policy attached to its token, it could still create children with
-   the `default` policy. This is no longer allowed (unless the parent has
-   `sudo` capability for the creation path). In most cases this is low severity
-   since the access grants in the `default` policy are meant to be access
-   grants that are acceptable for all tokens to have.
- * Leases Not Expired When Limited Use Token Runs Out of Uses: When using
-   limited-use tokens to create leased secrets, if the limited-use token was
-   revoked due to running out of uses (rather than due to TTL expiration or
-   explicit revocation) it would fail to revoke the leased secrets. These
-   secrets would still be revoked when their TTL expired, limiting the severity
-   of this issue. An endpoint has been added (`auth/token/tidy`) that can
-   perform housekeeping tasks on the token store; one of its tasks can detect
-   this situation and revoke the associated leases.
-
-FEATURES:
-
-  * **Policy UI (Enterprise)**: Vault Enterprise UI now supports viewing,
-    creating, and editing policies.
-
-IMPROVEMENTS:
-
- * http: Vault now sets a `no-store` cache control header to make it more
-   secure in setups that are not end-to-end encrypted [GH-2183]
-
-BUG FIXES:
-
- * auth/ldap: Don't panic if dialing returns an error and starttls is enabled;
-   instead, return the error [GH-2188]
- * ui (Enterprise): Submitting an unseal key now properly resets the
-   form so a browser refresh isn't required to continue.
-
-## 0.6.3 (December 6, 2016)
-
-DEPRECATIONS/CHANGES:
-
- * Request size limitation: A maximum request size of 32MB is imposed to
-   prevent a denial of service attack with arbitrarily large requests [GH-2108]
- * LDAP denies passwordless binds by default: In new LDAP mounts, or when
-   existing LDAP mounts are rewritten, passwordless binds will be denied by
-   default. The new `deny_null_bind` parameter can be set to `false` to allow
-   these. [GH-2103]
- * Any audit backend activated satisfies conditions: Previously, when a new
-   Vault node was taking over service in an HA cluster, all audit backends were
-   required to be loaded successfully to take over active duty. This behavior
-   now matches the behavior of the audit logging system itself: at least one
-   audit backend must successfully be loaded. The server log contains an error
-   when this occurs. This helps keep a Vault HA cluster working when there is a
-   misconfiguration on a standby node. [GH-2083]
-
-FEATURES:
-
- * **Web UI (Enterprise)**: Vault Enterprise now contains a built-in web UI
-   that offers access to a number of features, including init/unsealing/sealing,
-   authentication via userpass or LDAP, and K/V reading/writing. The capability
-   set of the UI will be expanding rapidly in further releases. To enable it,
-   set `ui = true` in the top level of Vault's configuration file and point a
-   web browser at your Vault address.
- * **Google Cloud Storage Physical Backend**: You can now use GCS for storing
-   Vault data [GH-2099]
-
-IMPROVEMENTS:
-
- * auth/github: Policies can now be assigned to users as well as to teams
-   [GH-2079]
- * cli: Set the number of retries on 500 down to 0 by default (no retrying). It
-   can be very confusing to users when there is a pause while the retries
-   happen if they haven't explicitly set it. With request forwarding the need
-   for this is lessened anyways. [GH-2093]
- * core: Response wrapping is now allowed to be specified by backend responses
-   (requires backends gaining support) [GH-2088]
- * physical/consul: When announcing service, use the scheme of the Vault server
-   rather than the Consul client [GH-2146]
- * secret/consul: Added listing functionality to roles [GH-2065]
- * secret/postgresql: Added `revocation_sql` parameter on the role endpoint to
-   enable customization of user revocation SQL statements [GH-2033]
- * secret/transit: Add listing of keys [GH-1987]
-
-BUG FIXES:
-
- * api/unwrap, command/unwrap: Increase compatibility of `unwrap` command with
-   Vault 0.6.1 and older [GH-2014]
- * api/unwrap, command/unwrap: Fix error when no client token exists [GH-2077]
- * auth/approle: Creating the index for the role_id properly [GH-2004]
- * auth/aws-ec2: Handle the case of multiple upgrade attempts when setting the
-   instance-profile ARN [GH-2035]
- * auth/ldap: Avoid leaking connections on login [GH-2130]
- * command/path-help: Use the actual error generated by Vault rather than
-   always using 500 when there is a path help error [GH-2153]
- * command/ssh: Use temporary file for identity and ensure its deletion before
-   the command returns [GH-2016]
- * cli: Fix error printing values with `-field` if the values contained
-   formatting directives [GH-2109]
- * command/server: Don't say mlock is supported on OSX when it isn't. [GH-2120]
- * core: Fix bug where a failure to come up as active node (e.g. if an audit
-   backend failed) could lead to deadlock [GH-2083]
- * physical/mysql: Fix potential crash during setup due to a query failure
-   [GH-2105]
- * secret/consul: Fix panic on user error [GH-2145]
-
-## 0.6.2 (October 5, 2016)
-
-DEPRECATIONS/CHANGES:
-
- * Convergent Encryption v2: New keys in `transit` using convergent mode will
-   use a new nonce derivation mechanism rather than require the user to supply
-   a nonce. While not explicitly increasing security, it minimizes the
-   likelihood that a user will use the mode improperly and impact the security
-   of their keys. Keys in convergent mode that were created in v0.6.1 will
-   continue to work with the same mechanism (user-supplied nonce).
- * `etcd` HA off by default: Following in the footsteps of `dynamodb`, the
-   `etcd` storage backend now requires that `ha_enabled` be explicitly
-   specified in the configuration file. The backend currently has known broken
-   HA behavior, so this flag discourages use by default without explicitly
-   enabling it. If you are using this functionality, when upgrading, you should
-   set `ha_enabled` to `"true"` *before* starting the new versions of Vault.
- * Default/Max lease/token TTLs are now 32 days: In previous versions of Vault
-   the default was 30 days, but moving it to 32 days allows some operations
-   (e.g. reauthenticating, renewing, etc.) to be performed via a monthly cron
-   job.
- * AppRole Secret ID endpoints changed: Secret ID and Secret ID accessors are
-   no longer part of request URLs. The GET and DELETE operations are now moved
-   to new endpoints (`/lookup` and `/destroy`) which consumes the input from
-   the body and not the URL.
- * AppRole requires at least one constraint: previously it was sufficient to
-   turn off all AppRole authentication constraints (secret ID, CIDR block) and
-   use the role ID only. It is now required that at least one additional
-   constraint is enabled. Existing roles are unaffected, but any new roles or
-   updated roles will require this.
- * Reading wrapped responses from `cubbyhole/response` is deprecated. The
-   `sys/wrapping/unwrap` endpoint should be used instead as it provides
-   additional security, auditing, and other benefits. The ability to read
-   directly will be removed in a future release.
- * Request Forwarding is now on by default: in 0.6.1 this required toggling on,
-   but is now enabled by default. This can be disabled via the
-   `"disable_clustering"` parameter in Vault's
-   [config](https://www.vaultproject.io/docs/config/index.html), or per-request
-   with the `X-Vault-No-Request-Forwarding` header.
- * In prior versions a bug caused the `bound_iam_role_arn` value in the
-   `aws-ec2` authentication backend to actually use the instance profile ARN.
-   This has been corrected, but as a result there is a behavior change. To
-   match using the instance profile ARN, a new parameter
-   `bound_iam_instance_profile_arn` has been added. Existing roles will
-   automatically transfer the value over to the correct parameter, but the next
-   time the role is updated, the new meanings will take effect.
-
-FEATURES:
-
- * **Secret ID CIDR Restrictions in `AppRole`**: Secret IDs generated under an
-   approle can now specify a list of CIDR blocks from where the requests to
-   generate secret IDs should originate from. If an approle already has CIDR
-   restrictions specified, the CIDR restrictions on the secret ID should be a
-   subset of those specified on the role [GH-1910]
- * **Initial Root Token PGP Encryption**: Similar to `generate-root`, the root
-   token created at initialization time can now be PGP encrypted [GH-1883]
- * **Support Chained Intermediate CAs in `pki`**: The `pki` backend now allows,
-   when a CA cert is being supplied as a signed root or intermediate, a trust
-   chain of arbitrary length. The chain is returned as a parameter at
-   certificate issue/sign time and is retrievable independently as well.
-   [GH-1694]
- * **Response Wrapping Enhancements**: There are new endpoints to look up
-   response wrapped token parameters; wrap arbitrary values; rotate wrapping
-   tokens; and unwrap with enhanced validation. In addition, list operations
-   can now be response-wrapped. [GH-1927]
- * Transit features: The `transit` backend now supports generating random bytes
-   and SHA sums; HMACs; and signing and verification functionality using EC
-   keys (P-256 curve)
-
-IMPROVEMENTS:
-
- * api: Return error when an invalid (as opposed to incorrect) unseal key is
-   submitted, rather than ignoring it [GH-1782]
- * api: Add method to call `auth/token/create-orphan` endpoint [GH-1834]
- * api: Rekey operation now redirects from standbys to master [GH-1862]
- * audit/file: Sending a `SIGHUP` to Vault now causes Vault to close and
-   re-open the log file, making it easier to rotate audit logs [GH-1953]
- * auth/aws-ec2: EC2 instances can get authenticated by presenting the identity
-   document and its SHA256 RSA digest [GH-1961]
- * auth/aws-ec2: IAM bound parameters on the aws-ec2 backend will perform a
-   prefix match instead of exact match [GH-1943]
- * auth/aws-ec2: Added a new constraint `bound_iam_instance_profile_arn` to
-   refer to IAM instance profile ARN and fixed the earlier `bound_iam_role_arn`
-   to refer to IAM role ARN instead of the instance profile ARN [GH-1913]
- * auth/aws-ec2: Backend generates the nonce by default and clients can
-   explicitly disable reauthentication by setting empty nonce [GH-1889]
- * auth/token: Added warnings if tokens and accessors are used in URLs [GH-1806]
- * command/format: The `format` flag on select CLI commands takes `yml` as an
-   alias for `yaml` [GH-1899]
- * core: Allow the size of the read cache to be set via the config file, and
-   change the default value to 1MB (from 32KB) [GH-1784]
- * core: Allow single and two-character path parameters for most places
-   [GH-1811]
- * core: Allow list operations to be response-wrapped [GH-1814]
- * core: Provide better protection against timing attacks in Shamir code
-   [GH-1877]
- * core: Unmounting/disabling backends no longer returns an error if the mount
-   didn't exist. This is line with elsewhere in Vault's API where `DELETE` is
-   an idempotent operation. [GH-1903]
- * credential/approle: At least one constraint is required to be enabled while
-   creating and updating a role [GH-1882]
- * secret/cassandra: Added consistency level for use with roles [GH-1931]
- * secret/mysql: SQL for revoking user can be configured on the role [GH-1914]
- * secret/transit: Use HKDF (RFC 5869) as the key derivation function for new
-   keys [GH-1812]
- * secret/transit: Empty plaintext values are now allowed [GH-1874]
-
-BUG FIXES:
-
- * audit: Fix panic being caused by some values logging as underlying Go types
-   instead of formatted strings [GH-1912]
- * auth/approle: Fixed panic on deleting approle that doesn't exist [GH-1920]
- * auth/approle: Not letting secret IDs and secret ID accessors to get logged
-   in plaintext in audit logs [GH-1947]
- * auth/aws-ec2: Allow authentication if the underlying host is in a bad state
-   but the instance is running [GH-1884]
- * auth/token: Fixed metadata getting missed out from token lookup response by
-   gracefully handling token entry upgrade [GH-1924]
- * cli: Don't error on newline in token file [GH-1774]
- * core: Pass back content-type header for forwarded requests [GH-1791]
- * core: Fix panic if the same key was given twice to `generate-root` [GH-1827]
- * core: Fix potential deadlock on unmount/remount [GH-1793]
- * physical/file: Remove empty directories from the `file` storage backend [GH-1821]
- * physical/zookeeper: Remove empty directories from the `zookeeper` storage
-   backend and add a fix to the `file` storage backend's logic [GH-1964]
- * secret/aws: Added update operation to `aws/sts` path to consider `ttl`
-   parameter [39b75c6]
- * secret/aws: Mark STS secrets as non-renewable [GH-1804]
- * secret/cassandra: Properly store session for re-use [GH-1802]
- * secret/ssh: Fix panic when revoking SSH dynamic keys [GH-1781]
-
-## 0.6.1 (August 22, 2016)
-
-DEPRECATIONS/CHANGES:
-
- * Once the active node is 0.6.1, standby nodes must also be 0.6.1 in order to
-   connect to the HA cluster. We recommend following our [general upgrade
-   instructions](https://www.vaultproject.io/docs/install/upgrade.html) in
-   addition to 0.6.1-specific upgrade instructions to ensure that this is not
-   an issue.
- * Status codes for sealed/uninitialized Vaults have changed to `503`/`501`
-   respectively. See the [version-specific upgrade
-   guide](https://www.vaultproject.io/docs/install/upgrade-to-0.6.1.html) for
-   more details.
- * Root tokens (tokens with the `root` policy) can no longer be created except
-   by another root token or the `generate-root` endpoint.
- * Issued certificates from the `pki` backend against new roles created or
-   modified after upgrading will contain a set of default key usages.
- * The `dynamodb` physical data store no longer supports HA by default. It has
-   some non-ideal behavior around failover that was causing confusion. See the
-   [documentation](https://www.vaultproject.io/docs/config/index.html#ha_enabled)
-   for information on enabling HA mode. It is very important that this
-   configuration is added _before upgrading_.
- * The `ldap` backend no longer searches for `memberOf` groups as part of its
-   normal flow. Instead, the desired group filter must be specified. This fixes
-   some errors and increases speed for directories with different structures,
-   but if this behavior has been relied upon, ensure that you see the upgrade
-   notes _before upgrading_.
- * `app-id` is now deprecated with the addition of the new AppRole backend.
-   There are no plans to remove it, but we encourage using AppRole whenever
-   possible, as it offers enhanced functionality and can accommodate many more
-   types of authentication paradigms.
-
-FEATURES:
-
- * **AppRole Authentication Backend**: The `approle` backend is a
-   machine-oriented authentication backend that provides a similar concept to
-   App-ID while adding many missing features, including a pull model that
-   allows for the backend to generate authentication credentials rather than
-   requiring operators or other systems to push credentials in. It should be
-   useful in many more situations than App-ID. The inclusion of this backend
-   deprecates App-ID. [GH-1426]
- * **Request Forwarding**: Vault servers can now forward requests to each other
-   rather than redirecting clients. This feature is off by default in 0.6.1 but
-   will be on by default in the next release. See the [HA concepts
-   page](https://www.vaultproject.io/docs/concepts/ha.html) for information on
-   enabling and configuring it. [GH-443]
- * **Convergent Encryption in `Transit`**: The `transit` backend now supports a
-   convergent encryption mode where the same plaintext will produce the same
-   ciphertext. Although very useful in some situations, this has potential
-   security implications, which are mostly mitigated by requiring the use of
-   key derivation when convergent encryption is enabled. See [the `transit`
-   backend
-   documentation](https://www.vaultproject.io/docs/secrets/transit/index.html)
-   for more details. [GH-1537]
- * **Improved LDAP Group Filters**: The `ldap` auth backend now uses templates
-   to define group filters, providing the capability to support some
-   directories that could not easily be supported before (especially specific
-   Active Directory setups with nested groups). [GH-1388]
- * **Key Usage Control in `PKI`**: Issued certificates from roles created or
-   modified after upgrading contain a set of default key usages for increased
-   compatibility with OpenVPN and some other software. This set can be changed
-   when writing a role definition. Existing roles are unaffected. [GH-1552]
- * **Request Retrying in the CLI and Go API**: Requests that fail with a `5xx`
-   error code will now retry after a backoff. The maximum total number of
-   retries (including disabling this functionality) can be set with an
-   environment variable. See the [environment variable
-   documentation](https://www.vaultproject.io/docs/commands/environment.html)
-   for more details. [GH-1594]
- * **Service Discovery in `vault init`**: The new `-auto` option on `vault init`
-   will perform service discovery using Consul. When only one node is discovered,
-   it will be initialized and when more than one node is discovered, they will
-   be output for easy selection. See `vault init --help` for more details. [GH-1642]
- * **MongoDB Secret Backend**: Generate dynamic unique MongoDB database
-   credentials based on configured roles. Sponsored by
-   [CommerceHub](http://www.commercehub.com/). [GH-1414]
- * **Circonus Metrics Integration**: Vault can now send metrics to
-   [Circonus](http://www.circonus.com/). See the [configuration
-   documentation](https://www.vaultproject.io/docs/config/index.html) for
-   details. [GH-1646]
-
-IMPROVEMENTS:
-
- * audit: Added a unique identifier to each request which will also be found in
-   the request portion of the response. [GH-1650]
- * auth/aws-ec2: Added a new constraint `bound_account_id` to the role
-   [GH-1523]
- * auth/aws-ec2: Added a new constraint `bound_iam_role_arn` to the role
-   [GH-1522]
- * auth/aws-ec2: Added `ttl` field for the role [GH-1703]
- * auth/ldap, secret/cassandra, physical/consul: Clients with `tls.Config`
-   have the minimum TLS version set to 1.2 by default. This is configurable.
- * auth/token: Added endpoint to list accessors [GH-1676]
- * auth/token: Added `disallowed_policies` option to token store roles [GH-1681]
- * auth/token: `root` or `sudo` tokens can now create periodic tokens via
-   `auth/token/create`; additionally, the same token can now be periodic and
-   have an explicit max TTL [GH-1725]
- * build: Add support for building on Solaris/Illumos [GH-1726]
- * cli: Output formatting in the presence of warnings in the response object
-   [GH-1533]
- * cli: `vault auth` command supports a `-path` option to take in the path at
-   which the auth backend is enabled, thereby allowing authenticating against
-   different paths using the command options [GH-1532]
- * cli: `vault auth -methods` will now display the config settings of the mount
-   [GH-1531]
- * cli: `vault read/write/unwrap -field` now allows selecting token response
-   fields [GH-1567]
- * cli: `vault write -field` now allows selecting wrapped response fields
-   [GH-1567]
- * command/status: Version information and cluster details added to the output
-   of `vault status` command [GH-1671]
- * core: Response wrapping is now enabled for login endpoints [GH-1588]
- * core: The duration of leadership is now exported via events through
-   telemetry [GH-1625]
- * core: `sys/capabilities-self` is now accessible as part of the `default`
-   policy [GH-1695]
- * core: `sys/renew` is now accessible as part of the `default` policy [GH-1701]
- * core: Unseal keys will now be returned in both hex and base64 forms, and
-   either can be used [GH-1734]
- * core: Responses from most `/sys` endpoints now return normal `api.Secret`
-   structs in addition to the values they carried before. This means that
-   response wrapping can now be used with most authenticated `/sys` operations
-   [GH-1699]
- * physical/etcd: Support `ETCD_ADDR` env var for specifying addresses [GH-1576]
- * physical/consul: Allowing additional tags to be added to Consul service
-   registration via `service_tags` option [GH-1643]
- * secret/aws: Listing of roles is supported now  [GH-1546]
- * secret/cassandra: Add `connect_timeout` value for Cassandra connection
-   configuration [GH-1581]
- * secret/mssql,mysql,postgresql: Reading of connection settings is supported
-   in all the sql backends [GH-1515]
- * secret/mysql: Added optional maximum idle connections value to MySQL
-   connection configuration [GH-1635]
- * secret/mysql: Use a combination of the role name and token display name in
-   generated user names and allow the length to be controlled [GH-1604]
- * secret/{cassandra,mssql,mysql,postgresql}: SQL statements can now be passed
-   in via one of four ways: a semicolon-delimited string, a base64-delimited
-   string, a serialized JSON string array, or a base64-encoded serialized JSON
-   string array [GH-1686]
- * secret/ssh: Added `allowed_roles` to vault-ssh-helper's config and returning
-   role name as part of response of `verify` API
- * secret/ssh: Added passthrough of command line arguments to `ssh` [GH-1680]
- * sys/health: Added version information to the response of health status
-   endpoint [GH-1647]
- * sys/health: Cluster information isbe returned as part of health status when
-   Vault is unsealed [GH-1671]
- * sys/mounts: MountTable data is compressed before serializing to accommodate
-   thousands of mounts [GH-1693]
- * website: The [token
-   concepts](https://www.vaultproject.io/docs/concepts/tokens.html) page has
-   been completely rewritten [GH-1725]
-
-BUG FIXES:
-
- * auth/aws-ec2: Added a nil check for stored whitelist identity object
-   during renewal [GH-1542]
- * auth/cert: Fix panic if no client certificate is supplied [GH-1637]
- * auth/token: Don't report that a non-expiring root token is renewable, as
-   attempting to renew it results in an error [GH-1692]
- * cli: Don't retry a command when a redirection is received [GH-1724]
- * core: Fix regression causing status codes to be `400` in most non-5xx error
-   cases [GH-1553]
- * core: Fix panic that could occur during a leadership transition [GH-1627]
- * physical/postgres: Remove use of prepared statements as this causes
-   connection multiplexing software to break [GH-1548]
- * physical/consul: Multiple Vault nodes on the same machine leading to check ID
-   collisions were resulting in incorrect health check responses [GH-1628]
- * physical/consul: Fix deregistration of health checks on exit [GH-1678]
- * secret/postgresql: Check for existence of role before attempting deletion
-   [GH-1575]
- * secret/postgresql: Handle revoking roles that have privileges on sequences
-   [GH-1573]
- * secret/postgresql(,mysql,mssql): Fix incorrect use of database over
-   transaction object which could lead to connection exhaustion [GH-1572]
- * secret/pki: Fix parsing CA bundle containing trailing whitespace [GH-1634]
- * secret/pki: Fix adding email addresses as SANs [GH-1688]
- * secret/pki: Ensure that CRL values are always UTC, per RFC [GH-1727]
- * sys/seal-status: Fixed nil Cluster object while checking seal status [GH-1715]
-
-## 0.6.0 (June 14th, 2016)
+## 0.6.0 (Unreleased)
 
 SECURITY:
 
@@ -496,7 +19,7 @@ SECURITY:
    confusion, we have simply removed `auth/token/revoke-prefix` in 0.6, and
    `sys/revoke-prefix` will be meant for both leases and tokens instead.
 
-DEPRECATIONS/CHANGES:
+DEPRECATIONS/BREAKING CHANGES:
 
  * `auth/token/revoke-prefix` has been removed. See the security notice for
    details. [GH-1280]
@@ -770,8 +293,8 @@ BUG FIXES:
    during renewals [GH-1176]
 
 ## 0.5.1 (February 25th, 2016)
-
-DEPRECATIONS/CHANGES:
+ 
+DEPRECATIONS/BREAKING CHANGES:
 
  * RSA keys less than 2048 bits are no longer supported in the PKI backend.
    1024-bit keys are considered unsafe and are disallowed in the Internet PKI.
@@ -800,7 +323,7 @@ IMPROVEMENTS:
  * api/health: Add the server's time in UTC to health responses [GH-1117]
  * command/rekey and command/generate-root: These now return the status at
    attempt initialization time, rather than requiring a separate fetch for the
-   nonce [GH-1054]
+   nonce [GH-1054] 
  * credential/cert: Don't require root/sudo tokens for the `certs/` and `crls/`
    paths; use normal ACL behavior instead [GH-468]
  * credential/github: The validity of the token used for login will be checked
@@ -855,7 +378,7 @@ SECURITY:
    would be a denial of service against a legitimate rekey operation by sending
    cancel requests over and over. Thanks to Josh Snyder for the report!
 
-DEPRECATIONS/CHANGES:
+DEPRECATIONS/BREAKING CHANGES:
 
  * `s3` physical backend: Environment variables are now preferred over
    configuration values. This makes it behave similar to the rest of Vault,
@@ -930,7 +453,7 @@ FEATURES:
    documentation](https://vaultproject.io/docs/config/index.html) for details.
    [GH-945]
  * **STS Support in AWS Secret Backend**: You can now use the AWS secret
-   backend to fetch STS tokens rather than IAM users. [GH-927]
+   backend to fetch STS tokens rather than IAM users. [GH-927] 
  * **Speedups in the transit backend**: The `transit` backend has gained a
    cache, and now loads only the working set of keys (e.g. from the
    `min_decryption_version` to the current key version) into its working set.
@@ -1040,7 +563,7 @@ against Go 1.5.3, there are no changes from 0.4.0.
 
 ## 0.4.0 (December 10, 2015)
 
-DEPRECATIONS/CHANGES:
+DEPRECATIONS/BREAKING CHANGES:
 
  * Policy Name Casing: Policy names are now normalized to lower-case on write,
    helping prevent accidental case mismatches. For backwards compatibility,
@@ -1190,7 +713,7 @@ MISC:
 
 ## 0.3.0 (September 28, 2015)
 
-DEPRECATIONS/CHANGES:
+DEPRECATIONS/BREAKING CHANGES:
 
 Note: deprecations and breaking changes in upcoming releases are announced
 ahead of time on the "vault-tool" mailing list.

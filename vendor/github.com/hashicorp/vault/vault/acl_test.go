@@ -199,13 +199,6 @@ func testLayeredACL(t *testing.T, acl *ACL) {
 	}
 }
 
-var tokenCreationPolicy = `
-name = "tokenCreation"
-path "auth/token/create*" {
-	capabilities = ["update", "create", "sudo"]
-}
-`
-
 var aclPolicy = `
 name = "dev"
 path "dev/*" {

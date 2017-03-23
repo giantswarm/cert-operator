@@ -17,7 +17,7 @@ type TokenCreateCommand struct {
 
 func (c *TokenCreateCommand) Run(args []string) int {
 	var format string
-	var id, displayName, lease, ttl, explicitMaxTTL, period, role string
+	var id, displayName, lease, ttl, explicitMaxTTL, role string
 	var orphan, noDefaultPolicy, renewable bool
 	var metadata map[string]string
 	var numUses int
@@ -29,7 +29,6 @@ func (c *TokenCreateCommand) Run(args []string) int {
 	flags.StringVar(&lease, "lease", "", "")
 	flags.StringVar(&ttl, "ttl", "", "")
 	flags.StringVar(&explicitMaxTTL, "explicit-max-ttl", "", "")
-	flags.StringVar(&period, "period", "", "")
 	flags.StringVar(&role, "role", "", "")
 	flags.BoolVar(&orphan, "orphan", false, "")
 	flags.BoolVar(&renewable, "renewable", true, "")
@@ -72,7 +71,6 @@ func (c *TokenCreateCommand) Run(args []string) int {
 		NumUses:         numUses,
 		Renewable:       new(bool),
 		ExplicitMaxTTL:  explicitMaxTTL,
-		Period:          period,
 	}
 	*tcr.Renewable = renewable
 
@@ -137,11 +135,6 @@ Token Options:
                           configuration file, this lifetime is a hard limit set
                           on the token itself and cannot be exceeded.
 
-  -period="1h"            If specified, the token will be periodic; it will
-                          have no maximum TTL (unless an "explicit-max-ttl" is
-                          also set) but every renewal will use the given
-                          period. Requires a root/sudo token to use.
-
   -renewable=true         Whether or not the token is renewable to extend its
                           TTL up to Vault's configured maximum TTL for tokens.
                           This defaults to true; set to false to disable
@@ -152,8 +145,8 @@ Token Options:
                           times.
 
   -orphan                 If specified, the token will have no parent. Only
-                          This prevents the new token from being revoked with
-                          your token. Requires a root/sudo token to use.
+                          root tokens can create orphan tokens. This prevents
+                          the new token from being revoked with your token.
 
   -no-default-policy      If specified, the token will not have the "default"
                           policy included in its policy set.

@@ -4,52 +4,12 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/vault/logical"
 	logicaltest "github.com/hashicorp/vault/logical/testing"
 	"github.com/mitchellh/mapstructure"
 )
-
-func TestBackend_config_connection(t *testing.T) {
-	var resp *logical.Response
-	var err error
-	config := logical.TestBackendConfig()
-	config.StorageView = &logical.InmemStorage{}
-	b, err := Factory(config)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	configData := map[string]interface{}{
-		"connection_string":    "sample_connection_string",
-		"max_open_connections": 7,
-		"verify_connection":    false,
-	}
-
-	configReq := &logical.Request{
-		Operation: logical.UpdateOperation,
-		Path:      "config/connection",
-		Storage:   config.StorageView,
-		Data:      configData,
-	}
-	resp, err = b.HandleRequest(configReq)
-	if err != nil || (resp != nil && resp.IsError()) {
-		t.Fatalf("err:%s resp:%#v\n", err, resp)
-	}
-
-	configReq.Operation = logical.ReadOperation
-	resp, err = b.HandleRequest(configReq)
-	if err != nil || (resp != nil && resp.IsError()) {
-		t.Fatalf("err:%s resp:%#v\n", err, resp)
-	}
-
-	delete(configData, "verify_connection")
-	if !reflect.DeepEqual(configData, resp.Data) {
-		t.Fatalf("bad: expected:%#v\nactual:%#v\n", configData, resp.Data)
-	}
-}
 
 func TestBackend_basic(t *testing.T) {
 	b, _ := Factory(logical.TestBackendConfig())
@@ -186,7 +146,7 @@ func testAccStepWriteLease(t *testing.T) logicaltest.TestStep {
 		Path:      "config/lease",
 		Data: map[string]interface{}{
 			"ttl":     "1h5m",
-			"max_ttl": "24h",
+			"ttl_max": "24h",
 		},
 	}
 }
@@ -196,7 +156,7 @@ func testAccStepReadLease(t *testing.T) logicaltest.TestStep {
 		Operation: logical.ReadOperation,
 		Path:      "config/lease",
 		Check: func(resp *logical.Response) error {
-			if resp.Data["ttl"] != "1h5m0s" || resp.Data["max_ttl"] != "24h0m0s" {
+			if resp.Data["ttl"] != "1h5m0s" || resp.Data["ttl_max"] != "24h0m0s" {
 				return fmt.Errorf("bad: %#v", resp)
 			}
 

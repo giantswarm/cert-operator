@@ -2,6 +2,7 @@ package physical
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -10,8 +11,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	log "github.com/mgutz/logxi/v1"
 
 	"github.com/armon/go-metrics"
 	"github.com/aws/aws-sdk-go/aws"
@@ -22,7 +21,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/hashicorp/errwrap"
 )
 
 const (
@@ -63,12 +61,10 @@ const (
 // a DynamoDB table. It can be run in high-availability mode
 // as DynamoDB has locking capabilities.
 type DynamoDBBackend struct {
-	table      string
-	client     *dynamodb.DynamoDB
-	recovery   bool
-	logger     log.Logger
-	haEnabled  bool
-	permitPool *PermitPool
+	table    string
+	client   *dynamodb.DynamoDB
+	recovery bool
+	logger   *log.Logger
 }
 
 // DynamoDBRecord is the representation of a vault entry in
@@ -91,7 +87,7 @@ type DynamoDBLock struct {
 
 // newDynamoDBBackend constructs a DynamoDB backend. If the
 // configured DynamoDB table does not exist, it creates it.
-func newDynamoDBBackend(conf map[string]string, logger log.Logger) (Backend, error) {
+func newDynamoDBBackend(conf map[string]string, logger *log.Logger) (Backend, error) {
 	table := os.Getenv("AWS_DYNAMODB_TABLE")
 	if table == "" {
 		table = conf["table"]
@@ -175,37 +171,16 @@ func newDynamoDBBackend(conf map[string]string, logger log.Logger) (Backend, err
 		return nil, err
 	}
 
-	haEnabled := os.Getenv("DYNAMODB_HA_ENABLED")
-	if haEnabled == "" {
-		haEnabled = conf["ha_enabled"]
-	}
-	haEnabledBool, _ := strconv.ParseBool(haEnabled)
-
 	recoveryMode := os.Getenv("RECOVERY_MODE")
 	if recoveryMode == "" {
 		recoveryMode = conf["recovery_mode"]
 	}
-	recoveryModeBool, _ := strconv.ParseBool(recoveryMode)
-
-	maxParStr, ok := conf["max_parallel"]
-	var maxParInt int
-	if ok {
-		maxParInt, err = strconv.Atoi(maxParStr)
-		if err != nil {
-			return nil, errwrap.Wrapf("failed parsing max_parallel parameter: {{err}}", err)
-		}
-		if logger.IsDebug() {
-			logger.Debug("physical/dynamodb: max_parallel set", "max_parallel", maxParInt)
-		}
-	}
 
 	return &DynamoDBBackend{
-		table:      table,
-		client:     client,
-		permitPool: NewPermitPool(maxParInt),
-		recovery:   recoveryModeBool,
-		haEnabled:  haEnabledBool,
-		logger:     logger,
+		table:    table,
+		client:   client,
+		recovery: recoveryMode == "1",
+		logger:   logger,
 	}, nil
 }
 
@@ -250,9 +225,6 @@ func (d *DynamoDBBackend) Put(entry *Entry) error {
 // Get is used to fetch an entry
 func (d *DynamoDBBackend) Get(key string) (*Entry, error) {
 	defer metrics.MeasureSince([]string{"dynamodb", "get"}, time.Now())
-
-	d.permitPool.Acquire()
-	defer d.permitPool.Release()
 
 	resp, err := d.client.GetItem(&dynamodb.GetItemInput{
 		TableName:      aws.String(d.table),
@@ -337,10 +309,6 @@ func (d *DynamoDBBackend) List(prefix string) ([]string, error) {
 			},
 		},
 	}
-
-	d.permitPool.Acquire()
-	defer d.permitPool.Release()
-
 	err := d.client.QueryPages(queryInput, func(out *dynamodb.QueryOutput, lastPage bool) bool {
 		var record DynamoDBRecord
 		for _, item := range out.Items {
@@ -368,10 +336,6 @@ func (d *DynamoDBBackend) LockWith(key, value string) (Lock, error) {
 	}, nil
 }
 
-func (d *DynamoDBBackend) HAEnabled() bool {
-	return d.haEnabled
-}
-
 // batchWriteRequests takes a list of write requests and executes them in badges
 // with a maximum size of 25 (which is the limit of BatchWriteItem requests).
 func (d *DynamoDBBackend) batchWriteRequests(requests []*dynamodb.WriteRequest) error {
@@ -380,13 +344,11 @@ func (d *DynamoDBBackend) batchWriteRequests(requests []*dynamodb.WriteRequest) 
 		batch := requests[:batchSize]
 		requests = requests[batchSize:]
 
-		d.permitPool.Acquire()
 		_, err := d.client.BatchWriteItem(&dynamodb.BatchWriteItemInput{
 			RequestItems: map[string][]*dynamodb.WriteRequest{
 				d.table: batch,
 			},
 		})
-		d.permitPool.Release()
 		if err != nil {
 			return err
 		}

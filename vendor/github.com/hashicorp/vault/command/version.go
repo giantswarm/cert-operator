@@ -16,11 +16,7 @@ func (c *VersionCommand) Help() string {
 }
 
 func (c *VersionCommand) Run(_ []string) int {
-	out := c.VersionInfo.FullVersionNumber(true)
-	if version.CgoEnabled {
-		out += " (cgo)"
-	}
-	c.Ui.Output(out)
+	c.Ui.Output(c.VersionInfo.String())
 	return 0
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/meta"
 )
@@ -29,16 +30,18 @@ func (c *UnwrapCommand) Run(args []string) int {
 		return 1
 	}
 
-	var tokenID string
-
 	args = flags.Args()
-	switch len(args) {
-	case 0:
-	case 1:
-		tokenID = args[0]
-	default:
-		c.Ui.Error("Unwrap expects zero or one argument (the ID of the wrapping token)")
+	if len(args) != 1 || len(args[0]) == 0 {
+		c.Ui.Error("Unwrap expects one argument: the ID of the wrapping token")
 		flags.Usage()
+		return 1
+	}
+
+	tokenID := args[0]
+	_, err = uuid.ParseUUID(tokenID)
+	if err != nil {
+		c.Ui.Error(fmt.Sprintf(
+			"Given token could not be parsed as a UUID: %s", err))
 		return 1
 	}
 
@@ -55,7 +58,7 @@ func (c *UnwrapCommand) Run(args []string) int {
 		return 1
 	}
 	if secret == nil {
-		c.Ui.Error("Server gave empty response or secret returned was empty")
+		c.Ui.Error("Secret returned was nil")
 		return 1
 	}
 
@@ -64,15 +67,6 @@ func (c *UnwrapCommand) Run(args []string) int {
 		return PrintRawField(c.Ui, secret, field)
 	}
 
-	// Check if the original was a list response and format as a list if so
-	if secret.Data != nil &&
-		len(secret.Data) == 1 &&
-		secret.Data["keys"] != nil {
-		_, ok := secret.Data["keys"].([]interface{})
-		if ok {
-			return OutputList(c.Ui, format, secret)
-		}
-	}
 	return OutputSecret(c.Ui, format, secret)
 }
 

@@ -2,9 +2,8 @@ package physical
 
 import (
 	"fmt"
+	"log"
 	"sync"
-
-	log "github.com/mgutz/logxi/v1"
 )
 
 type InmemHABackend struct {
@@ -12,11 +11,11 @@ type InmemHABackend struct {
 	locks  map[string]string
 	l      sync.Mutex
 	cond   *sync.Cond
-	logger log.Logger
+	logger *log.Logger
 }
 
 // NewInmemHA constructs a new in-memory HA backend. This is only for testing.
-func NewInmemHA(logger log.Logger) *InmemHABackend {
+func NewInmemHA(logger *log.Logger) *InmemHABackend {
 	in := &InmemHABackend{
 		InmemBackend: *NewInmem(logger),
 		locks:        make(map[string]string),
@@ -40,12 +39,6 @@ func (i *InmemHABackend) LockWith(key, value string) (Lock, error) {
 // been used for HA purposes rather than simply for storage
 func (i *InmemHABackend) LockMapSize() int {
 	return len(i.locks)
-}
-
-// HAEnabled indicates whether the HA functionality should be exposed.
-// Currently always returns true.
-func (i *InmemHABackend) HAEnabled() bool {
-	return true
 }
 
 // InmemLock is an in-memory Lock implementation for the HABackend

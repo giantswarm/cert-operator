@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/vault/helper/jsonutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -57,10 +56,10 @@ type CubbyholeBackend struct {
 
 func (b *CubbyholeBackend) revoke(saltedToken string) error {
 	if saltedToken == "" {
-		return fmt.Errorf("cubbyhole: client token empty during revocation")
+		return fmt.Errorf("[ERR] cubbyhole: client token empty during revocation")
 	}
 
-	if err := logical.ClearView(b.storageView.(*BarrierView).SubView(saltedToken + "/")); err != nil {
+	if err := ClearView(b.storageView.(*BarrierView).SubView(saltedToken + "/")); err != nil {
 		return err
 	}
 
@@ -80,7 +79,7 @@ func (b *CubbyholeBackend) handleExistenceCheck(
 func (b *CubbyholeBackend) handleRead(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	if req.ClientToken == "" {
-		return nil, fmt.Errorf("cubbyhole read: client token empty")
+		return nil, fmt.Errorf("[ERR] cubbyhole read: Client token empty")
 	}
 
 	// Read the path
@@ -96,7 +95,7 @@ func (b *CubbyholeBackend) handleRead(
 
 	// Decode the data
 	var rawData map[string]interface{}
-	if err := jsonutil.DecodeJSON(out.Value, &rawData); err != nil {
+	if err := json.Unmarshal(out.Value, &rawData); err != nil {
 		return nil, fmt.Errorf("json decoding failed: %v", err)
 	}
 
@@ -111,7 +110,7 @@ func (b *CubbyholeBackend) handleRead(
 func (b *CubbyholeBackend) handleWrite(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	if req.ClientToken == "" {
-		return nil, fmt.Errorf("cubbyhole write: client token empty")
+		return nil, fmt.Errorf("[ERR] cubbyhole write: Client token empty")
 	}
 	// Check that some fields are given
 	if len(req.Data) == 0 {
@@ -139,7 +138,7 @@ func (b *CubbyholeBackend) handleWrite(
 func (b *CubbyholeBackend) handleDelete(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	if req.ClientToken == "" {
-		return nil, fmt.Errorf("cubbyhole delete: client token empty")
+		return nil, fmt.Errorf("[ERR] cubbyhole delete: Client token empty")
 	}
 	// Delete the key at the request path
 	if err := req.Storage.Delete(req.ClientToken + "/" + req.Path); err != nil {
@@ -152,7 +151,7 @@ func (b *CubbyholeBackend) handleDelete(
 func (b *CubbyholeBackend) handleList(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	if req.ClientToken == "" {
-		return nil, fmt.Errorf("cubbyhole list: client token empty")
+		return nil, fmt.Errorf("[ERR] cubbyhole list: Client token empty")
 	}
 
 	// Right now we only handle directories, so ensure it ends with / We also

@@ -3,17 +3,15 @@ package vault
 import (
 	"encoding/json"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/vault/audit"
-	"github.com/hashicorp/vault/helper/compressutil"
 	"github.com/hashicorp/vault/logical"
 )
 
 func TestCore_DefaultMountTable(t *testing.T) {
-	c, keys, _ := TestCoreUnsealed(t)
+	c, key, _ := TestCoreUnsealed(t)
 	verifyDefaultTable(t, c.mounts)
 
 	// Start a second core with same physical
@@ -25,14 +23,12 @@ func TestCore_DefaultMountTable(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	for i, key := range keys {
-		unseal, err := TestCoreUnseal(c2, key)
-		if err != nil {
-			t.Fatalf("err: %v", err)
-		}
-		if i+1 == len(keys) && !unseal {
-			t.Fatalf("should be unsealed")
-		}
+	unseal, err := c2.Unseal(key)
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if !unseal {
+		t.Fatalf("should be unsealed")
 	}
 
 	// Verify matching mount tables
@@ -42,7 +38,7 @@ func TestCore_DefaultMountTable(t *testing.T) {
 }
 
 func TestCore_Mount(t *testing.T) {
-	c, keys, _ := TestCoreUnsealed(t)
+	c, key, _ := TestCoreUnsealed(t)
 	me := &MountEntry{
 		Table: mountTableType,
 		Path:  "foo",
@@ -66,14 +62,12 @@ func TestCore_Mount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	for i, key := range keys {
-		unseal, err := TestCoreUnseal(c2, key)
-		if err != nil {
-			t.Fatalf("err: %v", err)
-		}
-		if i+1 == len(keys) && !unseal {
-			t.Fatalf("should be unsealed")
-		}
+	unseal, err := c2.Unseal(key)
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if !unseal {
+		t.Fatalf("should be unsealed")
 	}
 
 	// Verify matching mount tables
@@ -83,10 +77,10 @@ func TestCore_Mount(t *testing.T) {
 }
 
 func TestCore_Unmount(t *testing.T) {
-	c, keys, _ := TestCoreUnsealed(t)
-	existed, err := c.unmount("secret")
-	if !existed || err != nil {
-		t.Fatalf("existed: %v; err: %v", existed, err)
+	c, key, _ := TestCoreUnsealed(t)
+	err := c.unmount("secret")
+	if err != nil {
+		t.Fatalf("err: %v", err)
 	}
 
 	match := c.router.MatchingMount("secret/foo")
@@ -102,14 +96,12 @@ func TestCore_Unmount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	for i, key := range keys {
-		unseal, err := TestCoreUnseal(c2, key)
-		if err != nil {
-			t.Fatalf("err: %v", err)
-		}
-		if i+1 == len(keys) && !unseal {
-			t.Fatalf("should be unsealed")
-		}
+	unseal, err := c2.Unseal(key)
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if !unseal {
+		t.Fatalf("should be unsealed")
 	}
 
 	// Verify matching mount tables
@@ -175,8 +167,8 @@ func TestCore_Unmount_Cleanup(t *testing.T) {
 	}
 
 	// Unmount, this should cleanup
-	if existed, err := c.unmount("test/"); !existed || err != nil {
-		t.Fatalf("existed: %v; err: %v", existed, err)
+	if err := c.unmount("test/"); err != nil {
+		t.Fatalf("err: %v", err)
 	}
 
 	// Rollback should be invoked
@@ -193,7 +185,7 @@ func TestCore_Unmount_Cleanup(t *testing.T) {
 	}
 
 	// View should be empty
-	out, err := logical.CollectKeys(view)
+	out, err := CollectKeys(view)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
@@ -203,7 +195,7 @@ func TestCore_Unmount_Cleanup(t *testing.T) {
 }
 
 func TestCore_Remount(t *testing.T) {
-	c, keys, _ := TestCoreUnsealed(t)
+	c, key, _ := TestCoreUnsealed(t)
 	err := c.remount("secret", "foo")
 	if err != nil {
 		t.Fatalf("err: %v", err)
@@ -222,14 +214,12 @@ func TestCore_Remount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	for i, key := range keys {
-		unseal, err := TestCoreUnseal(c2, key)
-		if err != nil {
-			t.Fatalf("err: %v", err)
-		}
-		if i+1 == len(keys) && !unseal {
-			t.Fatalf("should be unsealed")
-		}
+	unseal, err := c2.Unseal(key)
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if !unseal {
+		t.Fatalf("should be unsealed")
 	}
 
 	// Verify matching mount tables
@@ -313,7 +303,7 @@ func TestCore_Remount_Cleanup(t *testing.T) {
 	}
 
 	// View should not be empty
-	out, err := logical.CollectKeys(view)
+	out, err := CollectKeys(view)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
@@ -447,18 +437,8 @@ func testCore_MountTable_UpgradeToTyped_Common(
 		t.Fatal(err)
 	}
 
-	decompressedBytes, uncompressed, err := compressutil.Decompress(entry.Value)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	actual := decompressedBytes
-	if uncompressed {
-		actual = entry.Value
-	}
-
-	if strings.TrimSpace(string(actual)) != strings.TrimSpace(string(goodJson)) {
-		t.Fatalf("bad: expected\n%s\nactual\n%s\n", string(goodJson), string(actual))
+	if !reflect.DeepEqual(entry.Value, goodJson) {
+		t.Fatalf("bad: expected\n%s\ngot\n%s\n", string(goodJson), string(entry.Value))
 	}
 
 	// Now try saving invalid versions

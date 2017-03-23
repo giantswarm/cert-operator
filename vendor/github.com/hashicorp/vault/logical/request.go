@@ -6,80 +6,57 @@ import (
 	"time"
 )
 
-// RequestWrapInfo is a struct that stores information about desired response
-// wrapping behavior
-type RequestWrapInfo struct {
-	// Setting to non-zero specifies that the response should be wrapped.
-	// Specifies the desired TTL of the wrapping token.
-	TTL time.Duration `json:"ttl" structs:"ttl" mapstructure:"ttl"`
-
-	// The format to use for the wrapped response; if not specified it's a bare
-	// token
-	Format string `json:"format" structs:"format" mapstructure:"format"`
-}
-
 // Request is a struct that stores the parameters and context
 // of a request being made to Vault. It is used to abstract
 // the details of the higher level request protocol from the handlers.
 type Request struct {
-	// Id is the uuid associated with each request
-	ID string `json:"id" structs:"id" mapstructure:"id"`
-
 	// Operation is the requested operation type
-	Operation Operation `json:"operation" structs:"operation" mapstructure:"operation"`
+	Operation Operation
 
 	// Path is the part of the request path not consumed by the
 	// routing. As an example, if the original request path is "prod/aws/foo"
 	// and the AWS logical backend is mounted at "prod/aws/", then the
 	// final path is "foo" since the mount prefix is trimmed.
-	Path string `json:"path" structs:"path" mapstructure:"path"`
+	Path string
 
 	// Request data is an opaque map that must have string keys.
-	Data map[string]interface{} `json:"map" structs:"data" mapstructure:"data"`
+	Data map[string]interface{}
 
 	// Storage can be used to durably store and retrieve state.
-	Storage Storage `json:"storage" structs:"storage" mapstructure:"storage"`
+	Storage Storage
 
 	// Secret will be non-nil only for Revoke and Renew operations
 	// to represent the secret that was returned prior.
-	Secret *Secret `json:"secret" structs:"secret" mapstructure:"secret"`
+	Secret *Secret
 
 	// Auth will be non-nil only for Renew operations
 	// to represent the auth that was returned prior.
-	Auth *Auth `json:"auth" structs:"auth" mapstructure:"auth"`
-
-	// Headers will contain the http headers from the request. This value will
-	// be used in the audit broker to ensure we are auditing only the allowed
-	// headers.
-	Headers map[string][]string `json:"headers" structs:"headers" mapstructure:"headers"`
+	Auth *Auth
 
 	// Connection will be non-nil only for credential providers to
 	// inspect the connection information and potentially use it for
 	// authentication/protection.
-	Connection *Connection `json:"connection" structs:"connection" mapstructure:"connection"`
+	Connection *Connection
 
 	// ClientToken is provided to the core so that the identity
 	// can be verified and ACLs applied. This value is passed
 	// through to the logical backends but after being salted and
 	// hashed.
-	ClientToken string `json:"client_token" structs:"client_token" mapstructure:"client_token"`
-
-	// ClientTokenAccessor is provided to the core so that the it can get
-	// logged as part of request audit logging.
-	ClientTokenAccessor string `json:"client_token_accessor" structs:"client_token_accessor" mapstructure:"client_token_accessor"`
+	ClientToken string
 
 	// DisplayName is provided to the logical backend to help associate
 	// dynamic secrets with the source entity. This is not a sensitive
 	// name, but is useful for operators.
-	DisplayName string `json:"display_name" structs:"display_name" mapstructure:"display_name"`
+	DisplayName string
 
 	// MountPoint is provided so that a logical backend can generate
 	// paths relative to itself. The `Path` is effectively the client
 	// request path with the MountPoint trimmed off.
-	MountPoint string `json:"mount_point" structs:"mount_point" mapstructure:"mount_point"`
+	MountPoint string
 
-	// WrapInfo contains requested response wrapping parameters
-	WrapInfo *RequestWrapInfo `json:"wrap_info" structs:"wrap_info" mapstructure:"wrap_info"`
+	// WrapTTL contains the requested TTL of the token used to wrap the
+	// response in a cubbyhole.
+	WrapTTL time.Duration
 }
 
 // Get returns a data field and guards for nil Data

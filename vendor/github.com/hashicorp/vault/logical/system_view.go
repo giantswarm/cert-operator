@@ -30,19 +30,14 @@ type SystemView interface {
 	// Returns true if caching is disabled. If true, no caches should be used,
 	// despite known slowdowns.
 	CachingDisabled() bool
-
-	// ReplicationState indicates the state of cluster replication
-	ReplicationState() ReplicationState
 }
 
 type StaticSystemView struct {
-	DefaultLeaseTTLVal  time.Duration
-	MaxLeaseTTLVal      time.Duration
-	SudoPrivilegeVal    bool
-	TaintedVal          bool
-	CachingDisabledVal  bool
-	Primary             bool
-	ReplicationStateVal ReplicationState
+	DefaultLeaseTTLVal time.Duration
+	MaxLeaseTTLVal     time.Duration
+	SudoPrivilegeVal   bool
+	TaintedVal         bool
+	CachingDisabledVal bool
 }
 
 func (d StaticSystemView) DefaultLeaseTTL() time.Duration {
@@ -63,8 +58,4 @@ func (d StaticSystemView) Tainted() bool {
 
 func (d StaticSystemView) CachingDisabled() bool {
 	return d.CachingDisabledVal
-}
-
-func (d StaticSystemView) ReplicationState() ReplicationState {
-	return d.ReplicationStateVal
 }

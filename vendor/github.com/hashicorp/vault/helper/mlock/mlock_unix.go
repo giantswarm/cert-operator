@@ -1,4 +1,4 @@
-// +build dragonfly freebsd linux openbsd solaris
+// +build darwin dragonfly freebsd linux openbsd solaris
 
 package mlock
 

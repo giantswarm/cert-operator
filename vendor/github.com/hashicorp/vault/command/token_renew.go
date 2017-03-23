@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/vault/api"
-	"github.com/hashicorp/vault/helper/duration"
 	"github.com/hashicorp/vault/meta"
 )
 
@@ -44,7 +43,7 @@ func (c *TokenRenewCommand) Run(args []string) int {
 		increment = args[1]
 	}
 	if increment != "" {
-		dur, err := duration.ParseDurationSecond(increment)
+		dur, err := time.ParseDuration(increment)
 		if err != nil {
 			c.Ui.Error(fmt.Sprintf("Invalid increment: %s", err))
 			return 1

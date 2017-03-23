@@ -4,10 +4,9 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/hashicorp/vault/helper/errutil"
+	"github.com/hashicorp/vault/helper/certutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
-	"github.com/mitchellh/mapstructure"
 )
 
 func (b *backend) pathRewrap() *framework.Path {
@@ -26,12 +25,7 @@ func (b *backend) pathRewrap() *framework.Path {
 
 			"context": &framework.FieldSchema{
 				Type:        framework.TypeString,
-				Description: "Base64 encoded context for key derivation. Required for derived keys.",
-			},
-
-			"nonce": &framework.FieldSchema{
-				Type:        framework.TypeString,
-				Description: "Nonce for when convergent encryption is used",
+				Description: "Context for key derivation. Required for derived keys.",
 			},
 		},
 
@@ -46,134 +40,83 @@ func (b *backend) pathRewrap() *framework.Path {
 
 func (b *backend) pathRewrapWrite(
 	req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	batchInputRaw := d.Raw["batch_input"]
-	var batchInputItems []BatchRequestItem
-	var err error
-	if batchInputRaw != nil {
-		err = mapstructure.Decode(batchInputRaw, &batchInputItems)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse batch input: %v", err)
-		}
+	name := d.Get("name").(string)
 
-		if len(batchInputItems) == 0 {
-			return logical.ErrorResponse("missing batch input to process"), logical.ErrInvalidRequest
-		}
-	} else {
-		ciphertext := d.Get("ciphertext").(string)
-		if len(ciphertext) == 0 {
-			return logical.ErrorResponse("missing ciphertext to decrypt"), logical.ErrInvalidRequest
-		}
-
-		batchInputItems = make([]BatchRequestItem, 1)
-		batchInputItems[0] = BatchRequestItem{
-			Ciphertext: ciphertext,
-			Context:    d.Get("context").(string),
-			Nonce:      d.Get("nonce").(string),
-		}
+	value := d.Get("ciphertext").(string)
+	if len(value) == 0 {
+		return logical.ErrorResponse("missing ciphertext to decrypt"), logical.ErrInvalidRequest
 	}
 
-	batchResponseItems := make([]BatchResponseItem, len(batchInputItems))
-	contextSet := len(batchInputItems[0].Context) != 0
-
-	for i, item := range batchInputItems {
-		if (len(item.Context) == 0 && contextSet) || (len(item.Context) != 0 && !contextSet) {
-			return logical.ErrorResponse("context should be set either in all the request blocks or in none"), logical.ErrInvalidRequest
-		}
-
-		if item.Ciphertext == "" {
-			batchResponseItems[i].Error = "missing ciphertext to decrypt"
-			continue
-		}
-
-		// Decode the context
-		if len(item.Context) != 0 {
-			batchInputItems[i].DecodedContext, err = base64.StdEncoding.DecodeString(item.Context)
-			if err != nil {
-				batchResponseItems[i].Error = err.Error()
-				continue
-			}
-		}
-
-		// Decode the nonce
-		if len(item.Nonce) != 0 {
-			batchInputItems[i].DecodedNonce, err = base64.StdEncoding.DecodeString(item.Nonce)
-			if err != nil {
-				batchResponseItems[i].Error = err.Error()
-				continue
-			}
+	// Decode the context if any
+	contextRaw := d.Get("context").(string)
+	var context []byte
+	if len(contextRaw) != 0 {
+		var err error
+		context, err = base64.StdEncoding.DecodeString(contextRaw)
+		if err != nil {
+			return logical.ErrorResponse("failed to decode context as base64"), logical.ErrInvalidRequest
 		}
 	}
 
 	// Get the policy
-	p, lock, err := b.lm.GetPolicyShared(req.Storage, d.Get("name").(string))
+	p, lock, err := b.lm.GetPolicyShared(req.Storage, name)
 	if lock != nil {
 		defer lock.RUnlock()
 	}
 	if err != nil {
 		return nil, err
 	}
+	// Error if invalid policy
 	if p == nil {
 		return logical.ErrorResponse("policy not found"), logical.ErrInvalidRequest
 	}
 
-	for i, item := range batchInputItems {
-		if batchResponseItems[i].Error != "" {
-			continue
-		}
-
-		plaintext, err := p.Decrypt(item.DecodedContext, item.DecodedNonce, item.Ciphertext)
-		if err != nil {
-			switch err.(type) {
-			case errutil.UserError:
-				batchResponseItems[i].Error = err.Error()
-				continue
-			default:
-				return nil, err
-			}
-		}
-
-		ciphertext, err := p.Encrypt(item.DecodedContext, item.DecodedNonce, plaintext)
-		if err != nil {
-			switch err.(type) {
-			case errutil.UserError:
-				batchResponseItems[i].Error = err.Error()
-				continue
-			case errutil.InternalError:
-				return nil, err
-			default:
-				return nil, err
-			}
-		}
-
-		if ciphertext == "" {
-			return nil, fmt.Errorf("empty ciphertext returned for input item %d", i)
-		}
-
-		batchResponseItems[i].Ciphertext = ciphertext
-	}
-
-	resp := &logical.Response{}
-	if batchInputRaw != nil {
-		resp.Data = map[string]interface{}{
-			"batch_results": batchResponseItems,
-		}
-	} else {
-		if batchResponseItems[0].Error != "" {
-			return logical.ErrorResponse(batchResponseItems[0].Error), logical.ErrInvalidRequest
-		}
-		resp.Data = map[string]interface{}{
-			"ciphertext": batchResponseItems[0].Ciphertext,
+	plaintext, err := p.Decrypt(context, value)
+	if err != nil {
+		switch err.(type) {
+		case certutil.UserError:
+			return logical.ErrorResponse(err.Error()), logical.ErrInvalidRequest
+		case certutil.InternalError:
+			return nil, err
+		default:
+			return nil, err
 		}
 	}
 
+	if plaintext == "" {
+		return nil, fmt.Errorf("empty plaintext returned during rewrap")
+	}
+
+	ciphertext, err := p.Encrypt(context, plaintext)
+	if err != nil {
+		switch err.(type) {
+		case certutil.UserError:
+			return logical.ErrorResponse(err.Error()), logical.ErrInvalidRequest
+		case certutil.InternalError:
+			return nil, err
+		default:
+			return nil, err
+		}
+	}
+
+	if ciphertext == "" {
+		return nil, fmt.Errorf("empty ciphertext returned")
+	}
+
+	// Generate the response
+	resp := &logical.Response{
+		Data: map[string]interface{}{
+			"ciphertext": ciphertext,
+		},
+	}
 	return resp, nil
 }
 
 const pathRewrapHelpSyn = `Rewrap ciphertext`
 
 const pathRewrapHelpDesc = `
-After key rotation, this function can be used to rewrap the given ciphertext or
-a batch of given ciphertext blocks with the latest version of the named key.
-If the given ciphertext is already using the latest version of the key, this
-function is a no-op.
+After key rotation, this function can be used to rewrap the
+given ciphertext with the latest version of the named key.
+If the given ciphertext is already using the latest version
+of the key, this function is a no-op.
 `

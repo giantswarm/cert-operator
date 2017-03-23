@@ -12,24 +12,21 @@ import (
 
 func TestUnseal(t *testing.T) {
 	core := vault.TestCore(t)
-	keys, _ := vault.TestCoreInit(t, core)
+	key, _ := vault.TestCoreInit(t, core)
 	ln, addr := http.TestServer(t, core)
 	defer ln.Close()
 
 	ui := new(cli.MockUi)
+	c := &UnsealCommand{
+		Key: hex.EncodeToString(key),
+		Meta: meta.Meta{
+			Ui: ui,
+		},
+	}
 
-	for _, key := range keys {
-		c := &UnsealCommand{
-			Key: hex.EncodeToString(key),
-			Meta: meta.Meta{
-				Ui: ui,
-			},
-		}
-
-		args := []string{"-address", addr}
-		if code := c.Run(args); code != 0 {
-			t.Fatalf("bad: %d\n\n%s", code, ui.ErrorWriter.String())
-		}
+	args := []string{"-address", addr}
+	if code := c.Run(args); code != 0 {
+		t.Fatalf("bad: %d\n\n%s", code, ui.ErrorWriter.String())
 	}
 
 	sealed, err := core.Sealed()
@@ -43,23 +40,20 @@ func TestUnseal(t *testing.T) {
 
 func TestUnseal_arg(t *testing.T) {
 	core := vault.TestCore(t)
-	keys, _ := vault.TestCoreInit(t, core)
+	key, _ := vault.TestCoreInit(t, core)
 	ln, addr := http.TestServer(t, core)
 	defer ln.Close()
 
 	ui := new(cli.MockUi)
+	c := &UnsealCommand{
+		Meta: meta.Meta{
+			Ui: ui,
+		},
+	}
 
-	for _, key := range keys {
-		c := &UnsealCommand{
-			Meta: meta.Meta{
-				Ui: ui,
-			},
-		}
-
-		args := []string{"-address", addr, hex.EncodeToString(key)}
-		if code := c.Run(args); code != 0 {
-			t.Fatalf("bad: %d\n\n%s", code, ui.ErrorWriter.String())
-		}
+	args := []string{"-address", addr, hex.EncodeToString(key)}
+	if code := c.Run(args); code != 0 {
+		t.Fatalf("bad: %d\n\n%s", code, ui.ErrorWriter.String())
 	}
 
 	sealed, err := core.Sealed()

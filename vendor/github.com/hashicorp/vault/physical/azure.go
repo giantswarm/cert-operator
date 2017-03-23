@@ -4,13 +4,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-
-	log "github.com/mgutz/logxi/v1"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/armon/go-metrics"
@@ -25,14 +24,14 @@ var MaxBlobSize = 1024 * 1024 * 4
 type AzureBackend struct {
 	container  string
 	client     storage.BlobStorageClient
-	logger     log.Logger
+	logger     *log.Logger
 	permitPool *PermitPool
 }
 
 // newAzureBackend constructs an Azure backend using a pre-existing
 // bucket. Credentials can be provided to the backend, sourced
 // from the environment, AWS credential files or by IAM role.
-func newAzureBackend(conf map[string]string, logger log.Logger) (Backend, error) {
+func newAzureBackend(conf map[string]string, logger *log.Logger) (Backend, error) {
 
 	container := os.Getenv("AZURE_BLOB_CONTAINER")
 	if container == "" {
@@ -73,9 +72,7 @@ func newAzureBackend(conf map[string]string, logger log.Logger) (Backend, error)
 		if err != nil {
 			return nil, errwrap.Wrapf("failed parsing max_parallel parameter: {{err}}", err)
 		}
-		if logger.IsDebug() {
-			logger.Debug("azure: max_parallel set", "max_parallel", maxParInt)
-		}
+		logger.Printf("[DEBUG]: azure: max_parallel set to %d", maxParInt)
 	}
 
 	a := &AzureBackend{

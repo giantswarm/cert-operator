@@ -44,14 +44,7 @@ description: |-
             <span class="param">sealedcode</span>
             <span class="param-flags">optional</span>
             A query parameter provided to indicate the status code that should
-            be returned for a sealed node instead of the default of `503`
-          </li>
-          <li>
-            <span class="param">uninitcode</span>
-            <span class="param-flags">optional</span>
-            A query parameter provided to indicate the status code that should
-            be returned for an uninitialized Vault instead of the default of
-            `501`
+            be returned for a sealed node instead of the default of `500`
           </li>
         </ul>
     </dd>
@@ -60,15 +53,11 @@ description: |-
     <dd>
 
     ```javascript
-{
-  "cluster_id": "c9abceea-4f46-4dab-a688-5ce55f89e228",
-  "cluster_name": "vault-cluster-5515c810",
-  "version": "0.6.1-dev"
-  "server_time_utc": 1469555798,
-  "standby": false,
-  "sealed": false,
-  "initialized": true
-}
+    {
+      "initialized": true,
+      "sealed": false,
+      "standby": false
+    }
     ```
 
     Default Status Codes (GET/HEAD):

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/vault/helper/certutil"
-	"github.com/hashicorp/vault/helper/errutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -38,7 +37,7 @@ func (b *backend) pathCAWrite(
 	parsedBundle, err := certutil.ParsePEMBundle(pemBundle)
 	if err != nil {
 		switch err.(type) {
-		case errutil.InternalError:
+		case certutil.InternalError:
 			return nil, err
 		default:
 			return logical.ErrorResponse(err.Error()), nil
@@ -48,6 +47,23 @@ func (b *backend) pathCAWrite(
 	if parsedBundle.PrivateKey == nil ||
 		parsedBundle.PrivateKeyType == certutil.UnknownPrivateKey {
 		return logical.ErrorResponse("private key not found in the PEM bundle"), nil
+	}
+
+	// Handle the case of a self-signed certificate; the parsing function will
+	// see the CA and put it into the issuer
+	if parsedBundle.Certificate == nil &&
+		parsedBundle.IssuingCA != nil {
+		equal, err := certutil.ComparePublicKeys(parsedBundle.IssuingCA.PublicKey, parsedBundle.PrivateKey.Public())
+		if err != nil {
+			return logical.ErrorResponse(fmt.Sprintf(
+				"got only a CA and private key but could not verify the public keys match: %v", err)), nil
+		}
+		if !equal {
+			return logical.ErrorResponse(
+				"got only a CA and private key but keys do not match"), nil
+		}
+		parsedBundle.Certificate = parsedBundle.IssuingCA
+		parsedBundle.CertificateBytes = parsedBundle.IssuingCABytes
 	}
 
 	if parsedBundle.Certificate == nil {

@@ -2,13 +2,11 @@ package physical
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
-
-	"github.com/hashicorp/vault/helper/logformat"
-	log "github.com/mgutz/logxi/v1"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -50,8 +48,7 @@ func TestDynamoDBBackend(t *testing.T) {
 		})
 	}()
 
-	logger := logformat.NewVaultLogger(log.LevelTrace)
-
+	logger := log.New(os.Stderr, "", log.LstdFlags)
 	b, err := NewBackend("dynamodb", logger, map[string]string{
 		"access_key":    creds.AccessKeyID,
 		"secret_key":    creds.SecretAccessKey,
@@ -100,7 +97,7 @@ func TestDynamoDBHABackend(t *testing.T) {
 		})
 	}()
 
-	logger := logformat.NewVaultLogger(log.LevelTrace)
+	logger := log.New(os.Stderr, "", log.LstdFlags)
 	b, err := NewBackend("dynamodb", logger, map[string]string{
 		"access_key":    creds.AccessKeyID,
 		"secret_key":    creds.SecretAccessKey,

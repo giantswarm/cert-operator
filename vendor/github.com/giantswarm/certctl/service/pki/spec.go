@@ -54,6 +54,10 @@ type Service interface {
 	// cluster ID is created.
 	IsRoleCreated(clusterID string) (bool, error)
 
+	// VerifyPKISetup checks if IsMounted, IsCAGenerated and IsRoleCreated are all true
+	// for the given cluster ID.
+	VerifyPKISetup(clusterID string) (bool, error)
+
 	// RoleName returns the name used to register the PKI backend's role.
 	RoleName(clusterID string) string
 

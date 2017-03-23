@@ -46,18 +46,9 @@ sending a SIGHUP to the server process. These are denoted below.
   configuration options as documented below. If not set, HA will be attempted
   on the backend given in the `backend` parameter.
 
-* `cluster_name` (optional) - An identifier for your Vault cluster. If omitted,
-  Vault will generate a value for `cluster_name`. If connecting to Vault
-  Enterprise, this value will be used in the interface.
-
 * `listener` (required) - Configures how Vault is listening for API requests.
-  "tcp" and "atlas" are valid values. A full reference for the
+  "tcp" is currently the only option available. A full reference for the
    inner syntax is below.
-
-* `cache_size` (optional) - If set, the size of the read cache used
-  by the physical storage subsystem will be set to this value. The
-  value is in number of entries so the total cache size is dependent
-  on the entries being stored. Defaults to 32k entries.
 
 * `disable_cache` (optional) - A boolean. If true, this will disable all caches
   within Vault, including the read cache used by the physical storage
@@ -71,17 +62,12 @@ sending a SIGHUP to the server process. These are denoted below.
   (see below).
 
 * `default_lease_ttl` (optional) - Configures the default lease duration
-  for tokens and secrets. This is a string value using a suffix, e.g. "768h".
-  Default value is 32 days. This value cannot be larger than `max_lease_ttl`.
+  for tokens and secrets. This is a string value using a suffix, e.g. "720h".
+  Default value is 30 days. This value cannot be larger than `max_lease_ttl`.
 
 * `max_lease_ttl` (optional) - Configures the maximum possible
   lease duration for tokens and secrets. This is a string value using a suffix,
-  e.g. "768h". Default value is 32 days.
-
-* `ui` (optional, Vault Enterprise only) - If set `true`, enables the built-in
-  web-based UI. Once enabled, the UI will be available to browsers at the
-  standard Vault address. This can also be set via the `VAULT_UI`
-  environment variable, which takes precedence.
+  e.g. "720h". Default value is 30 days.
 
 In production it is a risk to run Vault on systems where `mlock` is
 unavailable or the setting has been disabled via the `disable_mlock`.
@@ -89,7 +75,7 @@ Disabling `mlock` is not recommended unless the systems running Vault only
 use encrypted swap or do not use swap at all.  Vault only supports memory
 locking on UNIX-like systems (Linux, FreeBSD, Darwin, etc).  Non-UNIX like
 systems (e.g. Windows, NaCL, Android) lack the primitives to keep a process's
-entire memory address space from spilling to disk and is therefore automatically
+entire memory address space from spilling disk and is therefore automatically
 disabled on unsupported platforms.
 
 On Linux, to give the Vault executable the ability to use the `mlock` syscall
@@ -101,21 +87,14 @@ sudo setcap cap_ipc_lock=+ep $(readlink -f $(which vault))
 
 ## Listener Reference
 
-For the `listener` section, the only required listener is "tcp".
-Regardless of future plans, this is the recommended listener,
-as it allows for HA mode. If you wish to use the Vault
-Enterprise interface in HashiCorp Atlas, you may add an ["atlas" listener block](#connecting-to-vault-enterprise-in-hashicorp-atlas)
-in addition to the "tcp" one.
+For the `listener` section, the only supported listener currently
+is "tcp". Regardless of future plans, this is the recommended listener,
+since it allows for HA mode.
 
 The supported options are:
 
   * `address` (optional) - The address to bind to for listening. This
       defaults to "127.0.0.1:8200".
-
-  * `cluster_address` (optional) - The address to bind to for cluster
-      server-to-server requests. This defaults to one port higher than the
-      value of `address`, so with the default value of `address`, this would be
-      "127.0.0.1:8201".
 
   * `tls_disable` (optional) - If true, then TLS will be disabled.
       This will parse as boolean value, and can be set to "0", "no",
@@ -137,100 +116,19 @@ The supported options are:
       are generally considered less secure; avoid using these if
       possible.
 
-  * `tls_cipher_suites` (optional) - The list of supported ciphersuites
-      separated with comma. The list of all available ciphersuites you can find
-      [here](https://golang.org/src/crypto/tls/cipher_suites.go).
-
-  * `tls_prefer_server_cipher_suites` (optional) - Controls whether the server
-      selects client's most preferred ciphersuite, or the server's most
-      preferred ciphersuite. If true then the server's preference, as expressed
-      in the order of elements in `tls_cipher_suites`, is used. This defaults to
-      "false" (client's preference).
-
-### Connecting to Vault Enterprise in HashiCorp Atlas
-
-Adding an "atlas" block will initiate a long-running connection to the
-[SCADA](https://scada.hashicorp.com) service. The SCADA connection allows the
-Vault Enterprise interface to securely communicate with and operate on your
-Vault cluster.
-
-The "atlas" `listener` supports these options:
-
-  * `endpoint` (optional) - The endpoint address used for Vault Enterprise interface
-      integration. Defaults to the public Vault Enterprise endpoints on Atlas.
-
-  * `infrastructure` (required) - Used to provide the Atlas infrastructure name and
-      the SCADA connection. The format of this is `username/environment`.
-
-  * `node_id` (required) - The identifier for an individual node—used in
-      the Vault Enterprise dashboard.
-
-  * `token` (required) - A token from Atlas used to authenticate SCADA session. Generate
-      one in the [Atlas](https://atlas.hashicorp.com/settings/tokens).
-
-Additionally, the [`cluster_name`](#cluster_name) config option will be used to
-identify your cluster members inside the infrastructure in the Vault Enterprise
-interface. It is important for operators to use the same value for
-`cluster_name` across cluster members because Vault overwrites this value
-internally on instance instantiation.
-
-This allows the connection of multiple clusters to a single `infrastructure`.
-
-For more on Vault Enterprise, see the [help documentation](https://atlas.hashicorptest.com/help/vault/features).
-
-
 ## Telemetry Reference
 
 For the `telemetry` section, there is no resource name. All configuration
 is within the object itself.
 
 * `statsite_address` (optional) - An address to a [Statsite](https://github.com/armon/statsite)
-  instance for metrics. This is highly recommended for production usage.
+  instances for metrics. This is highly recommended for production usage.
 
 * `statsd_address` (optional) - This is the same as `statsite_address` but
   for StatsD.
 
 * `disable_hostname` (optional) - Whether or not to prepend runtime telemetry
   with the machines hostname. This is a global option. Defaults to false.
-
-* `circonus_api_token`
-  A valid [Circonus](http://circonus.com/) API Token used to create/manage check. If provided, metric management is enabled.
-
-* `circonus_api_app`
-  A valid app name associated with the API token. By default, this is set to "consul".
-
-* `circonus_api_url`
-  The base URL to use for contacting the Circonus API. By default, this is set to "https://api.circonus.com/v2".
-
-* `circonus_submission_interval`
-  The interval at which metrics are submitted to Circonus. By default, this is set to "10s" (ten seconds).
-
-* `circonus_submission_url`
-  The `check.config.submission_url` field, of a Check API object, from a previously created HTTPTRAP check.
-
-* `circonus_check_id`
-  The Check ID (not **check bundle**) from a previously created HTTPTRAP check. The numeric portion of the `check._cid` field in the Check API object.
-
-* `circonus_check_force_metric_activation`
-  Force activation of metrics which already exist and are not currently active. If check management is enabled, the default behavior is to add new metrics as they are encountered. If the metric already exists in the check, it will **not** be activated. This setting overrides that behavior. By default, this is set to "false".
-
-* `circonus_check_instance_id`
-  Serves to uniquely identify the metrics coming from this *instance*.  It can be used to maintain metric continuity with transient or ephemeral instances as they move around within an infrastructure. By default, this is set to hostname:application name (e.g. "host123:vault").
-
-* `circonus_check_search_tag`
-  A special tag which, when coupled with the instance id, helps to narrow down the search results when neither a Submission URL or Check ID is provided. By default, this is set to service:app (e.g. "service:vault").
-
-* `circonus_check_display_name`
-  Specifies a name to give a check when it is created. This name is displayed in the Circonus UI Checks list.
-
-* `circonus_check_tags`
-  Comma separated list of additional tags to add to a check when it is created.
-
-* `circonus_broker_id`
-  The ID of a specific Circonus Broker to use when creating a new check. The numeric portion of `broker._cid` field in a Broker API object. If metric management is enabled and neither a Submission URL nor Check ID is provided, an attempt will be made to search for an existing check using Instance ID and Search Tag. If one is not found, a new HTTPTRAP check will be created. By default, this is not used and a random Enterprise Broker is selected, or, the default Circonus Public Broker.
-
-* `circonus_broker_select_tag`
-  A special tag which will be used to select a Circonus Broker when a Broker ID is not provided. The best use of this is to as a hint for which broker should be used based on *where* this particular instance is running (e.g. a specific geo location or datacenter, dc:sfo). By default, this is not used.
 
 ## Backend Reference
 
@@ -257,12 +155,9 @@ to help you, but may refer you to the backend author.
     This backend supports HA. This is a community-supported backend.
 
   * `dynamodb` - Store data in a [DynamoDB](https://aws.amazon.com/dynamodb/) table.
-    This backend optionally supports HA. This is a community-supported backend.
+    This backend supports HA. This is a community-supported backend.
 
   * `s3` - Store data within an S3 bucket [S3](https://aws.amazon.com/s3/).
-    This backend does not support HA. This is a community-supported backend.
-
-  * `gcs` - Store data within a [Google Cloud Storage](https://cloud.google.com/storage/) bucket.
     This backend does not support HA. This is a community-supported backend.
 
   * `azure` - Store data in an Azure Storage container [Azure](https://azure.microsoft.com/en-us/services/storage/).
@@ -285,25 +180,19 @@ to help you, but may refer you to the backend author.
     This backend does not support HA.
 
 
-#### High Availability Options
+#### Common Backend Options
 
-All HA backends support the following options. These are discussed in much more
-detail in the [High Availability concepts
-page](https://www.vaultproject.io/docs/concepts/ha.html).
+All backends support the following options:
 
-  * `redirect_addr` (required) - This is the address to advertise to other
-    Vault servers in the cluster for client redirection. This can also be
-    set via the `VAULT_REDIRECT_ADDR` environment variable, which takes
-    precedence. Some HA backends may be able to autodetect this value, but if
-    not it is required to be manually specified.
-
-  * `cluster_addr` (optional) - This is the address to advertise to other Vault
-    servers in the cluster for request forwarding. This can also be set via the
-    `VAULT_CLUSTER_ADDR` environment variable, which takes precedence.
-
-  * `disable_clustering` (optional) - This controls whether clustering features
-    (currently, request forwarding) are enabled. Setting this on a node will
-    disable these features _when that node is the active node_.
+  * `advertise_addr` (optional) - For backends that support HA, this
+    is the address to advertise to other Vault servers in the cluster for
+    request forwarding. As an example, if a cluster contains nodes A, B, and C,
+    node A should set it to the address that B and C should redirect client
+    nodes to when A is the active node and B and C are standby nodes. This may
+    be the same address across nodes if using a load balancer or service
+    discovery. Most HA backends will attempt to determine the advertise address
+    if not provided.  This can also be overridden via the `VAULT_ADVERTISE_ADDR`
+    environment variable.
 
 #### Backend Reference: Consul
 
@@ -326,24 +215,13 @@ For Consul, the following options are supported:
   * `service` (optional) - The name of the service to register with Consul.
     Defaults to "vault".
 
-  * `service_tags` (optional) - Comma separated list of tags that are to be
-    applied to the service that gets registered with Consul.
-
   * `token` (optional) - An access token to use to write data to Consul.
 
-  * `max_parallel` (optional) - The maximum number of concurrent requests to Consul.
-    Defaults to `"128"`.
+  * `max_parallel` (optional) - The maximum number of concurrent connections to Consul.
+    Defaults to "128".
 
   * `tls_skip_verify` (optional) - If non-empty, then TLS host verification
     will be disabled for Consul communication.  Defaults to false.
-
-  * `tls_min_version` (optional) - Minimum TLS version to use. Accepted values
-    are 'tls10', 'tls11' or 'tls12'. Defaults to 'tls12'.
-
-  * `consistency_mode` (optional) - This option configures the consistency mode
-    used with Consul get requests. See [consistency
-    modes](https://www.consul.io/docs/agent/http.html#consistency-modes) in Consul
-    for tradeoffs. It can be set to "default" or "strong". Defaults to "default".
 
 The following settings should be set according to your [Consul encryption
 settings](https://www.consul.io/docs/agent/encryption.html):
@@ -379,7 +257,7 @@ backend "consul" {
   scheme = "http"
 
   // token is a Consul ACL Token that has write privileges to the path
-  // specified below.  Use of a Consul ACL Token is a best practice.
+  // specified below.  Use of a Consul ACL Token is a best pracitce.
   token = "[redacted]" // Vault's Consul ACL Token
 
   // path must be writable by the Consul ACL Token
@@ -446,15 +324,6 @@ Unseal Progress: 0
 
 #### Backend Reference: etcd (Community-Supported)
 
-The etcd physical backend supports both v2 and v3 APIs. To explicitly specify
-the API version, use the `etcd_api` configuration parameter. The default
-version is auto-detected based on the version of the etcd cluster. If the
-cluster version is 3.1+ and there has been no data written using the v2 API,
-the auto-detected default is v3.
-
-The v2 API has known issues with HA support and should not be used in HA
-scenarios.
-
 For etcd, the following options are supported:
 
   * `path` (optional) - The path within etcd where data will be stored.
@@ -462,23 +331,13 @@ For etcd, the following options are supported:
 
   * `address` (optional) - The address(es) of the etcd instance(s) to talk to.
     Can be comma separated list (protocol://host:port) of many etcd instances.
-    Defaults to "http://localhost:2379" if not specified. May also be specified
-    via the ETCD_ADDR environment variable.
-
-  * `etcd_api` (optional) - Set to `"v2"` or `"v3"` to explicitly set the API
-    version that the backend will use.
+    Defaults to "http://localhost:2379" if not specified.
 
   * `sync` (optional) - Should we synchronize the list of available etcd
     servers on startup?  This is a **string** value to allow for auto-sync to
     be implemented later. It can be set to "0", "no", "n", "false", "1", "yes",
     "y", or "true".  Defaults to on.  Set to false if your etcd cluster is
     behind a proxy server and syncing causes Vault to fail.
-
-  * `ha_enabled` (optional) - Setting this to `"1"`, `"t"`, or `"true"` will
-    enable HA mode. _This is currently *known broken*._ This option can also be
-    provided via the environment variable `ETCD_HA_ENABLED`. If you are
-    upgrading from a version of Vault where HA support was enabled by default,
-    it is _very important_ that you set this parameter _before_ upgrading!
 
   * `username` (optional) - Username to use when authenticating with the etcd
     server.  May also be specified via the ETCD_USERNAME environment variable.
@@ -554,75 +413,32 @@ ACL check.
 
 #### Backend Reference: DynamoDB (Community-Supported)
 
-The DynamoDB optionally supports HA. Because Dynamo does not support session
-lifetimes on its locks, a Vault node that has failed, rather than shut down in
-an orderly fashion, will require manual cleanup rather than failing over
-automatically. See the documentation of `recovery_mode` to better understand
-this process. To enable HA, set the `ha_enabled` option.
-
 The DynamoDB backend has the following options:
 
-  * `table` (optional) - The name of the DynamoDB table to store data in. The
-    default table name is `vault-dynamodb-backend`. This option can also be
-    provided via the environment variable `AWS_DYNAMODB_TABLE`. If the
-    specified table does not yet exist, it will be created during
-    initialization.
+  * `table` (optional) - The name of the DynamoDB table to store data in. The default table name is `vault-dynamodb-backend`. This option can also be provided via the environment variable `AWS_DYNAMODB_TABLE`. If the specified table does not yet exist, it will be created during initialization.
 
-  * `read_capacity` (optional) - The read capacity to provision when creating
-    the DynamoDB table. This is the maximum number of reads consumed per second
-    on the table. The default value is 5. This option can also be provided via
-    the environment variable `AWS_DYNAMODB_READ_CAPACITY`.
+  * `read_capacity` (optional) - The read capacity to provision when creating the DynamoDB table. This is the maximum number of reads consumed per second on the table. The default value is 5. This option can also be provided via the environment variable `AWS_DYNAMODB_READ_CAPACITY`.
 
-  * `write_capacity` (optional) - The write capacity to provision when creating
-    the DynamoDB table. This is the maximum number of writes performed per
-    second on the table. The default value is 5. This option can also be
-    provided via the environment variable `AWS_DYNAMODB_WRITE_CAPACITY`.
+  * `write_capacity` (optional) - The write capacity to provision when creating the DynamoDB table. This is the maximum number of writes performed per second on the table. The default value is 5. This option can also be provided via the environment variable `AWS_DYNAMODB_WRITE_CAPACITY`.
 
-  * `access_key` - (required) The AWS access key. It must be provided, but it
-    can also be sourced from the `AWS_ACCESS_KEY_ID` environment variable.
+  * `access_key` - (required) The AWS access key. It must be provided, but it can also be sourced from the `AWS_ACCESS_KEY_ID` environment variable.
 
-  * `secret_key` - (required) The AWS secret key. It must be provided, but it
-    can also be sourced from the `AWS_SECRET_ACCESS_KEY` environment variable.
+  * `secret_key` - (required) The AWS secret key. It must be provided, but it can also be sourced from the `AWS_SECRET_ACCESS_KEY` environment variable.
 
-  * `session_token` - (optional) The AWS session token. It can also be sourced
-    from the `AWS_SESSION_TOKEN` environment variable.
+  * `session_token` - (optional) The AWS session token. It can also be sourced from the `AWS_SESSION_TOKEN` environment variable.
 
-  * `endpoint` - (optional) An alternative (AWS compatible) DynamoDB endpoint
-    to use. It can also be sourced from the `AWS_DYNAMODB_ENDPOINT` environment
-    variable.
+  * `endpoint` - (optional) An alternative (AWS compatible) DynamoDB endpoint to use. It can also be sourced from the `AWS_DYNAMODB_ENDPOINT` environment variable.
 
-  * `region` (optional) - The AWS region. It can be sourced from the
-    `AWS_DEFAULT_REGION` environment variable and will default to `us-east-1`
-    if not specified.
+  * `region` (optional) - The AWS region. It can be sourced from the `AWS_DEFAULT_REGION` environment variable and will default to `us-east-1` if not specified.
 
-  * `max_parallel` (optional) - The maximum number of concurrent requests to
-    DynamoDB. Defaults to `"128"`.
+  * `recovery_mode` (optional) - When the Vault leader crashes or is killed without being able to shut down properly, no other node can become the new leader because the DynamoDB table still holds the old leader's lock record. To recover from this situation, one can start a single Vault node with this option set to `1` and the node will remove the old lock from DynamoDB. It is important that only one node is running in recovery mode! After this node has become the leader, other nodes can be started with regular configuration.
+    This option can also be provided via the environment variable `RECOVERY_MODE`.
 
-  * `ha_enabled` (optional) - Setting this to `"1"`, `"t"`, or `"true"` will
-    enable HA mode. Please ensure you have read the documentation for the
-    `recovery_mode` option before enabling this. This option can also be
-    provided via the environment variable `DYNAMODB_HA_ENABLED`. If you are
-    upgrading from a version of Vault where HA support was enabled by default,
-    it is _very important_ that you set this parameter _before_ upgrading!
-
-  * `recovery_mode` (optional) - When the Vault leader crashes or is killed
-    without being able to shut down properly, no other node can become the new
-    leader because the DynamoDB table still holds the old leader's lock record.
-    To recover from this situation, one can start a single Vault node with this
-    option set to `"1"`, `"t"`, or `"true"` and the node will remove the old
-    lock from DynamoDB. It is important that only one node is running in
-    recovery mode! After this node has become the leader, other nodes can be
-    started with regular configuration. This option can also be provided via
-    the environment variable `RECOVERY_MODE`.
-
-For more information about the read/write capacity of DynamoDB tables, see the
-[official AWS DynamoDB
-docs](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.html#ProvisionedThroughput).
+For more information about the read/write capacity of DynamoDB tables, see the [official AWS DynamoDB docs](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.html#ProvisionedThroughput).
 If you are running your Vault server on an EC2 instance, you can also make use
-of the EC2 instance profile service to provide the credentials Vault will use
-to make DynamoDB API calls. Leaving the `access_key` and `secret_key` fields
-empty will cause Vault to attempt to retrieve credentials from the metadata
-service.
+of the EC2 instance profile service to provide the credentials Vault will use to
+make DynamoDB API calls. Leaving the `access_key` and `secret_key` fields empty
+will cause Vault to attempt to retrieve credentials from the metadata service.
 
 #### Backend Reference: S3 (Community-Supported)
 
@@ -647,17 +463,6 @@ will cause Vault to attempt to retrieve credentials from the metadata service.
 You are responsible for ensuring your instance is launched with the appropriate
 profile enabled. Vault will handle renewing profile credentials as they rotate.
 
-#### Backend Reference: Google Cloud Storage (Community-Supported)
-
-For Google Cloud Storage, the following options are supported:
-
-  * `bucket` (required) - The name of the Google Cloud Storage bucket to use. It must be provided, but it can also be sourced from the `GOOGLE_STORAGE_BUCKET` environment variable.
-
-  * `credentials_file` - (required) The path to a GCP [service account](https://cloud.google.com/compute/docs/access/service-accounts) private key file in [JSON format](https://cloud.google.com/storage/docs/authentication#generating-a-private-key). It must be provided, but it can also be sourced from the `GOOGLE_APPLICATION_CREDENTIALS` environment variable.
-
-  * `max_parallel` (optional) - The maximum number of concurrent requests to Google Cloud Storage.
-    Defaults to `"128"`.
-
 #### Backend Reference: Azure (Community-Supported)
 
   * `accountName` (required) - The Azure Storage account name
@@ -666,13 +471,13 @@ For Google Cloud Storage, the following options are supported:
 
   * `container`   (required) - The Azure Storage Blob container name
 
-  * `max_parallel` (optional) - The maximum number of concurrent requests to Azure. Defaults to `"128"`.
+  * `max_parallel` (optional) - The maximum number of concurrent connections to Azure. Defaults to "128".
 
-The current implementation is limited to a maximum of 4 MBytes per blob/file.
+The current implementation is limited to a maximum of 4 MBytes per blob/file. 
 
 #### Backend Reference: Swift (Community-Supported)
 
-For Swift, the following options are valid; only v1.0 auth endpoints are supported:
+For Swift, the following options are supported:
 
   * `container` (required) - The name of the Swift container to use. It must be provided, but it can also be sourced from the `OS_CONTAINER` environment variable.
 
@@ -684,7 +489,7 @@ For Swift, the following options are valid; only v1.0 auth endpoints are support
 
   * `tenant` (optional) - The name of Tenant to use. It can be sourced from the `OS_TENANT_NAME` environment variable and will default to default tenant of for the username if not specified.
 
-  * `max_parallel` (optional) - The maximum number of concurrent requests to Swift. Defaults to `"128"`.
+  * `max_parallel` (optional) - The maximum number of concurrent connections to Swift. Defaults to "128".
 
 #### Backend Reference: MySQL (Community-Supported)
 

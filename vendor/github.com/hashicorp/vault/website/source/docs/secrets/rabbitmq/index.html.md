@@ -10,14 +10,13 @@ description: |-
 
 Name: `rabbitmq`
 
-The RabbitMQ secret backend for Vault generates user credentials dynamically
-based on configured permissions and virtual hosts. This means that services
-that need to access a virtual host no longer need to hardcode credentials:
-they can request them from Vault, and use Vault's leasing mechanism to
-more easily roll users.
+The RabbitMQ secret backend for Vault generates user credentials
+dynamically based on configured permissions and virtual hosts. This means that
+services that need to access a virtual host no longer need to hardcode credentials:
+they can request them from Vault, and use Vault's leasing mechanism to more easily roll users.
 
-Additionally, it introduces a new ability: with every service accessing the
-messaging queue with unique credentials, it makes auditing much easier when
+Additionally, it introduces a new ability: with every service accessing
+the messaging queue with unique credentials, it makes auditing much easier when
 questionable data access is discovered: you can track it down to the specific
 instance of a service based on the RabbitMQ username.
 
@@ -30,8 +29,8 @@ on every path, use `vault path-help` after mounting the backend.
 
 ## Quick Start
 
-The first step to using the RabbitMQ backend is to mount it. Unlike the
-`generic` backend, the `rabbitmq` backend is not mounted by default.
+The first step to using the RabbitMQ backend is to mount it.
+Unlike the `generic` backend, the `rabbitmq` backend is not mounted by default.
 
 ```text
 $ vault mount rabbitmq
@@ -39,26 +38,25 @@ Successfully mounted 'rabbitmq' at 'rabbitmq'!
 ```
 
 Next, Vault must be configured to connect to the RabbitMQ. This is done by
-writing the RabbitMQ management URI, RabbitMQ management administrator user,
-and the user's password.
+writing the RabbitMQ management URI, RabbitMQ management administrator user, and
+the user's password.
 
 ```text
 $ vault write rabbitmq/config/connection \
-    connection_uri="http://localhost:15672" \
+    uri="http://localhost:15672" \
     username="admin" \
     password="password"
 ```
 
-In this case, we've configured Vault with the URI "http://localhost:15672",
-user "admin", and password "password" connecting to a local RabbitMQ
-management instance. It is important that the Vault user have the
-administrator privilege to manager users.
+In this case, we've configured Vault with the URI "http://localhost:15672", user "admin",
+and password "password" connecting to a local RabbitMQ management instance. It is important
+that the Vault user have the administrator privilege to manager users.
 
 Optionally, we can configure the lease settings for credentials generated
 by Vault. This is done by writing to the `config/lease` key:
 
 ```
-$ vault write rabbitmq/config/lease ttl=3600 max_ttl=86400
+$ vault write rabbitmq/config/lease ttl=3600 ttl_max=86400
 Success! Data written to: rabbitmq/config/lease
 ```
 
@@ -68,13 +66,13 @@ application to renew their credentials at least hourly, and to recycle
 them once per day.
 
 The next step is to configure a role. A role is a logical name that maps
-to tags and virtual host permissions used to generated those credentials.
-For example, lets create a "readwrite" virtual host role:
+to tags and virtual host permissions used to generated those credentials. For example,
+lets create a "readwrite" virtual host role:
 
 ```text
 $ vault write rabbitmq/roles/readwrite \
     vhosts='{"/":{"write": ".*", "read": ".*"}}'
-Success! Data written to: rabbitmq/roles/readwrite
+Success! Data written to: rabbitmq/roles/readonly
 ```
 
 By writing to the `roles/readwrite` path we are defining the `readwrite` role.
@@ -83,7 +81,7 @@ By default, no tags and no virtual hosts are assigned to a role. You can read mo
 about RabbitMQ management tags [here](https://www.rabbitmq.com/management.html#permissions).
 Configure, write, and read permissions are granted per virtual host.
 
-To generate a new set of credentials, we simply read from that role.
+To generate a new set of credentials, we simply read from that role:
 Vault is now configured to create and manage credentials for RabbitMQ!
 
 ```text
@@ -117,6 +115,7 @@ subpath for interactive help output.
   <dt>Description</dt>
   <dd>
     Configures the connection string used to communicate with RabbitMQ.
+    This is a root protected endpoint.
   </dd>
 
   <dt>Method</dt>
@@ -178,12 +177,12 @@ subpath for interactive help output.
     <ul>
       <li>
         <span class="param">ttl</span>
-        <span class="param-flags">optional</span>
+        <span class="param-flags">required</span>
         The lease ttl provided in seconds.
       </li>
       <li>
-        <span class="param">max_ttl</span>
-        <span class="param-flags">optional</span>
+        <span class="param">ttl_max</span>
+        <span class="param-flags">required</span>
         The maximum ttl provided in seconds.
       </li>
     </ul>

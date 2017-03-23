@@ -60,7 +60,7 @@ by Vault. This is done by writing to the `config/lease` key:
 ```
 $ vault write mssql/config/lease \
     ttl=1h \
-    max_ttl=24h
+    ttl_max=24h
 Success! Data written to: mssql/config/lease
 ```
 
@@ -187,7 +187,7 @@ allowed to read.
         with time suffix. Hour is the largest suffix.
       </li>
       <li>
-        <span class="param">max_ttl</span>
+        <span class="param">ttl_max</span>
         <span class="param-flags">required</span>
         The maximum ttl value provided as a string duration
         with time suffix. Hour is the largest suffix.
@@ -198,47 +198,6 @@ allowed to read.
   <dt>Returns</dt>
   <dd>
     A `204` response code.
-  </dd>
-</dl>
-
-#### GET
-
-<dl class="api">
-  <dt>Description</dt>
-  <dd>
-    Queries the lease configuration.
-  </dd>
-
-  <dt>Method</dt>
-  <dd>GET</dd>
-
-  <dt>URL</dt>
-  <dd>`/mssql/config/lease`</dd>
-
-  <dt>Parameters</dt>
-  <dd>
-     None
-  </dd>
-
-  <dt>Returns</dt>
-  <dd>
-
-    ```javascript
-    {
-      "lease_id": "",
-      "renewable": false,
-      "lease_duration": 0,
-      "data": {
-        "max_ttl": "5h",
-        "ttl": "1h",
-        "ttl_max": "5h"
-      },
-      "wrap_info": null,
-      "warnings": ["The field ttl_max is deprecated and will be removed in a future release. Use max_ttl instead."],
-      "auth": null
-    }
-    ```
-
   </dd>
 </dl>
 
@@ -263,11 +222,9 @@ allowed to read.
       <li>
         <span class="param">sql</span>
         <span class="param-flags">required</span>
-        The SQL statements executed to create and configure the role.  The
-        '{{name}}' and '{{password}}' values will be substituted. Must be a
-        semicolon-separated string, a base64-encoded semicolon-separated
-        string, a serialized JSON string array, or a base64-encoded serialized
-        JSON string array.
+        The SQL statements executed to create and configure the role.
+        Must be semi-colon separated. The '{{name}}' and '{{password}}'
+        values will be substituted.
       </li>
     </ul>
   </dd>
@@ -321,10 +278,10 @@ allowed to read.
   </dd>
 
   <dt>Method</dt>
-  <dd>LIST/GET</dd>
+  <dd>GET</dd>
 
   <dt>URL</dt>
-  <dd>`/mssql/roles` (LIST) or `/mssql/roles/?list=true` (GET)</dd>
+  <dd>`/roles/?list=true`</dd>
 
   <dt>Parameters</dt>
   <dd>
@@ -340,7 +297,7 @@ allowed to read.
     "data": {
       "keys": ["dev", "prod"]
     },
-    "lease_duration": 2764800,
+    "lease_duration": 2592000,
     "lease_id": "",
     "renewable": false
   }

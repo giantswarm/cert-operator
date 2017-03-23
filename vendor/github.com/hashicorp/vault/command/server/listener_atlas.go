@@ -5,7 +5,6 @@ import (
 	"net"
 
 	"github.com/hashicorp/scada-client/scada"
-	"github.com/hashicorp/vault/vault"
 	"github.com/hashicorp/vault/version"
 )
 
@@ -27,14 +26,13 @@ func (s *SCADAListener) Addr() net.Addr {
 	return s.ln.Addr()
 }
 
-func atlasListenerFactory(config map[string]string, logger io.Writer) (net.Listener, map[string]string, vault.ReloadFunc, error) {
+func atlasListenerFactory(config map[string]string, logger io.Writer) (net.Listener, map[string]string, ReloadFunc, error) {
 	scadaConfig := &scada.Config{
 		Service:      "vault",
-		Version:      version.GetVersion().VersionNumber(),
+		Version:      version.GetVersion().String(),
 		ResourceType: "vault-cluster",
 		Meta: map[string]string{
-			"node_id":      config["node_id"],
-			"cluster_name": config["cluster_name"],
+			"node_id": config["node_id"],
 		},
 		Atlas: scada.AtlasConfig{
 			Endpoint:       config["endpoint"],
@@ -57,10 +55,6 @@ func atlasListenerFactory(config map[string]string, logger io.Writer) (net.Liste
 		"addr":           "Atlas/SCADA",
 		"infrastructure": scadaConfig.Atlas.Infrastructure,
 	}
-
-	// The outer connection is already TLS-enabled; this is just the listener
-	// that reaches back inside that connection
-	config["tls_disable"] = "1"
 
 	return listenerWrapTLS(ln, props, config)
 }

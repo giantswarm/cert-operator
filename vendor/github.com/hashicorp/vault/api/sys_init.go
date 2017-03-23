@@ -38,7 +38,6 @@ type InitRequest struct {
 	RecoveryShares    int      `json:"recovery_shares"`
 	RecoveryThreshold int      `json:"recovery_threshold"`
 	RecoveryPGPKeys   []string `json:"recovery_pgp_keys"`
-	RootTokenPGPKey   string   `json:"root_token_pgp_key"`
 }
 
 type InitStatusResponse struct {
@@ -46,9 +45,7 @@ type InitStatusResponse struct {
 }
 
 type InitResponse struct {
-	Keys            []string `json:"keys"`
-	KeysB64         []string `json:"keys_base64"`
-	RecoveryKeys    []string `json:"recovery_keys"`
-	RecoveryKeysB64 []string `json:"recovery_keys_base64"`
-	RootToken       string   `json:"root_token"`
+	Keys         []string
+	RecoveryKeys []string `json:"recovery_keys"`
+	RootToken    string   `json:"root_token"`
 }

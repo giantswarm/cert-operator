@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/keybase/go-crypto/openpgp"
+	"golang.org/x/crypto/openpgp"
 )
 
 // PGPPubKeyFiles implements the flag.Value interface and allows

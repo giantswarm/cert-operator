@@ -2,15 +2,14 @@ package physical
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
-	log "github.com/mgutz/logxi/v1"
-
-	metrics "github.com/armon/go-metrics"
+	"github.com/armon/go-metrics"
 	"github.com/samuel/go-zookeeper/zk"
 )
 
@@ -29,12 +28,12 @@ type ZookeeperBackend struct {
 	path   string
 	client *zk.Conn
 	acl    []zk.ACL
-	logger log.Logger
+	logger *log.Logger
 }
 
 // newZookeeperBackend constructs a Zookeeper backend using the given API client
 // and the prefix in the KV store.
-func newZookeeperBackend(conf map[string]string, logger log.Logger) (Backend, error) {
+func newZookeeperBackend(conf map[string]string, logger *log.Logger) (Backend, error) {
 	// Get the path in Zookeeper
 	path, ok := conf["path"]
 	if !ok {
@@ -159,39 +158,7 @@ func (c *ZookeeperBackend) ensurePath(path string, value []byte) error {
 	return nil
 }
 
-// cleanupLogicalPath is used to remove all empty nodes, begining with deepest one,
-// aborting on first non-empty one, up to top-level node.
-func (c *ZookeeperBackend) cleanupLogicalPath(path string) error {
-	nodes := strings.Split(path, "/")
-	for i := len(nodes) - 1; i > 0; i-- {
-		fullPath := c.path + strings.Join(nodes[:i], "/")
-
-		_, stat, err := c.client.Exists(fullPath)
-		if err != nil {
-			return fmt.Errorf("Failed to acquire node data: %s", err)
-		}
-
-		if stat.DataLength > 0 && stat.NumChildren > 0 {
-			msgFmt := "Node %s is both of data and leaf type ??"
-			panic(fmt.Sprintf(msgFmt, fullPath))
-		} else if stat.DataLength > 0 {
-			msgFmt := "Node %s is a data node, this is either a bug or " +
-				"backend data is corrupted"
-			panic(fmt.Sprintf(msgFmt, fullPath))
-		} else if stat.NumChildren > 0 {
-			return nil
-		} else {
-			// Empty node, lets clean it up!
-			if err := c.client.Delete(fullPath, -1); err != nil && err != zk.ErrNoNode {
-				msgFmt := "Removal of node `%s` failed: `%v`"
-				return fmt.Errorf(msgFmt, fullPath, err)
-			}
-		}
-	}
-	return nil
-}
-
-// nodePath returns an zk path based on the given key.
+// nodePath returns an etcd filepath based on the given key.
 func (c *ZookeeperBackend) nodePath(key string) string {
 	return filepath.Join(c.path, filepath.Dir(key), ZKNodeFilePrefix+filepath.Base(key))
 }
@@ -242,21 +209,14 @@ func (c *ZookeeperBackend) Get(key string) (*Entry, error) {
 func (c *ZookeeperBackend) Delete(key string) error {
 	defer metrics.MeasureSince([]string{"zookeeper", "delete"}, time.Now())
 
-	if key == "" {
-		return nil
-	}
-
 	// Delete the full path
 	fullPath := c.nodePath(key)
 	err := c.client.Delete(fullPath, -1)
 
 	// Mask if the node does not exist
-	if err != nil && err != zk.ErrNoNode {
-		return fmt.Errorf("Failed to remove %q: %v", fullPath, err)
+	if err == zk.ErrNoNode {
+		err = nil
 	}
-
-	err = c.cleanupLogicalPath(key)
-
 	return err
 }
 
@@ -272,28 +232,15 @@ func (c *ZookeeperBackend) List(prefix string) ([]string, error) {
 	// If the path nodes are missing, no children!
 	if err == zk.ErrNoNode {
 		return []string{}, nil
-	} else if err != nil {
-		return []string{}, err
 	}
 
 	children := []string{}
 	for _, key := range result {
-		childPath := fullPath + "/" + key
-		_, stat, err := c.client.Exists(childPath)
-		if err != nil {
-			// Node is ought to exists, so it must be something different
-			return []string{}, err
-		}
-
-		// Check if this entry is a leaf of a node,
+		// Check if this entry has any child entries,
 		// and append the slash which is what Vault depends on
 		// for iteration
-		if stat.DataLength > 0 && stat.NumChildren > 0 {
-			msgFmt := "Node %q is both of data and leaf type ??"
-			panic(fmt.Sprintf(msgFmt, childPath))
-		} else if stat.DataLength == 0 {
-			// No, we cannot differentiate here on number of children as node
-			// can have all it leafs remoed, and it still is a node.
+		nodeChildren, _, _ := c.client.Children(fullPath + "/" + key)
+		if nodeChildren != nil && len(nodeChildren) > 0 {
 			children = append(children, key+"/")
 		} else {
 			children = append(children, key[1:])
@@ -311,12 +258,6 @@ func (c *ZookeeperBackend) LockWith(key, value string) (Lock, error) {
 		value: value,
 	}
 	return l, nil
-}
-
-// HAEnabled indicates whether the HA functionality should be exposed.
-// Currently always returns true.
-func (c *ZookeeperBackend) HAEnabled() bool {
-	return true
 }
 
 // ZookeeperHALock is a Zookeeper Lock implementation for the HABackend

@@ -49,10 +49,6 @@ func Hash(salter *salt.Salt, raw interface{}) error {
 			s.ClientToken = fn(s.ClientToken)
 		}
 
-		if s.ClientTokenAccessor != "" {
-			s.ClientTokenAccessor = fn(s.ClientTokenAccessor)
-		}
-
 		data, err := HashStructure(s.Data, fn)
 		if err != nil {
 			return err
@@ -84,7 +80,7 @@ func Hash(salter *salt.Salt, raw interface{}) error {
 
 		s.Data = data.(map[string]interface{})
 
-	case *logical.ResponseWrapInfo:
+	case *logical.WrapInfo:
 		if s == nil {
 			return nil
 		}

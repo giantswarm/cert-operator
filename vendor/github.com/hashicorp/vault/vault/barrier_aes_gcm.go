@@ -1,18 +1,19 @@
 package vault
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/armon/go-metrics"
-	"github.com/hashicorp/vault/helper/jsonutil"
 	"github.com/hashicorp/vault/physical"
 )
 
@@ -299,7 +300,7 @@ func (b *AESGCMBarrier) ReloadMasterKey() error {
 	defer b.l.Unlock()
 
 	// Check if the master key is the same
-	if subtle.ConstantTimeCompare(b.keyring.MasterKey(), key.Value) == 1 {
+	if bytes.Equal(b.keyring.MasterKey(), key.Value) {
 		return nil
 	}
 
@@ -376,7 +377,7 @@ func (b *AESGCMBarrier) Unseal(key []byte) error {
 
 	// Unmarshal the barrier init
 	var init barrierInit
-	if err := jsonutil.DecodeJSON(plain, &init); err != nil {
+	if err := json.Unmarshal(plain, &init); err != nil {
 		return fmt.Errorf("failed to unmarshal barrier init file")
 	}
 
