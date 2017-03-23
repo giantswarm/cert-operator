@@ -26,12 +26,15 @@ import:
   subpackages:
   - api
 - package: github.com/juju/errgo
-- package: golang.org/x/net/context
+- package: golang.org/x/net
+  subpackages:
+  - context
 - package: k8s.io/client-go
   version: ^2.0.0
   subpackages:
   - kubernetes
   - rest
+- package: github.com/giantswarm/certificatetpr
 testImport:
 - package: github.com/stretchr/testify
   version: ^1.1.4
