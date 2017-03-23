@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"strings"
 
-	microerror "github.com/giantswarm/microkit/error"
-
 	"github.com/giantswarm/certctl/service/pki"
 	"github.com/giantswarm/certctl/service/token"
+	"github.com/giantswarm/certificatetpr"
+	microerror "github.com/giantswarm/microkit/error"
 )
 
 // setupPKIBackend creates a PKI backend if one does not exist for the cluster.
-func (s *Service) setupPKIBackend(cert CertificateSpec) error {
+func (s *Service) setupPKIBackend(cert certificatetpr.Spec) error {
 	var err error
 
 	service, err := s.getPKIService()
@@ -44,7 +44,7 @@ func (s *Service) setupPKIBackend(cert CertificateSpec) error {
 }
 
 // setupPKIPolicy creates a PKI policy if one does not exist for the cluster.
-func (s *Service) setupPKIPolicy(cert CertificateSpec) error {
+func (s *Service) setupPKIPolicy(cert certificatetpr.Spec) error {
 	var err error
 
 	service, err := s.getTokenService()
@@ -65,14 +65,14 @@ func (s *Service) setupPKIPolicy(cert CertificateSpec) error {
 	return service.CreatePolicy(cert.ClusterID)
 }
 
-func (config Config) getCACommonName(cert CertificateSpec) string {
+func (config Config) getCACommonName(cert certificatetpr.Spec) string {
 	commonNameFormat := config.Viper.GetString(config.Flag.Vault.PKI.CommonNameFormat)
 	commonName := fmt.Sprintf(commonNameFormat, cert.ClusterID)
 
 	return commonName
 }
 
-func getAllowedDomainsForCA(caCommonName string, cert CertificateSpec) string {
+func getAllowedDomainsForCA(caCommonName string, cert certificatetpr.Spec) string {
 	domains := []string{caCommonName}
 	domains = append(domains, cert.AltNames...)
 

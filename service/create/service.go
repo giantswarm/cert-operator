@@ -14,16 +14,6 @@ import (
 	"github.com/giantswarm/cert-operator/flag"
 )
 
-// TODO Replace with Certificate TPR
-type CertificateSpec struct {
-	ClusterID        string
-	CommonName       string
-	IPSANs           []string
-	AltNames         []string
-	AllowBareDomains bool
-	TTL              string
-}
-
 // Config represents the configuration used to create a create service.
 type Config struct {
 	// Dependencies.
@@ -98,7 +88,7 @@ func (s *Service) Boot() {
 		}
 		s.Config.Logger.Log("info", "successfully created third-party resource")
 
-		cert := CertificateSpec{
+		cert := certificatetpr.Spec{
 			ClusterID:  "cert-test",
 			CommonName: "api.cert-test.g8s.eu-west-1.aws.test.private.giantswarm.io",
 			IPSANs:     []string{"10.0.0.4", "10.0.0.5"},
