@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/giantswarm/certificatetpr"
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
 	vaultapi "github.com/hashicorp/vault/api"
@@ -92,7 +93,10 @@ type Service struct {
 // Boot starts the service
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		s.Config.Logger.Log("info", "Booted cert-operator")
+		if err := s.createTPR(); err != nil {
+			panic(fmt.Sprintf("could not create cluster resource: %#v", err))
+		}
+		s.Config.Logger.Log("info", "successfully created third-party resource")
 
 		cert := CertificateSpec{
 			ClusterID:  "cert-test",
