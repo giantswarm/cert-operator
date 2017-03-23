@@ -7,9 +7,8 @@ spec:
   commonName: "api.cert-test.g8s.eu-west-1.aws.test.private.giantswarm.io"
   altNames:
   - "cert-test.g8s.eu-west-1.aws.test.private.giantswarm.io"
-  # TODO Fix bug with allowing bare domains
-  # - "k8s-master-vm"
-  # - "kubernetes"
+  - "k8s-master-vm"
+  - "kubernetes"
   - "kubernetes.default"
   - "kubernetes.default.svc"
   - "kubernetes.default.svc.cluster.local"
