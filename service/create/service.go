@@ -109,9 +109,9 @@ func (s *Service) Boot() {
 			&certificatetpr.CustomObject{},
 			resyncPeriod,
 			cache.ResourceEventHandlerFuncs{
-				AddFunc:    s.handleCertAdd,
-				DeleteFunc: s.handleCertDelete,
-				UpdateFunc: s.handleCertUpdate,
+				AddFunc:    s.addFunc,
+				DeleteFunc: s.deleteFunc,
+				UpdateFunc: s.updateFunc,
 			},
 		)
 
@@ -123,9 +123,9 @@ func (s *Service) Boot() {
 	})
 }
 
-// handleCertAdd issues a certificate using Vault for the certificate TPR. A PKI backend is
+// addFunc issues a certificate using Vault for the certificate TPR. A PKI backend is
 // setup for the Cluster ID if it does not yet exist.
-func (s *Service) handleCertAdd(obj interface{}) {
+func (s *Service) addFunc(obj interface{}) {
 	cert := obj.(*certificatetpr.CustomObject)
 	s.Config.Logger.Log("info", fmt.Sprintf("creating certificate '%s'", cert.Spec.CommonName))
 
@@ -146,14 +146,14 @@ func (s *Service) handleCertAdd(obj interface{}) {
 	s.Config.Logger.Log("info", fmt.Sprintf("certificate issued %s", cert.Spec.CommonName))
 }
 
-// handleCertDelete is not yet implemented.
-func (s *Service) handleCertDelete(obj interface{}) {
+// deleteFunc is not yet implemented.
+func (s *Service) deleteFunc(obj interface{}) {
 	cert := obj.(*certificatetpr.CustomObject)
 	s.Config.Logger.Log("info", fmt.Sprintf("deleting certificate '%s' is not implemented yet", cert.Spec.CommonName))
 }
 
-// handleCertUpdate is not yet implemented.
-func (s *Service) handleCertUpdate(old, cur interface{}) {
+// updateFunc is not yet implemented.
+func (s *Service) updateFunc(old, cur interface{}) {
 	cert := cur.(*certificatetpr.CustomObject)
 	s.Config.Logger.Log("info", fmt.Sprintf("updating certificate '%s' is not implemented yet", cert.Spec.CommonName))
 }
