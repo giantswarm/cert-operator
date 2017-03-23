@@ -1,8 +1,10 @@
 package create
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/giantswarm/certificatetpr"
 	microerror "github.com/giantswarm/microkit/error"
@@ -10,8 +12,22 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/runtime"
+	"k8s.io/client-go/pkg/watch"
+	"k8s.io/client-go/tools/cache"
 
+	k8sutil "github.com/giantswarm/cert-operator/client/k8s"
 	"github.com/giantswarm/cert-operator/flag"
+)
+
+const (
+	CertificateListAPIEndpoint  string = "/apis/giantswarm.io/v1/certificates"
+	CertificateWatchAPIEndpoint string = "/apis/giantswarm.io/v1/watch/certificates"
+
+	// Period for re-synchronizing the list of objects in k8s watcher. 0 means that re-sync will be
+	// delayed as long as possible, until the watch will be closed or timed out.
+	resyncPeriod time.Duration = 0
 )
 
 // Config represents the configuration used to create a create service.
@@ -80,7 +96,7 @@ type Service struct {
 	bootOnce sync.Once
 }
 
-// Boot starts the service
+// Boot starts the service and implements the watch for the certificate TPR.
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
 		if err := s.createTPR(); err != nil {
@@ -88,19 +104,29 @@ func (s *Service) Boot() {
 		}
 		s.Config.Logger.Log("info", "successfully created third-party resource")
 
-		cert := certificatetpr.Spec{
-			ClusterID:  "cert-test",
-			CommonName: "api.cert-test.g8s.eu-west-1.aws.test.private.giantswarm.io",
-			IPSANs:     []string{"10.0.0.4", "10.0.0.5"},
-			AltNames: []string{
-				"kubernetes",
-				"kubernetes.default",
-				"kubernetes.default.svc",
-				"kubernetes.default.svc.cluster.local",
+		_, certInformer := cache.NewInformer(
+			s.newCertificateListWatch(),
+			&certificatetpr.CustomObject{},
+			resyncPeriod,
+			cache.ResourceEventHandlerFuncs{
+				AddFunc:    s.handleCertAdd,
+				DeleteFunc: s.handleCertDelete,
+				UpdateFunc: s.handleCertUpdate,
 			},
-			AllowBareDomains: true,
-			TTL:              "720h",
-		}
+		)
+
+		s.Config.Logger.Log("info", "starting watch")
+
+		// Certificate informer lifecycle can be interrupted by putting a value into a "stop channel".
+		// We aren't currently using that functionality, so we are passing a nil here.
+		certInformer.Run(nil)
+	})
+}
+
+// handleCertAdd issues a certificate using Vault for the certificate TPR. A PKI backend is
+// setup for the Cluster ID if it does not yet exist.
+func (s *Service) handleCertAdd(obj interface{}) {
+	cert := obj.(*certificatetpr.CustomObject)
 	s.Config.Logger.Log("info", fmt.Sprintf("creating certificate '%s'", cert.Spec.CommonName))
 
 	if err := s.setupPKIBackend(cert.Spec); err != nil {
@@ -118,7 +144,53 @@ func (s *Service) Boot() {
 		return
 	}
 	s.Config.Logger.Log("info", fmt.Sprintf("certificate issued %s", cert.Spec.CommonName))
+}
 
+// handleCertDelete is not yet implemented.
+func (s *Service) handleCertDelete(obj interface{}) {
+	cert := obj.(*certificatetpr.CustomObject)
+	s.Config.Logger.Log("info", fmt.Sprintf("deleting certificate '%s' is not implemented yet", cert.Spec.CommonName))
+}
+
+// handleCertUpdate is not yet implemented.
+func (s *Service) handleCertUpdate(old, cur interface{}) {
+	cert := cur.(*certificatetpr.CustomObject)
+	s.Config.Logger.Log("info", fmt.Sprintf("updating certificate '%s' is not implemented yet", cert.Spec.CommonName))
+}
+
+// newCertificateListWatch returns a configured list watch for the certificate TPR.
+func (s *Service) newCertificateListWatch() *cache.ListWatch {
+	client := s.Config.K8sClient.Core().RESTClient()
+
+	listWatch := &cache.ListWatch{
+		ListFunc: func(options api.ListOptions) (runtime.Object, error) {
+			req := client.Get().AbsPath(CertificateListAPIEndpoint)
+			b, err := req.DoRaw()
+			if err != nil {
+				return nil, err
 			}
 
+			var c certificatetpr.List
+			if err := json.Unmarshal(b, &c); err != nil {
+				return nil, err
+			}
+
+			return &c, nil
+		},
+
+		WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
+			req := client.Get().AbsPath(CertificateWatchAPIEndpoint)
+			stream, err := req.Stream()
+			if err != nil {
+				return nil, err
+			}
+
+			watcher := watch.NewStreamWatcher(&k8sutil.CertificateDecoder{
+				Stream: stream,
+			})
+
+			return watcher, nil
+		},
+	}
+	return listWatch
 }
