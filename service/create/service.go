@@ -101,27 +101,24 @@ func (s *Service) Boot() {
 			AllowBareDomains: true,
 			TTL:              "720h",
 		}
+	s.Config.Logger.Log("info", fmt.Sprintf("creating certificate '%s'", cert.Spec.CommonName))
 
-		// Ensure a PKI backend exists for the cluster.
-		err := s.setupPKIBackend(cert)
-		if err == nil {
-			// Ensure a PKI policy exists for the cluster.
-			err := s.setupPKIPolicy(cert)
-			if err == nil {
-				// PKI setup is OK so attempt to issue a certificate.
-				issueResp, err := s.Issue(cert)
-				if err == nil {
-					s.Config.Logger.Log("info", fmt.Sprintf("cert issued %s %s", cert.CommonName, issueResp.SerialNumber))
-				} else {
-					s.Config.Logger.Log("error", fmt.Sprintf("could not issue cert '%#v'", err))
-				}
+	if err := s.setupPKIBackend(cert.Spec); err != nil {
+		s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki backend '%#v'", err))
+		return
+	}
+	if err := s.setupPKIPolicy(cert.Spec); err != nil {
+		s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki backend '%#v'", err))
+		return
+	}
 
-			} else {
-				s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki policy '%#v'", err))
+	_, err := s.Issue(cert.Spec)
+	if err != nil {
+		s.Config.Logger.Log("error", fmt.Sprintf("could not issue cert '%#v'", err))
+		return
+	}
+	s.Config.Logger.Log("info", fmt.Sprintf("certificate issued %s", cert.Spec.CommonName))
+
 			}
 
-		} else {
-			s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki backend '%#v'", err))
-		}
-	})
 }
