@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/giantswarm/certificatetpr"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,13 +13,13 @@ func TestGetAllowedDomainsForCA(t *testing.T) {
 	tests := []struct {
 		name                string
 		caCommonName        string
-		cert                CertificateSpec
+		cert                certificatetpr.Spec
 		expectedDomainCount int
 	}{
 		{
 			name:         "Specify api cert with alt names",
 			caCommonName: "cluster-test.g8s.test.giantswarm.io",
-			cert: CertificateSpec{
+			cert: certificatetpr.Spec{
 				AltNames: []string{
 					"kubernetes",
 					"kubernetes.default",
@@ -31,7 +32,7 @@ func TestGetAllowedDomainsForCA(t *testing.T) {
 		{
 			name:                "Specify etcd cert without alt names",
 			caCommonName:        "cluster-test.g8s.test.giantswarm.io",
-			cert:                CertificateSpec{},
+			cert:                certificatetpr.Spec{},
 			expectedDomainCount: 1,
 		},
 	}

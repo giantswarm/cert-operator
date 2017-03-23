@@ -5,12 +5,13 @@ import (
 
 	"github.com/giantswarm/certctl/service/cert-signer"
 	"github.com/giantswarm/certctl/service/spec"
+	"github.com/giantswarm/certificatetpr"
 	microerror "github.com/giantswarm/microkit/error"
 )
 
 // Issue generates a certificate using the PKI backend signed by the certificate
 // authority associated with the configured cluster ID.
-func (s *Service) Issue(config CertificateSpec) (spec.IssueResponse, error) {
+func (s *Service) Issue(cert certificatetpr.Spec) (spec.IssueResponse, error) {
 	var issueResp spec.IssueResponse
 
 	// Create a certificate signer to generate a new signed certificate.
@@ -24,11 +25,11 @@ func (s *Service) Issue(config CertificateSpec) (spec.IssueResponse, error) {
 
 	// Generate a new signed certificate.
 	newIssueConfig := spec.IssueConfig{
-		ClusterID:  config.ClusterID,
-		CommonName: config.CommonName,
-		IPSANs:     strings.Join(config.IPSANs, ","),
-		AltNames:   strings.Join(config.AltNames, ","),
-		TTL:        config.TTL,
+		ClusterID:  cert.ClusterID,
+		CommonName: cert.CommonName,
+		IPSANs:     strings.Join(cert.IPSANs, ","),
+		AltNames:   strings.Join(cert.AltNames, ","),
+		TTL:        cert.TTL,
 	}
 
 	newIssueResponse, err := newCertSigner.Issue(newIssueConfig)

@@ -1,5 +1,5 @@
-hash: bd3bb558eb767c022c08b6ca20b7733673f5e920f77cbdfcec9b99c2881a479a
-updated: 2017-03-22T20:35:35.463796756+01:00
+hash: b0565c64180d64944fd4aef93db887765fd070c527ab8f60a2c08d9efe823238
+updated: 2017-03-23T12:56:45.112810719+01:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -65,6 +65,8 @@ imports:
   - service/pki
   - service/spec
   - service/token
+- name: github.com/giantswarm/certificatetpr
+  version: 42a7d2d2af0b2f8bb375a46134111211f0345ba7
 - name: github.com/giantswarm/go-uuid
   version: ed3ca8a15a931b141440a7e98e4f716eec255f7d
   subpackages:

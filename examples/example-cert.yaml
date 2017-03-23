@@ -1,0 +1,19 @@
+apiVersion: "giantswarm.io/v1"
+kind: Certificate
+metadata:
+  name: "example-cert"
+spec:
+  clusterID: "cert-test"
+  commonName: "api.cert-test.g8s.eu-west-1.aws.test.private.giantswarm.io"
+  altNames:
+  - "cert-test.g8s.eu-west-1.aws.test.private.giantswarm.io"
+  - "k8s-master-vm"
+  - "kubernetes"
+  - "kubernetes.default"
+  - "kubernetes.default.svc"
+  - "kubernetes.default.svc.cluster.local"
+  ipSans:
+  - "10.0.2.1"
+  - "10.0.2.2"
+  ttl: "720h"
+  allowBareDomains: true
