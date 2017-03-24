@@ -45,7 +45,7 @@ spec:
           containerPort: 8000
         args:
         - daemon
-      imagePullSecrets:
-      - name: circleci-giantswarm-registry
         - --config.dirs="/var/run/cert-operator/configmap/ /var/run/cert-operator/secret/"
         - --config.files="config secret"
+      imagePullSecrets:
+      - name: circleci-giantswarm-registry
