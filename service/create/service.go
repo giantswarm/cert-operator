@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/giantswarm/certctl/service/spec"
 	"github.com/giantswarm/certificatetpr"
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
@@ -40,6 +41,13 @@ type Config struct {
 	// Settings.
 	Flag  *flag.Flag
 	Viper *viper.Viper
+}
+
+// certificateSecret stores a cert issued by Vault that will be stored as a k8s secret.
+type certificateSecret struct {
+	CommonName    string
+	Namespace     string
+	IssueResponse spec.IssueResponse
 }
 
 // DefaultConfig provides a default configuration to create a new create service
@@ -127,7 +135,7 @@ func (s *Service) Boot() {
 // setup for the Cluster ID if it does not yet exist.
 func (s *Service) addFunc(obj interface{}) {
 	cert := obj.(*certificatetpr.CustomObject)
-	s.Config.Logger.Log("info", fmt.Sprintf("creating certificate '%s'", cert.Spec.CommonName))
+	s.Config.Logger.Log("debug", fmt.Sprintf("creating certificate '%s'", cert.Spec.CommonName))
 
 	if err := s.setupPKIBackend(cert.Spec); err != nil {
 		s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki backend '%#v'", err))
@@ -137,13 +145,12 @@ func (s *Service) addFunc(obj interface{}) {
 		s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki backend '%#v'", err))
 		return
 	}
-
-	_, err := s.Issue(cert.Spec)
-	if err != nil {
+	if err := s.Issue(cert); err != nil {
 		s.Config.Logger.Log("error", fmt.Sprintf("could not issue cert '%#v'", err))
 		return
 	}
-	s.Config.Logger.Log("info", fmt.Sprintf("certificate issued %s", cert.Spec.CommonName))
+
+	s.Config.Logger.Log("info", fmt.Sprintf("certificate '%s' issued", cert.Spec.CommonName))
 }
 
 // deleteFunc is not yet implemented.
