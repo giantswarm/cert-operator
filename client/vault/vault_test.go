@@ -47,8 +47,8 @@ func TestNewClient(t *testing.T) {
 		f := flag.New()
 		v := viper.New()
 
-		v.Set(f.Vault.Address, tc.address)
-		v.Set(f.Vault.Token, tc.token)
+		v.Set(f.Service.Vault.Address, tc.address)
+		v.Set(f.Service.Vault.Token, tc.token)
 
 		config := Config{
 			Flag:  f,
