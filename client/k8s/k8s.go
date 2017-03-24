@@ -30,12 +30,12 @@ type Config struct {
 
 func newRawClientConfig(config Config) *rest.Config {
 	tlsClientConfig := rest.TLSClientConfig{
-		CertFile: config.Viper.GetString(config.Flag.Kubernetes.TLS.CertFile),
-		KeyFile:  config.Viper.GetString(config.Flag.Kubernetes.TLS.KeyFile),
-		CAFile:   config.Viper.GetString(config.Flag.Kubernetes.TLS.CAFile),
+		CertFile: config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CertFile),
+		KeyFile:  config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.KeyFile),
+		CAFile:   config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CAFile),
 	}
 	rawClientConfig := &rest.Config{
-		Host:            config.Viper.GetString(config.Flag.Kubernetes.Address),
+		Host:            config.Viper.GetString(config.Flag.Service.Kubernetes.Address),
 		QPS:             MaxQPS,
 		Burst:           MaxBurst,
 		TLSClientConfig: tlsClientConfig,
@@ -48,9 +48,9 @@ func getRawClientConfig(config Config) (*rest.Config, error) {
 	var rawClientConfig *rest.Config
 	var err error
 
-	address := config.Viper.GetString(config.Flag.Kubernetes.Address)
+	address := config.Viper.GetString(config.Flag.Service.Kubernetes.Address)
 
-	if config.Viper.GetBool(config.Flag.Kubernetes.InCluster) {
+	if config.Viper.GetBool(config.Flag.Service.Kubernetes.InCluster) {
 		config.Logger.Log("debug", "creating in-cluster config")
 		rawClientConfig, err = rest.InClusterConfig()
 		if err != nil {

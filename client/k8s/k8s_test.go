@@ -65,11 +65,11 @@ func TestGetRawClientConfig(t *testing.T) {
 		f := flag.New()
 		v := viper.New()
 
-		v.Set(f.Kubernetes.InCluster, tc.inCluster)
-		v.Set(f.Kubernetes.Address, tc.expectedAddress)
-		v.Set(f.Kubernetes.TLS.CertFile, certFile)
-		v.Set(f.Kubernetes.TLS.KeyFile, keyFile)
-		v.Set(f.Kubernetes.TLS.CAFile, caFile)
+		v.Set(f.Service.Kubernetes.InCluster, tc.inCluster)
+		v.Set(f.Service.Kubernetes.Address, tc.expectedAddress)
+		v.Set(f.Service.Kubernetes.TLS.CertFile, certFile)
+		v.Set(f.Service.Kubernetes.TLS.KeyFile, keyFile)
+		v.Set(f.Service.Kubernetes.TLS.CAFile, caFile)
 
 		config := Config{
 			Logger: newLogger,
