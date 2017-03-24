@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/giantswarm/cert-operator.svg?style=svg)](https://circleci.com/gh/giantswarm/cert-operator)
+
 # cert-operator
 
 Cert Operator creates/configure/manages certificates for Kubernetes clusters running on Giantnetes.
