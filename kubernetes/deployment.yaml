@@ -23,7 +23,7 @@ spec:
               path: config.yml
       - name: cert-operator-secret
         secret:
-          name: cert-operator-secret
+          secretName: cert-operator-secret
           items:
             - key: secret.yml
               path: secret.yml
@@ -45,7 +45,7 @@ spec:
           containerPort: 8000
         args:
         - daemon
-        - --config.dirs=/var/run/cert-operator/configmap/,/var/run/cert-operator/secret/
-        - --config.files=config,secret
       imagePullSecrets:
       - name: circleci-giantswarm-registry
+        - --config.dirs="/var/run/cert-operator/configmap/ /var/run/cert-operator/secret/"
+        - --config.files="config secret"
