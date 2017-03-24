@@ -153,10 +153,17 @@ func (s *Service) addFunc(obj interface{}) {
 	s.Config.Logger.Log("info", fmt.Sprintf("certificate '%s' issued", cert.Spec.CommonName))
 }
 
-// deleteFunc is not yet implemented.
+// deleteFunc deletes the k8s secret containing the certificate.
 func (s *Service) deleteFunc(obj interface{}) {
 	cert := obj.(*certificatetpr.CustomObject)
-	s.Config.Logger.Log("info", fmt.Sprintf("deleting certificate '%s' is not implemented yet", cert.Spec.CommonName))
+	s.Config.Logger.Log("debug", fmt.Sprintf("deleting certificate '%s'", cert.Spec.CommonName))
+
+	if err := s.DeleteCertificate(cert); err != nil {
+		s.Config.Logger.Log("error", fmt.Sprintf("could not delete certificate '%#v'", err))
+		return
+	}
+
+	s.Config.Logger.Log("info", fmt.Sprintf("certificate '%s' deleted", cert.Spec.CommonName))
 }
 
 // updateFunc is not yet implemented.
