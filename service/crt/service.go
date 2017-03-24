@@ -53,7 +53,7 @@ type certificateSecret struct {
 	IssueResponse    spec.IssueResponse
 }
 
-// DefaultConfig provides a default configuration to create a new Crt service
+// DefaultConfig provides a default configuration to create a new create service
 // by best effort.
 func DefaultConfig() Config {
 	return Config{
