@@ -4,6 +4,7 @@ metadata:
   name: "example-cert"
 spec:
   clusterID: "cert-test"
+  clusterComponent: "kubernetes"
   commonName: "api.cert-test.g8s.eu-west-1.aws.test.private.giantswarm.io"
   altNames:
   - "cert-test.g8s.eu-west-1.aws.test.private.giantswarm.io"

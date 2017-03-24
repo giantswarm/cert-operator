@@ -36,9 +36,10 @@ func (s *Service) Issue(cert *certificatetpr.CustomObject) error {
 
 	// Save the certificate as a k8s secret.
 	secret := certificateSecret{
-		CommonName:    cert.Spec.CommonName,
-		Namespace:     cert.ObjectMeta.Namespace,
-		IssueResponse: newIssueResponse,
+		ClusterComponent: cert.Spec.ClusterComponent,
+		CommonName:       cert.Spec.CommonName,
+		Namespace:        cert.ObjectMeta.Namespace,
+		IssueResponse:    newIssueResponse,
 	}
 	if err := s.CreateCertificate(secret); err != nil {
 		return microerror.MaskAny(err)
