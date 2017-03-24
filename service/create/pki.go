@@ -36,7 +36,7 @@ func (s *Service) setupPKIBackend(cert certificatetpr.Spec) error {
 		CommonName:       caCommonName,
 		AllowedDomains:   getAllowedDomainsForCA(caCommonName, cert),
 		AllowBareDomains: cert.AllowBareDomains,
-		TTL:              s.Config.Viper.GetString(s.Config.Flag.Service.Vault.PKI.CA.TTL),
+		TTL:              s.Config.Viper.GetString(s.Config.Flag.Service.Vault.Config.PKI.CA.TTL),
 	}
 
 	s.Config.Logger.Log("debug", fmt.Sprintf("Creating PKI backend for cluster %s", cert.ClusterID))
@@ -66,7 +66,7 @@ func (s *Service) setupPKIPolicy(cert certificatetpr.Spec) error {
 }
 
 func (config Config) getCACommonName(cert certificatetpr.Spec) string {
-	commonNameFormat := config.Viper.GetString(config.Flag.Service.Vault.PKI.CommonName.Format)
+	commonNameFormat := config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format)
 	commonName := fmt.Sprintf(commonNameFormat, cert.ClusterID)
 
 	return commonName

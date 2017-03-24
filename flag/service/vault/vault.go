@@ -1,11 +1,9 @@
 package vault
 
 import (
-	"github.com/giantswarm/cert-operator/flag/service/vault/pki"
+	"github.com/giantswarm/cert-operator/flag/service/vault/config"
 )
 
 type Vault struct {
-	Address string
-	Token   string
-	PKI     pki.PKI
+	Config config.Config
 }

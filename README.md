@@ -55,7 +55,8 @@ Here the plain Vault token has to be inserted.
 ```
 service:
   vault:
-    token: 'TODO'
+    config:
+      token: 'TODO'
 ```
 
 Here the base64 representation of the data structure above has to be inserted.
