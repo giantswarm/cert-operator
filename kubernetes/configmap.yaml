@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cert-operator-configmap
+  namespace: giantswarm
+data:
+  config.yml: |
+    server:
+      listen:
+        address: 'http://0.0.0.0:8000'
+    service:
+      vault:
+        config:
+          address: 'https://leaseweb-vault-private.giantswarm.io:8200'
+          pki:
+            ca:
+              ttl: '86400h'
+            commonname:
+              format: '%s.g8s.fra-1.giantswarm.io'
