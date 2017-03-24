@@ -40,7 +40,7 @@ func (s *Service) Issue(cert *certificatetpr.CustomObject) error {
 		Namespace:     cert.ObjectMeta.Namespace,
 		IssueResponse: newIssueResponse,
 	}
-	if err := s.SaveCertificate(secret); err != nil {
+	if err := s.CreateCertificate(secret); err != nil {
 		return microerror.MaskAny(err)
 	}
 
