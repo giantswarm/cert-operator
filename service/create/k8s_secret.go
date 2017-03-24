@@ -7,8 +7,8 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 )
 
-// SaveCertificate saves the certificate as a k8s secret.
-func (s *Service) SaveCertificate(cert certificateSecret) error {
+// CreateCertificate saves the certificate as a k8s secret.
+func (s *Service) CreateCertificate(cert certificateSecret) error {
 	var err error
 
 	secret := &v1.Secret{
@@ -22,17 +22,10 @@ func (s *Service) SaveCertificate(cert certificateSecret) error {
 		},
 	}
 
-	// Create the secret.
+	// Create the secret which should be idempotent.
 	_, err = s.Config.K8sClient.Core().Secrets(cert.Namespace).Create(secret)
 	if errors.IsAlreadyExists(err) {
-		// Update the secret if it already exists.
-		_, err = s.Config.K8sClient.Core().Secrets(cert.Namespace).Update(secret)
-		if err != nil {
-			return microerror.MaskAny(err)
-		}
-
 		return nil
-
 	} else if err != nil {
 		return microerror.MaskAny(err)
 	}
@@ -45,8 +38,11 @@ func (s *Service) DeleteCertificate(cert *certificatetpr.CustomObject) error {
 	namespace := cert.ObjectMeta.Namespace
 	secretName := cert.Spec.CommonName
 
+	// Delete the secret which should be idempotent.
 	err := s.Config.K8sClient.Core().Secrets(namespace).Delete(secretName, &v1.DeleteOptions{})
-	if err != nil {
+	if errors.IsNotFound(err) {
+		return nil
+	} else if err != nil {
 		return microerror.MaskAny(err)
 	}
 
