@@ -32,7 +32,7 @@ func NewClient(config Config) (*vaultapi.Client, error) {
 	}
 
 	if token == "" {
-		return nil, microerror.MaskAnyf(invalidConfigError, "vault address must not be empty")
+		return nil, microerror.MaskAnyf(invalidConfigError, "vault token must not be empty")
 	}
 
 	newClientConfig := vaultapi.DefaultConfig()
