@@ -14,6 +14,9 @@ func (s *Service) CreateCertificate(cert certificateSecret) error {
 	secret := &v1.Secret{
 		ObjectMeta: v1.ObjectMeta{
 			Name: cert.CommonName,
+			Labels: map[string]string{
+				"clusterComponent": cert.ClusterComponent,
+			},
 		},
 		StringData: map[string]string{
 			"crt": cert.IssueResponse.Certificate,
