@@ -30,7 +30,7 @@ type Config struct {
 
 func newRawClientConfig(config Config) *rest.Config {
 	tlsClientConfig := rest.TLSClientConfig{
-		CertFile: config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CertFile),
+		CertFile: config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CrtFile),
 		KeyFile:  config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.KeyFile),
 		CAFile:   config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CAFile),
 	}
