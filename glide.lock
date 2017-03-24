@@ -66,7 +66,7 @@ imports:
   - service/spec
   - service/token
 - name: github.com/giantswarm/certificatetpr
-  version: 42a7d2d2af0b2f8bb375a46134111211f0345ba7
+  version: e7556ebe23341e8de38174e2a8ad85332281a670
 - name: github.com/giantswarm/go-uuid
   version: ed3ca8a15a931b141440a7e98e4f716eec255f7d
   subpackages:
