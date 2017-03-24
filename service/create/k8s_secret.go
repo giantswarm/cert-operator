@@ -39,3 +39,16 @@ func (s *Service) SaveCertificate(cert certificateSecret) error {
 
 	return nil
 }
+
+// DeleteCertificate deletes the k8s secret that stores the certificate.
+func (s *Service) DeleteCertificate(cert *certificatetpr.CustomObject) error {
+	namespace := cert.ObjectMeta.Namespace
+	secretName := cert.Spec.CommonName
+
+	err := s.Config.K8sClient.Core().Secrets(namespace).Delete(secretName, &v1.DeleteOptions{})
+	if err != nil {
+		return microerror.MaskAny(err)
+	}
+
+	return nil
+}
