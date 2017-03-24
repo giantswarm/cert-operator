@@ -1,0 +1,51 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cert-operator
+  namespace: giantswarm
+  labels:
+    app: cert-operator
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: cert-operator
+    spec:
+      volumes:
+      - name: cert-operator-configmap
+        configMap:
+          name: cert-operator-configmap
+          items:
+            - key: config.yml
+              path: config.yml
+      - name: cert-operator-secret
+        secret:
+          secretName: cert-operator-secret
+          items:
+            - key: secret.yml
+              path: secret.yml
+      - name: certs
+        hostPath:
+          path: /etc/ssl/certs/ca-certificates.crt
+      containers:
+      - name: cert-operator
+        image: registry.giantswarm.io/giantswarm/cert-operator:%%DOCKER_TAG%%
+        volumeMounts:
+        - name: cert-operator-configmap
+          mountPath: /var/run/cert-operator/configmap/
+        - name: cert-operator-secret
+          mountPath: /var/run/cert-operator/secret/
+        - name: certs
+          mountPath: /etc/ssl/certs/ca-certificate.crt
+        ports:
+        - name: http
+          containerPort: 8000
+        args:
+        - daemon
+        - --config.dirs="/var/run/cert-operator/configmap/ /var/run/cert-operator/secret/"
+        - --config.files="config secret"
+      imagePullSecrets:
+      - name: circleci-giantswarm-registry

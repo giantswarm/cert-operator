@@ -18,8 +18,8 @@ type Config struct {
 }
 
 func NewClient(config Config) (*vaultapi.Client, error) {
-	address := config.Viper.GetString(config.Flag.Vault.Address)
-	token := config.Viper.GetString(config.Flag.Vault.Token)
+	address := config.Viper.GetString(config.Flag.Service.Vault.Config.Address)
+	token := config.Viper.GetString(config.Flag.Service.Vault.Config.Token)
 
 	if address == "" {
 		return nil, microerror.MaskAnyf(invalidConfigError, "vault address must not be empty")
@@ -32,7 +32,7 @@ func NewClient(config Config) (*vaultapi.Client, error) {
 	}
 
 	if token == "" {
-		return nil, microerror.MaskAnyf(invalidConfigError, "vault address must not be empty")
+		return nil, microerror.MaskAnyf(invalidConfigError, "vault token must not be empty")
 	}
 
 	newClientConfig := vaultapi.DefaultConfig()

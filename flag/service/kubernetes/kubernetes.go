@@ -1,7 +1,7 @@
 package kubernetes
 
 import (
-	"github.com/giantswarm/cert-operator/flag/kubernetes/tls"
+	"github.com/giantswarm/cert-operator/flag/service/kubernetes/tls"
 )
 
 type Kubernetes struct {

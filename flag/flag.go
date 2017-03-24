@@ -3,13 +3,11 @@ package flag
 import (
 	"github.com/giantswarm/microkit/flag"
 
-	"github.com/giantswarm/cert-operator/flag/kubernetes"
-	"github.com/giantswarm/cert-operator/flag/vault"
+	"github.com/giantswarm/cert-operator/flag/service"
 )
 
 type Flag struct {
-	Kubernetes kubernetes.Kubernetes
-	Vault      vault.Vault
+	Service service.Service
 }
 
 func New() *Flag {

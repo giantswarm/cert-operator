@@ -26,7 +26,7 @@ func TestGetRawClientConfig(t *testing.T) {
 		}
 	}
 
-	certFile := "/var/run/kubernetes/client-admin.crt"
+	crtFile := "/var/run/kubernetes/client-admin.crt"
 	keyFile := "/var/run/kubernetes/client-admin.key"
 	caFile := "/var/run/kubernetes/server-ca.crt"
 
@@ -65,11 +65,11 @@ func TestGetRawClientConfig(t *testing.T) {
 		f := flag.New()
 		v := viper.New()
 
-		v.Set(f.Kubernetes.InCluster, tc.inCluster)
-		v.Set(f.Kubernetes.Address, tc.expectedAddress)
-		v.Set(f.Kubernetes.TLS.CertFile, certFile)
-		v.Set(f.Kubernetes.TLS.KeyFile, keyFile)
-		v.Set(f.Kubernetes.TLS.CAFile, caFile)
+		v.Set(f.Service.Kubernetes.InCluster, tc.inCluster)
+		v.Set(f.Service.Kubernetes.Address, tc.expectedAddress)
+		v.Set(f.Service.Kubernetes.TLS.CrtFile, crtFile)
+		v.Set(f.Service.Kubernetes.TLS.KeyFile, keyFile)
+		v.Set(f.Service.Kubernetes.TLS.CAFile, caFile)
 
 		config := Config{
 			Logger: newLogger,
@@ -85,7 +85,7 @@ func TestGetRawClientConfig(t *testing.T) {
 		}
 		assert.Nil(t, err, fmt.Sprintf("[%s] An error was unexpected", tc.name))
 		assert.Equal(t, tc.expectedAddress, rawClientConfig.Host, fmt.Sprintf("[%s] Hosts should be equal", tc.name))
-		assert.Equal(t, certFile, rawClientConfig.TLSClientConfig.CertFile, fmt.Sprintf("[%s] CertFiles should be equal", tc.name))
+		assert.Equal(t, crtFile, rawClientConfig.TLSClientConfig.CertFile, fmt.Sprintf("[%s] CertFiles should be equal", tc.name))
 		assert.Equal(t, keyFile, rawClientConfig.TLSClientConfig.KeyFile, fmt.Sprintf("[%s] KeyFiles should be equal", tc.name))
 		assert.Equal(t, caFile, rawClientConfig.TLSClientConfig.CAFile, fmt.Sprintf("[%s] CAFiles should be equal", tc.name))
 	}
