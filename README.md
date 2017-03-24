@@ -46,3 +46,31 @@ cert-operator is under the Apache 2.0 license. See the [LICENSE](LICENSE) file f
 ## Credit
 - https://golang.org
 - https://github.com/giantswarm/microkit
+
+
+### Secrets
+The cert-operator is deployed via Kubernetes.
+
+Here the plain Vault token has to be inserted.
+```
+service:
+  vault:
+    token: 'TODO'
+```
+
+Here the base64 representation of the data structure above has to be inserted.
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cert-operator-secret
+  namespace: giantswarm
+type: Opaque
+data:
+  secret.yml: 'TODO'
+```
+
+To create the secret manually do this.
+```
+kubectl create -f ./path/to/secret.yml
+```
