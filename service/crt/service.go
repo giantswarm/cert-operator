@@ -1,4 +1,4 @@
-package create
+package crt
 
 import (
 	"encoding/json"
@@ -20,6 +20,7 @@ import (
 
 	k8sutil "github.com/giantswarm/cert-operator/client/k8s"
 	"github.com/giantswarm/cert-operator/flag"
+	"github.com/giantswarm/cert-operator/service/ca"
 )
 
 const (
@@ -31,11 +32,12 @@ const (
 	resyncPeriod time.Duration = 0
 )
 
-// Config represents the configuration used to create a create service.
+// Config represents the configuration used to create a Crt service.
 type Config struct {
 	// Dependencies.
-	K8sClient   kubernetes.Interface
+	CAService   *ca.Service
 	Logger      micrologger.Logger
+	K8sClient   kubernetes.Interface
 	VaultClient *vaultapi.Client
 
 	// Settings.
@@ -51,11 +53,12 @@ type certificateSecret struct {
 	IssueResponse    spec.IssueResponse
 }
 
-// DefaultConfig provides a default configuration to create a new create service
+// DefaultConfig provides a default configuration to create a new Crt service
 // by best effort.
 func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
+		CAService:   nil,
 		K8sClient:   nil,
 		Logger:      nil,
 		VaultClient: nil,
@@ -66,9 +69,12 @@ func DefaultConfig() Config {
 	}
 }
 
-// New creates a new configured version service.
+// New creates a new configured Crt service.
 func New(config Config) (*Service, error) {
 	// Dependencies.
+	if config.CAService == nil {
+		return nil, microerror.MaskAnyf(invalidConfigError, "ca service must not be empty")
+	}
 	if config.K8sClient == nil {
 		return nil, microerror.MaskAnyf(invalidConfigError, "kubernetes client must not be empty")
 	}
@@ -97,7 +103,7 @@ func New(config Config) (*Service, error) {
 	return newService, nil
 }
 
-// Service implements the version service interface.
+// Service implements the Crt service interface.
 type Service struct {
 	Config
 
@@ -109,7 +115,7 @@ type Service struct {
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
 		if err := s.createTPR(); err != nil {
-			panic(fmt.Sprintf("could not create cluster resource: %#v", err))
+			panic(fmt.Sprintf("could not create certificate resource: %#v", err))
 		}
 		s.Config.Logger.Log("info", "successfully created third-party resource")
 
@@ -138,12 +144,8 @@ func (s *Service) addFunc(obj interface{}) {
 	cert := obj.(*certificatetpr.CustomObject)
 	s.Config.Logger.Log("debug", fmt.Sprintf("creating certificate '%s'", cert.Spec.CommonName))
 
-	if err := s.setupPKIBackend(cert.Spec); err != nil {
-		s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki backend '%#v'", err))
-		return
-	}
-	if err := s.setupPKIPolicy(cert.Spec); err != nil {
-		s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki backend '%#v'", err))
+	if err := s.Config.CAService.SetupPKI(cert); err != nil {
+		s.Config.Logger.Log("error", fmt.Sprintf("could not setup PKI '%#v'", err))
 		return
 	}
 	if err := s.Issue(cert); err != nil {
