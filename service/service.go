@@ -1,4 +1,5 @@
-// Package service implements business logic to TODO
+// Package service implements business logic to issue certificates for clusters
+// running on the Giantnetes platform.
 package service
 
 import (
@@ -14,7 +15,8 @@ import (
 	k8sutil "github.com/giantswarm/cert-operator/client/k8s"
 	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
-	"github.com/giantswarm/cert-operator/service/create"
+	"github.com/giantswarm/cert-operator/service/ca"
+	"github.com/giantswarm/cert-operator/service/crt"
 	"github.com/giantswarm/cert-operator/service/version"
 )
 
@@ -93,16 +95,31 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var createService *create.Service
+	var caService *ca.Service
 	{
-		createConfig := create.DefaultConfig()
-		createConfig.Flag = config.Flag
-		createConfig.K8sClient = k8sClient
-		createConfig.Logger = config.Logger
-		createConfig.VaultClient = vaultClient
-		createConfig.Viper = config.Viper
+		caConfig := ca.DefaultConfig()
+		caConfig.Flag = config.Flag
+		caConfig.Logger = config.Logger
+		caConfig.VaultClient = vaultClient
+		caConfig.Viper = config.Viper
 
-		createService, err = create.New(createConfig)
+		caService, err = ca.New(caConfig)
+		if err != nil {
+			return nil, microerror.MaskAny(err)
+		}
+	}
+
+	var crtService *crt.Service
+	{
+		crtConfig := crt.DefaultConfig()
+		crtConfig.Flag = config.Flag
+		crtConfig.CAService = caService
+		crtConfig.K8sClient = k8sClient
+		crtConfig.Logger = config.Logger
+		crtConfig.VaultClient = vaultClient
+		crtConfig.Viper = config.Viper
+
+		crtService, err = crt.New(crtConfig)
 		if err != nil {
 			return nil, microerror.MaskAny(err)
 		}
@@ -125,7 +142,7 @@ func New(config Config) (*Service, error) {
 
 	newService := &Service{
 		// Dependencies.
-		Create:  createService,
+		Crt:     crtService,
 		Version: versionService,
 
 		// Internals
@@ -137,7 +154,7 @@ func New(config Config) (*Service, error) {
 
 type Service struct {
 	// Dependencies.
-	Create  *create.Service
+	Crt     *crt.Service
 	Version *version.Service
 
 	// Internals.
@@ -146,6 +163,6 @@ type Service struct {
 
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		s.Create.Boot()
+		s.Crt.Boot()
 	})
 }

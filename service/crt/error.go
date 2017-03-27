@@ -1,4 +1,4 @@
-package create
+package crt
 
 import (
 	"github.com/juju/errgo"

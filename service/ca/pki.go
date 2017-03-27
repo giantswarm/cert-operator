@@ -1,4 +1,4 @@
-package create
+package ca
 
 import (
 	"fmt"
@@ -9,6 +9,23 @@ import (
 	"github.com/giantswarm/certificatetpr"
 	microerror "github.com/giantswarm/microkit/error"
 )
+
+// SetupPKI creates a PKI backend and policy if one does not exists for the cluster.
+func (s *Service) SetupPKI(cert *certificatetpr.CustomObject) error {
+	s.Config.Logger.Log("debug", fmt.Sprintf("setting up PKI for cluster '%s'", cert.Spec.ClusterID))
+
+	if err := s.setupPKIBackend(cert.Spec); err != nil {
+		s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki backend '%#v'", err))
+		return err
+	}
+	if err := s.setupPKIPolicy(cert.Spec); err != nil {
+		s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki policy '%#v'", err))
+		return err
+	}
+
+	s.Config.Logger.Log("debug", fmt.Sprintf("valid PKI exists for cluster '%s'", cert.Spec.ClusterID))
+	return nil
+}
 
 // setupPKIBackend creates a PKI backend if one does not exist for the cluster.
 func (s *Service) setupPKIBackend(cert certificatetpr.Spec) error {
