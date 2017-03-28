@@ -1,0 +1,14 @@
+apiVersion: "giantswarm.io/v1"
+kind: Certificate
+metadata:
+  name: "uo91f-calico"
+  namespace: "uo91f"
+spec:
+  clusterID: "uo91f"
+  clusterComponent: "calico"
+  commonName: "calico.uo91f.g8s.eu-west-1.aws.test.private.giantswarm.io"
+  altNames:
+  ipSans:
+  - "10.0.2.2"
+  ttl: "720h"
+  allowBareDomains: false

@@ -1,0 +1,20 @@
+apiVersion: "giantswarm.io/v1"
+kind: Certificate
+metadata:
+  name: "uo91f-worker"
+  namespace: "uo91f"
+spec:
+  clusterID: "uo91f"
+  clusterComponent: "worker"
+  commonName: "api.uo91f.g8s.eu-west-1.aws.test.private.giantswarm.io"
+  altNames:
+  - "uo91f.g8s.eu-west-1.aws.test.private.giantswarm.io"
+  - "k8s-master-vm"
+  - "kubernetes"
+  - "kubernetes.default"
+  - "kubernetes.default.svc"
+  - "kubernetes.default.svc.cluster.local"
+  ipSans:
+  - "10.0.2.2"
+  ttl: "720h"
+  allowBareDomains: true
