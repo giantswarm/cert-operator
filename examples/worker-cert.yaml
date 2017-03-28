@@ -2,7 +2,7 @@ apiVersion: "giantswarm.io/v1"
 kind: Certificate
 metadata:
   name: "uo91f-worker"
-  namespace: "uo91f"
+  namespace: "default"
 spec:
   clusterID: "uo91f"
   clusterComponent: "worker"
