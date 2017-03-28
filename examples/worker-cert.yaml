@@ -6,7 +6,7 @@ metadata:
 spec:
   clusterID: "uo91f"
   clusterComponent: "worker"
-  commonName: "api.uo91f.g8s.eu-west-1.aws.test.private.giantswarm.io"
+  commonName: "worker.uo91f.g8s.eu-west-1.aws.test.private.giantswarm.io"
   altNames:
   ipSans:
   - "10.0.2.2"
