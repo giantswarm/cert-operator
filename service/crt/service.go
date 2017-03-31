@@ -47,10 +47,8 @@ type Config struct {
 
 // certificateSecret stores a cert issued by Vault that will be stored as a k8s secret.
 type certificateSecret struct {
-	ClusterComponent string
-	CommonName       string
-	Namespace        string
-	IssueResponse    spec.IssueResponse
+	Certificate   *certificatetpr.CustomObject
+	IssueResponse spec.IssueResponse
 }
 
 // DefaultConfig provides a default configuration to create a new create service
