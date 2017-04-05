@@ -32,7 +32,7 @@ spec:
           path: /etc/ssl/certs/ca-certificates.crt
       containers:
       - name: cert-operator
-        image: registry.giantswarm.io/giantswarm/cert-operator:%%DOCKER_TAG%%
+        image: registry.giantswarm.io/giantswarm/cert-operator:{{ .BuildInfo.SHA }}
         volumeMounts:
         - name: cert-operator-configmap
           mountPath: /var/run/cert-operator/configmap/

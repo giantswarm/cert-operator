@@ -11,9 +11,9 @@ data:
     service:
       vault:
         config:
-          address: 'https://leaseweb-vault-private.giantswarm.io:8200'
+          address: {{ .Installation.V1.Auth.Vault.Address | urlString }}
           pki:
             ca:
-              ttl: '86400h'
+              ttl: {{ .Installation.V1.Auth.Vault.CA.TTL | shortDuration }}
             commonname:
-              format: '%s.g8s.fra-1.giantswarm.io'
+              format: '%s.{{ .Installation.V1.Guest.Kubernetes.API.EndpointBase }}'
