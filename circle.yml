@@ -11,7 +11,7 @@ dependencies:
 
 test:
   override:
-    - ./architect build --golang-version=1.8.0
+    - ./architect build
 
 deployment:
   master:
