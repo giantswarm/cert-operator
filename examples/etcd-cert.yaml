@@ -1,0 +1,14 @@
+apiVersion: "giantswarm.io/v1"
+kind: Certificate
+metadata:
+  name: "uo91f-etcd"
+  namespace: "default"
+spec:
+  clusterID: "uo91f"
+  clusterComponent: "etcd"
+  commonName: "etcd.uo91f.g8s.eu-west-1.aws.test.private.giantswarm.io"
+  altNames:
+  ipSans:
+  - "10.0.2.2"
+  ttl: "720h"
+  allowBareDomains: false
