@@ -30,6 +30,9 @@ spec:
       - name: certs
         hostPath:
           path: /etc/ssl/certs/ca-certificates.crt
+      - name: ssl-certs
+        hostPath:
+          path: /etc/ssl/certs/
       containers:
       - name: cert-operator
         image: registry.giantswarm.io/giantswarm/cert-operator:{{ .BuildInfo.SHA }}
@@ -40,6 +43,8 @@ spec:
           mountPath: /var/run/cert-operator/secret/
         - name: certs
           mountPath: /etc/ssl/certs/ca-certificate.crt
+        - name: ssl-certs
+          mountPath: /etc/ssl/certs/
         ports:
         - name: http
           containerPort: 8000
