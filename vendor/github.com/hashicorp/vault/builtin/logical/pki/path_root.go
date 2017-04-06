@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/hashicorp/vault/helper/certutil"
+	"github.com/hashicorp/vault/helper/errutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -84,9 +84,9 @@ func (b *backend) pathCAGenerateRoot(
 	parsedBundle, err := generateCert(b, role, nil, true, req, data)
 	if err != nil {
 		switch err.(type) {
-		case certutil.UserError:
+		case errutil.UserError:
 			return logical.ErrorResponse(err.Error()), nil
-		case certutil.InternalError:
+		case errutil.InternalError:
 			return nil, err
 		}
 	}
@@ -106,26 +106,26 @@ func (b *backend) pathCAGenerateRoot(
 	switch format {
 	case "pem":
 		resp.Data["certificate"] = cb.Certificate
-		resp.Data["issuing_ca"] = cb.IssuingCA
+		resp.Data["issuing_ca"] = cb.Certificate
 		if exported {
 			resp.Data["private_key"] = cb.PrivateKey
 			resp.Data["private_key_type"] = cb.PrivateKeyType
 		}
 
 	case "pem_bundle":
-		resp.Data["issuing_ca"] = cb.IssuingCA
+		resp.Data["issuing_ca"] = cb.Certificate
 
 		if exported {
 			resp.Data["private_key"] = cb.PrivateKey
 			resp.Data["private_key_type"] = cb.PrivateKeyType
-			resp.Data["certificate"] = fmt.Sprintf("%s\n%s\n%s", cb.PrivateKey, cb.Certificate, cb.IssuingCA)
+			resp.Data["certificate"] = fmt.Sprintf("%s\n%s", cb.PrivateKey, cb.Certificate)
 		} else {
-			resp.Data["certificate"] = fmt.Sprintf("%s\n%s", cb.Certificate, cb.IssuingCA)
+			resp.Data["certificate"] = cb.Certificate
 		}
 
 	case "der":
 		resp.Data["certificate"] = base64.StdEncoding.EncodeToString(parsedBundle.CertificateBytes)
-		resp.Data["issuing_ca"] = base64.StdEncoding.EncodeToString(parsedBundle.IssuingCABytes)
+		resp.Data["issuing_ca"] = base64.StdEncoding.EncodeToString(parsedBundle.CertificateBytes)
 		if exported {
 			resp.Data["private_key"] = base64.StdEncoding.EncodeToString(parsedBundle.PrivateKeyBytes)
 			resp.Data["private_key_type"] = cb.PrivateKeyType
@@ -201,11 +201,11 @@ func (b *backend) pathCASignIntermediate(
 	var caErr error
 	signingBundle, caErr := fetchCAInfo(req)
 	switch caErr.(type) {
-	case certutil.UserError:
-		return nil, certutil.UserError{Err: fmt.Sprintf(
+	case errutil.UserError:
+		return nil, errutil.UserError{Err: fmt.Sprintf(
 			"could not fetch the CA certificate (was one set?): %s", caErr)}
-	case certutil.InternalError:
-		return nil, certutil.InternalError{Err: fmt.Sprintf(
+	case errutil.InternalError:
+		return nil, errutil.InternalError{Err: fmt.Sprintf(
 			"error fetching CA certificate: %s", caErr)}
 	}
 
@@ -220,11 +220,20 @@ func (b *backend) pathCASignIntermediate(
 	parsedBundle, err := signCert(b, role, signingBundle, true, useCSRValues, req, data)
 	if err != nil {
 		switch err.(type) {
-		case certutil.UserError:
+		case errutil.UserError:
 			return logical.ErrorResponse(err.Error()), nil
-		case certutil.InternalError:
+		case errutil.InternalError:
 			return nil, err
 		}
+	}
+
+	if err := parsedBundle.Verify(); err != nil {
+		return nil, fmt.Errorf("verification of parsed bundle failed: %s", err)
+	}
+
+	signingCB, err := signingBundle.ToCertBundle()
+	if err != nil {
+		return nil, fmt.Errorf("Error converting raw signing bundle to cert bundle: %s", err)
 	}
 
 	cb, err := parsedBundle.ToCertBundle()
@@ -242,15 +251,29 @@ func (b *backend) pathCASignIntermediate(
 	switch format {
 	case "pem":
 		resp.Data["certificate"] = cb.Certificate
-		resp.Data["issuing_ca"] = cb.IssuingCA
+		resp.Data["issuing_ca"] = signingCB.Certificate
+		if cb.CAChain != nil && len(cb.CAChain) > 0 {
+			resp.Data["ca_chain"] = cb.CAChain
+		}
 
 	case "pem_bundle":
-		resp.Data["certificate"] = fmt.Sprintf("%s\n%s", cb.Certificate, cb.IssuingCA)
-		resp.Data["issuing_ca"] = cb.IssuingCA
+		resp.Data["certificate"] = cb.ToPEMBundle()
+		resp.Data["issuing_ca"] = signingCB.Certificate
+		if cb.CAChain != nil && len(cb.CAChain) > 0 {
+			resp.Data["ca_chain"] = cb.CAChain
+		}
 
 	case "der":
 		resp.Data["certificate"] = base64.StdEncoding.EncodeToString(parsedBundle.CertificateBytes)
-		resp.Data["issuing_ca"] = base64.StdEncoding.EncodeToString(parsedBundle.IssuingCABytes)
+		resp.Data["issuing_ca"] = base64.StdEncoding.EncodeToString(signingBundle.CertificateBytes)
+
+		var caChain []string
+		for _, caCert := range parsedBundle.CAChain {
+			caChain = append(caChain, base64.StdEncoding.EncodeToString(caCert.Bytes))
+		}
+		if caChain != nil && len(caChain) > 0 {
+			resp.Data["ca_chain"] = cb.CAChain
+		}
 	}
 
 	err = req.Storage.Put(&logical.StorageEntry{

@@ -4,19 +4,18 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/mgutz/logxi/v1"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/hcl/hcl/ast"
 )
-
-// ReloadFunc are functions that are called when a reload is requested.
-type ReloadFunc func(map[string]string) error
 
 // Config is the configuration for the vault server.
 type Config struct {
@@ -24,6 +23,7 @@ type Config struct {
 	Backend   *Backend    `hcl:"-"`
 	HABackend *Backend    `hcl:"-"`
 
+	CacheSize    int  `hcl:"cache_size"`
 	DisableCache bool `hcl:"disable_cache"`
 	DisableMlock bool `hcl:"disable_mlock"`
 
@@ -33,11 +33,13 @@ type Config struct {
 	MaxLeaseTTLRaw     string        `hcl:"max_lease_ttl"`
 	DefaultLeaseTTL    time.Duration `hcl:"-"`
 	DefaultLeaseTTLRaw string        `hcl:"default_lease_ttl"`
+
+	ClusterName string `hcl:"cluster_name"`
 }
 
 // DevConfig is a Config that is used for dev mode of Vault.
-func DevConfig() *Config {
-	return &Config{
+func DevConfig(ha bool) *Config {
+	ret := &Config{
 		DisableCache: false,
 		DisableMlock: true,
 
@@ -57,9 +59,15 @@ func DevConfig() *Config {
 
 		Telemetry: &Telemetry{},
 
-		MaxLeaseTTL:     30 * 24 * time.Hour,
-		DefaultLeaseTTL: 30 * 24 * time.Hour,
+		MaxLeaseTTL:     32 * 24 * time.Hour,
+		DefaultLeaseTTL: 32 * 24 * time.Hour,
 	}
+
+	if ha {
+		ret.Backend.Type = "inmem_ha"
+	}
+
+	return ret
 }
 
 // Listener is the listener configuration for the server.
@@ -74,9 +82,11 @@ func (l *Listener) GoString() string {
 
 // Backend is the backend configuration for the server.
 type Backend struct {
-	Type          string
-	AdvertiseAddr string
-	Config        map[string]string
+	Type              string
+	RedirectAddr      string
+	ClusterAddr       string
+	DisableClustering bool
+	Config            map[string]string
 }
 
 func (b *Backend) GoString() string {
@@ -89,6 +99,77 @@ type Telemetry struct {
 	StatsdAddr   string `hcl:"statsd_address"`
 
 	DisableHostname bool `hcl:"disable_hostname"`
+
+	// Circonus: see https://github.com/circonus-labs/circonus-gometrics
+	// for more details on the various configuration options.
+	// Valid configuration combinations:
+	//    - CirconusAPIToken
+	//      metric management enabled (search for existing check or create a new one)
+	//    - CirconusSubmissionUrl
+	//      metric management disabled (use check with specified submission_url,
+	//      broker must be using a public SSL certificate)
+	//    - CirconusAPIToken + CirconusCheckSubmissionURL
+	//      metric management enabled (use check with specified submission_url)
+	//    - CirconusAPIToken + CirconusCheckID
+	//      metric management enabled (use check with specified id)
+
+	// CirconusAPIToken is a valid API Token used to create/manage check. If provided,
+	// metric management is enabled.
+	// Default: none
+	CirconusAPIToken string `hcl:"circonus_api_token"`
+	// CirconusAPIApp is an app name associated with API token.
+	// Default: "consul"
+	CirconusAPIApp string `hcl:"circonus_api_app"`
+	// CirconusAPIURL is the base URL to use for contacting the Circonus API.
+	// Default: "https://api.circonus.com/v2"
+	CirconusAPIURL string `hcl:"circonus_api_url"`
+	// CirconusSubmissionInterval is the interval at which metrics are submitted to Circonus.
+	// Default: 10s
+	CirconusSubmissionInterval string `hcl:"circonus_submission_interval"`
+	// CirconusCheckSubmissionURL is the check.config.submission_url field from a
+	// previously created HTTPTRAP check.
+	// Default: none
+	CirconusCheckSubmissionURL string `hcl:"circonus_submission_url"`
+	// CirconusCheckID is the check id (not check bundle id) from a previously created
+	// HTTPTRAP check. The numeric portion of the check._cid field.
+	// Default: none
+	CirconusCheckID string `hcl:"circonus_check_id"`
+	// CirconusCheckForceMetricActivation will force enabling metrics, as they are encountered,
+	// if the metric already exists and is NOT active. If check management is enabled, the default
+	// behavior is to add new metrics as they are encoutered. If the metric already exists in the
+	// check, it will *NOT* be activated. This setting overrides that behavior.
+	// Default: "false"
+	CirconusCheckForceMetricActivation string `hcl:"circonus_check_force_metric_activation"`
+	// CirconusCheckInstanceID serves to uniquely identify the metrics comming from this "instance".
+	// It can be used to maintain metric continuity with transient or ephemeral instances as
+	// they move around within an infrastructure.
+	// Default: hostname:app
+	CirconusCheckInstanceID string `hcl:"circonus_check_instance_id"`
+	// CirconusCheckSearchTag is a special tag which, when coupled with the instance id, helps to
+	// narrow down the search results when neither a Submission URL or Check ID is provided.
+	// Default: service:app (e.g. service:consul)
+	CirconusCheckSearchTag string `hcl:"circonus_check_search_tag"`
+	// CirconusCheckTags is a comma separated list of tags to apply to the check. Note that
+	// the value of CirconusCheckSearchTag will always be added to the check.
+	// Default: none
+	CirconusCheckTags string `mapstructure:"circonus_check_tags"`
+	// CirconusCheckDisplayName is the name for the check which will be displayed in the Circonus UI.
+	// Default: value of CirconusCheckInstanceID
+	CirconusCheckDisplayName string `mapstructure:"circonus_check_display_name"`
+	// CirconusBrokerID is an explicit broker to use when creating a new check. The numeric portion
+	// of broker._cid. If metric management is enabled and neither a Submission URL nor Check ID
+	// is provided, an attempt will be made to search for an existing check using Instance ID and
+	// Search Tag. If one is not found, a new HTTPTRAP check will be created.
+	// Default: use Select Tag if provided, otherwise, a random Enterprise Broker associated
+	// with the specified API token or the default Circonus Broker.
+	// Default: none
+	CirconusBrokerID string `hcl:"circonus_broker_id"`
+	// CirconusBrokerSelectTag is a special tag which will be used to select a broker when
+	// a Broker ID is not provided. The best use of this is to as a hint for which broker
+	// should be used based on *where* this particular instance is running.
+	// (e.g. a specific geo location or datacenter, dc:sfo)
+	// Default: none
+	CirconusBrokerSelectTag string `hcl:"circonus_broker_select_tag"`
 }
 
 func (s *Telemetry) GoString() string {
@@ -97,6 +178,10 @@ func (s *Telemetry) GoString() string {
 
 // Merge merges two configurations.
 func (c *Config) Merge(c2 *Config) *Config {
+	if c2 == nil {
+		return c
+	}
+
 	result := new(Config)
 	for _, l := range c.Listeners {
 		result.Listeners = append(result.Listeners, l)
@@ -118,6 +203,11 @@ func (c *Config) Merge(c2 *Config) *Config {
 	result.Telemetry = c.Telemetry
 	if c2.Telemetry != nil {
 		result.Telemetry = c2.Telemetry
+	}
+
+	result.CacheSize = c.CacheSize
+	if c2.CacheSize != 0 {
+		result.CacheSize = c2.CacheSize
 	}
 
 	// merging these booleans via an OR operation
@@ -142,35 +232,40 @@ func (c *Config) Merge(c2 *Config) *Config {
 		result.DefaultLeaseTTL = c2.DefaultLeaseTTL
 	}
 
+	result.ClusterName = c.ClusterName
+	if c2.ClusterName != "" {
+		result.ClusterName = c2.ClusterName
+	}
+
 	return result
 }
 
 // LoadConfig loads the configuration at the given path, regardless if
 // its a file or directory.
-func LoadConfig(path string) (*Config, error) {
+func LoadConfig(path string, logger log.Logger) (*Config, error) {
 	fi, err := os.Stat(path)
 	if err != nil {
 		return nil, err
 	}
 
 	if fi.IsDir() {
-		return LoadConfigDir(path)
+		return LoadConfigDir(path, logger)
 	} else {
-		return LoadConfigFile(path)
+		return LoadConfigFile(path, logger)
 	}
 }
 
 // LoadConfigFile loads the configuration from the given file.
-func LoadConfigFile(path string) (*Config, error) {
+func LoadConfigFile(path string, logger log.Logger) (*Config, error) {
 	// Read the file
 	d, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	return ParseConfig(string(d))
+	return ParseConfig(string(d), logger)
 }
 
-func ParseConfig(d string) (*Config, error) {
+func ParseConfig(d string, logger log.Logger) (*Config, error) {
 	// Parse!
 	obj, err := hcl.Parse(d)
 	if err != nil {
@@ -204,44 +299,16 @@ func ParseConfig(d string) (*Config, error) {
 		"backend",
 		"ha_backend",
 		"listener",
+		"cache_size",
 		"disable_cache",
 		"disable_mlock",
 		"telemetry",
 		"default_lease_ttl",
 		"max_lease_ttl",
-
-		// TODO: Remove in 0.6.0
-		// Deprecated keys
-		"statsd_addr",
-		"statsite_addr",
+		"cluster_name",
 	}
 	if err := checkHCLKeys(list, valid); err != nil {
 		return nil, err
-	}
-
-	// TODO: Remove in 0.6.0
-	// Preflight checks for deprecated keys
-	sda := list.Filter("statsd_addr")
-	ssa := list.Filter("statsite_addr")
-	if len(sda.Items) > 0 || len(ssa.Items) > 0 {
-		log.Println("[WARN] The top-level keys 'statsd_addr' and 'statsite_addr' " +
-			"have been moved into a 'telemetry' block instead. Please update your " +
-			"Vault configuration as this deprecation will be removed in the next " +
-			"major release. Values specified in a 'telemetry' block will take " +
-			"precendence.")
-
-		t := struct {
-			StatsdAddr   string `hcl:"statsd_addr"`
-			StatsiteAddr string `hcl:"statsite_addr"`
-		}{}
-		if err := hcl.DecodeObject(&t, list); err != nil {
-			return nil, err
-		}
-
-		result.Telemetry = &Telemetry{
-			StatsdAddr:   t.StatsdAddr,
-			StatsiteAddr: t.StatsiteAddr,
-		}
 	}
 
 	if o := list.Filter("backend"); len(o.Items) > 0 {
@@ -273,7 +340,7 @@ func ParseConfig(d string) (*Config, error) {
 
 // LoadConfigDir loads all the configurations in the given directory
 // in alphabetical order.
-func LoadConfigDir(dir string) (*Config, error) {
+func LoadConfigDir(dir string, logger log.Logger) (*Config, error) {
 	f, err := os.Open(dir)
 	if err != nil {
 		return nil, err
@@ -324,7 +391,7 @@ func LoadConfigDir(dir string) (*Config, error) {
 
 	var result *Config
 	for _, f := range files {
-		config, err := LoadConfigFile(f)
+		config, err := LoadConfigFile(f, logger)
 		if err != nil {
 			return nil, fmt.Errorf("Error loading %s: %s", f, err)
 		}
@@ -366,17 +433,39 @@ func parseBackends(result *Config, list *ast.ObjectList) error {
 		return multierror.Prefix(err, fmt.Sprintf("backend.%s:", key))
 	}
 
-	// Pull out the advertise address since it's common to all backends
-	var advertiseAddr string
-	if v, ok := m["advertise_addr"]; ok {
-		advertiseAddr = v
+	// Pull out the redirect address since it's common to all backends
+	var redirectAddr string
+	if v, ok := m["redirect_addr"]; ok {
+		redirectAddr = v
+		delete(m, "redirect_addr")
+	} else if v, ok := m["advertise_addr"]; ok {
+		redirectAddr = v
 		delete(m, "advertise_addr")
 	}
 
+	// Pull out the cluster address since it's common to all backends
+	var clusterAddr string
+	if v, ok := m["cluster_addr"]; ok {
+		clusterAddr = v
+		delete(m, "cluster_addr")
+	}
+
+	var disableClustering bool
+	var err error
+	if v, ok := m["disable_clustering"]; ok {
+		disableClustering, err = strconv.ParseBool(v)
+		if err != nil {
+			return multierror.Prefix(err, fmt.Sprintf("backend.%s:", key))
+		}
+		delete(m, "disable_clustering")
+	}
+
 	result.Backend = &Backend{
-		AdvertiseAddr: advertiseAddr,
-		Type:          strings.ToLower(key),
-		Config:        m,
+		RedirectAddr:      redirectAddr,
+		ClusterAddr:       clusterAddr,
+		DisableClustering: disableClustering,
+		Type:              strings.ToLower(key),
+		Config:            m,
 	}
 	return nil
 }
@@ -399,17 +488,39 @@ func parseHABackends(result *Config, list *ast.ObjectList) error {
 		return multierror.Prefix(err, fmt.Sprintf("ha_backend.%s:", key))
 	}
 
-	// Pull out the advertise address since it's common to all backends
-	var advertiseAddr string
-	if v, ok := m["advertise_addr"]; ok {
-		advertiseAddr = v
+	// Pull out the redirect address since it's common to all backends
+	var redirectAddr string
+	if v, ok := m["redirect_addr"]; ok {
+		redirectAddr = v
+		delete(m, "redirect_addr")
+	} else if v, ok := m["advertise_addr"]; ok {
+		redirectAddr = v
 		delete(m, "advertise_addr")
 	}
 
+	// Pull out the cluster address since it's common to all backends
+	var clusterAddr string
+	if v, ok := m["cluster_addr"]; ok {
+		clusterAddr = v
+		delete(m, "cluster_addr")
+	}
+
+	var disableClustering bool
+	var err error
+	if v, ok := m["disable_clustering"]; ok {
+		disableClustering, err = strconv.ParseBool(v)
+		if err != nil {
+			return multierror.Prefix(err, fmt.Sprintf("backend.%s:", key))
+		}
+		delete(m, "disable_clustering")
+	}
+
 	result.HABackend = &Backend{
-		AdvertiseAddr: advertiseAddr,
-		Type:          strings.ToLower(key),
-		Config:        m,
+		RedirectAddr:      redirectAddr,
+		ClusterAddr:       clusterAddr,
+		DisableClustering: disableClustering,
+		Type:              strings.ToLower(key),
+		Config:            m,
 	}
 	return nil
 }
@@ -426,6 +537,7 @@ func parseListeners(result *Config, list *ast.ObjectList) error {
 
 		valid := []string{
 			"address",
+			"cluster_address",
 			"endpoint",
 			"infrastructure",
 			"node_id",
@@ -483,9 +595,22 @@ func parseTelemetry(result *Config, list *ast.ObjectList) error {
 
 	// Check for invalid keys
 	valid := []string{
-		"statsite_address",
-		"statsd_address",
+		"circonus_api_token",
+		"circonus_api_app",
+		"circonus_api_url",
+		"circonus_submission_interval",
+		"circonus_submission_url",
+		"circonus_check_id",
+		"circonus_check_force_metric_activation",
+		"circonus_check_instance_id",
+		"circonus_check_search_tag",
+		"circonus_check_display_name",
+		"circonus_check_tags",
+		"circonus_broker_id",
+		"circonus_broker_select_tag",
 		"disable_hostname",
+		"statsd_address",
+		"statsite_address",
 	}
 	if err := checkHCLKeys(item.Val, valid); err != nil {
 		return multierror.Prefix(err, "telemetry:")

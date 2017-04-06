@@ -7,10 +7,10 @@ import (
 	"github.com/hashicorp/vault/vault"
 )
 
-func handleHelpHandler(h http.Handler, core *vault.Core) http.Handler {
+func wrapHelpHandler(h http.Handler, core *vault.Core) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// If the help parameter is not blank, then show the help
-		if v := req.URL.Query().Get("help"); v != "" {
+		if v := req.URL.Query().Get("help"); v != "" || req.Method == "HELP" {
 			handleHelp(core, w, req)
 			return
 		}
@@ -27,13 +27,15 @@ func handleHelp(core *vault.Core, w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	resp, err := core.HandleRequest(requestAuth(req, &logical.Request{
+	lreq := requestAuth(core, req, &logical.Request{
 		Operation:  logical.HelpOperation,
 		Path:       path,
 		Connection: getConnection(req),
-	}))
+	})
+
+	resp, err := core.HandleRequest(lreq)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, err)
+		respondErrorCommon(w, resp, err)
 		return
 	}
 

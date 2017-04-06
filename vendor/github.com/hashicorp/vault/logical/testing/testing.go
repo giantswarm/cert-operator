@@ -3,22 +3,20 @@ package testing
 import (
 	"crypto/tls"
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"sort"
 	"testing"
 
+	log "github.com/mgutz/logxi/v1"
+
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/vault/api"
+	"github.com/hashicorp/vault/helper/logformat"
 	"github.com/hashicorp/vault/http"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/physical"
 	"github.com/hashicorp/vault/vault"
-)
-
-var (
-	logger = log.New(os.Stderr, "", log.LstdFlags)
 )
 
 // TestEnvVar must be set to a non-empty value for acceptance tests to run.
@@ -108,11 +106,11 @@ type TestTeardownFunc func() error
 // the "-test.v" flag) is set. Because some acceptance tests take quite
 // long, we require the verbose flag so users are able to see progress
 // output.
-func Test(t TestT, c TestCase) {
+func Test(tt TestT, c TestCase) {
 	// We only run acceptance tests if an env var is set because they're
 	// slow and generally require some outside configuration.
 	if c.AcceptanceTest && os.Getenv(TestEnvVar) == "" {
-		t.Skip(fmt.Sprintf(
+		tt.Skip(fmt.Sprintf(
 			"Acceptance tests skipped unless env '%s' set",
 			TestEnvVar))
 		return
@@ -120,7 +118,7 @@ func Test(t TestT, c TestCase) {
 
 	// We require verbose mode so that the user knows what is going on.
 	if c.AcceptanceTest && !testTesting && !testing.Verbose() {
-		t.Fatal("Acceptance tests must be run with the -v flag on tests")
+		tt.Fatal("Acceptance tests must be run with the -v flag on tests")
 		return
 	}
 
@@ -131,10 +129,13 @@ func Test(t TestT, c TestCase) {
 
 	// Check that something is provided
 	if c.Backend == nil && c.Factory == nil {
-		t.Fatal("Must provide either Backend or Factory")
+		tt.Fatal("Must provide either Backend or Factory")
+		return
 	}
 
 	// Create an in-memory Vault core
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
 	core, err := vault.NewCore(&vault.CoreConfig{
 		Physical: physical.NewInmem(logger),
 		LogicalBackends: map[string]logical.Factory{
@@ -148,25 +149,29 @@ func Test(t TestT, c TestCase) {
 		DisableMlock: true,
 	})
 	if err != nil {
-		t.Fatal("error initializing core: ", err)
+		tt.Fatal("error initializing core: ", err)
 		return
 	}
 
 	// Initialize the core
-	init, err := core.Initialize(&vault.SealConfig{
-		SecretShares:    1,
-		SecretThreshold: 1,
-	}, nil)
+	init, err := core.Initialize(&vault.InitParams{
+		BarrierConfig: &vault.SealConfig{
+			SecretShares:    1,
+			SecretThreshold: 1,
+		},
+		RecoveryConfig: nil,
+	})
 	if err != nil {
-		t.Fatal("error initializing core: ", err)
+		tt.Fatal("error initializing core: ", err)
+		return
 	}
 
 	// Unseal the core
 	if unsealed, err := core.Unseal(init.SecretShares[0]); err != nil {
-		t.Fatal("error unsealing core: ", err)
+		tt.Fatal("error unsealing core: ", err)
 		return
 	} else if !unsealed {
-		t.Fatal("vault shouldn't be sealed")
+		tt.Fatal("vault shouldn't be sealed")
 		return
 	}
 
@@ -177,7 +182,7 @@ func Test(t TestT, c TestCase) {
 	clientConfig.Address = addr
 	client, err := api.NewClient(clientConfig)
 	if err != nil {
-		t.Fatal("error initializing HTTP client: ", err)
+		tt.Fatal("error initializing HTTP client: ", err)
 		return
 	}
 
@@ -191,14 +196,16 @@ func Test(t TestT, c TestCase) {
 		Description: "acceptance test",
 	}
 	if err := client.Sys().Mount(prefix, mountInfo); err != nil {
-		t.Fatal("error mounting backend: ", err)
+		tt.Fatal("error mounting backend: ", err)
 		return
 	}
 
 	// Make requests
 	var revoke []*logical.Request
 	for i, s := range c.Steps {
-		log.Printf("[WARN] Executing test step %d", i+1)
+		if log.IsWarn() {
+			log.Warn("Executing test step", "step_number", i+1)
+		}
 
 		// Create the request
 		req := &logical.Request{
@@ -220,7 +227,7 @@ func Test(t TestT, c TestCase) {
 			ct := req.ClientToken
 			req.ClientToken = ""
 			if err := s.PreFlight(req); err != nil {
-				t.Error(fmt.Sprintf("Failed preflight for step %d: %s", i+1, err))
+				tt.Error(fmt.Sprintf("Failed preflight for step %d: %s", i+1, err))
 				break
 			}
 			req.ClientToken = ct
@@ -249,7 +256,7 @@ func Test(t TestT, c TestCase) {
 				err = nil
 			} else {
 				// If the error is not expected, fail right away.
-				t.Error(fmt.Sprintf("Failed step %d: %s", i+1, err))
+				tt.Error(fmt.Sprintf("Failed step %d: %s", i+1, err))
 				break
 			}
 		}
@@ -272,7 +279,7 @@ func Test(t TestT, c TestCase) {
 		}
 
 		if err != nil {
-			t.Error(fmt.Sprintf("Failed step %d: %s", i+1, err))
+			tt.Error(fmt.Sprintf("Failed step %d: %s", i+1, err))
 			break
 		}
 	}
@@ -280,7 +287,9 @@ func Test(t TestT, c TestCase) {
 	// Revoke any secrets we might have.
 	var failedRevokes []*logical.Secret
 	for _, req := range revoke {
-		log.Printf("[WARN] Revoking secret: %#v", req)
+		if log.IsWarn() {
+			log.Warn("Revoking secret", "secret", fmt.Sprintf("%#v", req))
+		}
 		req.ClientToken = client.Token()
 		resp, err := core.HandleRequest(req)
 		if err == nil && resp.IsError() {
@@ -288,14 +297,14 @@ func Test(t TestT, c TestCase) {
 		}
 		if err != nil {
 			failedRevokes = append(failedRevokes, req.Secret)
-			t.Error(fmt.Sprintf("[ERR] Revoke error: %s", err))
+			tt.Error(fmt.Sprintf("Revoke error: %s", err))
 		}
 	}
 
 	// Perform any rollbacks. This should no-op if there aren't any.
 	// We set the "immediate" flag here that any backend can pick up on
 	// to do all rollbacks immediately even if the WAL entries are new.
-	log.Printf("[WARN] Requesting RollbackOperation")
+	log.Warn("Requesting RollbackOperation")
 	req := logical.RollbackRequest(prefix + "/")
 	req.Data["immediate"] = true
 	req.ClientToken = client.Token()
@@ -305,14 +314,14 @@ func Test(t TestT, c TestCase) {
 	}
 	if err != nil {
 		if !errwrap.Contains(err, logical.ErrUnsupportedOperation.Error()) {
-			t.Error(fmt.Sprintf("[ERR] Rollback error: %s", err))
+			tt.Error(fmt.Sprintf("[ERR] Rollback error: %s", err))
 		}
 	}
 
 	// If we have any failed revokes, log it.
 	if len(failedRevokes) > 0 {
 		for _, s := range failedRevokes {
-			t.Error(fmt.Sprintf(
+			tt.Error(fmt.Sprintf(
 				"WARNING: Revoking the following secret failed. It may\n"+
 					"still exist. Please verify:\n\n%#v",
 				s))

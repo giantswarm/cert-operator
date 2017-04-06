@@ -1,11 +1,15 @@
 package vault
 
 import (
+	"encoding/base64"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/hashicorp/vault/helper/duration"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 	"github.com/mitchellh/mapstructure"
@@ -19,7 +23,7 @@ var (
 	}
 )
 
-func NewSystemBackend(core *Core, config *logical.BackendConfig) logical.Backend {
+func NewSystemBackend(core *Core, config *logical.BackendConfig) (logical.Backend, error) {
 	b := &SystemBackend{
 		Core: core,
 	}
@@ -147,6 +151,30 @@ func NewSystemBackend(core *Core, config *logical.BackendConfig) logical.Backend
 			},
 
 			&framework.Path{
+				Pattern: "auth/(?P<path>.+?)/tune$",
+				Fields: map[string]*framework.FieldSchema{
+					"path": &framework.FieldSchema{
+						Type:        framework.TypeString,
+						Description: strings.TrimSpace(sysHelp["auth_tune"][0]),
+					},
+					"default_lease_ttl": &framework.FieldSchema{
+						Type:        framework.TypeString,
+						Description: strings.TrimSpace(sysHelp["tune_default_lease_ttl"][0]),
+					},
+					"max_lease_ttl": &framework.FieldSchema{
+						Type:        framework.TypeString,
+						Description: strings.TrimSpace(sysHelp["tune_max_lease_ttl"][0]),
+					},
+				},
+				Callbacks: map[logical.Operation]framework.OperationFunc{
+					logical.ReadOperation:   b.handleAuthTuneRead,
+					logical.UpdateOperation: b.handleAuthTuneWrite,
+				},
+				HelpSynopsis:    strings.TrimSpace(sysHelp["auth_tune"][0]),
+				HelpDescription: strings.TrimSpace(sysHelp["auth_tune"][1]),
+			},
+
+			&framework.Path{
 				Pattern: "mounts/(?P<path>.+?)/tune$",
 
 				Fields: map[string]*framework.FieldSchema{
@@ -238,9 +266,13 @@ func NewSystemBackend(core *Core, config *logical.BackendConfig) logical.Backend
 			},
 
 			&framework.Path{
-				Pattern: "renew/(?P<lease_id>.+)",
+				Pattern: "renew" + framework.OptionalParamRegex("url_lease_id"),
 
 				Fields: map[string]*framework.FieldSchema{
+					"url_lease_id": &framework.FieldSchema{
+						Type:        framework.TypeString,
+						Description: strings.TrimSpace(sysHelp["lease_id"][0]),
+					},
 					"lease_id": &framework.FieldSchema{
 						Type:        framework.TypeString,
 						Description: strings.TrimSpace(sysHelp["lease_id"][0]),
@@ -509,12 +541,72 @@ func NewSystemBackend(core *Core, config *logical.BackendConfig) logical.Backend
 				HelpSynopsis:    strings.TrimSpace(sysHelp["rotate"][0]),
 				HelpDescription: strings.TrimSpace(sysHelp["rotate"][1]),
 			},
+
+			&framework.Path{
+				Pattern: "wrapping/wrap$",
+
+				Callbacks: map[logical.Operation]framework.OperationFunc{
+					logical.UpdateOperation: b.handleWrappingWrap,
+				},
+
+				HelpSynopsis:    strings.TrimSpace(sysHelp["wrap"][0]),
+				HelpDescription: strings.TrimSpace(sysHelp["wrap"][1]),
+			},
+
+			&framework.Path{
+				Pattern: "wrapping/unwrap$",
+
+				Fields: map[string]*framework.FieldSchema{
+					"token": &framework.FieldSchema{
+						Type: framework.TypeString,
+					},
+				},
+
+				Callbacks: map[logical.Operation]framework.OperationFunc{
+					logical.UpdateOperation: b.handleWrappingUnwrap,
+				},
+
+				HelpSynopsis:    strings.TrimSpace(sysHelp["unwrap"][0]),
+				HelpDescription: strings.TrimSpace(sysHelp["unwrap"][1]),
+			},
+
+			&framework.Path{
+				Pattern: "wrapping/lookup$",
+
+				Fields: map[string]*framework.FieldSchema{
+					"token": &framework.FieldSchema{
+						Type: framework.TypeString,
+					},
+				},
+
+				Callbacks: map[logical.Operation]framework.OperationFunc{
+					logical.UpdateOperation: b.handleWrappingLookup,
+				},
+
+				HelpSynopsis:    strings.TrimSpace(sysHelp["wraplookup"][0]),
+				HelpDescription: strings.TrimSpace(sysHelp["wraplookup"][1]),
+			},
+
+			&framework.Path{
+				Pattern: "wrapping/rewrap$",
+
+				Fields: map[string]*framework.FieldSchema{
+					"token": &framework.FieldSchema{
+						Type: framework.TypeString,
+					},
+				},
+
+				Callbacks: map[logical.Operation]framework.OperationFunc{
+					logical.UpdateOperation: b.handleWrappingRewrap,
+				},
+
+				HelpSynopsis:    strings.TrimSpace(sysHelp["rewrap"][0]),
+				HelpDescription: strings.TrimSpace(sysHelp["rewrap"][1]),
+			},
 		},
 	}
 
-	b.Backend.Setup(config)
-
-	return b.Backend
+	return b.Backend.Setup(config)
 }
 
 // SystemBackend implements logical.Backend and is used to interact with
@@ -527,7 +619,11 @@ type SystemBackend struct {
 
 // handleCapabilitiesreturns the ACL capabilities of the token for a given path
 func (b *SystemBackend) handleCapabilities(req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	capabilities, err := b.Core.Capabilities(d.Get("token").(string), d.Get("path").(string))
+	token := d.Get("token").(string)
+	if token == "" {
+		token = req.ClientToken
+	}
+	capabilities, err := b.Core.Capabilities(token, d.Get("path").(string))
 	if err != nil {
 		return nil, err
 	}
@@ -547,12 +643,12 @@ func (b *SystemBackend) handleCapabilitiesAccessor(req *logical.Request, d *fram
 		return logical.ErrorResponse("missing accessor"), nil
 	}
 
-	token, err := b.Core.tokenStore.lookupByAccessor(accessor)
+	aEntry, err := b.Core.tokenStore.lookupByAccessor(accessor)
 	if err != nil {
 		return nil, err
 	}
 
-	capabilities, err := b.Core.Capabilities(token, d.Get("path").(string))
+	capabilities, err := b.Core.Capabilities(aEntry.TokenID, d.Get("path").(string))
 	if err != nil {
 		return nil, err
 	}
@@ -578,11 +674,28 @@ func (b *SystemBackend) handleRekeyRetrieve(
 		return logical.ErrorResponse("no backed-up keys found"), nil
 	}
 
+	keysB64 := map[string][]string{}
+	for k, v := range backup.Keys {
+		for _, j := range v {
+			currB64Keys := keysB64[k]
+			if currB64Keys == nil {
+				currB64Keys = []string{}
+			}
+			key, err := hex.DecodeString(j)
+			if err != nil {
+				return nil, fmt.Errorf("error decoding hex-encoded backup key: %v", err)
+			}
+			currB64Keys = append(currB64Keys, base64.StdEncoding.EncodeToString(key))
+			keysB64[k] = currB64Keys
+		}
+	}
+
 	// Format the status
 	resp := &logical.Response{
 		Data: map[string]interface{}{
-			"nonce": backup.Nonce,
-			"keys":  backup.Keys,
+			"nonce":       backup.Nonce,
+			"keys":        backup.Keys,
+			"keys_base64": keysB64,
 		},
 	}
 
@@ -612,6 +725,7 @@ func (b *SystemBackend) handleRekeyDelete(
 
 	return nil, nil
 }
+
 func (b *SystemBackend) handleRekeyDeleteBarrier(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	return b.handleRekeyDelete(req, data, false)
@@ -637,8 +751,8 @@ func (b *SystemBackend) handleMountTable(
 			"type":        entry.Type,
 			"description": entry.Description,
 			"config": map[string]interface{}{
-				"default_lease_ttl": int(entry.Config.DefaultLeaseTTL.Seconds()),
-				"max_lease_ttl":     int(entry.Config.MaxLeaseTTL.Seconds()),
+				"default_lease_ttl": int64(entry.Config.DefaultLeaseTTL.Seconds()),
+				"max_lease_ttl":     int64(entry.Config.MaxLeaseTTL.Seconds()),
 			},
 		}
 
@@ -678,7 +792,7 @@ func (b *SystemBackend) handleMount(
 	case "":
 	case "system":
 	default:
-		tmpDef, err := time.ParseDuration(apiConfig.DefaultLeaseTTL)
+		tmpDef, err := duration.ParseDurationSecond(apiConfig.DefaultLeaseTTL)
 		if err != nil {
 			return logical.ErrorResponse(fmt.Sprintf(
 					"unable to parse default TTL of %s: %s", apiConfig.DefaultLeaseTTL, err)),
@@ -691,7 +805,7 @@ func (b *SystemBackend) handleMount(
 	case "":
 	case "system":
 	default:
-		tmpMax, err := time.ParseDuration(apiConfig.MaxLeaseTTL)
+		tmpMax, err := duration.ParseDurationSecond(apiConfig.MaxLeaseTTL)
 		if err != nil {
 			return logical.ErrorResponse(fmt.Sprintf(
 					"unable to parse max TTL of %s: %s", apiConfig.MaxLeaseTTL, err)),
@@ -729,7 +843,7 @@ func (b *SystemBackend) handleMount(
 
 	// Attempt mount
 	if err := b.Core.mount(me); err != nil {
-		b.Backend.Logger().Printf("[ERR] sys: mount %s failed: %v", me.Path, err)
+		b.Backend.Logger().Error("sys: mount failed", "path", me.Path, "error", err)
 		return handleError(err)
 	}
 
@@ -758,8 +872,8 @@ func (b *SystemBackend) handleUnmount(
 	suffix = sanitizeMountPath(suffix)
 
 	// Attempt unmount
-	if err := b.Core.unmount(suffix); err != nil {
-		b.Backend.Logger().Printf("[ERR] sys: unmount '%s' failed: %v", suffix, err)
+	if existed, err := b.Core.unmount(suffix); existed && err != nil {
+		b.Backend.Logger().Error("sys: unmount failed", "path", suffix, "error", err)
 		return handleError(err)
 	}
 
@@ -783,11 +897,23 @@ func (b *SystemBackend) handleRemount(
 
 	// Attempt remount
 	if err := b.Core.remount(fromPath, toPath); err != nil {
-		b.Backend.Logger().Printf("[ERR] sys: remount '%s' to '%s' failed: %v", fromPath, toPath, err)
+		b.Backend.Logger().Error("sys: remount failed", "from_path", fromPath, "to_path", toPath, "error", err)
 		return handleError(err)
 	}
 
 	return nil, nil
+}
+
+// handleAuthTuneRead is used to get config settings on a auth path
+func (b *SystemBackend) handleAuthTuneRead(
+	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	path := data.Get("path").(string)
+	if path == "" {
+		return logical.ErrorResponse(
+				"path must be specified as a string"),
+			logical.ErrInvalidRequest
+	}
+	return b.handleTuneReadCommon("auth/" + path)
 }
 
 // handleMountTuneRead is used to get config settings on a backend
@@ -800,13 +926,20 @@ func (b *SystemBackend) handleMountTuneRead(
 			logical.ErrInvalidRequest
 	}
 
+	// This call will read both logical backend's configuration as well as auth backends'.
+	// Retaining this behavior for backward compatibility. If this behavior is not desired,
+	// an error can be returned if path has a prefix of "auth/".
+	return b.handleTuneReadCommon(path)
+}
+
+// handleTuneReadCommon returns the config settings of a path
+func (b *SystemBackend) handleTuneReadCommon(path string) (*logical.Response, error) {
 	path = sanitizeMountPath(path)
 
 	sysView := b.Core.router.MatchingSystemView(path)
 	if sysView == nil {
-		err := fmt.Errorf("[ERR] sys: cannot fetch sysview for path %s", path)
-		b.Backend.Logger().Print(err)
-		return handleError(err)
+		b.Backend.Logger().Error("sys: cannot fetch sysview", "path", path)
+		return handleError(fmt.Errorf("sys: cannot fetch sysview for path %s", path))
 	}
 
 	resp := &logical.Response{
@@ -819,32 +952,48 @@ func (b *SystemBackend) handleMountTuneRead(
 	return resp, nil
 }
 
+// handleAuthTuneWrite is used to set config settings on an auth path
+func (b *SystemBackend) handleAuthTuneWrite(
+	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	path := data.Get("path").(string)
+	if path == "" {
+		return logical.ErrorResponse("path must be specified as a string"),
+			logical.ErrInvalidRequest
+	}
+	return b.handleTuneWriteCommon("auth/"+path, data)
+}
+
 // handleMountTuneWrite is used to set config settings on a backend
 func (b *SystemBackend) handleMountTuneWrite(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	path := data.Get("path").(string)
 	if path == "" {
-		return logical.ErrorResponse(
-				"path must be specified as a string"),
+		return logical.ErrorResponse("path must be specified as a string"),
 			logical.ErrInvalidRequest
 	}
+	// This call will write both logical backend's configuration as well as auth backends'.
+	// Retaining this behavior for backward compatibility. If this behavior is not desired,
+	// an error can be returned if path has a prefix of "auth/".
+	return b.handleTuneWriteCommon(path, data)
+}
 
+// handleTuneWriteCommon is used to set config settings on a path
+func (b *SystemBackend) handleTuneWriteCommon(
+	path string, data *framework.FieldData) (*logical.Response, error) {
 	path = sanitizeMountPath(path)
 
 	// Prevent protected paths from being changed
 	for _, p := range untunableMounts {
 		if strings.HasPrefix(path, p) {
-			err := fmt.Errorf("[ERR] core: cannot tune '%s'", path)
-			b.Backend.Logger().Print(err)
-			return handleError(err)
+			b.Backend.Logger().Error("sys: cannot tune this mount", "path", path)
+			return handleError(fmt.Errorf("sys: cannot tune '%s'", path))
 		}
 	}
 
 	mountEntry := b.Core.router.MatchingMountEntry(path)
 	if mountEntry == nil {
-		err := fmt.Errorf("[ERR] sys: tune of path '%s' failed: no mount entry found", path)
-		b.Backend.Logger().Print(err)
-		return handleError(err)
+		b.Backend.Logger().Error("sys: tune failed: no mount entry found", "path", path)
+		return handleError(fmt.Errorf("sys: tune of path '%s' failed: no mount entry found", path))
 	}
 
 	var lock *sync.RWMutex
@@ -865,7 +1014,7 @@ func (b *SystemBackend) handleMountTuneWrite(
 			tmpDef := time.Duration(0)
 			newDefault = &tmpDef
 		default:
-			tmpDef, err := time.ParseDuration(defTTL)
+			tmpDef, err := duration.ParseDurationSecond(defTTL)
 			if err != nil {
 				return handleError(err)
 			}
@@ -879,7 +1028,7 @@ func (b *SystemBackend) handleMountTuneWrite(
 			tmpMax := time.Duration(0)
 			newMax = &tmpMax
 		default:
-			tmpMax, err := time.ParseDuration(maxTTL)
+			tmpMax, err := duration.ParseDurationSecond(maxTTL)
 			if err != nil {
 				return handleError(err)
 			}
@@ -891,7 +1040,7 @@ func (b *SystemBackend) handleMountTuneWrite(
 			defer lock.Unlock()
 
 			if err := b.tuneMountTTLs(path, &mountEntry.Config, newDefault, newMax); err != nil {
-				b.Backend.Logger().Printf("[ERR] sys: tune of path '%s' failed: %v", path, err)
+				b.Backend.Logger().Error("sys: tuning failed", "path", path, "error", err)
 				return handleError(err)
 			}
 		}
@@ -905,6 +1054,9 @@ func (b *SystemBackend) handleRenew(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	// Get all the options
 	leaseID := data.Get("lease_id").(string)
+	if leaseID == "" {
+		leaseID = data.Get("url_lease_id").(string)
+	}
 	incrementRaw := data.Get("increment").(int)
 
 	// Convert the increment
@@ -913,7 +1065,7 @@ func (b *SystemBackend) handleRenew(
 	// Invoke the expiration manager directly
 	resp, err := b.Core.expiration.Renew(leaseID, increment)
 	if err != nil {
-		b.Backend.Logger().Printf("[ERR] sys: renew '%s' failed: %v", leaseID, err)
+		b.Backend.Logger().Error("sys: lease renewal failed", "lease_id", leaseID, "error", err)
 		return handleError(err)
 	}
 	return resp, err
@@ -927,7 +1079,7 @@ func (b *SystemBackend) handleRevoke(
 
 	// Invoke the expiration manager directly
 	if err := b.Core.expiration.Revoke(leaseID); err != nil {
-		b.Backend.Logger().Printf("[ERR] sys: revoke '%s' failed: %v", leaseID, err)
+		b.Backend.Logger().Error("sys: lease revocation failed", "lease_id", leaseID, "error", err)
 		return handleError(err)
 	}
 	return nil, nil
@@ -959,7 +1111,7 @@ func (b *SystemBackend) handleRevokePrefixCommon(
 		err = b.Core.expiration.RevokePrefix(prefix)
 	}
 	if err != nil {
-		b.Backend.Logger().Printf("[ERR] sys: revoke prefix '%s' failed: %v", prefix, err)
+		b.Backend.Logger().Error("sys: revoke prefix failed", "prefix", prefix, "error", err)
 		return handleError(err)
 	}
 	return nil, nil
@@ -975,9 +1127,13 @@ func (b *SystemBackend) handleAuthTable(
 		Data: make(map[string]interface{}),
 	}
 	for _, entry := range b.Core.auth.Entries {
-		info := map[string]string{
+		info := map[string]interface{}{
 			"type":        entry.Type,
 			"description": entry.Description,
+			"config": map[string]interface{}{
+				"default_lease_ttl": int64(entry.Config.DefaultLeaseTTL.Seconds()),
+				"max_lease_ttl":     int64(entry.Config.MaxLeaseTTL.Seconds()),
+			},
 		}
 		resp.Data[entry.Path] = info
 	}
@@ -1010,7 +1166,7 @@ func (b *SystemBackend) handleEnableAuth(
 
 	// Attempt enabling
 	if err := b.Core.enableCredential(me); err != nil {
-		b.Backend.Logger().Printf("[ERR] sys: enable auth %s failed: %v", me.Path, err)
+		b.Backend.Logger().Error("sys: enable auth mount failed", "path", me.Path, "error", err)
 		return handleError(err)
 	}
 	return nil, nil
@@ -1027,8 +1183,8 @@ func (b *SystemBackend) handleDisableAuth(
 	suffix = sanitizeMountPath(suffix)
 
 	// Attempt disable
-	if err := b.Core.disableCredential(suffix); err != nil {
-		b.Backend.Logger().Printf("[ERR] sys: disable auth '%s' failed: %v", suffix, err)
+	if existed, err := b.Core.disableCredential(suffix); existed && err != nil {
+		b.Backend.Logger().Error("sys: disable auth mount failed", "path", suffix, "error", err)
 		return handleError(err)
 	}
 	return nil, nil
@@ -1180,7 +1336,7 @@ func (b *SystemBackend) handleEnableAudit(
 
 	// Attempt enabling
 	if err := b.Core.enableAudit(me); err != nil {
-		b.Backend.Logger().Printf("[ERR] sys: enable audit %s failed: %v", me.Path, err)
+		b.Backend.Logger().Error("sys: enable audit mount failed", "path", me.Path, "error", err)
 		return handleError(err)
 	}
 	return nil, nil
@@ -1192,8 +1348,8 @@ func (b *SystemBackend) handleDisableAudit(
 	path := data.Get("path").(string)
 
 	// Attempt disable
-	if err := b.Core.disableAudit(path); err != nil {
-		b.Backend.Logger().Printf("[ERR] sys: disable audit '%s' failed: %v", path, err)
+	if existed, err := b.Core.disableAudit(path); existed && err != nil {
+		b.Backend.Logger().Error("sys: disable audit mount failed", "path", path, "error", err)
 		return handleError(err)
 	}
 	return nil, nil
@@ -1282,7 +1438,7 @@ func (b *SystemBackend) handleKeyStatus(
 	resp := &logical.Response{
 		Data: map[string]interface{}{
 			"term":         info.Term,
-			"install_time": info.InstallTime.Format(time.RFC3339),
+			"install_time": info.InstallTime.Format(time.RFC3339Nano),
 		},
 	}
 	return resp, nil
@@ -1294,26 +1450,243 @@ func (b *SystemBackend) handleRotate(
 	// Rotate to the new term
 	newTerm, err := b.Core.barrier.Rotate()
 	if err != nil {
-		b.Backend.Logger().Printf("[ERR] sys: failed to create new encryption key: %v", err)
+		b.Backend.Logger().Error("sys: failed to create new encryption key", "error", err)
 		return handleError(err)
 	}
-	b.Backend.Logger().Printf("[INFO] sys: installed new encryption key")
+	b.Backend.Logger().Info("sys: installed new encryption key")
 
 	// In HA mode, we need to an upgrade path for the standby instances
 	if b.Core.ha != nil {
 		// Create the upgrade path to the new term
 		if err := b.Core.barrier.CreateUpgrade(newTerm); err != nil {
-			b.Backend.Logger().Printf("[ERR] sys: failed to create new upgrade for key term %d: %v", newTerm, err)
+			b.Backend.Logger().Error("sys: failed to create new upgrade", "term", newTerm, "error", err)
 		}
 
 		// Schedule the destroy of the upgrade path
 		time.AfterFunc(keyRotateGracePeriod, func() {
 			if err := b.Core.barrier.DestroyUpgrade(newTerm); err != nil {
-				b.Backend.Logger().Printf("[ERR] sys: failed to destroy upgrade for key term %d: %v", newTerm, err)
+				b.Backend.Logger().Error("sys: failed to destroy upgrade", "term", newTerm, "error", err)
 			}
 		})
 	}
 	return nil, nil
+}
+
+func (b *SystemBackend) handleWrappingWrap(
+	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	if req.WrapTTL == 0 {
+		return logical.ErrorResponse("endpoint requires response wrapping to be used"), logical.ErrInvalidRequest
+	}
+
+	return &logical.Response{
+		Data: data.Raw,
+	}, nil
+}
+
+func (b *SystemBackend) handleWrappingUnwrap(
+	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	// If a third party is unwrapping (rather than the calling token being the
+	// wrapping token) we detect this so that we can revoke the original
+	// wrapping token after reading it
+	var thirdParty bool
+
+	token := data.Get("token").(string)
+	if token != "" {
+		thirdParty = true
+	} else {
+		token = req.ClientToken
+	}
+
+	if thirdParty {
+		// Use the token to decrement the use count to avoid a second operation on the token.
+		_, err := b.Core.tokenStore.UseTokenByID(token)
+		if err != nil {
+			return nil, fmt.Errorf("error decrementing wrapping token's use-count: %v", err)
+		}
+
+		defer b.Core.tokenStore.Revoke(token)
+	}
+
+	cubbyReq := &logical.Request{
+		Operation:   logical.ReadOperation,
+		Path:        "cubbyhole/response",
+		ClientToken: token,
+	}
+	cubbyResp, err := b.Core.router.Route(cubbyReq)
+	if err != nil {
+		return nil, fmt.Errorf("error looking up wrapping information: %v", err)
+	}
+	if cubbyResp == nil {
+		return logical.ErrorResponse("no information found; wrapping token may be from a previous Vault version"), nil
+	}
+	if cubbyResp != nil && cubbyResp.IsError() {
+		return cubbyResp, nil
+	}
+	if cubbyResp.Data == nil {
+		return logical.ErrorResponse("wrapping information was nil; wrapping token may be from a previous Vault version"), nil
+	}
+
+	responseRaw := cubbyResp.Data["response"]
+	if responseRaw == nil {
+		return nil, fmt.Errorf("no response found inside the cubbyhole")
+	}
+	response, ok := responseRaw.(string)
+	if !ok {
+		return nil, fmt.Errorf("could not decode response inside the cubbyhole")
+	}
+
+	resp := &logical.Response{
+		Data: map[string]interface{}{},
+	}
+	if len(response) == 0 {
+		resp.Data[logical.HTTPStatusCode] = 204
+	} else {
+		resp.Data[logical.HTTPStatusCode] = 200
+		resp.Data[logical.HTTPRawBody] = []byte(response)
+		resp.Data[logical.HTTPContentType] = "application/json"
+	}
+
+	return resp, nil
+}
+
+func (b *SystemBackend) handleWrappingLookup(
+	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	token := data.Get("token").(string)
+
+	if token == "" {
+		return logical.ErrorResponse("missing \"token\" value in input"), logical.ErrInvalidRequest
+	}
+
+	cubbyReq := &logical.Request{
+		Operation:   logical.ReadOperation,
+		Path:        "cubbyhole/wrapinfo",
+		ClientToken: token,
+	}
+	cubbyResp, err := b.Core.router.Route(cubbyReq)
+	if err != nil {
+		return nil, fmt.Errorf("error looking up wrapping information: %v", err)
+	}
+	if cubbyResp == nil {
+		return logical.ErrorResponse("no information found; wrapping token may be from a previous Vault version"), nil
+	}
+	if cubbyResp != nil && cubbyResp.IsError() {
+		return cubbyResp, nil
+	}
+	if cubbyResp.Data == nil {
+		return logical.ErrorResponse("wrapping information was nil; wrapping token may be from a previous Vault version"), nil
+	}
+
+	creationTTLRaw := cubbyResp.Data["creation_ttl"]
+	creationTime := cubbyResp.Data["creation_time"]
+
+	resp := &logical.Response{
+		Data: map[string]interface{}{},
+	}
+	if creationTTLRaw != nil {
+		creationTTL, err := creationTTLRaw.(json.Number).Int64()
+		if err != nil {
+			return nil, fmt.Errorf("error reading creation_ttl value from wrapping information: %v", err)
+		}
+		resp.Data["creation_ttl"] = time.Duration(creationTTL).Seconds()
+	}
+	if creationTime != nil {
+		// This was JSON marshaled so it's already a string in RFC3339 format
+		resp.Data["creation_time"] = cubbyResp.Data["creation_time"]
+	}
+
+	return resp, nil
+}
+
+func (b *SystemBackend) handleWrappingRewrap(
+	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	// If a third party is rewrapping (rather than the calling token being the
+	// wrapping token) we detect this so that we can revoke the original
+	// wrapping token after reading it. Right now wrapped tokens can't unwrap
+	// themselves, but in case we change it, this will be ready to do the right
+	// thing.
+	var thirdParty bool
+
+	token := data.Get("token").(string)
+	if token != "" {
+		thirdParty = true
+	} else {
+		token = req.ClientToken
+	}
+
+	if thirdParty {
+		// Use the token to decrement the use count to avoid a second operation on the token.
+		_, err := b.Core.tokenStore.UseTokenByID(token)
+		if err != nil {
+			return nil, fmt.Errorf("error decrementing wrapping token's use-count: %v", err)
+		}
+		defer b.Core.tokenStore.Revoke(token)
+	}
+
+	// Fetch the original TTL
+	cubbyReq := &logical.Request{
+		Operation:   logical.ReadOperation,
+		Path:        "cubbyhole/wrapinfo",
+		ClientToken: token,
+	}
+	cubbyResp, err := b.Core.router.Route(cubbyReq)
+	if err != nil {
+		return nil, fmt.Errorf("error looking up wrapping information: %v", err)
+	}
+	if cubbyResp == nil {
+		return logical.ErrorResponse("no information found; wrapping token may be from a previous Vault version"), nil
+	}
+	if cubbyResp != nil && cubbyResp.IsError() {
+		return cubbyResp, nil
+	}
+	if cubbyResp.Data == nil {
+		return logical.ErrorResponse("wrapping information was nil; wrapping token may be from a previous Vault version"), nil
+	}
+
+	// Set the creation TTL on the request
+	creationTTLRaw := cubbyResp.Data["creation_ttl"]
+	if creationTTLRaw == nil {
+		return nil, fmt.Errorf("creation_ttl value in wrapping information was nil")
+	}
+	creationTTL, err := cubbyResp.Data["creation_ttl"].(json.Number).Int64()
+	if err != nil {
+		return nil, fmt.Errorf("error reading creation_ttl value from wrapping information: %v", err)
+	}
+
+	// Fetch the original response and return it as the data for the new response
+	cubbyReq = &logical.Request{
+		Operation:   logical.ReadOperation,
+		Path:        "cubbyhole/response",
+		ClientToken: token,
+	}
+	cubbyResp, err = b.Core.router.Route(cubbyReq)
+	if err != nil {
+		return nil, fmt.Errorf("error looking up response: %v", err)
+	}
+	if cubbyResp == nil {
+		return logical.ErrorResponse("no information found; wrapping token may be from a previous Vault version"), nil
+	}
+	if cubbyResp != nil && cubbyResp.IsError() {
+		return cubbyResp, nil
+	}
+	if cubbyResp.Data == nil {
+		return logical.ErrorResponse("wrapping information was nil; wrapping token may be from a previous Vault version"), nil
+	}
+
+	response := cubbyResp.Data["response"]
+	if response == nil {
+		return nil, fmt.Errorf("no response found inside the cubbyhole")
+	}
+
+	// Return response in "response"; wrapping code will detect the rewrap and
+	// slot in instead of nesting
+	return &logical.Response{
+		Data: map[string]interface{}{
+			"response": response,
+		},
+		WrapInfo: &logical.WrapInfo{
+			TTL: time.Duration(creationTTL),
+		},
+	}, nil
 }
 
 func sanitizeMountPath(path string) string {
@@ -1467,8 +1840,16 @@ This path responds to the following HTTP methods.
 		`,
 	},
 
+	"auth_tune": {
+		"Tune the configuration parameters for an auth path.",
+		`Read and write the 'default-lease-ttl' and 'max-lease-ttl' values of
+the auth path.`,
+	},
+
 	"mount_tune": {
 		"Tune backend configuration parameters for this mount.",
+		`Read and write the 'default-lease-ttl' and 'max-lease-ttl' values of
+the mount.`,
 	},
 
 	"renew": {
@@ -1699,5 +2080,28 @@ Enable a new audit backend or disable an existing backend.
 		"Fetches the capabilities of the token associated with the given token, on the given path.",
 		`When there is no access to the token, token accessor can be used to fetch the token's capabilities
 		on a given path.`,
+	},
+
+	"wrap": {
+		"Response-wraps an arbitrary JSON object.",
+		`Round trips the given input data into a response-wrapped token.`,
+	},
+
+	"unwrap": {
+		"Unwraps a response-wrapped token.",
+		`Unwraps a response-wrapped token. Unlike simply reading from cubbyhole/response,
+		this provides additional validation on the token, and rather than a JSON-escaped
+		string, the returned response is the exact same as the contained wrapped response.`,
+	},
+
+	"wraplookup": {
+		"Looks up the properties of a response-wrapped token.",
+		`Returns the creation TTL and creation time of a response-wrapped token.`,
+	},
+
+	"rewrap": {
+		"Rotates a response-wrapped token.",
+		`Rotates a response-wrapped token; the output is a new token with the same
+		response wrapped inside and the same creation TTL. The original token is revoked.`,
 	},
 }

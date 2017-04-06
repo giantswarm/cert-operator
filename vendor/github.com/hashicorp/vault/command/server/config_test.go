@@ -5,10 +5,15 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/vault/helper/logformat"
+	log "github.com/mgutz/logxi/v1"
 )
 
 func TestLoadConfigFile(t *testing.T) {
-	config, err := LoadConfigFile("./test-fixtures/config.hcl")
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
+	config, err := LoadConfigFile("./test-fixtures/config.hcl", logger)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -33,19 +38,20 @@ func TestLoadConfigFile(t *testing.T) {
 		},
 
 		Backend: &Backend{
-			Type:          "consul",
-			AdvertiseAddr: "foo",
+			Type:         "consul",
+			RedirectAddr: "foo",
 			Config: map[string]string{
 				"foo": "bar",
 			},
 		},
 
 		HABackend: &Backend{
-			Type:          "consul",
-			AdvertiseAddr: "snafu",
+			Type:         "consul",
+			RedirectAddr: "snafu",
 			Config: map[string]string{
 				"bar": "baz",
 			},
+			DisableClustering: true,
 		},
 
 		Telemetry: &Telemetry{
@@ -61,6 +67,7 @@ func TestLoadConfigFile(t *testing.T) {
 		MaxLeaseTTLRaw:     "10h",
 		DefaultLeaseTTL:    10 * time.Hour,
 		DefaultLeaseTTLRaw: "10h",
+		ClusterName:        "testcluster",
 	}
 	if !reflect.DeepEqual(config, expected) {
 		t.Fatalf("expected \n\n%#v\n\n to be \n\n%#v\n\n", config, expected)
@@ -68,7 +75,9 @@ func TestLoadConfigFile(t *testing.T) {
 }
 
 func TestLoadConfigFile_json(t *testing.T) {
-	config, err := LoadConfigFile("./test-fixtures/config.hcl.json")
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
+	config, err := LoadConfigFile("./test-fixtures/config.hcl.json", logger)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -97,18 +106,33 @@ func TestLoadConfigFile_json(t *testing.T) {
 			Config: map[string]string{
 				"foo": "bar",
 			},
+			DisableClustering: true,
 		},
 
 		Telemetry: &Telemetry{
-			StatsiteAddr:    "baz",
-			StatsdAddr:      "",
-			DisableHostname: false,
+			StatsiteAddr:                       "baz",
+			StatsdAddr:                         "",
+			DisableHostname:                    false,
+			CirconusAPIToken:                   "",
+			CirconusAPIApp:                     "",
+			CirconusAPIURL:                     "",
+			CirconusSubmissionInterval:         "",
+			CirconusCheckSubmissionURL:         "",
+			CirconusCheckID:                    "",
+			CirconusCheckForceMetricActivation: "",
+			CirconusCheckInstanceID:            "",
+			CirconusCheckSearchTag:             "",
+			CirconusCheckDisplayName:           "",
+			CirconusCheckTags:                  "",
+			CirconusBrokerID:                   "",
+			CirconusBrokerSelectTag:            "",
 		},
 
 		MaxLeaseTTL:        10 * time.Hour,
 		MaxLeaseTTLRaw:     "10h",
 		DefaultLeaseTTL:    10 * time.Hour,
 		DefaultLeaseTTLRaw: "10h",
+		ClusterName:        "testcluster",
 	}
 	if !reflect.DeepEqual(config, expected) {
 		t.Fatalf("expected \n\n%#v\n\n to be \n\n%#v\n\n", config, expected)
@@ -116,7 +140,9 @@ func TestLoadConfigFile_json(t *testing.T) {
 }
 
 func TestLoadConfigFile_json2(t *testing.T) {
-	config, err := LoadConfigFile("./test-fixtures/config2.hcl.json")
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
+	config, err := LoadConfigFile("./test-fixtures/config2.hcl.json", logger)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -142,6 +168,7 @@ func TestLoadConfigFile_json2(t *testing.T) {
 			Config: map[string]string{
 				"foo": "bar",
 			},
+			DisableClustering: true,
 		},
 
 		HABackend: &Backend{
@@ -151,19 +178,35 @@ func TestLoadConfigFile_json2(t *testing.T) {
 			},
 		},
 
+		CacheSize: 45678,
+
 		Telemetry: &Telemetry{
-			StatsiteAddr:    "foo",
-			StatsdAddr:      "bar",
-			DisableHostname: true,
+			StatsiteAddr:                       "foo",
+			StatsdAddr:                         "bar",
+			DisableHostname:                    true,
+			CirconusAPIToken:                   "0",
+			CirconusAPIApp:                     "vault",
+			CirconusAPIURL:                     "http://api.circonus.com/v2",
+			CirconusSubmissionInterval:         "10s",
+			CirconusCheckSubmissionURL:         "https://someplace.com/metrics",
+			CirconusCheckID:                    "0",
+			CirconusCheckForceMetricActivation: "true",
+			CirconusCheckInstanceID:            "node1:vault",
+			CirconusCheckSearchTag:             "service:vault",
+			CirconusCheckDisplayName:           "node1:vault",
+			CirconusCheckTags:                  "cat1:tag1,cat2:tag2",
+			CirconusBrokerID:                   "0",
+			CirconusBrokerSelectTag:            "dc:sfo",
 		},
 	}
 	if !reflect.DeepEqual(config, expected) {
-		t.Fatalf("expected \n\n%#v\n\n to be \n\n%#v\n\n", config, expected)
 	}
 }
 
 func TestLoadConfigDir(t *testing.T) {
-	config, err := LoadConfigDir("./test-fixtures/config-dir")
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
+	config, err := LoadConfigDir("./test-fixtures/config-dir", logger)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -186,6 +229,7 @@ func TestLoadConfigDir(t *testing.T) {
 			Config: map[string]string{
 				"foo": "bar",
 			},
+			DisableClustering: true,
 		},
 
 		Telemetry: &Telemetry{
@@ -196,18 +240,21 @@ func TestLoadConfigDir(t *testing.T) {
 
 		MaxLeaseTTL:     10 * time.Hour,
 		DefaultLeaseTTL: 10 * time.Hour,
+		ClusterName:     "testcluster",
 	}
 	if !reflect.DeepEqual(config, expected) {
-		t.Fatalf("bad: %#v", config)
+		t.Fatalf("expected \n\n%#v\n\n to be \n\n%#v\n\n", config, expected)
 	}
 }
 
 func TestParseConfig_badTopLevel(t *testing.T) {
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
 	_, err := ParseConfig(strings.TrimSpace(`
 backend {}
 bad  = "one"
 nope = "yes"
-`))
+`), logger)
 
 	if err == nil {
 		t.Fatal("expected error")
@@ -223,13 +270,15 @@ nope = "yes"
 }
 
 func TestParseConfig_badListener(t *testing.T) {
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
 	_, err := ParseConfig(strings.TrimSpace(`
 listener "tcp" {
 	address = "1.2.3.3"
 	bad  = "one"
 	nope = "yes"
 }
-`))
+`), logger)
 
 	if err == nil {
 		t.Fatal("expected error")
@@ -245,13 +294,15 @@ listener "tcp" {
 }
 
 func TestParseConfig_badTelemetry(t *testing.T) {
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
 	_, err := ParseConfig(strings.TrimSpace(`
 telemetry {
 	statsd_address = "1.2.3.3"
 	bad  = "one"
 	nope = "yes"
 }
-`))
+`), logger)
 
 	if err == nil {
 		t.Fatal("expected error")

@@ -45,6 +45,9 @@ The following parameters are required:
   credentials.
 - `region` the AWS region for API calls.
 
+Note: the client uses the official AWS SDK and will use environment variable or IAM 
+role-provided credentials if available.
+
 The next step is to configure a role. A role is a logical name that maps
 to a policy used to generated those credentials.
 You can either supply a user inline policy (via the policy argument), or
@@ -176,7 +179,7 @@ as soon as they are generated.
 Vault also supports an STS credentials instead of creating a new IAM user.
 
 The `aws/sts` endpoint will always fetch credentials with a 1hr ttl.
-Unlike the `aws/creds` enpoint, the ttl is enforced by STS.
+Unlike the `aws/creds` endpoint, the ttl is enforced by STS.
 
 Vault supports two of the [STS APIs](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html),
 [STS federation tokens](http://docs.aws.amazon.com/STS/latest/APIReference/API_GetFederationToken.html) and
@@ -302,7 +305,7 @@ Finally, let's create a "deploy" policy using the arn of our role to assume:
 
 ```text
 $ vault write aws/roles/deploy \
-    policy=arn:aws:iam::ACCOUNT-ID-WITHOUT-HYPHENS:role/RoleNameToAssume
+    arn=arn:aws:iam::ACCOUNT-ID-WITHOUT-HYPHENS:role/RoleNameToAssume
 ```
 
 To generate a new set of STS assumed role credentials, we again read from
@@ -368,7 +371,12 @@ errors for exceeding the AWS limit of 32 characters on STS token names.
   <dt>Description</dt>
   <dd>
     Configures the root IAM credentials used.
-    This is a root protected endpoint.
+    If static credentials are not provided using
+    this endpoint, then the credentials will be retrieved from the
+    environment variables `AWS_ACCESS_KEY`, `AWS_SECRET_KEY` and `AWS_REGION`
+    respectively. If the credentials are still not found and if the
+    backend is configured on an EC2 instance with metadata querying
+    capabilities, the credentials are fetched automatically.
   </dd>
 
   <dt>Method</dt>
@@ -411,7 +419,6 @@ errors for exceeding the AWS limit of 32 characters on STS token names.
   <dt>Description</dt>
   <dd>
     Configures the lease settings for generated credentials.
-    This is a root protected endpoint.
   </dd>
 
   <dt>Method</dt>
@@ -502,7 +509,6 @@ errors for exceeding the AWS limit of 32 characters on STS token names.
 
   <dt>Returns</dt>
   <dd>
-
     ```javascript
     {
       "data": {
@@ -545,6 +551,47 @@ errors for exceeding the AWS limit of 32 characters on STS token names.
   </dd>
 </dl>
 
+#### LIST
+
+<dl class="api">
+  <dt>Description</dt>
+  <dd>
+    Returns a list of existing roles in the backend
+  </dd>
+
+  <dt>Method</dt>
+  <dd>LIST/GET</dd>
+
+  <dt>URL</dt>
+  <dd>`/aws/roles` (LIST) or `/aws/roles/?list=true` (GET)</dd>
+
+  <dt>Parameters</dt>
+  <dd>
+     None
+  </dd>
+
+  <dt>Returns</dt>
+  <dd>
+    ```javascript
+{
+  "auth": null,
+  "warnings": null,
+  "wrap_info": null,
+  "data": {
+    "keys": [
+      "devrole",
+      "prodrole",
+      "testrole"
+    ]
+  },
+  "lease_duration": 0,
+  "renewable": false,
+  "lease_id": ""
+}
+    ```
+  </dd>
+</dl>
+
 
 ### /aws/creds/
 #### GET
@@ -568,17 +615,15 @@ errors for exceeding the AWS limit of 32 characters on STS token names.
 
   <dt>Returns</dt>
   <dd>
-
     ```javascript
     {
       "data": {
         "access_key": "...",
         "secret_key": "...",
-        "secret_token": null
+        "security_token": null
       }
     }
     ```
-
   </dd>
 </dl>
 
@@ -587,33 +632,73 @@ errors for exceeding the AWS limit of 32 characters on STS token names.
 #### GET
 
 <dl class="api">
-    <dt>Description</dt>
-    <dd>
-        Generates a dynamic IAM credential with an STS token based on the named role.
-    </dd>
+  <dt>Description</dt>
+  <dd>
+      Generates a dynamic IAM credential with an STS token based on the named
+      role. The TTL will be 3600 seconds (one hour).
+  </dd>
 
-    <dt>Method</dt>
-    <dd>GET</dd>
+  <dt>Method</dt>
+  <dd>GET</dd>
 
-    <dt>URL</dt>
-    <dd>`/aws/sts/<name>`</dd>
+  <dt>URL</dt>
+  <dd>`/aws/sts/<name>`</dd>
 
-    <dt>Parameters</dt>
-    <dd>
-        None
-    </dd>
+  <dt>Parameters</dt>
+  <dd>
+      None
+  </dd>
 
-    <dt>Returns</dt>
-    <dd>
-
+  <dt>Returns</dt>
+  <dd>
     ```javascript
     {
         "data": {
             "access_key": "...",
             "secret_key": "...",
-            "secret_token": "..."
+            "security_token": "..."
         }
     }
     ```
     </dd>
+</dl>
+
+#### POST
+
+<dl class="api">
+  <dt>Description</dt>
+  <dd>
+      Generates a dynamic IAM credential with an STS token based on the named
+      role and the given TTL (defaults to 3600 seconds, or one hour).
+  </dd>
+
+  <dt>Method</dt>
+  <dd>POST</dd>
+
+  <dt>URL</dt>
+  <dd>`/aws/sts/<name>`</dd>
+
+  <dt>Parameters</dt>
+  <dd>
+    <ul>
+      <li>
+        <span class="param">ttl</span>
+        <span class="param-flags">optional</span>
+        The TTL to use for the STS token.
+      </li>
+    </ul>
+  </dd>
+
+  <dt>Returns</dt>
+  <dd>
+    ```javascript
+    {
+        "data": {
+            "access_key": "...",
+            "secret_key": "...",
+            "security_token": "..."
+        }
+    }
+    ```
+  </dd>
 </dl>

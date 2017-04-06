@@ -3,14 +3,17 @@ package framework
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"regexp"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	log "github.com/mgutz/logxi/v1"
+
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/vault/helper/errutil"
+	"github.com/hashicorp/vault/helper/logformat"
 	"github.com/hashicorp/vault/logical"
 )
 
@@ -70,7 +73,7 @@ type Backend struct {
 	// See the built-in AuthRenew helpers in lease.go for common callbacks.
 	AuthRenew OperationFunc
 
-	logger  *log.Logger
+	logger  log.Logger
 	system  logical.SystemView
 	once    sync.Once
 	pathsRe []*regexp.Regexp
@@ -128,7 +131,7 @@ func (b *Backend) HandleExistenceCheck(req *logical.Request) (checkFound bool, e
 
 	err = fd.Validate()
 	if err != nil {
-		return false, false, err
+		return false, false, errutil.UserError{Err: err.Error()}
 	}
 
 	// Call the callback with the request and the data
@@ -223,12 +226,12 @@ func (b *Backend) Cleanup() {
 
 // Logger can be used to get the logger. If no logger has been set,
 // the logs will be discarded.
-func (b *Backend) Logger() *log.Logger {
+func (b *Backend) Logger() log.Logger {
 	if b.logger != nil {
 		return b.logger
 	}
 
-	return log.New(ioutil.Discard, "", 0)
+	return logformat.NewVaultLoggerWithWriter(ioutil.Discard, log.LevelOff)
 }
 
 func (b *Backend) System() logical.SystemView {
@@ -450,9 +453,9 @@ func (b *Backend) handleWALRollback(
 	if age == 0 {
 		age = 10 * time.Minute
 	}
-	minAge := time.Now().UTC().Add(-1 * age)
+	minAge := time.Now().Add(-1 * age)
 	if _, ok := req.Data["immediate"]; ok {
-		minAge = time.Now().UTC().Add(1000 * time.Hour)
+		minAge = time.Now().Add(1000 * time.Hour)
 	}
 
 	for _, k := range keys {

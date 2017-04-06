@@ -1,9 +1,11 @@
 package: github.com/giantswarm/cert-operator
 import:
 - package: github.com/golang/protobuf
-  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
+  version: 2bba0603135d7d7f5cb73b2125beeda19c09f4ef
+- package: google.golang.org/grpc
+  version: b5071124392bfd416c713e6595ac149b387f7186
 - package: github.com/giantswarm/certctl
-  version: 350bd8e6c1098d0c20166ef7e286c8c7afe6e517
+  version: 0b15172fab3ef7d0805680a90876a7d704e2e80e
   subpackages:
   - service/cert-signer
   - service/pki
@@ -22,7 +24,7 @@ import:
   - endpoint
   - transport/http
 - package: github.com/hashicorp/vault
-  version: 0.6.0
+  version: 0.6.4
   subpackages:
   - api
 - package: github.com/juju/errgo

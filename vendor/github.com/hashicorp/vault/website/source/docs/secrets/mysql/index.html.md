@@ -37,7 +37,7 @@ Successfully mounted 'mysql' at 'mysql'!
 ```
 
 Next, we must configure Vault to know how to connect to the MySQL
-instance. This is done by providing a DSN (Data Source Name):
+instance. This is done by providing a [DSN (Data Source Name)](https://github.com/go-sql-driver/mysql#dsn-data-source-name):
 
 ```
 $ vault write mysql/config/connection \
@@ -49,6 +49,8 @@ In this case, we've configured Vault with the user "root" and password "root,
 connecting to an instance at "192.168.33.10" on port 3306. It is not necessary
 that Vault has the root user, but the user must have privileges to create
 other users, namely the `GRANT OPTION` privilege.
+
+For using UNIX socket use: `root:root@unix(/path/to/socket)/`.
 
 Optionally, we can configure the lease settings for credentials generated
 by Vault. This is done by writing to the `config/lease` key:
@@ -92,7 +94,7 @@ Key           	Value
 lease_id      	mysql/creds/readonly/bd404e98-0f35-b378-269a-b7770ef01897
 lease_duration	3600
 password      	132ae3ef-5a64-7499-351e-bfe59f3a2a21
-username      	root-aefa635a-18
+username      	readonly-aefa635a-18
 ```
 
 By reading from the `creds/readonly` path, Vault has generated a new
@@ -105,6 +107,16 @@ that trusted operators can manage the role definitions, and both
 users and applications are restricted in the credentials they are
 allowed to read.
 
+Optionally, you may configure both the number of characters from the role name
+that are truncated to form the display name portion of the mysql username
+interpolated into the `{{name}}` field: the default is 10. 
+
+You may also configure the total number of characters allowed in the entire
+generated username (the sum of the display name and uuid poritions); the
+default is 16. Note that versions of MySQL prior to 5.8 have a 16 character
+total limit on user names, so it is probably not safe to increase this above
+the default on versions prior to that.
+
 ## API
 
 ### /mysql/config/connection
@@ -114,7 +126,6 @@ allowed to read.
   <dt>Description</dt>
   <dd>
     Configures the connection DSN used to communicate with MySQL.
-    This is a root protected endpoint.
   </dd>
 
   <dt>Method</dt>
@@ -154,7 +165,16 @@ allowed to read.
   <dd>
     <ul>
       <li>
-        <span class="param">verify-connection</span>
+        <span class="param">max_idle_connections</span>
+        <span class="param-flags">optional</span>
+        Maximum number of idle connections to the database. A zero uses the value of `max_open_connections` and a negative value disables idle connections. If larger than `max_open_connections` it will be reduced to be equal.
+      </li>
+    </ul>
+  </dd>
+  <dd>
+    <ul>
+      <li>
+        <span class="param">verify_connection</span>
         <span class="param-flags">optional</span>
 	If set, connection_url is verified by actually connecting to the database.
 	Defaults to true.
@@ -230,9 +250,40 @@ allowed to read.
       <li>
         <span class="param">sql</span>
         <span class="param-flags">required</span>
-        The SQL statements executed to create and configure the role.
-        Must be semi-colon separated. The '{{name}}' and '{{password}}'
-        values will be substituted.
+        The SQL statements executed to create and configure a user. Must be a
+        semicolon-separated string, a base64-encoded semicolon-separated
+        string, a serialized JSON string array, or a base64-encoded serialized
+        JSON string array.  The '{{name}}' and '{{password}}' values will be
+        substituted.
+      </li>
+      <li>
+        <span class="param">revocation_sql</span>
+        <span class="param-flags">optional</span>
+        The SQL statements executed to revoke a user. Must be a
+        semicolon-separated string, a base64-encoded semicolon-separated
+        string, a serialized JSON string array, or a base64-encoded serialized
+        JSON string array. The '{{name}}' value will be substituted.
+      </li>
+      <li>
+        <span class="param">rolename_length</span>
+        <span class="param-flags">optional</span>
+        Determines how many characters from the role name will be used
+        to form the mysql username interpolated into the '{{name}}' field
+        of the sql parameter.  The default is 4.
+      </li>
+      <li>
+        <span class="param">displayname_length</span>
+        <span class="param-flags">optional</span>
+        Determines how many characters from the token display name will be used
+        to form the mysql username interpolated into the '{{name}}' field
+        of the sql parameter.  The default is 4.
+      </li>
+      <li>
+        <span class="param">username_length</span>
+        <span class="param-flags">optional</span>
+        Determines the maximum total length in characters of the
+        mysql username interpolated into the '{{name}}' field
+        of the sql parameter.  The default is 16.
       </li>
     </ul>
   </dd>
@@ -286,10 +337,10 @@ allowed to read.
   </dd>
 
   <dt>Method</dt>
-  <dd>GET</dd>
+  <dd>LIST/GET</dd>
 
   <dt>URL</dt>
-  <dd>`/roles/?list=true`</dd>
+  <dd>`/mysql/roles` (LIST) or `/mysql/roles/?list=true` (GET)</dd>
 
   <dt>Parameters</dt>
   <dd>
@@ -305,7 +356,7 @@ allowed to read.
     "data": {
       "keys": ["dev", "prod"]
     },
-    "lease_duration": 2592000,
+    "lease_duration": 2764800,
     "lease_id": "",
     "renewable": false
   }
@@ -365,7 +416,7 @@ allowed to read.
     ```javascript
     {
       "data": {
-        "username": "root-aefa635a-18",
+        "username": "user-role-aefa63",
         "password": "132ae3ef-5a64-7499-351e-bfe59f3a2a21"
       }
     }

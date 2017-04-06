@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"reflect"
 )
 
 // encodes a string to a TOML-compliant string value
@@ -51,6 +52,9 @@ func tomlValueStringRepresentation(v interface{}) (string, error) {
 		return strconv.FormatFloat(value, 'f', -1, 32), nil
 	case string:
 		return "\"" + encodeTomlString(value) + "\"", nil
+	case []byte:
+		b, _ := v.([]byte)
+		return tomlValueStringRepresentation(string(b))
 	case bool:
 		if value {
 			return "true", nil
@@ -60,9 +64,14 @@ func tomlValueStringRepresentation(v interface{}) (string, error) {
 		return value.Format(time.RFC3339), nil
 	case nil:
 		return "", nil
-	case []interface{}:
+	}
+
+	rv := reflect.ValueOf(v)
+
+	if rv.Kind() == reflect.Slice {
 		values := []string{}
-		for _, item := range value {
+		for i := 0; i < rv.Len(); i++ {
+			item := rv.Index(i).Interface()
 			itemRepr, err := tomlValueStringRepresentation(item)
 			if err != nil {
 				return "", err
@@ -70,9 +79,8 @@ func tomlValueStringRepresentation(v interface{}) (string, error) {
 			values = append(values, itemRepr)
 		}
 		return "[" + strings.Join(values, ",") + "]", nil
-	default:
-		return "", fmt.Errorf("unsupported value type %T: %v", value, value)
 	}
+	return "", fmt.Errorf("unsupported value type %T: %v", v, v)
 }
 
 func (t *TomlTree) writeTo(w io.Writer, indent, keyspace string, bytesCount int64) (int64, error) {

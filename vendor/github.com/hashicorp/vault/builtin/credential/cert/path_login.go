@@ -72,8 +72,8 @@ func (b *backend) pathLogin(
 			Metadata: map[string]string{
 				"cert_name":        matched.Entry.Name,
 				"common_name":      clientCerts[0].Subject.CommonName,
-				"subject_key_id":   certutil.GetOctalFormatted(clientCerts[0].SubjectKeyId, ":"),
-				"authority_key_id": certutil.GetOctalFormatted(clientCerts[0].AuthorityKeyId, ":"),
+				"subject_key_id":   certutil.GetHexFormatted(clientCerts[0].SubjectKeyId, ":"),
+				"authority_key_id": certutil.GetHexFormatted(clientCerts[0].AuthorityKeyId, ":"),
 			},
 			LeaseOptions: logical.LeaseOptions{
 				Renewable: true,
@@ -143,6 +143,10 @@ func (b *backend) verifyCredentials(req *logical.Request) (*ParsedCert, *logical
 	}
 	connState := req.Connection.ConnState
 
+	if connState.PeerCertificates == nil || len(connState.PeerCertificates) == 0 {
+		return nil, logical.ErrorResponse("client certificate must be supplied"), nil
+	}
+
 	// Load the trusted certificates
 	roots, trusted, trustedNonCAs := b.loadTrustedCerts(req.Storage)
 
@@ -210,20 +214,22 @@ func (b *backend) matchPolicy(chains [][]*x509.Certificate, trusted []*ParsedCer
 // loadTrustedCerts is used to load all the trusted certificates from the backend
 func (b *backend) loadTrustedCerts(store logical.Storage) (pool *x509.CertPool, trusted []*ParsedCert, trustedNonCAs []*ParsedCert) {
 	pool = x509.NewCertPool()
+	trusted = make([]*ParsedCert, 0)
+	trustedNonCAs = make([]*ParsedCert, 0)
 	names, err := store.List("cert/")
 	if err != nil {
-		b.Logger().Printf("[ERR] cert: failed to list trusted certs: %v", err)
+		b.Logger().Error("cert: failed to list trusted certs", "error", err)
 		return
 	}
 	for _, name := range names {
 		entry, err := b.Cert(store, strings.TrimPrefix(name, "cert/"))
 		if err != nil {
-			b.Logger().Printf("[ERR] cert: failed to load trusted certs '%s': %v", name, err)
+			b.Logger().Error("cert: failed to load trusted cert", "name", name, "error", err)
 			continue
 		}
 		parsed := parsePEM([]byte(entry.Certificate))
 		if len(parsed) == 0 {
-			b.Logger().Printf("[ERR] cert: failed to parse certificate for '%s'", name)
+			b.Logger().Error("cert: failed to parse certificate", "name", name)
 			continue
 		}
 		if !parsed[0].IsCA {

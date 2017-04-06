@@ -158,9 +158,12 @@ func TestExpiration_RegisterAuth_NoLease(t *testing.T) {
 	}
 
 	// Should not be able to renew, no expiration
-	_, err = exp.RenewToken(&logical.Request{}, "auth/github/login", root.ID, 0)
-	if err.Error() != "lease not found or lease is not renewable" {
-		t.Fatalf("err: %v", err)
+	resp, err := exp.RenewToken(&logical.Request{}, "auth/github/login", root.ID, 0)
+	if err != nil && (err != logical.ErrInvalidRequest || (resp != nil && resp.IsError() && resp.Error().Error() != "lease not found or lease is not renewable")) {
+		t.Fatalf("bad: err:%v resp:%#v", err, resp)
+	}
+	if resp == nil {
+		t.Fatal("expected a response")
 	}
 
 	// Wait and check token is not invalidated
@@ -455,10 +458,14 @@ func TestExpiration_RenewToken_NotRenewable(t *testing.T) {
 	}
 
 	// Attempt to renew the token
-	_, err = exp.RenewToken(&logical.Request{}, "auth/github/login", root.ID, 0)
-	if err.Error() != "lease is not renewable" {
-		t.Fatalf("err: %v", err)
+	resp, err := exp.RenewToken(&logical.Request{}, "auth/github/login", root.ID, 0)
+	if err != nil && (err != logical.ErrInvalidRequest || (resp != nil && resp.IsError() && resp.Error().Error() != "lease is not renewable")) {
+		t.Fatalf("bad: err:%v resp:%#v", err, resp)
 	}
+	if resp == nil {
+		t.Fatal("expected a response")
+	}
+
 }
 
 func TestExpiration_Renew(t *testing.T) {
@@ -698,10 +705,23 @@ func TestExpiration_revokeEntry_token(t *testing.T) {
 		t.Fatalf("err: %v", err)
 	}
 
+	// N.B.: Vault doesn't allow both a secret and auth to be returned, but the
+	// reason for both is that auth needs to be included in order to use the
+	// token store as it's the only mounted backend, *but* RegisterAuth doesn't
+	// actually create the index by token, only Register (for a Secret) does.
+	// So without the Secret we don't do anything when removing the index which
+	// (at the time of writing) now fails because a bug causing every token
+	// expiration to do an extra delete to a non-existent key has been fixed,
+	// and this test relies on this nonstandard behavior.
 	le := &leaseEntry{
 		LeaseID: "foo/bar/1234",
 		Auth: &logical.Auth{
 			ClientToken: root.ID,
+			LeaseOptions: logical.LeaseOptions{
+				TTL: time.Minute,
+			},
+		},
+		Secret: &logical.Secret{
 			LeaseOptions: logical.LeaseOptions{
 				TTL: time.Minute,
 			},
@@ -718,7 +738,7 @@ func TestExpiration_revokeEntry_token(t *testing.T) {
 	if err := exp.createIndexByToken(le.ClientToken, le.LeaseID); err != nil {
 		t.Fatalf("error creating secondary index: %v", err)
 	}
-	exp.updatePending(le, le.Auth.LeaseTotal())
+	exp.updatePending(le, le.Secret.LeaseTotal())
 
 	indexEntry, err := exp.indexByToken(le.ClientToken, le.LeaseID)
 	if err != nil {
@@ -899,9 +919,9 @@ func TestExpiration_PersistLoadDelete(t *testing.T) {
 				TTL: time.Minute,
 			},
 		},
-		IssueTime:       time.Now().UTC(),
-		ExpireTime:      time.Now().UTC(),
-		LastRenewalTime: time.Time{}.UTC(),
+		IssueTime:       time.Now(),
+		ExpireTime:      time.Now(),
+		LastRenewalTime: time.Time{},
 	}
 	if err := exp.persistEntry(le); err != nil {
 		t.Fatalf("err: %v", err)
@@ -911,8 +931,9 @@ func TestExpiration_PersistLoadDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
+	le.LastRenewalTime = out.LastRenewalTime
 	if !reflect.DeepEqual(out, le) {
-		t.Fatalf("\nout: %#v\nexpect: %#v\n", out, le)
+		t.Fatalf("bad: expected:%#v\nactual:%#v", le, out)
 	}
 
 	err = exp.deleteEntry("foo/bar/1234")
@@ -941,8 +962,8 @@ func TestLeaseEntry(t *testing.T) {
 				TTL: time.Minute,
 			},
 		},
-		IssueTime:  time.Now().UTC(),
-		ExpireTime: time.Now().UTC(),
+		IssueTime:  time.Now(),
+		ExpireTime: time.Now(),
 	}
 
 	enc, err := le.encode()

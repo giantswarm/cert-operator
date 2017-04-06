@@ -93,12 +93,14 @@ func (c *RekeyCommand) Run(args []string) int {
 				SecretShares:    shares,
 				SecretThreshold: threshold,
 				PGPKeys:         pgpKeys,
+				Backup:          backup,
 			})
 		} else {
 			rekeyStatus, err = client.Sys().RekeyInit(&api.RekeyInitRequest{
 				SecretShares:    shares,
 				SecretThreshold: threshold,
 				PGPKeys:         pgpKeys,
+				Backup:          backup,
 			})
 		}
 		if err != nil {
@@ -158,11 +160,23 @@ func (c *RekeyCommand) Run(args []string) int {
 	// Space between the key prompt, if any, and the output
 	c.Ui.Output("\n")
 	// Provide the keys
+	var haveB64 bool
+	if result.KeysB64 != nil && len(result.KeysB64) == len(result.Keys) {
+		haveB64 = true
+	}
 	for i, key := range result.Keys {
 		if len(result.PGPFingerprints) > 0 {
-			c.Ui.Output(fmt.Sprintf("Key %d fingerprint: %s; value: %s", i+1, result.PGPFingerprints[i], key))
+			if haveB64 {
+				c.Ui.Output(fmt.Sprintf("Key %d fingerprint: %s; value: %s", i+1, result.PGPFingerprints[i], result.KeysB64[i]))
+			} else {
+				c.Ui.Output(fmt.Sprintf("Key %d fingerprint: %s; value: %s", i+1, result.PGPFingerprints[i], key))
+			}
 		} else {
-			c.Ui.Output(fmt.Sprintf("Key %d: %s", i+1, key))
+			if haveB64 {
+				c.Ui.Output(fmt.Sprintf("Key %d: %s", i+1, result.KeysB64[i]))
+			} else {
+				c.Ui.Output(fmt.Sprintf("Key %d: %s", i+1, key))
+			}
 		}
 	}
 
@@ -388,9 +402,9 @@ Rekey Options:
                           public PGP keys, or Keybase usernames specified as
                           "keybase:<username>". The number of given entries
                           must match 'key-shares'. The output unseal keys will
-                          be encrypted and hex-encoded, in order, with the
+                          be encrypted and base64-encoded, in order, with the
                           given public keys.  If you want to use them with the
-                          'vault unseal' command, you will need to hex decode
+                          'vault unseal' command, you will need to base64-decode
                           and decrypt; this will be the plaintext unseal key.
 
   -backup=false           If true, and if the key shares are PGP-encrypted, a
@@ -400,7 +414,7 @@ Rekey Options:
                           'sys/rekey/backup' endpoint.
 
   -recovery-key=false     Whether to rekey the recovery key instead of the
-                          barrier key. This is not normally available.
+                          barrier key. Only used with Vault HSM.
 `
 	return strings.TrimSpace(helpText)
 }

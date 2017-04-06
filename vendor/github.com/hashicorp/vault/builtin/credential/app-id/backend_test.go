@@ -10,8 +10,7 @@ import (
 
 func TestBackend_basic(t *testing.T) {
 	logicaltest.Test(t, logicaltest.TestCase{
-		AcceptanceTest: true,
-		Factory:        Factory,
+		Factory: Factory,
 		Steps: []logicaltest.TestStep{
 			testAccStepMapAppId(t),
 			testAccStepMapUserId(t),
@@ -26,8 +25,7 @@ func TestBackend_basic(t *testing.T) {
 
 func TestBackend_cidr(t *testing.T) {
 	logicaltest.Test(t, logicaltest.TestCase{
-		AcceptanceTest: true,
-		Factory:        Factory,
+		Factory: Factory,
 		Steps: []logicaltest.TestStep{
 			testAccStepMapAppIdDisplayName(t),
 			testAccStepMapUserIdCidr(t, "192.168.1.0/16"),
@@ -40,8 +38,7 @@ func TestBackend_cidr(t *testing.T) {
 
 func TestBackend_displayName(t *testing.T) {
 	logicaltest.Test(t, logicaltest.TestCase{
-		AcceptanceTest: true,
-		Factory:        Factory,
+		Factory: Factory,
 		Steps: []logicaltest.TestStep{
 			testAccStepMapAppIdDisplayName(t),
 			testAccStepMapUserId(t),
@@ -165,7 +162,7 @@ func testAccStepMapUserIdCidr(t *testing.T, cidr string) logicaltest.TestStep {
 
 func testAccLogin(t *testing.T, display string) logicaltest.TestStep {
 	checkTTL := func(resp *logical.Response) error {
-		if resp.Auth.LeaseOptions.TTL.String() != "720h0m0s" {
+		if resp.Auth.LeaseOptions.TTL.String() != "768h0m0s" {
 			return fmt.Errorf("invalid TTL")
 		}
 		return nil
@@ -189,7 +186,7 @@ func testAccLogin(t *testing.T, display string) logicaltest.TestStep {
 
 func testAccLoginAppIDInPath(t *testing.T, display string) logicaltest.TestStep {
 	checkTTL := func(resp *logical.Response) error {
-		if resp.Auth.LeaseOptions.TTL.String() != "720h0m0s" {
+		if resp.Auth.LeaseOptions.TTL.String() != "768h0m0s" {
 			return fmt.Errorf("invalid TTL")
 		}
 		return nil

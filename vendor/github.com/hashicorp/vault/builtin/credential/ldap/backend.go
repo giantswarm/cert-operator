@@ -1,12 +1,13 @@
 package ldap
 
 import (
+	"bytes"
 	"fmt"
-
-	"strings"
+	"text/template"
 
 	"github.com/go-ldap/ldap"
 	"github.com/hashicorp/vault/helper/mfa"
+	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -15,7 +16,7 @@ func Factory(conf *logical.BackendConfig) (logical.Backend, error) {
 	return Backend().Setup(conf)
 }
 
-func Backend() *framework.Backend {
+func Backend() *backend {
 	var b backend
 	b.Backend = &framework.Backend{
 		Help: backendHelp,
@@ -41,7 +42,7 @@ func Backend() *framework.Backend {
 		AuthRenew: b.pathLoginRenew,
 	}
 
-	return b.Backend
+	return &b
 }
 
 type backend struct {
@@ -100,23 +101,38 @@ func (b *backend) Login(req *logical.Request, username string, password string) 
 		return nil, logical.ErrorResponse("invalid connection returned from LDAP dial"), nil
 	}
 
-	bindDN, err := getBindDN(cfg, c, username)
+	// Clean connection
+	defer c.Close()
+
+	bindDN, err := b.getBindDN(cfg, c, username)
 	if err != nil {
 		return nil, logical.ErrorResponse(err.Error()), nil
 	}
 
+	if b.Logger().IsDebug() {
+		b.Logger().Debug("auth/ldap: BindDN fetched", "username", username, "binddn", bindDN)
+	}
+
+	if cfg.DenyNullBind && len(password) == 0 {
+		return nil, logical.ErrorResponse("password cannot be of zero length when passwordless binds are being denied"), nil
+	}
+
+	// Try to bind as the login user. This is where the actual authentication takes place.
 	if err = c.Bind(bindDN, password); err != nil {
 		return nil, logical.ErrorResponse(fmt.Sprintf("LDAP bind failed: %v", err)), nil
 	}
 
-	userDN, err := getUserDN(cfg, c, bindDN)
+	userDN, err := b.getUserDN(cfg, c, bindDN)
 	if err != nil {
 		return nil, logical.ErrorResponse(err.Error()), nil
 	}
 
-	ldapGroups, err := getLdapGroups(cfg, c, userDN, username)
+	ldapGroups, err := b.getLdapGroups(cfg, c, userDN, username)
 	if err != nil {
 		return nil, logical.ErrorResponse(err.Error()), nil
+	}
+	if b.Logger().IsDebug() {
+		b.Logger().Debug("auth/ldap: Groups fetched from server", "num_server_groups", len(ldapGroups), "server_groups", ldapGroups)
 	}
 
 	ldapResponse := &logical.Response{
@@ -124,8 +140,7 @@ func (b *backend) Login(req *logical.Request, username string, password string) 
 	}
 	if len(ldapGroups) == 0 {
 		errString := fmt.Sprintf(
-			"no LDAP groups found in userDN '%s' or groupDN '%s';only policies from locally-defined groups available",
-			cfg.UserDN,
+			"no LDAP groups found in groupDN '%s'; only policies from locally-defined groups available",
 			cfg.GroupDN)
 		ldapResponse.AddWarning(errString)
 	}
@@ -133,10 +148,13 @@ func (b *backend) Login(req *logical.Request, username string, password string) 
 	var allGroups []string
 	// Import the custom added groups from ldap backend
 	user, err := b.User(req.Storage, username)
-	if err == nil && user != nil {
+	if err == nil && user != nil && user.Groups != nil {
+		if b.Logger().IsDebug() {
+			b.Logger().Debug("auth/ldap: adding local groups", "num_local_groups", len(user.Groups), "local_groups", user.Groups)
+		}
 		allGroups = append(allGroups, user.Groups...)
 	}
-	// add the LDAP groups
+	// Merge local and LDAP groups
 	allGroups = append(allGroups, ldapGroups...)
 
 	// Retrieve policies
@@ -147,6 +165,9 @@ func (b *backend) Login(req *logical.Request, username string, password string) 
 			policies = append(policies, group.Policies...)
 		}
 	}
+
+	// Policies from each group may overlap
+	policies = strutil.RemoveDuplicates(policies)
 
 	if len(policies) == 0 {
 		errStr := "user is not a member of any authorized group"
@@ -161,16 +182,55 @@ func (b *backend) Login(req *logical.Request, username string, password string) 
 	return policies, ldapResponse, nil
 }
 
-func getBindDN(cfg *ConfigEntry, c *ldap.Conn, username string) (string, error) {
+/*
+ * Parses a distinguished name and returns the CN portion.
+ * Given a non-conforming string (such as an already-extracted CN),
+ * it will be returned as-is.
+ */
+func (b *backend) getCN(dn string) string {
+	parsedDN, err := ldap.ParseDN(dn)
+	if err != nil || len(parsedDN.RDNs) == 0 {
+		// It was already a CN, return as-is
+		return dn
+	}
+
+	for _, rdn := range parsedDN.RDNs {
+		for _, rdnAttr := range rdn.Attributes {
+			if rdnAttr.Type == "CN" {
+				return rdnAttr.Value
+			}
+		}
+	}
+
+	// Default, return self
+	return dn
+}
+
+/*
+ * Discover and return the bind string for the user attempting to authenticate.
+ * This is handled in one of several ways:
+ *
+ * 1. If DiscoverDN is set, the user object will be searched for using userdn (base search path)
+ *    and userattr (the attribute that maps to the provided username).
+ *    The bind will either be anonymous or use binddn and bindpassword if they were provided.
+ * 2. If upndomain is set, the user dn is constructed as 'username@upndomain'. See https://msdn.microsoft.com/en-us/library/cc223499.aspx
+ *
+ */
+func (b *backend) getBindDN(cfg *ConfigEntry, c *ldap.Conn, username string) (string, error) {
 	bindDN := ""
 	if cfg.DiscoverDN || (cfg.BindDN != "" && cfg.BindPassword != "") {
 		if err := c.Bind(cfg.BindDN, cfg.BindPassword); err != nil {
 			return bindDN, fmt.Errorf("LDAP bind (service) failed: %v", err)
 		}
+
+		filter := fmt.Sprintf("(%s=%s)", cfg.UserAttr, ldap.EscapeFilter(username))
+		if b.Logger().IsDebug() {
+			b.Logger().Debug("auth/ldap: Discovering user", "userdn", cfg.UserDN, "filter", filter)
+		}
 		result, err := c.Search(&ldap.SearchRequest{
 			BaseDN: cfg.UserDN,
 			Scope:  2, // subtree
-			Filter: fmt.Sprintf("(%s=%s)", cfg.UserAttr, ldap.EscapeFilter(username)),
+			Filter: filter,
 		})
 		if err != nil {
 			return bindDN, fmt.Errorf("LDAP search for binddn failed: %v", err)
@@ -190,14 +250,21 @@ func getBindDN(cfg *ConfigEntry, c *ldap.Conn, username string) (string, error) 
 	return bindDN, nil
 }
 
-func getUserDN(cfg *ConfigEntry, c *ldap.Conn, bindDN string) (string, error) {
+/*
+ * Returns the DN of the object representing the authenticated user.
+ */
+func (b *backend) getUserDN(cfg *ConfigEntry, c *ldap.Conn, bindDN string) (string, error) {
 	userDN := ""
 	if cfg.UPNDomain != "" {
 		// Find the distinguished name for the user if userPrincipalName used for login
+		filter := fmt.Sprintf("(userPrincipalName=%s)", ldap.EscapeFilter(bindDN))
+		if b.Logger().IsDebug() {
+			b.Logger().Debug("auth/ldap: Searching UPN", "userdn", cfg.UserDN, "filter", filter)
+		}
 		result, err := c.Search(&ldap.SearchRequest{
 			BaseDN: cfg.UserDN,
 			Scope:  2, // subtree
-			Filter: fmt.Sprintf("(userPrincipalName=%s)", ldap.EscapeFilter(bindDN)),
+			Filter: filter,
 		})
 		if err != nil {
 			return userDN, fmt.Errorf("LDAP search failed for detecting user: %v", err)
@@ -212,77 +279,104 @@ func getUserDN(cfg *ConfigEntry, c *ldap.Conn, bindDN string) (string, error) {
 	return userDN, nil
 }
 
-func getLdapGroups(cfg *ConfigEntry, c *ldap.Conn, userDN string, username string) ([]string, error) {
+/*
+ * getLdapGroups queries LDAP and returns a slice describing the set of groups the authenticated user is a member of.
+ *
+ * The search query is constructed according to cfg.GroupFilter, and run in context of cfg.GroupDN.
+ * Groups will be resolved from the query results by following the attribute defined in cfg.GroupAttr.
+ *
+ * cfg.GroupFilter is a go template and is compiled with the following context: [UserDN, Username]
+ *    UserDN - The DN of the authenticated user
+ *    Username - The Username of the authenticated user
+ *
+ * Example:
+ *   cfg.GroupFilter = "(&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{.UserDN}}))"
+ *   cfg.GroupDN     = "OU=Groups,DC=myorg,DC=com"
+ *   cfg.GroupAttr   = "cn"
+ *
+ * NOTE - If cfg.GroupFilter is empty, no query is performed and an empty result slice is returned.
+ *
+ */
+func (b *backend) getLdapGroups(cfg *ConfigEntry, c *ldap.Conn, userDN string, username string) ([]string, error) {
 	// retrieve the groups in a string/bool map as a structure to avoid duplicates inside
 	ldapMap := make(map[string]bool)
-	// Fetch the optional memberOf property values on the user object
-	// This is the most common method used in Active Directory setup to retrieve the groups
+
+	if cfg.GroupFilter == "" {
+		b.Logger().Warn("auth/ldap: GroupFilter is empty, will not query server")
+		return make([]string, 0), nil
+	}
+
+	if cfg.GroupDN == "" {
+		b.Logger().Warn("auth/ldap: GroupDN is empty, will not query server")
+		return make([]string, 0), nil
+	}
+
+	// If groupfilter was defined, resolve it as a Go template and use the query for
+	// returning the user's groups
+	if b.Logger().IsDebug() {
+		b.Logger().Debug("auth/ldap: Compiling group filter", "group_filter", cfg.GroupFilter)
+	}
+
+	// Parse the configuration as a template.
+	// Example template "(&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{.UserDN}}))"
+	t, err := template.New("queryTemplate").Parse(cfg.GroupFilter)
+	if err != nil {
+		return nil, fmt.Errorf("LDAP search failed due to template compilation error: %v", err)
+	}
+
+	// Build context to pass to template - we will be exposing UserDn and Username.
+	context := struct {
+		UserDN   string
+		Username string
+	}{
+		ldap.EscapeFilter(userDN),
+		ldap.EscapeFilter(username),
+	}
+
+	var renderedQuery bytes.Buffer
+	t.Execute(&renderedQuery, context)
+
+	if b.Logger().IsDebug() {
+		b.Logger().Debug("auth/ldap: Searching", "groupdn", cfg.GroupDN, "rendered_query", renderedQuery.String())
+	}
+
 	result, err := c.Search(&ldap.SearchRequest{
-		BaseDN: userDN,
-		Scope:  0,        // base scope to fetch only the userDN
-		Filter: "(cn=*)", // bogus filter, required to fetch the CN from userDN
+		BaseDN: cfg.GroupDN,
+		Scope:  2, // subtree
+		Filter: renderedQuery.String(),
 		Attributes: []string{
-			"memberOf",
+			cfg.GroupAttr,
 		},
 	})
-	// this check remains in case something happens with the ldap query or connection
 	if err != nil {
-		return nil, fmt.Errorf("LDAP fetch of distinguishedName=%s failed: %v", userDN, err)
+		return nil, fmt.Errorf("LDAP search failed: %v", err)
 	}
-	// if there are more than one entry, we consider the results irrelevant and ignore them
-	if len(result.Entries) == 1 {
-		for _, attr := range result.Entries[0].Attributes {
-			// Find the groups the user is member of from the 'memberOf' attribute extracting the CN
-			if attr.Name == "memberOf" {
-				for _, value := range attr.Values {
-					memberOfDN, err := ldap.ParseDN(value)
-					if err != nil || len(memberOfDN.RDNs) == 0 {
-						continue
-					}
 
-					for _, rdn := range memberOfDN.RDNs {
-						for _, rdnTypeAndValue := range rdn.Attributes {
-							if strings.EqualFold(rdnTypeAndValue.Type, "CN") {
-								ldapMap[rdnTypeAndValue.Value] = true
-							}
-						}
-					}
-				}
+	for _, e := range result.Entries {
+		dn, err := ldap.ParseDN(e.DN)
+		if err != nil || len(dn.RDNs) == 0 {
+			continue
+		}
+
+		// Enumerate attributes of each result, parse out CN and add as group
+		values := e.GetAttributeValues(cfg.GroupAttr)
+		if len(values) > 0 {
+			for _, val := range values {
+				groupCN := b.getCN(val)
+				ldapMap[groupCN] = true
 			}
+		} else {
+			// If groupattr didn't resolve, use self (enumerating group objects)
+			groupCN := b.getCN(e.DN)
+			ldapMap[groupCN] = true
 		}
 	}
 
-	// Find groups by searching in groupDN for any of the memberUid, member or uniqueMember attributes
-	// and retrieving the CN in the DN result
-	if cfg.GroupDN != "" {
-		result, err := c.Search(&ldap.SearchRequest{
-			BaseDN: cfg.GroupDN,
-			Scope:  2, // subtree
-			Filter: fmt.Sprintf("(|(memberUid=%s)(member=%s)(uniqueMember=%s))", ldap.EscapeFilter(username), ldap.EscapeFilter(userDN), ldap.EscapeFilter(userDN)),
-		})
-		if err != nil {
-			return nil, fmt.Errorf("LDAP search failed: %v", err)
-		}
-
-		for _, e := range result.Entries {
-			dn, err := ldap.ParseDN(e.DN)
-			if err != nil || len(dn.RDNs) == 0 {
-				continue
-			}
-			for _, rdn := range dn.RDNs {
-				for _, rdnTypeAndValue := range rdn.Attributes {
-					if strings.EqualFold(rdnTypeAndValue.Type, "CN") {
-						ldapMap[rdnTypeAndValue.Value] = true
-					}
-				}
-			}
-		}
-	}
-
-	ldapGroups := make([]string, len(ldapMap))
+	ldapGroups := make([]string, 0, len(ldapMap))
 	for key, _ := range ldapMap {
 		ldapGroups = append(ldapGroups, key)
 	}
+
 	return ldapGroups, nil
 }
 

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -18,33 +19,66 @@ func TestSysMounts(t *testing.T) {
 
 	var actual map[string]interface{}
 	expected := map[string]interface{}{
+		"lease_id":       "",
+		"renewable":      false,
+		"lease_duration": json.Number("0"),
+		"wrap_info":      nil,
+		"warnings":       nil,
+		"auth":           nil,
+		"data": map[string]interface{}{
+			"secret/": map[string]interface{}{
+				"description": "generic secret storage",
+				"type":        "generic",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"sys/": map[string]interface{}{
+				"description": "system endpoints used for control, policy and debugging",
+				"type":        "system",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"cubbyhole/": map[string]interface{}{
+				"description": "per-token private secret storage",
+				"type":        "cubbyhole",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+		},
 		"secret/": map[string]interface{}{
 			"description": "generic secret storage",
 			"type":        "generic",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"sys/": map[string]interface{}{
 			"description": "system endpoints used for control, policy and debugging",
 			"type":        "system",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"cubbyhole/": map[string]interface{}{
 			"description": "per-token private secret storage",
 			"type":        "cubbyhole",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 	}
 	testResponseStatus(t, resp, 200)
 	testResponseBody(t, resp, &actual)
+	expected["request_id"] = actual["request_id"]
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("bad: %#v", actual)
 	}
@@ -66,41 +100,82 @@ func TestSysMount(t *testing.T) {
 
 	var actual map[string]interface{}
 	expected := map[string]interface{}{
+		"lease_id":       "",
+		"renewable":      false,
+		"lease_duration": json.Number("0"),
+		"wrap_info":      nil,
+		"warnings":       nil,
+		"auth":           nil,
+		"data": map[string]interface{}{
+			"foo/": map[string]interface{}{
+				"description": "foo",
+				"type":        "generic",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"secret/": map[string]interface{}{
+				"description": "generic secret storage",
+				"type":        "generic",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"sys/": map[string]interface{}{
+				"description": "system endpoints used for control, policy and debugging",
+				"type":        "system",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"cubbyhole/": map[string]interface{}{
+				"description": "per-token private secret storage",
+				"type":        "cubbyhole",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+		},
 		"foo/": map[string]interface{}{
 			"description": "foo",
 			"type":        "generic",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"secret/": map[string]interface{}{
 			"description": "generic secret storage",
 			"type":        "generic",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"sys/": map[string]interface{}{
 			"description": "system endpoints used for control, policy and debugging",
 			"type":        "system",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"cubbyhole/": map[string]interface{}{
 			"description": "per-token private secret storage",
 			"type":        "cubbyhole",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 	}
 	testResponseStatus(t, resp, 200)
 	testResponseBody(t, resp, &actual)
+	expected["request_id"] = actual["request_id"]
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("bad: %#v", actual)
 	}
@@ -144,41 +219,82 @@ func TestSysRemount(t *testing.T) {
 
 	var actual map[string]interface{}
 	expected := map[string]interface{}{
+		"lease_id":       "",
+		"renewable":      false,
+		"lease_duration": json.Number("0"),
+		"wrap_info":      nil,
+		"warnings":       nil,
+		"auth":           nil,
+		"data": map[string]interface{}{
+			"bar/": map[string]interface{}{
+				"description": "foo",
+				"type":        "generic",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"secret/": map[string]interface{}{
+				"description": "generic secret storage",
+				"type":        "generic",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"sys/": map[string]interface{}{
+				"description": "system endpoints used for control, policy and debugging",
+				"type":        "system",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"cubbyhole/": map[string]interface{}{
+				"description": "per-token private secret storage",
+				"type":        "cubbyhole",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+		},
 		"bar/": map[string]interface{}{
 			"description": "foo",
 			"type":        "generic",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"secret/": map[string]interface{}{
 			"description": "generic secret storage",
 			"type":        "generic",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"sys/": map[string]interface{}{
 			"description": "system endpoints used for control, policy and debugging",
 			"type":        "system",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"cubbyhole/": map[string]interface{}{
 			"description": "per-token private secret storage",
 			"type":        "cubbyhole",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 	}
 	testResponseStatus(t, resp, 200)
 	testResponseBody(t, resp, &actual)
+	expected["request_id"] = actual["request_id"]
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("bad: %#v", actual)
 	}
@@ -203,33 +319,66 @@ func TestSysUnmount(t *testing.T) {
 
 	var actual map[string]interface{}
 	expected := map[string]interface{}{
+		"lease_id":       "",
+		"renewable":      false,
+		"lease_duration": json.Number("0"),
+		"wrap_info":      nil,
+		"warnings":       nil,
+		"auth":           nil,
+		"data": map[string]interface{}{
+			"secret/": map[string]interface{}{
+				"description": "generic secret storage",
+				"type":        "generic",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"sys/": map[string]interface{}{
+				"description": "system endpoints used for control, policy and debugging",
+				"type":        "system",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"cubbyhole/": map[string]interface{}{
+				"description": "per-token private secret storage",
+				"type":        "cubbyhole",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+		},
 		"secret/": map[string]interface{}{
 			"description": "generic secret storage",
 			"type":        "generic",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"sys/": map[string]interface{}{
 			"description": "system endpoints used for control, policy and debugging",
 			"type":        "system",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"cubbyhole/": map[string]interface{}{
 			"description": "per-token private secret storage",
 			"type":        "cubbyhole",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 	}
 	testResponseStatus(t, resp, 200)
 	testResponseBody(t, resp, &actual)
+	expected["request_id"] = actual["request_id"]
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("bad: %#v", actual)
 	}
@@ -251,41 +400,82 @@ func TestSysTuneMount(t *testing.T) {
 
 	var actual map[string]interface{}
 	expected := map[string]interface{}{
+		"lease_id":       "",
+		"renewable":      false,
+		"lease_duration": json.Number("0"),
+		"wrap_info":      nil,
+		"warnings":       nil,
+		"auth":           nil,
+		"data": map[string]interface{}{
+			"foo/": map[string]interface{}{
+				"description": "foo",
+				"type":        "generic",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"secret/": map[string]interface{}{
+				"description": "generic secret storage",
+				"type":        "generic",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"sys/": map[string]interface{}{
+				"description": "system endpoints used for control, policy and debugging",
+				"type":        "system",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"cubbyhole/": map[string]interface{}{
+				"description": "per-token private secret storage",
+				"type":        "cubbyhole",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+		},
 		"foo/": map[string]interface{}{
 			"description": "foo",
 			"type":        "generic",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"secret/": map[string]interface{}{
 			"description": "generic secret storage",
 			"type":        "generic",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"sys/": map[string]interface{}{
 			"description": "system endpoints used for control, policy and debugging",
 			"type":        "system",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"cubbyhole/": map[string]interface{}{
 			"description": "per-token private secret storage",
 			"type":        "cubbyhole",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 	}
 	testResponseStatus(t, resp, 200)
 	testResponseBody(t, resp, &actual)
+	expected["request_id"] = actual["request_id"]
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("bad: %#v", actual)
 	}
@@ -328,43 +518,83 @@ func TestSysTuneMount(t *testing.T) {
 
 	resp = testHttpGet(t, token, addr+"/v1/sys/mounts")
 	expected = map[string]interface{}{
+		"lease_id":       "",
+		"renewable":      false,
+		"lease_duration": json.Number("0"),
+		"wrap_info":      nil,
+		"warnings":       nil,
+		"auth":           nil,
+		"data": map[string]interface{}{
+			"foo/": map[string]interface{}{
+				"description": "foo",
+				"type":        "generic",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("259196400"),
+					"max_lease_ttl":     json.Number("259200000"),
+				},
+			},
+			"secret/": map[string]interface{}{
+				"description": "generic secret storage",
+				"type":        "generic",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"sys/": map[string]interface{}{
+				"description": "system endpoints used for control, policy and debugging",
+				"type":        "system",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+			"cubbyhole/": map[string]interface{}{
+				"description": "per-token private secret storage",
+				"type":        "cubbyhole",
+				"config": map[string]interface{}{
+					"default_lease_ttl": json.Number("0"),
+					"max_lease_ttl":     json.Number("0"),
+				},
+			},
+		},
 		"foo/": map[string]interface{}{
 			"description": "foo",
 			"type":        "generic",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(259196400),
-				"max_lease_ttl":     float64(259200000),
+				"default_lease_ttl": json.Number("259196400"),
+				"max_lease_ttl":     json.Number("259200000"),
 			},
 		},
 		"secret/": map[string]interface{}{
 			"description": "generic secret storage",
 			"type":        "generic",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"sys/": map[string]interface{}{
 			"description": "system endpoints used for control, policy and debugging",
 			"type":        "system",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 		"cubbyhole/": map[string]interface{}{
 			"description": "per-token private secret storage",
 			"type":        "cubbyhole",
 			"config": map[string]interface{}{
-				"default_lease_ttl": float64(0),
-				"max_lease_ttl":     float64(0),
+				"default_lease_ttl": json.Number("0"),
+				"max_lease_ttl":     json.Number("0"),
 			},
 		},
 	}
 
 	testResponseStatus(t, resp, 200)
 	testResponseBody(t, resp, &actual)
-
+	expected["request_id"] = actual["request_id"]
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("bad:\nExpected: %#v\nActual:%#v", expected, actual)
 	}
@@ -373,12 +603,23 @@ func TestSysTuneMount(t *testing.T) {
 	resp = testHttpGet(t, token, addr+"/v1/sys/mounts/foo/tune")
 	actual = map[string]interface{}{}
 	expected = map[string]interface{}{
-		"default_lease_ttl": float64(259196400),
-		"max_lease_ttl":     float64(259200000),
+		"lease_id":       "",
+		"renewable":      false,
+		"lease_duration": json.Number("0"),
+		"wrap_info":      nil,
+		"warnings":       nil,
+		"auth":           nil,
+		"data": map[string]interface{}{
+			"default_lease_ttl": json.Number("259196400"),
+			"max_lease_ttl":     json.Number("259200000"),
+		},
+		"default_lease_ttl": json.Number("259196400"),
+		"max_lease_ttl":     json.Number("259200000"),
 	}
 
 	testResponseStatus(t, resp, 200)
 	testResponseBody(t, resp, &actual)
+	expected["request_id"] = actual["request_id"]
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("bad:\nExpected: %#v\nActual:%#v", expected, actual)
 	}
@@ -393,12 +634,23 @@ func TestSysTuneMount(t *testing.T) {
 	resp = testHttpGet(t, token, addr+"/v1/sys/mounts/secret/tune")
 	actual = map[string]interface{}{}
 	expected = map[string]interface{}{
-		"default_lease_ttl": float64(40),
-		"max_lease_ttl":     float64(80),
+		"lease_id":       "",
+		"renewable":      false,
+		"lease_duration": json.Number("0"),
+		"wrap_info":      nil,
+		"warnings":       nil,
+		"auth":           nil,
+		"data": map[string]interface{}{
+			"default_lease_ttl": json.Number("40"),
+			"max_lease_ttl":     json.Number("80"),
+		},
+		"default_lease_ttl": json.Number("40"),
+		"max_lease_ttl":     json.Number("80"),
 	}
 
 	testResponseStatus(t, resp, 200)
 	testResponseBody(t, resp, &actual)
+	expected["request_id"] = actual["request_id"]
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("bad:\nExpected: %#v\nActual:%#v", expected, actual)
 	}

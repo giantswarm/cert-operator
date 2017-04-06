@@ -56,14 +56,20 @@ Following are the configuration options available for the backend.
       <li>
         <span class="param">log_raw</span>
         <span class="param-flags">optional</span>
-            A boolean, if set, logs the security sensitive information without
+            A string containing a boolean value ('true'/'false'), if set, logs the security sensitive information without
             hashing, in the raw format. Defaults to `false`.
       </li>
       <li>
         <span class="param">hmac_accessor</span>
         <span class="param-flags">optional</span>
-            A boolean, if set, enables the hashing of token accessor. Defaults to `true`. This option
-            is useful only when `log_raw` is `false`.
+            A string containing a boolean value ('true'/'false'), if set, enables the hashing of token accessor. Defaults
+            to `true`. This option is useful only when `log_raw` is `false`.
+      </li>
+      <li>
+        <span class="param">format</span>
+        <span class="param-flags">optional</span>
+            Allows selecting the output format. Valid values are `json` (the
+            default) and `jsonx`, which formats the normal log entries as XML.
       </li>
     </ul>
   </dd>

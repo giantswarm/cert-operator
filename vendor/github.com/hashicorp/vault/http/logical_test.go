@@ -2,19 +2,18 @@ package http
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
-	"log"
-	"os"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
+	log "github.com/mgutz/logxi/v1"
+
+	"github.com/hashicorp/vault/helper/logformat"
 	"github.com/hashicorp/vault/physical"
 	"github.com/hashicorp/vault/vault"
-)
-
-var (
-	logger = log.New(os.Stderr, "", log.LstdFlags)
 )
 
 func TestLogical(t *testing.T) {
@@ -30,13 +29,16 @@ func TestLogical(t *testing.T) {
 	testResponseStatus(t, resp, 204)
 
 	// READ
-	resp = testHttpGet(t, token, addr+"/v1/secret/foo")
+	// Bad token should return a 403
+	resp = testHttpGet(t, token+"bad", addr+"/v1/secret/foo")
+	testResponseStatus(t, resp, 403)
 
+	resp = testHttpGet(t, token, addr+"/v1/secret/foo")
 	var actual map[string]interface{}
 	var nilWarnings interface{}
 	expected := map[string]interface{}{
 		"renewable":      false,
-		"lease_duration": float64((30 * 24 * time.Hour) / time.Second),
+		"lease_duration": json.Number(strconv.Itoa(int((32 * 24 * time.Hour) / time.Second))),
 		"data": map[string]interface{}{
 			"data": "bar",
 		},
@@ -47,6 +49,7 @@ func TestLogical(t *testing.T) {
 	testResponseStatus(t, resp, 200)
 	testResponseBody(t, resp, &actual)
 	delete(actual, "lease_id")
+	expected["request_id"] = actual["request_id"]
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("bad:\nactual:\n%#v\nexpected:\n%#v", actual, expected)
 	}
@@ -76,12 +79,14 @@ func TestLogical_StandbyRedirect(t *testing.T) {
 	defer ln2.Close()
 
 	// Create an HA Vault
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
 	inmha := physical.NewInmemHA(logger)
 	conf := &vault.CoreConfig{
-		Physical:      inmha,
-		HAPhysical:    inmha,
-		AdvertiseAddr: addr1,
-		DisableMlock:  true,
+		Physical:     inmha,
+		HAPhysical:   inmha,
+		RedirectAddr: addr1,
+		DisableMlock: true,
 	}
 	core1, err := vault.NewCore(conf)
 	if err != nil {
@@ -98,10 +103,10 @@ func TestLogical_StandbyRedirect(t *testing.T) {
 
 	// Create a second HA Vault
 	conf2 := &vault.CoreConfig{
-		Physical:      inmha,
-		HAPhysical:    inmha,
-		AdvertiseAddr: addr2,
-		DisableMlock:  true,
+		Physical:     inmha,
+		HAPhysical:   inmha,
+		RedirectAddr: addr2,
+		DisableMlock: true,
 	}
 	core2, err := vault.NewCore(conf2)
 	if err != nil {
@@ -127,19 +132,18 @@ func TestLogical_StandbyRedirect(t *testing.T) {
 	var nilWarnings interface{}
 	expected := map[string]interface{}{
 		"renewable":      false,
-		"lease_duration": float64(0),
+		"lease_duration": json.Number("0"),
 		"data": map[string]interface{}{
 			"meta":             nil,
-			"num_uses":         float64(0),
+			"num_uses":         json.Number("0"),
 			"path":             "auth/token/root",
 			"policies":         []interface{}{"root"},
 			"display_name":     "root",
 			"orphan":           true,
 			"id":               root,
-			"ttl":              float64(0),
-			"creation_ttl":     float64(0),
-			"role":             "",
-			"explicit_max_ttl": float64(0),
+			"ttl":              json.Number("0"),
+			"creation_ttl":     json.Number("0"),
+			"explicit_max_ttl": json.Number("0"),
 		},
 		"warnings":  nilWarnings,
 		"wrap_info": nil,
@@ -152,6 +156,7 @@ func TestLogical_StandbyRedirect(t *testing.T) {
 	delete(actualDataMap, "creation_time")
 	delete(actualDataMap, "accessor")
 	actual["data"] = actualDataMap
+	expected["request_id"] = actual["request_id"]
 	delete(actual, "lease_id")
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("bad: got %#v; expected %#v", actual, expected)
@@ -178,14 +183,14 @@ func TestLogical_CreateToken(t *testing.T) {
 	expected := map[string]interface{}{
 		"lease_id":       "",
 		"renewable":      false,
-		"lease_duration": float64(0),
+		"lease_duration": json.Number("0"),
 		"data":           nil,
 		"wrap_info":      nil,
 		"auth": map[string]interface{}{
 			"policies":       []interface{}{"root"},
 			"metadata":       nil,
-			"lease_duration": float64(0),
-			"renewable":      true,
+			"lease_duration": json.Number("0"),
+			"renewable":      false,
 		},
 		"warnings": nilWarnings,
 	}
@@ -193,6 +198,7 @@ func TestLogical_CreateToken(t *testing.T) {
 	testResponseBody(t, resp, &actual)
 	delete(actual["auth"].(map[string]interface{}), "client_token")
 	delete(actual["auth"].(map[string]interface{}), "accessor")
+	expected["request_id"] = actual["request_id"]
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("bad:\nexpected:\n%#v\nactual:\n%#v", expected, actual)
 	}
@@ -224,4 +230,17 @@ func TestLogical_RawHTTP(t *testing.T) {
 	if string(body.Bytes()) != "hello world" {
 		t.Fatalf("Bad: %s", body.Bytes())
 	}
+}
+
+func TestLogical_RequestSizeLimit(t *testing.T) {
+	core, _, token := vault.TestCoreUnsealed(t)
+	ln, addr := TestServer(t, core)
+	defer ln.Close()
+	TestServerAuth(t, addr, token)
+
+	// Write a very large object, should fail
+	resp := testHttpPut(t, token, addr+"/v1/secret/foo", map[string]interface{}{
+		"data": make([]byte, MaxRequestSize),
+	})
+	testResponseStatus(t, resp, 413)
 }

@@ -1,9 +1,11 @@
 package physical
 
 import (
-	"log"
 	"os"
 	"testing"
+
+	"github.com/hashicorp/vault/helper/logformat"
+	log "github.com/mgutz/logxi/v1"
 
 	_ "github.com/lib/pq"
 )
@@ -20,7 +22,8 @@ func TestPostgreSQLBackend(t *testing.T) {
 	}
 
 	// Run vault tests
-	logger := log.New(os.Stderr, "", log.LstdFlags)
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
 	b, err := NewBackend("postgresql", logger, map[string]string{
 		"connection_url": connURL,
 		"table":          table,
@@ -32,7 +35,7 @@ func TestPostgreSQLBackend(t *testing.T) {
 
 	defer func() {
 		pg := b.(*PostgreSQLBackend)
-		_, err := pg.client.Exec("DROP TABLE " + pg.table)
+		_, err := pg.client.Exec("TRUNCATE TABLE " + pg.table)
 		if err != nil {
 			t.Fatalf("Failed to drop table: %v", err)
 		}

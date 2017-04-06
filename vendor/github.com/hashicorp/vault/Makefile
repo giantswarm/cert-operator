@@ -4,7 +4,7 @@ EXTERNAL_TOOLS=\
 	github.com/mitchellh/gox
 BUILD_TAGS?=vault
 
-default: test
+default: dev 
 
 # bin generates the releaseable binaries for Vault
 bin: generate
@@ -20,7 +20,7 @@ dev-dynamic: generate
 
 # test runs the unit tests and vets the code
 test: generate
-	CGO_ENABLED=0 VAULT_TOKEN= VAULT_ACC= go test -tags='$(BUILD_TAGS)' $(TEST) $(TESTARGS) -timeout=120s -parallel=4
+	CGO_ENABLED=0 VAULT_TOKEN= VAULT_ACC= go test -tags='$(BUILD_TAGS)' $(TEST) $(TESTARGS) -timeout=10m -parallel=4
 
 # testacc runs acceptance tests
 testacc: generate
@@ -32,7 +32,7 @@ testacc: generate
 
 # testrace runs the race checker
 testrace: generate
-	CGO_ENABLED=1 VAULT_TOKEN= VAULT_ACC= go test -tags='$(BUILD_TAGS)' -race $(TEST) $(TESTARGS)
+	CGO_ENABLED=1 VAULT_TOKEN= VAULT_ACC= go test -tags='$(BUILD_TAGS)' -race $(TEST) $(TESTARGS) -timeout=20m -parallel=4
 
 cover:
 	./scripts/coverage.sh --html
@@ -57,7 +57,11 @@ generate:
 bootstrap:
 	@for tool in  $(EXTERNAL_TOOLS) ; do \
 		echo "Installing $$tool" ; \
-		go get $$tool; \
+		go get -u $$tool; \
 	done
+
+proto:
+	protoc -I helper/forwarding -I vault -I ../../.. vault/request_forwarding_service.proto --go_out=plugins=grpc:vault
+	protoc -I helper/forwarding -I vault -I ../../.. helper/forwarding/types.proto --go_out=plugins=grpc:helper/forwarding
 
 .PHONY: bin default generate test vet bootstrap

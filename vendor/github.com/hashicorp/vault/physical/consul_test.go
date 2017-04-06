@@ -2,20 +2,26 @@ package physical
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
+	log "github.com/mgutz/logxi/v1"
+
 	"github.com/hashicorp/consul/api"
+	"github.com/hashicorp/vault/helper/logformat"
+	"github.com/hashicorp/vault/helper/strutil"
+	"github.com/ory-am/dockertest"
 )
 
 type consulConf map[string]string
 
 var (
-	addrCount int = 0
+	addrCount     int = 0
+	testImagePull sync.Once
 )
 
 func testHostIP() string {
@@ -29,7 +35,8 @@ func testConsulBackend(t *testing.T) *ConsulBackend {
 }
 
 func testConsulBackendConfig(t *testing.T, conf *consulConf) *ConsulBackend {
-	logger := log.New(os.Stderr, "", log.LstdFlags)
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
 	be, err := newConsulBackend(*conf, logger)
 	if err != nil {
 		t.Fatalf("Expected Consul to initialize: %v", err)
@@ -72,40 +79,77 @@ func testSealedFunc(sealedPct float64) sealedFunction {
 	}
 }
 
+func TestConsul_ServiceTags(t *testing.T) {
+	consulConfig := map[string]string{
+		"path":                 "seaTech/",
+		"service":              "astronomy",
+		"service_tags":         "deadbeef, cafeefac, deadc0de, feedface",
+		"redirect_addr":        "http://127.0.0.2:8200",
+		"check_timeout":        "6s",
+		"address":              "127.0.0.2",
+		"scheme":               "https",
+		"token":                "deadbeef-cafeefac-deadc0de-feedface",
+		"max_parallel":         "4",
+		"disable_registration": "false",
+	}
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
+	be, err := newConsulBackend(consulConfig, logger)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c, ok := be.(*ConsulBackend)
+	if !ok {
+		t.Fatalf("failed to create physical Consul backend")
+	}
+
+	expected := []string{"deadbeef", "cafeefac", "deadc0de", "feedface"}
+	actual := c.fetchServiceTags(false)
+	if !strutil.EquivalentSlices(actual, append(expected, "standby")) {
+		t.Fatalf("bad: expected:%s actual:%s", append(expected, "standby"), actual)
+	}
+
+	actual = c.fetchServiceTags(true)
+	if !strutil.EquivalentSlices(actual, append(expected, "active")) {
+		t.Fatalf("bad: expected:%s actual:%s", append(expected, "active"), actual)
+	}
+}
+
 func TestConsul_newConsulBackend(t *testing.T) {
 	tests := []struct {
-		name          string
-		consulConfig  map[string]string
-		fail          bool
-		advertiseAddr string
-		checkTimeout  time.Duration
-		path          string
-		service       string
-		address       string
-		scheme        string
-		token         string
-		max_parallel  int
-		disableReg    bool
+		name         string
+		consulConfig map[string]string
+		fail         bool
+		redirectAddr string
+		checkTimeout time.Duration
+		path         string
+		service      string
+		address      string
+		scheme       string
+		token        string
+		max_parallel int
+		disableReg   bool
 	}{
 		{
-			name:          "Valid default config",
-			consulConfig:  map[string]string{},
-			checkTimeout:  5 * time.Second,
-			advertiseAddr: "http://127.0.0.1:8200",
-			path:          "vault/",
-			service:       "vault",
-			address:       "127.0.0.1:8500",
-			scheme:        "http",
-			token:         "",
-			max_parallel:  4,
-			disableReg:    false,
+			name:         "Valid default config",
+			consulConfig: map[string]string{},
+			checkTimeout: 5 * time.Second,
+			redirectAddr: "http://127.0.0.1:8200",
+			path:         "vault/",
+			service:      "vault",
+			address:      "127.0.0.1:8500",
+			scheme:       "http",
+			token:        "",
+			max_parallel: 4,
+			disableReg:   false,
 		},
 		{
 			name: "Valid modified config",
 			consulConfig: map[string]string{
 				"path":                 "seaTech/",
 				"service":              "astronomy",
-				"advertiseAddr":        "http://127.0.0.2:8200",
+				"redirect_addr":        "http://127.0.0.2:8200",
 				"check_timeout":        "6s",
 				"address":              "127.0.0.2",
 				"scheme":               "https",
@@ -113,14 +157,14 @@ func TestConsul_newConsulBackend(t *testing.T) {
 				"max_parallel":         "4",
 				"disable_registration": "false",
 			},
-			checkTimeout:  6 * time.Second,
-			path:          "seaTech/",
-			service:       "astronomy",
-			advertiseAddr: "http://127.0.0.2:8200",
-			address:       "127.0.0.2",
-			scheme:        "https",
-			token:         "deadbeef-cafeefac-deadc0de-feedface",
-			max_parallel:  4,
+			checkTimeout: 6 * time.Second,
+			path:         "seaTech/",
+			service:      "astronomy",
+			redirectAddr: "http://127.0.0.2:8200",
+			address:      "127.0.0.2",
+			scheme:       "https",
+			token:        "deadbeef-cafeefac-deadc0de-feedface",
+			max_parallel: 4,
 		},
 		{
 			name: "check timeout too short",
@@ -132,7 +176,8 @@ func TestConsul_newConsulBackend(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		logger := log.New(os.Stderr, "", log.LstdFlags)
+		logger := logformat.NewVaultLogger(log.LevelTrace)
+
 		be, err := newConsulBackend(test.consulConfig, logger)
 		if test.fail {
 			if err == nil {
@@ -158,7 +203,8 @@ func TestConsul_newConsulBackend(t *testing.T) {
 		}
 
 		var shutdownCh ShutdownChannel
-		if err := c.RunServiceDiscovery(shutdownCh, test.advertiseAddr, testActiveFunc(0.5), testSealedFunc(0.5)); err != nil {
+		waitGroup := &sync.WaitGroup{}
+		if err := c.RunServiceDiscovery(waitGroup, shutdownCh, test.redirectAddr, testActiveFunc(0.5), testSealedFunc(0.5)); err != nil {
 			t.Fatalf("bad: %v", err)
 		}
 
@@ -196,15 +242,17 @@ func TestConsul_serviceTags(t *testing.T) {
 		},
 	}
 
+	c := testConsulBackend(t)
+
 	for _, test := range tests {
-		tags := serviceTags(test.active)
+		tags := c.fetchServiceTags(test.active)
 		if !reflect.DeepEqual(tags[:], test.tags[:]) {
 			t.Errorf("Bad %v: %v %v", test.active, tags, test.tags)
 		}
 	}
 }
 
-func TestConsul_setAdvertiseAddr(t *testing.T) {
+func TestConsul_setRedirectAddr(t *testing.T) {
 	tests := []struct {
 		addr string
 		host string
@@ -246,7 +294,7 @@ func TestConsul_setAdvertiseAddr(t *testing.T) {
 	}
 	for _, test := range tests {
 		c := testConsulBackend(t)
-		err := c.setAdvertiseAddr(test.addr)
+		err := c.setRedirectAddr(test.addr)
 		if test.pass {
 			if err != nil {
 				t.Fatalf("bad: %v", err)
@@ -259,22 +307,17 @@ func TestConsul_setAdvertiseAddr(t *testing.T) {
 			}
 		}
 
-		if c.advertiseHost != test.host {
-			t.Fatalf("bad: %v != %v", c.advertiseHost, test.host)
+		if c.redirectHost != test.host {
+			t.Fatalf("bad: %v != %v", c.redirectHost, test.host)
 		}
 
-		if c.advertisePort != test.port {
-			t.Fatalf("bad: %v != %v", c.advertisePort, test.port)
+		if c.redirectPort != test.port {
+			t.Fatalf("bad: %v != %v", c.redirectPort, test.port)
 		}
 	}
 }
 
 func TestConsul_NotifyActiveStateChange(t *testing.T) {
-	addr := os.Getenv("CONSUL_HTTP_ADDR")
-	if addr == "" {
-		t.Skipf("No consul process running, skipping test")
-	}
-
 	c := testConsulBackend(t)
 
 	if err := c.NotifyActiveStateChange(); err != nil {
@@ -283,11 +326,6 @@ func TestConsul_NotifyActiveStateChange(t *testing.T) {
 }
 
 func TestConsul_NotifySealedStateChange(t *testing.T) {
-	addr := os.Getenv("CONSUL_HTTP_ADDR")
-	if addr == "" {
-		t.Skipf("No consul process running, skipping test")
-	}
-
 	c := testConsulBackend(t)
 
 	if err := c.NotifySealedStateChange(); err != nil {
@@ -295,37 +333,30 @@ func TestConsul_NotifySealedStateChange(t *testing.T) {
 	}
 }
 
-func TestConsul_checkID(t *testing.T) {
-	c := testConsulBackend(t)
-	if c.checkID() != "vault-sealed-check" {
-		t.Errorf("bad")
-	}
-}
-
 func TestConsul_serviceID(t *testing.T) {
 	passingTests := []struct {
-		name          string
-		advertiseAddr string
-		serviceName   string
-		expected      string
+		name         string
+		redirectAddr string
+		serviceName  string
+		expected     string
 	}{
 		{
-			name:          "valid host w/o slash",
-			advertiseAddr: "http://127.0.0.1:8200",
-			serviceName:   "sea-tech-astronomy",
-			expected:      "sea-tech-astronomy:127.0.0.1:8200",
+			name:         "valid host w/o slash",
+			redirectAddr: "http://127.0.0.1:8200",
+			serviceName:  "sea-tech-astronomy",
+			expected:     "sea-tech-astronomy:127.0.0.1:8200",
 		},
 		{
-			name:          "valid host w/ slash",
-			advertiseAddr: "http://127.0.0.1:8200/",
-			serviceName:   "sea-tech-astronomy",
-			expected:      "sea-tech-astronomy:127.0.0.1:8200",
+			name:         "valid host w/ slash",
+			redirectAddr: "http://127.0.0.1:8200/",
+			serviceName:  "sea-tech-astronomy",
+			expected:     "sea-tech-astronomy:127.0.0.1:8200",
 		},
 		{
-			name:          "valid https host w/ slash",
-			advertiseAddr: "https://127.0.0.1:8200/",
-			serviceName:   "sea-tech-astronomy",
-			expected:      "sea-tech-astronomy:127.0.0.1:8200",
+			name:         "valid https host w/ slash",
+			redirectAddr: "https://127.0.0.1:8200/",
+			serviceName:  "sea-tech-astronomy",
+			expected:     "sea-tech-astronomy:127.0.0.1:8200",
 		},
 	}
 
@@ -334,7 +365,7 @@ func TestConsul_serviceID(t *testing.T) {
 			"service": test.serviceName,
 		})
 
-		if err := c.setAdvertiseAddr(test.advertiseAddr); err != nil {
+		if err := c.setRedirectAddr(test.redirectAddr); err != nil {
 			t.Fatalf("bad: %s %v", test.name, err)
 		}
 
@@ -346,13 +377,20 @@ func TestConsul_serviceID(t *testing.T) {
 }
 
 func TestConsulBackend(t *testing.T) {
+	var token string
 	addr := os.Getenv("CONSUL_HTTP_ADDR")
 	if addr == "" {
-		t.Skipf("No consul process running, skipping test")
+		cid, connURL := prepareTestContainer(t)
+		if cid != "" {
+			defer cleanupTestContainer(t, cid)
+		}
+		addr = connURL
+		token = dockertest.ConsulACLMasterToken
 	}
 
 	conf := api.DefaultConfig()
 	conf.Address = addr
+	conf.Token = token
 	client, err := api.NewClient(conf)
 	if err != nil {
 		t.Fatalf("err: %v", err)
@@ -363,11 +401,13 @@ func TestConsulBackend(t *testing.T) {
 		client.KV().DeleteTree(randPath, nil)
 	}()
 
-	logger := log.New(os.Stderr, "", log.LstdFlags)
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
 	b, err := NewBackend("consul", logger, map[string]string{
-		"address":      addr,
+		"address":      conf.Address,
 		"path":         randPath,
 		"max_parallel": "256",
+		"token":        conf.Token,
 	})
 	if err != nil {
 		t.Fatalf("err: %s", err)
@@ -378,13 +418,20 @@ func TestConsulBackend(t *testing.T) {
 }
 
 func TestConsulHABackend(t *testing.T) {
+	var token string
 	addr := os.Getenv("CONSUL_HTTP_ADDR")
 	if addr == "" {
-		t.Skipf("No consul process running, skipping test")
+		cid, connURL := prepareTestContainer(t)
+		if cid != "" {
+			defer cleanupTestContainer(t, cid)
+		}
+		addr = connURL
+		token = dockertest.ConsulACLMasterToken
 	}
 
 	conf := api.DefaultConfig()
 	conf.Address = addr
+	conf.Token = token
 	client, err := api.NewClient(conf)
 	if err != nil {
 		t.Fatalf("err: %v", err)
@@ -395,11 +442,13 @@ func TestConsulHABackend(t *testing.T) {
 		client.KV().DeleteTree(randPath, nil)
 	}()
 
-	logger := log.New(os.Stderr, "", log.LstdFlags)
+	logger := logformat.NewVaultLogger(log.LevelTrace)
+
 	b, err := NewBackend("consul", logger, map[string]string{
-		"address":      addr,
+		"address":      conf.Address,
 		"path":         randPath,
 		"max_parallel": "-1",
+		"token":        conf.Token,
 	})
 	if err != nil {
 		t.Fatalf("err: %s", err)
@@ -411,9 +460,9 @@ func TestConsulHABackend(t *testing.T) {
 	}
 	testHABackend(t, ha, ha)
 
-	detect, ok := b.(AdvertiseDetect)
+	detect, ok := b.(RedirectDetect)
 	if !ok {
-		t.Fatalf("consul does not implement AdvertiseDetect")
+		t.Fatalf("consul does not implement RedirectDetect")
 	}
 	host, err := detect.DetectHostAddr()
 	if err != nil {
@@ -421,5 +470,63 @@ func TestConsulHABackend(t *testing.T) {
 	}
 	if host == "" {
 		t.Fatalf("bad addr: %v", host)
+	}
+}
+
+func prepareTestContainer(t *testing.T) (cid dockertest.ContainerID, retAddress string) {
+	if os.Getenv("CONSUL_HTTP_ADDR") != "" {
+		return "", os.Getenv("CONSUL_HTTP_ADDR")
+	}
+
+	// Without this the checks for whether the container has started seem to
+	// never actually pass. There's really no reason to expose the test
+	// containers, so don't.
+	dockertest.BindDockerToLocalhost = "yep"
+
+	testImagePull.Do(func() {
+		dockertest.Pull(dockertest.ConsulImageName)
+	})
+
+	try := 0
+	cid, connErr := dockertest.ConnectToConsul(60, 500*time.Millisecond, func(connAddress string) bool {
+		try += 1
+		// Build a client and verify that the credentials work
+		config := api.DefaultConfig()
+		config.Address = connAddress
+		config.Token = dockertest.ConsulACLMasterToken
+		client, err := api.NewClient(config)
+		if err != nil {
+			if try > 50 {
+				panic(err)
+			}
+			return false
+		}
+
+		_, err = client.KV().Put(&api.KVPair{
+			Key:   "setuptest",
+			Value: []byte("setuptest"),
+		}, nil)
+		if err != nil {
+			if try > 50 {
+				panic(err)
+			}
+			return false
+		}
+
+		retAddress = connAddress
+		return true
+	})
+
+	if connErr != nil {
+		t.Fatalf("could not connect to consul: %v", connErr)
+	}
+
+	return
+}
+
+func cleanupTestContainer(t *testing.T, cid dockertest.ContainerID) {
+	err := cid.KillRemove()
+	if err != nil {
+		t.Fatal(err)
 	}
 }

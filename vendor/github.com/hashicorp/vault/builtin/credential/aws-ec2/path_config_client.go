@@ -13,13 +13,13 @@ func pathConfigClient(b *backend) *framework.Path {
 			"access_key": &framework.FieldSchema{
 				Type:        framework.TypeString,
 				Default:     "",
-				Description: "AWS Access key with permissions to query EC2 DescribeInstances API.",
+				Description: "AWS Access Key ID for the account used to make AWS API requests.",
 			},
 
 			"secret_key": &framework.FieldSchema{
 				Type:        framework.TypeString,
 				Default:     "",
-				Description: "AWS Secret key with permissions to query EC2 DescribeInstances API.",
+				Description: "AWS Secret Access Key for the account used to make AWS API requests.",
 			},
 
 			"endpoint": &framework.FieldSchema{
@@ -108,6 +108,9 @@ func (b *backend) pathConfigClientDelete(
 	// Remove all the cached EC2 client objects in the backend.
 	b.flushCachedEC2Clients()
 
+	// Remove all the cached EC2 client objects in the backend.
+	b.flushCachedIAMClients()
+
 	return nil, nil
 }
 
@@ -175,6 +178,7 @@ func (b *backend) pathConfigClientCreateUpdate(
 
 	if changedCreds {
 		b.flushCachedEC2Clients()
+		b.flushCachedIAMClients()
 	}
 
 	return nil, nil
@@ -189,11 +193,15 @@ type clientConfig struct {
 }
 
 const pathConfigClientHelpSyn = `
-Configure the client credentials that are used to query instance details from AWS EC2 API.
+Configure AWS IAM credentials that are used to query instance and role details from the AWS API.
 `
 
 const pathConfigClientHelpDesc = `
-aws-ec2 auth backend makes DescribeInstances API call to retrieve information regarding
-the instance that performs login. The aws_secret_key and aws_access_key registered with
-Vault should have the permissions to make the API call.
+The aws-ec2 auth backend makes AWS API queries to retrieve information
+regarding EC2 instances that perform login operations. The 'aws_secret_key' and
+'aws_access_key' parameters configured here should map to an AWS IAM user that
+has permission to make the following API queries:
+
+* ec2:DescribeInstances
+* iam:GetInstanceProfile (if IAM Role binding is used)
 `

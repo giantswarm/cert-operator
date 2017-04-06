@@ -1,5 +1,5 @@
-hash: b0565c64180d64944fd4aef93db887765fd070c527ab8f60a2c08d9efe823238
-updated: 2017-03-23T12:56:45.112810719+01:00
+hash: f26daafddf7806d8a397652b1e331da37b69613343eef900fad5fad5d4a57769
+updated: 2017-04-06T15:55:09.876016956Z
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -13,7 +13,7 @@ imports:
 - name: github.com/blang/semver
   version: 31b736133b98f26d5e078ec9eb591666edfd091f
 - name: github.com/coreos/etcd
-  version: 41e52ebc22add2f9b91a59f90db8e31f7e5c0538
+  version: 20490caaf0dcd96bb4a95e40625559def8ef5b04
   subpackages:
   - auth/authpb
   - client
@@ -55,11 +55,11 @@ imports:
 - name: github.com/fatih/structs
   version: a720dfa8df582c51dee1b36feabb906bde1588bd
 - name: github.com/fsnotify/fsnotify
-  version: ff7bc41d4007f67e5456703c34342df4e0113f64
+  version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/giantswarm/certctl
-  version: 350bd8e6c1098d0c20166ef7e286c8c7afe6e517
+  version: 0b15172fab3ef7d0805680a90876a7d704e2e80e
   subpackages:
   - service/cert-signer
   - service/pki
@@ -119,10 +119,15 @@ imports:
 - name: github.com/golang/glog
   version: 44145f04b68cf362d9c4df2182967c2275eaefed
 - name: github.com/golang/protobuf
-  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
+  version: 2bba0603135d7d7f5cb73b2125beeda19c09f4ef
   subpackages:
   - jsonpb
   - proto
+  - ptypes/any
+- name: github.com/google/go-genproto
+  version: 411e09b969b1170a9f0c467558eb4c4c110d9c77
+  subpackages:
+  - googleapis/rpc/status
 - name: github.com/google/gofuzz
   version: bbcb9da2d746f8bdbd6a936686a0a6067ada0ec5
 - name: github.com/gorilla/context
@@ -157,9 +162,11 @@ imports:
   - json/scanner
   - json/token
 - name: github.com/hashicorp/vault
-  version: f627c01df8d7bebb403cf899ca1beb24f5fc84cd
+  version: f4adc7fa960ed8e828f94bc6785bcdbae8d1b263
   subpackages:
   - api
+  - helper/compressutil
+  - helper/jsonutil
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jonboulle/clockwork
@@ -191,7 +198,7 @@ imports:
 - name: github.com/pelletier/go-buffruneio
   version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
-  version: 25e50242f65c230a826c3ab0d6480c58a973dcae
+  version: fe206efb84b2bc8e8cfafe6b4c1826622be969e3
 - name: github.com/prometheus/client_golang
   version: c5b7fccd204277076155f10851dad72b76a49317
   subpackages:
@@ -215,6 +222,8 @@ imports:
   version: 8a290539e2e8629dbc4e6bad948158f790ec31f4
 - name: github.com/PuerkitoBio/urlesc
   version: 5bd2802263f21d8788851d5305584c82a5c75d7e
+- name: github.com/sethgrid/pester
+  version: ad2265b06c1300b29bd9352e597121db34656d40
 - name: github.com/spf13/afero
   version: 9be650865eab0c12963d8753212f4f9c66cdcf12
   subpackages:
@@ -222,11 +231,11 @@ imports:
 - name: github.com/spf13/cast
   version: ce135a4ebeee6cfe9a26c93ee0d37825f26113c7
 - name: github.com/spf13/cobra
-  version: 7be4beda01ec05d0b93d80b3facd2b6f44080d94
+  version: 7aeaa2cce6ae7e18d2a6ee597b60ee137e999bd9
 - name: github.com/spf13/jwalterweatherman
   version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag
-  version: 5ccb023bc27df288a957c5e994cd44fd19619465
+  version: 9a906f17374922ed0f74e1b2f593d3723f2ffb00
 - name: github.com/spf13/viper
   version: 84f94806c67f59dd7ae87bc5351f7a9c94a4558d
 - name: github.com/tylerb/graceful
@@ -283,20 +292,24 @@ imports:
   - internal/urlfetch
   - urlfetch
 - name: google.golang.org/grpc
-  version: 777daa17ff9b5daef1cfdf915088a2ada3332bf0
+  version: b5071124392bfd416c713e6595ac149b387f7186
   subpackages:
   - codes
   - credentials
   - grpclog
   - internal
+  - keepalive
   - metadata
   - naming
   - peer
+  - stats
+  - status
+  - tap
   - transport
 - name: gopkg.in/inf.v0
   version: 3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4
 - name: gopkg.in/yaml.v2
-  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
+  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 - name: k8s.io/client-go
   version: e121606b0d09b2e1c467183ee46217fa85a6b672
   subpackages:
@@ -377,6 +390,7 @@ imports:
   - pkg/util
   - pkg/util/cert
   - pkg/util/clock
+  - pkg/util/diff
   - pkg/util/errors
   - pkg/util/flowcontrol
   - pkg/util/framer
@@ -402,6 +416,7 @@ imports:
   - plugin/pkg/client/auth/gcp
   - plugin/pkg/client/auth/oidc
   - rest
+  - tools/cache
   - tools/clientcmd/api
   - tools/metrics
   - transport

@@ -7,8 +7,11 @@ import (
 	"net"
 	"net/url"
 	"strings"
+	"text/template"
 
+	"github.com/fatih/structs"
 	"github.com/go-ldap/ldap"
+	"github.com/hashicorp/vault/helper/tlsutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -19,6 +22,7 @@ func pathConfig(b *backend) *framework.Path {
 		Fields: map[string]*framework.FieldSchema{
 			"url": &framework.FieldSchema{
 				Type:        framework.TypeString,
+				Default:     "ldap://127.0.0.1",
 				Description: "ldap URL to connect to (default: ldap://127.0.0.1)",
 			},
 
@@ -39,7 +43,25 @@ func pathConfig(b *backend) *framework.Path {
 
 			"groupdn": &framework.FieldSchema{
 				Type:        framework.TypeString,
-				Description: "LDAP domain to use for groups (eg: ou=Groups,dc=example,dc=org)",
+				Description: "LDAP search base to use for group membership search (eg: ou=Groups,dc=example,dc=org)",
+			},
+
+			"groupfilter": &framework.FieldSchema{
+				Type:    framework.TypeString,
+				Default: "(|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))",
+				Description: `Go template for querying group membership of user (optional)
+The template can access the following context variables: UserDN, Username
+Example: (&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{.UserDN}}))
+Default: (|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))`,
+			},
+
+			"groupattr": &framework.FieldSchema{
+				Type:    framework.TypeString,
+				Default: "cn",
+				Description: `LDAP attribute to follow on objects returned by <groupfilter>
+in order to enumerate user group membership.
+Examples: "cn" or "memberOf", etc.
+Default: cn`,
 			},
 
 			"upndomain": &framework.FieldSchema{
@@ -49,6 +71,7 @@ func pathConfig(b *backend) *framework.Path {
 
 			"userattr": &framework.FieldSchema{
 				Type:        framework.TypeString,
+				Default:     "cn",
 				Description: "Attribute used for users (default: cn)",
 			},
 
@@ -71,6 +94,23 @@ func pathConfig(b *backend) *framework.Path {
 				Type:        framework.TypeBool,
 				Description: "Issue a StartTLS command after establishing unencrypted connection (optional)",
 			},
+
+			"tls_min_version": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Default:     "tls12",
+				Description: "Minimum TLS version to use. Accepted values are 'tls10', 'tls11' or 'tls12'. Defaults to 'tls12'",
+			},
+
+			"tls_max_version": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Default:     "tls12",
+				Description: "Maximum TLS version to use. Accepted values are 'tls10', 'tls11' or 'tls12'. Defaults to 'tls12'",
+			},
+			"deny_null_bind": &framework.FieldSchema{
+				Type:        framework.TypeBool,
+				Default:     true,
+				Description: "Denies an unauthenticated LDAP bind request if the user's password is empty; defaults to true",
+			},
 		},
 
 		Callbacks: map[logical.Operation]framework.OperationFunc{
@@ -83,20 +123,39 @@ func pathConfig(b *backend) *framework.Path {
 	}
 }
 
+/*
+ * Construct ConfigEntry struct using stored configuration.
+ */
 func (b *backend) Config(req *logical.Request) (*ConfigEntry, error) {
-	entry, err := req.Storage.Get("config")
+	// Schema for ConfigEntry
+	fd, err := b.getConfigFieldData()
 	if err != nil {
 		return nil, err
 	}
-	if entry == nil {
-		return nil, nil
-	}
-	var result ConfigEntry
-	result.SetDefaults()
-	if err := entry.DecodeJSON(&result); err != nil {
+
+	// Create a new ConfigEntry, filling in defaults where appropriate
+	result, err := b.newConfigEntry(fd)
+	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+
+	storedConfig, err := req.Storage.Get("config")
+	if err != nil {
+		return nil, err
+	}
+
+	if storedConfig == nil {
+		// No user overrides, return default configuration
+		return result, nil
+	}
+
+	// Deserialize stored configuration.
+	// Fields not specified in storedConfig will retain their defaults.
+	if err := storedConfig.DecodeJSON(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func (b *backend) pathConfigRead(
@@ -110,27 +169,20 @@ func (b *backend) pathConfigRead(
 		return nil, nil
 	}
 
-	return &logical.Response{
-		Data: map[string]interface{}{
-			"url":          cfg.Url,
-			"userdn":       cfg.UserDN,
-			"groupdn":      cfg.GroupDN,
-			"upndomain":    cfg.UPNDomain,
-			"userattr":     cfg.UserAttr,
-			"certificate":  cfg.Certificate,
-			"insecure_tls": cfg.InsecureTLS,
-			"starttls":     cfg.StartTLS,
-			"binddn":       cfg.BindDN,
-			"bindpass":     cfg.BindPassword,
-			"discoverdn":   cfg.DiscoverDN,
-		},
-	}, nil
+	resp := &logical.Response{
+		Data: structs.New(cfg).Map(),
+	}
+	resp.AddWarning("Read access to this endpoint should be controlled via ACLs as it will return the configuration information as-is, including any passwords.")
+	return resp, nil
 }
 
-func (b *backend) pathConfigWrite(
-	req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+/*
+ * Creates and initializes a ConfigEntry object with its default values,
+ * as specified by the passed schema.
+ */
+func (b *backend) newConfigEntry(d *framework.FieldData) (*ConfigEntry, error) {
+	cfg := new(ConfigEntry)
 
-	cfg := &ConfigEntry{}
 	url := d.Get("url").(string)
 	if url != "" {
 		cfg.Url = strings.ToLower(url)
@@ -147,8 +199,22 @@ func (b *backend) pathConfigWrite(
 	if groupdn != "" {
 		cfg.GroupDN = groupdn
 	}
+	groupfilter := d.Get("groupfilter").(string)
+	if groupfilter != "" {
+		// Validate the template before proceeding
+		_, err := template.New("queryTemplate").Parse(groupfilter)
+		if err != nil {
+			return nil, fmt.Errorf("invalid groupfilter (%v)", err)
+		}
+
+		cfg.GroupFilter = groupfilter
+	}
+	groupattr := d.Get("groupattr").(string)
+	if groupattr != "" {
+		cfg.GroupAttr = groupattr
+	}
 	upndomain := d.Get("upndomain").(string)
-	if groupdn != "" {
+	if upndomain != "" {
 		cfg.UPNDomain = upndomain
 	}
 	certificate := d.Get("certificate").(string)
@@ -159,6 +225,30 @@ func (b *backend) pathConfigWrite(
 	if insecureTLS {
 		cfg.InsecureTLS = insecureTLS
 	}
+	cfg.TLSMinVersion = d.Get("tls_min_version").(string)
+	if cfg.TLSMinVersion == "" {
+		return nil, fmt.Errorf("failed to get 'tls_min_version' value")
+	}
+
+	var ok bool
+	_, ok = tlsutil.TLSLookup[cfg.TLSMinVersion]
+	if !ok {
+		return nil, fmt.Errorf("invalid 'tls_min_version'")
+	}
+
+	cfg.TLSMaxVersion = d.Get("tls_max_version").(string)
+	if cfg.TLSMaxVersion == "" {
+		return nil, fmt.Errorf("failed to get 'tls_max_version' value")
+	}
+
+	_, ok = tlsutil.TLSLookup[cfg.TLSMaxVersion]
+	if !ok {
+		return nil, fmt.Errorf("invalid 'tls_max_version'")
+	}
+	if cfg.TLSMaxVersion < cfg.TLSMinVersion {
+		return nil, fmt.Errorf("'tls_max_version' must be greater than or equal to 'tls_min_version'")
+	}
+
 	startTLS := d.Get("starttls").(bool)
 	if startTLS {
 		cfg.StartTLS = startTLS
@@ -171,22 +261,26 @@ func (b *backend) pathConfigWrite(
 	if bindPass != "" {
 		cfg.BindPassword = bindPass
 	}
+	denyNullBind := d.Get("deny_null_bind").(bool)
+	if denyNullBind {
+		cfg.DenyNullBind = denyNullBind
+	}
 	discoverDN := d.Get("discoverdn").(bool)
 	if discoverDN {
 		cfg.DiscoverDN = discoverDN
 	}
 
-	// Try to connect to the LDAP server, to validate the URL configuration
-	// We can also check the URL at this stage, as anything else would probably
-	// require authentication.
-	conn, cerr := cfg.DialLDAP()
-	if cerr != nil {
-		return logical.ErrorResponse(cerr.Error()), nil
+	return cfg, nil
+}
+
+func (b *backend) pathConfigWrite(
+	req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+
+	// Build a ConfigEntry struct out of the supplied FieldData
+	cfg, err := b.newConfigEntry(d)
+	if err != nil {
+		return logical.ErrorResponse(err.Error()), nil
 	}
-	if conn == nil {
-		return logical.ErrorResponse("invalid connection returned from LDAP dial"), nil
-	}
-	conn.Close()
 
 	entry, err := logical.StorageEntryJSON("config", cfg)
 	if err != nil {
@@ -200,23 +294,45 @@ func (b *backend) pathConfigWrite(
 }
 
 type ConfigEntry struct {
-	Url          string
-	UserDN       string
-	GroupDN      string
-	UPNDomain    string
-	UserAttr     string
-	Certificate  string
-	InsecureTLS  bool
-	StartTLS     bool
-	BindDN       string
-	BindPassword string
-	DiscoverDN   bool
+	Url           string `json:"url" structs:"url" mapstructure:"url"`
+	UserDN        string `json:"userdn" structs:"userdn" mapstructure:"userdn"`
+	GroupDN       string `json:"groupdn" structs:"groupdn" mapstructure:"groupdn"`
+	GroupFilter   string `json:"groupfilter" structs:"groupfilter" mapstructure:"groupfilter"`
+	GroupAttr     string `json:"groupattr" structs:"groupattr" mapstructure:"groupattr"`
+	UPNDomain     string `json:"upndomain" structs:"upndomain" mapstructure:"upndomain"`
+	UserAttr      string `json:"userattr" structs:"userattr" mapstructure:"userattr"`
+	Certificate   string `json:"certificate" structs:"certificate" mapstructure:"certificate"`
+	InsecureTLS   bool   `json:"insecure_tls" structs:"insecure_tls" mapstructure:"insecure_tls"`
+	StartTLS      bool   `json:"starttls" structs:"starttls" mapstructure:"starttls"`
+	BindDN        string `json:"binddn" structs:"binddn" mapstructure:"binddn"`
+	BindPassword  string `json:"bindpass" structs:"bindpass" mapstructure:"bindpass"`
+	DenyNullBind  bool   `json:"deny_null_bind" structs:"deny_null_bind" mapstructure:"deny_null_bind"`
+	DiscoverDN    bool   `json:"discoverdn" structs:"discoverdn" mapstructure:"discoverdn"`
+	TLSMinVersion string `json:"tls_min_version" structs:"tls_min_version" mapstructure:"tls_min_version"`
+	TLSMaxVersion string `json:"tls_max_version" structs:"tls_max_version" mapstructure:"tls_max_version"`
 }
 
 func (c *ConfigEntry) GetTLSConfig(host string) (*tls.Config, error) {
 	tlsConfig := &tls.Config{
 		ServerName: host,
 	}
+
+	if c.TLSMinVersion != "" {
+		tlsMinVersion, ok := tlsutil.TLSLookup[c.TLSMinVersion]
+		if !ok {
+			return nil, fmt.Errorf("invalid 'tls_min_version' in config")
+		}
+		tlsConfig.MinVersion = tlsMinVersion
+	}
+
+	if c.TLSMaxVersion != "" {
+		tlsMaxVersion, ok := tlsutil.TLSLookup[c.TLSMaxVersion]
+		if !ok {
+			return nil, fmt.Errorf("invalid 'tls_max_version' in config")
+		}
+		tlsConfig.MaxVersion = tlsMaxVersion
+	}
+
 	if c.InsecureTLS {
 		tlsConfig.InsecureSkipVerify = true
 	}
@@ -250,6 +366,13 @@ func (c *ConfigEntry) DialLDAP() (*ldap.Conn, error) {
 			port = "389"
 		}
 		conn, err = ldap.Dial("tcp", host+":"+port)
+		if err != nil {
+			break
+		}
+		if conn == nil {
+			err = fmt.Errorf("empty connection after dialing")
+			break
+		}
 		if c.StartTLS {
 			tlsConfig, err = c.GetTLSConfig(host)
 			if err != nil {
@@ -276,9 +399,24 @@ func (c *ConfigEntry) DialLDAP() (*ldap.Conn, error) {
 	return conn, nil
 }
 
-func (c *ConfigEntry) SetDefaults() {
-	c.Url = "ldap://127.0.0.1"
-	c.UserAttr = "cn"
+/*
+ * Returns FieldData describing our ConfigEntry struct schema
+ */
+func (b *backend) getConfigFieldData() (*framework.FieldData, error) {
+	configPath := b.Route("config")
+
+	if configPath == nil {
+		return nil, logical.ErrUnsupportedPath
+	}
+
+	raw := make(map[string]interface{}, len(configPath.Fields))
+
+	fd := framework.FieldData{
+		Raw:    raw,
+		Schema: configPath.Fields,
+	}
+
+	return &fd, nil
 }
 
 const pathConfigHelpSyn = `

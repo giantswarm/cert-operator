@@ -138,7 +138,8 @@ func TestPolicyStore_Predefined(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	if len(out) != 2 || out[0] != "default" || out[1] != "response-wrapping" {
+	// This shouldn't contain response-wrapping since it's non-assignable
+	if len(out) != 1 || out[0] != "default" {
 		t.Fatalf("bad: %v", out)
 	}
 
@@ -146,8 +147,8 @@ func TestPolicyStore_Predefined(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	if pCubby.Raw != cubbyholeResponseWrappingPolicy {
-		t.Fatalf("bad: expected\n%s\ngot\n%s\n", cubbyholeResponseWrappingPolicy, pCubby.Raw)
+	if pCubby.Raw != responseWrappingPolicy {
+		t.Fatalf("bad: expected\n%s\ngot\n%s\n", responseWrappingPolicy, pCubby.Raw)
 	}
 	pRoot, err := core.policyStore.GetPolicy("root")
 	if err != nil {

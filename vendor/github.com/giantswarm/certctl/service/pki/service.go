@@ -83,6 +83,12 @@ func (s *service) IsCAGenerated(clusterID string) (bool, error) {
 	} else if err != nil {
 		return false, maskAny(err)
 	}
+
+	// If the secret is nil, the CA has not been generated.
+	if secret == nil {
+		return false, nil
+	}
+
 	if certificate, ok := secret.Data["certificate"]; ok && certificate == "" {
 		return false, nil
 	}

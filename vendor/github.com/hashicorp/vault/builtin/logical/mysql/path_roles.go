@@ -2,8 +2,10 @@ package mysql
 
 import (
 	"fmt"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -25,14 +27,37 @@ func pathRoles(b *backend) *framework.Path {
 	return &framework.Path{
 		Pattern: "roles/" + framework.GenericNameRegex("name"),
 		Fields: map[string]*framework.FieldSchema{
-			"name": &framework.FieldSchema{
+			"name": {
 				Type:        framework.TypeString,
 				Description: "Name of the role.",
 			},
 
-			"sql": &framework.FieldSchema{
+			"sql": {
 				Type:        framework.TypeString,
 				Description: "SQL string to create a user. See help for more info.",
+			},
+
+			"revocation_sql": {
+				Type:        framework.TypeString,
+				Description: "SQL string to revoke a user. See help for more info.",
+			},
+
+			"username_length": {
+				Type:        framework.TypeInt,
+				Description: "number of characters to truncate generated mysql usernames to (default 16)",
+				Default:     16,
+			},
+
+			"rolename_length": {
+				Type:        framework.TypeInt,
+				Description: "number of characters to truncate the rolename portion of generated mysql usernames to (default 4)",
+				Default:     4,
+			},
+
+			"displayname_length": {
+				Type:        framework.TypeInt,
+				Description: "number of characters to truncate the displayname portion of generated mysql usernames to (default 4)",
+				Default:     4,
 			},
 		},
 
@@ -56,7 +81,13 @@ func (b *backend) Role(s logical.Storage, n string) (*roleEntry, error) {
 		return nil, nil
 	}
 
-	var result roleEntry
+	// Set defaults to handle upgrade cases
+	result := roleEntry{
+		UsernameLength:    16,
+		RolenameLength:    4,
+		DisplaynameLength: 4,
+	}
+
 	if err := entry.DecodeJSON(&result); err != nil {
 		return nil, err
 	}
@@ -86,7 +117,8 @@ func (b *backend) pathRoleRead(
 
 	return &logical.Response{
 		Data: map[string]interface{}{
-			"sql": role.SQL,
+			"sql":            role.SQL,
+			"revocation_sql": role.RevocationSQL,
 		},
 	}, nil
 }
@@ -104,7 +136,6 @@ func (b *backend) pathRoleList(
 func (b *backend) pathRoleCreate(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	name := data.Get("name").(string)
-	sql := data.Get("sql").(string)
 
 	// Get our connection
 	db, err := b.DB(req.Storage)
@@ -113,7 +144,13 @@ func (b *backend) pathRoleCreate(
 	}
 
 	// Test the query by trying to prepare it
-	for _, query := range SplitSQL(sql) {
+	sql := data.Get("sql").(string)
+	for _, query := range strutil.ParseArbitraryStringSlice(sql, ";") {
+		query = strings.TrimSpace(query)
+		if len(query) == 0 {
+			continue
+		}
+
 		stmt, err := db.Prepare(Query(query, map[string]string{
 			"name":     "foo",
 			"password": "bar",
@@ -127,7 +164,11 @@ func (b *backend) pathRoleCreate(
 
 	// Store it
 	entry, err := logical.StorageEntryJSON("role/"+name, &roleEntry{
-		SQL: sql,
+		SQL:               sql,
+		RevocationSQL:     data.Get("revocation_sql").(string),
+		UsernameLength:    data.Get("username_length").(int),
+		DisplaynameLength: data.Get("displayname_length").(int),
+		RolenameLength:    data.Get("rolename_length").(int),
 	})
 	if err != nil {
 		return nil, err
@@ -139,7 +180,11 @@ func (b *backend) pathRoleCreate(
 }
 
 type roleEntry struct {
-	SQL string `json:"sql"`
+	SQL               string `json:"sql" mapstructure:"sql" structs:"sql"`
+	RevocationSQL     string `json:"revocation_sql" mapstructure:"revocation_sql" structs:"revocation_sql"`
+	UsernameLength    int    `json:"username_length" mapstructure:"username_length" structs:"username_length"`
+	DisplaynameLength int    `json:"displayname_length" mapstructure:"displayname_length" structs:"displayname_length"`
+	RolenameLength    int    `json:"rolename_length" mapstructure:"rolename_length" structs:"rolename_length"`
 }
 
 const pathRoleHelpSyn = `
@@ -165,4 +210,24 @@ Example of a decent SQL query to use:
 
 Note the above user would be able to access anything in db1. Please see the MySQL
 manual on the GRANT command to learn how to do more fine grained access.
+
+The "rolename_length" parameter determines how many characters of the role name
+will be used in creating the generated mysql username; the default is 4.
+
+The "displayname_length" parameter determines how many characters of the token
+display name will be used in creating the generated mysql username; the default
+is 4.
+
+The "username_length" parameter determines how many total characters the
+generated username (including the role name, token display name and the uuid
+portion) will be truncated to.  Versions of MySQL prior to 5.7.8 are limited to
+16 characters total (see
+http://dev.mysql.com/doc/refman/5.7/en/user-names.html) so that is the default;
+for versions >=5.7.8 it is safe to increase this to 32.
+
+For best readability in MySQL process lists, we recommend using MySQL 5.7.8 or
+later, setting "username_length" to 32 and setting both "rolename_length" and
+"displayname_length" to 8.  However due the the prevalence of older versions of
+MySQL in general deployment, the defaults are currently tuned for a
+username_length of 16.
 `

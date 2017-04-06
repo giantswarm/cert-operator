@@ -6,15 +6,17 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/errwrap"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/vault"
 )
 
-type PrepareRequestFunc func(req *logical.Request) error
+type PrepareRequestFunc func(*vault.Core, *logical.Request) error
 
-func buildLogicalRequest(w http.ResponseWriter, r *http.Request) (*logical.Request, int, error) {
+func buildLogicalRequest(core *vault.Core, w http.ResponseWriter, r *http.Request) (*logical.Request, int, error) {
 	// Determine the path...
 	if !strings.HasPrefix(r.URL.Path, "/v1/") {
 		return nil, http.StatusNotFound, nil
@@ -54,7 +56,7 @@ func buildLogicalRequest(w http.ResponseWriter, r *http.Request) (*logical.Reque
 	// Parse the request if we can
 	var data map[string]interface{}
 	if op == logical.UpdateOperation {
-		err := parseRequest(r, &data)
+		err := parseRequest(r, w, &data)
 		if err == io.EOF {
 			data = nil
 			err = nil
@@ -65,12 +67,19 @@ func buildLogicalRequest(w http.ResponseWriter, r *http.Request) (*logical.Reque
 	}
 
 	var err error
-	req := requestAuth(r, &logical.Request{
+	request_id, err := uuid.GenerateUUID()
+	if err != nil {
+		return nil, http.StatusBadRequest, errwrap.Wrapf("failed to generate identifier for the request: {{err}}", err)
+	}
+
+	req := requestAuth(core, r, &logical.Request{
+		ID:         request_id,
 		Operation:  op,
 		Path:       path,
 		Data:       data,
 		Connection: getConnection(r),
 	})
+
 	req, err = requestWrapTTL(r, req)
 	if err != nil {
 		return nil, http.StatusBadRequest, errwrap.Wrapf("error parsing X-Vault-Wrap-TTL header: {{err}}", err)
@@ -81,7 +90,7 @@ func buildLogicalRequest(w http.ResponseWriter, r *http.Request) (*logical.Reque
 
 func handleLogical(core *vault.Core, dataOnly bool, prepareRequestCallback PrepareRequestFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		req, statusCode, err := buildLogicalRequest(w, r)
+		req, statusCode, err := buildLogicalRequest(core, w, r)
 		if err != nil || statusCode != 0 {
 			respondError(w, statusCode, err)
 			return
@@ -91,8 +100,8 @@ func handleLogical(core *vault.Core, dataOnly bool, prepareRequestCallback Prepa
 		// will have a callback registered to do the needed operations, so
 		// invoke it before proceeding.
 		if prepareRequestCallback != nil {
-			if err := prepareRequestCallback(req); err != nil {
-				respondError(w, http.StatusInternalServerError, err)
+			if err := prepareRequestCallback(core, req); err != nil {
+				respondError(w, http.StatusBadRequest, err)
 				return
 			}
 		}
@@ -113,17 +122,17 @@ func handleLogical(core *vault.Core, dataOnly bool, prepareRequestCallback Prepa
 
 		// Basically: if we have empty "keys" or no keys at all, 404. This
 		// provides consistency with GET.
-		case req.Operation == logical.ListOperation:
+		case req.Operation == logical.ListOperation && resp.WrapInfo == nil:
 			if resp == nil || len(resp.Data) == 0 {
 				respondError(w, http.StatusNotFound, nil)
 				return
 			}
-			keysInt, ok := resp.Data["keys"]
-			if !ok || keysInt == nil {
+			keysRaw, ok := resp.Data["keys"]
+			if !ok || keysRaw == nil {
 				respondError(w, http.StatusNotFound, nil)
 				return
 			}
-			keys, ok := keysInt.([]string)
+			keys, ok := keysRaw.([]string)
 			if !ok {
 				respondError(w, http.StatusInternalServerError, nil)
 				return
@@ -135,12 +144,14 @@ func handleLogical(core *vault.Core, dataOnly bool, prepareRequestCallback Prepa
 		}
 
 		// Build the proper response
-		respondLogical(w, r, req.Path, dataOnly, resp)
+		respondLogical(w, r, req, dataOnly, resp)
 	})
 }
 
-func respondLogical(w http.ResponseWriter, r *http.Request, path string, dataOnly bool, resp *logical.Response) {
-	var httpResp interface{}
+func respondLogical(w http.ResponseWriter, r *http.Request, req *logical.Request, dataOnly bool, resp *logical.Response) {
+	var httpResp *logical.HTTPResponse
+	var ret interface{}
+
 	if resp != nil {
 		if resp.Redirect != "" {
 			// If we have a redirect, redirect! We use a 307 code
@@ -149,84 +160,107 @@ func respondLogical(w http.ResponseWriter, r *http.Request, path string, dataOnl
 			return
 		}
 
-		if dataOnly {
-			respondOk(w, resp.Data)
-			return
-		}
-
 		// Check if this is a raw response
-		if _, ok := resp.Data[logical.HTTPContentType]; ok {
-			respondRaw(w, r, path, resp)
+		if _, ok := resp.Data[logical.HTTPStatusCode]; ok {
+			respondRaw(w, r, resp)
 			return
 		}
 
 		if resp.WrapInfo != nil && resp.WrapInfo.Token != "" {
-			httpResp = logical.HTTPResponse{
+			httpResp = &logical.HTTPResponse{
 				WrapInfo: &logical.HTTPWrapInfo{
 					Token:           resp.WrapInfo.Token,
 					TTL:             int(resp.WrapInfo.TTL.Seconds()),
-					CreationTime:    resp.WrapInfo.CreationTime,
+					CreationTime:    resp.WrapInfo.CreationTime.Format(time.RFC3339Nano),
 					WrappedAccessor: resp.WrapInfo.WrappedAccessor,
 				},
 			}
 		} else {
-			httpResp = logical.SanitizeResponse(resp)
+			httpResp = logical.LogicalResponseToHTTPResponse(resp)
+			httpResp.RequestID = req.ID
+		}
+
+		ret = httpResp
+
+		if dataOnly {
+			injector := logical.HTTPSysInjector{
+				Response: httpResp,
+			}
+			ret = injector
 		}
 	}
 
 	// Respond
-	respondOk(w, httpResp)
+	respondOk(w, ret)
 	return
 }
 
 // respondRaw is used when the response is using HTTPContentType and HTTPRawBody
 // to change the default response handling. This is only used for specific things like
 // returning the CRL information on the PKI backends.
-func respondRaw(w http.ResponseWriter, r *http.Request, path string, resp *logical.Response) {
+func respondRaw(w http.ResponseWriter, r *http.Request, resp *logical.Response) {
+	retErr := func(w http.ResponseWriter, err string) {
+		w.Header().Set("X-Vault-Raw-Error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(nil)
+	}
+
 	// Ensure this is never a secret or auth response
 	if resp.Secret != nil || resp.Auth != nil {
-		respondError(w, http.StatusInternalServerError, nil)
+		retErr(w, "raw responses cannot contain secrets or auth")
 		return
 	}
 
 	// Get the status code
 	statusRaw, ok := resp.Data[logical.HTTPStatusCode]
 	if !ok {
-		respondError(w, http.StatusInternalServerError, nil)
+		retErr(w, "no status code given")
 		return
 	}
 	status, ok := statusRaw.(int)
 	if !ok {
-		respondError(w, http.StatusInternalServerError, nil)
+		retErr(w, "cannot decode status code")
 		return
 	}
 
-	// Get the header
+	nonEmpty := status != http.StatusNoContent
+
+	var contentType string
+	var body []byte
+
+	// Get the content type header; don't require it if the body is empty
 	contentTypeRaw, ok := resp.Data[logical.HTTPContentType]
-	if !ok {
-		respondError(w, http.StatusInternalServerError, nil)
+	if !ok && !nonEmpty {
+		retErr(w, "no content type given")
 		return
 	}
-	contentType, ok := contentTypeRaw.(string)
-	if !ok {
-		respondError(w, http.StatusInternalServerError, nil)
-		return
+	if ok {
+		contentType, ok = contentTypeRaw.(string)
+		if !ok {
+			retErr(w, "cannot decode content type")
+			return
+		}
 	}
 
-	// Get the body
-	bodyRaw, ok := resp.Data[logical.HTTPRawBody]
-	if !ok {
-		respondError(w, http.StatusInternalServerError, nil)
-		return
-	}
-	body, ok := bodyRaw.([]byte)
-	if !ok {
-		respondError(w, http.StatusInternalServerError, nil)
-		return
+	if nonEmpty {
+		// Get the body
+		bodyRaw, ok := resp.Data[logical.HTTPRawBody]
+		if !ok {
+			retErr(w, "no body given")
+			return
+		}
+		body, ok = bodyRaw.([]byte)
+		if !ok {
+			retErr(w, "cannot decode body")
+			return
+		}
 	}
 
 	// Write the response
-	w.Header().Set("Content-Type", contentType)
+	if contentType != "" {
+		w.Header().Set("Content-Type", contentType)
+	}
+
 	w.WriteHeader(status)
 	w.Write(body)
 }
