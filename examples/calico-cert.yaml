@@ -1,12 +1,12 @@
 apiVersion: "giantswarm.io/v1"
 kind: Certificate
 metadata:
-  name: "uo91f-calico"
+  name: "example-cluster-calico"
   namespace: "default"
 spec:
-  clusterID: "uo91f"
+  clusterID: "example-cluster"
   clusterComponent: "calico"
-  commonName: "calico.uo91f.g8s.eu-west-1.aws.test.private.giantswarm.io"
+  commonName: "calico.example-cluster.g8s.eu-west-1.aws.private.giantswarm.io"
   altNames:
   ipSans:
   - "10.0.2.2"
