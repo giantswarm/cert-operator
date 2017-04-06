@@ -105,7 +105,6 @@ Permission denied
   <dt>Description</dt>
   <dd>
     Configures the access information for Consul.
-    This is a root protected endpoint.
   </dd>
 
   <dt>Method</dt>
@@ -222,7 +221,7 @@ Permission denied
   </dd>
 </dl>
 
-#### Delete
+#### DELETE
 
 <dl class="api">
   <dt>Description</dt>
@@ -280,5 +279,3 @@ Permission denied
 
   </dd>
 </dl>
-
-

@@ -2,7 +2,9 @@ package postgresql
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -24,14 +26,22 @@ func pathRoles(b *backend) *framework.Path {
 	return &framework.Path{
 		Pattern: "roles/" + framework.GenericNameRegex("name"),
 		Fields: map[string]*framework.FieldSchema{
-			"name": &framework.FieldSchema{
+			"name": {
 				Type:        framework.TypeString,
 				Description: "Name of the role.",
 			},
 
-			"sql": &framework.FieldSchema{
+			"sql": {
 				Type:        framework.TypeString,
 				Description: "SQL string to create a user. See help for more info.",
+			},
+
+			"revocation_sql": {
+				Type: framework.TypeString,
+				Description: `SQL statements to be executed to revoke a user. Must be a semicolon-separated
+string, a base64-encoded semicolon-separated string, a serialized JSON string
+array, or a base64-encoded serialized JSON string array. The '{{name}}' value
+will be substituted.`,
 			},
 		},
 
@@ -85,7 +95,8 @@ func (b *backend) pathRoleRead(
 
 	return &logical.Response{
 		Data: map[string]interface{}{
-			"sql": role.SQL,
+			"sql":            role.SQL,
+			"revocation_sql": role.RevocationSQL,
 		},
 	}, nil
 }
@@ -112,7 +123,12 @@ func (b *backend) pathRoleCreate(
 	}
 
 	// Test the query by trying to prepare it
-	for _, query := range SplitSQL(sql) {
+	for _, query := range strutil.ParseArbitraryStringSlice(sql, ";") {
+		query = strings.TrimSpace(query)
+		if len(query) == 0 {
+			continue
+		}
+
 		stmt, err := db.Prepare(Query(query, map[string]string{
 			"name":       "foo",
 			"password":   "bar",
@@ -127,7 +143,8 @@ func (b *backend) pathRoleCreate(
 
 	// Store it
 	entry, err := logical.StorageEntryJSON("role/"+name, &roleEntry{
-		SQL: sql,
+		SQL:           sql,
+		RevocationSQL: data.Get("revocation_sql").(string),
 	})
 	if err != nil {
 		return nil, err
@@ -140,7 +157,8 @@ func (b *backend) pathRoleCreate(
 }
 
 type roleEntry struct {
-	SQL string `json:"sql"`
+	SQL           string `json:"sql" mapstructure:"sql" structs:"sql"`
+	RevocationSQL string `json:"revocation_sql" mapstructure:"revocation_sql" structs:"revocation_sql"`
 }
 
 const pathRoleHelpSyn = `
@@ -171,4 +189,12 @@ Example of a decent SQL query to use:
 
 Note the above user would be able to access everything in schema public.
 For more complex GRANT clauses, see the PostgreSQL manual.
+
+The "revocation_sql" parameter customizes the SQL string used to revoke a user.
+Example of a decent revocation SQL query to use:
+
+	REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM {{name}};
+	REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM {{name}};
+	REVOKE USAGE ON SCHEMA public FROM {{name}};
+	DROP ROLE IF EXISTS {{name}};
 `

@@ -12,14 +12,24 @@ func Factory(conf *logical.BackendConfig) (logical.Backend, error) {
 	return Backend().Setup(conf)
 }
 
-func Backend() *framework.Backend {
+func Backend() *backend {
 	var b backend
-	b.Map = &framework.PolicyMap{
+	b.TeamMap = &framework.PolicyMap{
 		PathMap: framework.PathMap{
 			Name: "teams",
 		},
 		DefaultKey: "default",
 	}
+
+	b.UserMap = &framework.PolicyMap{
+		PathMap: framework.PathMap{
+			Name: "users",
+		},
+		DefaultKey: "default",
+	}
+
+	allPaths := append(b.TeamMap.Paths(), b.UserMap.Paths()...)
+
 	b.Backend = &framework.Backend{
 		Help: backendHelp,
 
@@ -32,18 +42,20 @@ func Backend() *framework.Backend {
 		Paths: append([]*framework.Path{
 			pathConfig(&b),
 			pathLogin(&b),
-		}, b.Map.Paths()...),
+		}, allPaths...),
 
 		AuthRenew: b.pathLoginRenew,
 	}
 
-	return b.Backend
+	return &b
 }
 
 type backend struct {
 	*framework.Backend
 
-	Map *framework.PolicyMap
+	TeamMap *framework.PolicyMap
+
+	UserMap *framework.PolicyMap
 }
 
 // Client returns the GitHub client to communicate to GitHub via the

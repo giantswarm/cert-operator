@@ -1,72 +1,11 @@
 package vault
 
 import (
-	"encoding/json"
 	"reflect"
 	"testing"
 
 	"github.com/hashicorp/vault/logical"
 )
-
-func TestAuth_UpgradeAWSEC2Auth(t *testing.T) {
-	c, _, _ := TestCoreUnsealed(t)
-
-	// create a no-op backend in the name of "aws"
-	c.credentialBackends["aws"] = func(*logical.BackendConfig) (logical.Backend, error) {
-		return &NoopBackend{}, nil
-	}
-
-	// create a mount entry and create an entry in the mount table
-	me := &MountEntry{
-		Table: credentialTableType,
-		Path:  "aws",
-		Type:  "aws",
-	}
-	err := c.enableCredential(me)
-	if err != nil {
-		t.Fatalf("err: %v", err)
-	}
-
-	// save the mount table with an auth entry for "aws"
-	mt := c.auth
-	before, err := json.Marshal(mt)
-	if err != nil {
-		t.Fatal(err)
-	}
-	entry := &Entry{
-		Key:   coreAuthConfigPath,
-		Value: before,
-	}
-	if err := c.barrier.Put(entry); err != nil {
-		t.Fatal(err)
-	}
-
-	// create an expected value
-	var expectedMt MountTable
-	expectedMt = *c.auth
-
-	for _, entry := range expectedMt.Entries {
-		if entry.Type == "aws" {
-			entry.Type = "aws-ec2"
-		}
-	}
-	expected, err := json.Marshal(&expectedMt)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// loadCredentials should upgrade the mount table and the entry should now be "aws-ec2"
-	err = c.loadCredentials()
-
-	// read the entry back again and compare it with the expected value
-	actual, err := c.barrier.Get(coreAuthConfigPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(expected, actual.Value) {
-		t.Fatalf("bad: expected\n%s\ngot\n%s\n", string(expected), string(entry.Value))
-	}
-}
 
 func TestCore_DefaultAuthTable(t *testing.T) {
 	c, key, _ := TestCoreUnsealed(t)
@@ -81,7 +20,7 @@ func TestCore_DefaultAuthTable(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	unseal, err := c2.Unseal(key)
+	unseal, err := TestCoreUnseal(c2, key)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
@@ -127,7 +66,7 @@ func TestCore_EnableCredential(t *testing.T) {
 	c2.credentialBackends["noop"] = func(*logical.BackendConfig) (logical.Backend, error) {
 		return &NoopBackend{}, nil
 	}
-	unseal, err := c2.Unseal(key)
+	unseal, err := TestCoreUnseal(c2, key)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
@@ -188,9 +127,9 @@ func TestCore_DisableCredential(t *testing.T) {
 		return &NoopBackend{}, nil
 	}
 
-	err := c.disableCredential("foo")
-	if err.Error() != "no matching backend" {
-		t.Fatalf("err: %v", err)
+	existed, err := c.disableCredential("foo")
+	if existed || err.Error() != "no matching backend" {
+		t.Fatalf("existed: %v; err: %v", existed, err)
 	}
 
 	me := &MountEntry{
@@ -203,9 +142,9 @@ func TestCore_DisableCredential(t *testing.T) {
 		t.Fatalf("err: %v", err)
 	}
 
-	err = c.disableCredential("foo")
-	if err != nil {
-		t.Fatalf("err: %v", err)
+	existed, err = c.disableCredential("foo")
+	if !existed || err != nil {
+		t.Fatalf("existed: %v; err: %v", existed, err)
 	}
 
 	match := c.router.MatchingMount("auth/foo/bar")
@@ -221,7 +160,7 @@ func TestCore_DisableCredential(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	unseal, err := c2.Unseal(key)
+	unseal, err := TestCoreUnseal(c2, key)
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
@@ -237,9 +176,9 @@ func TestCore_DisableCredential(t *testing.T) {
 
 func TestCore_DisableCredential_Protected(t *testing.T) {
 	c, _, _ := TestCoreUnsealed(t)
-	err := c.disableCredential("token")
-	if err.Error() != "token credential backend cannot be disabled" {
-		t.Fatalf("err: %v", err)
+	existed, err := c.disableCredential("token")
+	if !existed || err.Error() != "token credential backend cannot be disabled" {
+		t.Fatalf("existed: %v; err: %v", existed, err)
 	}
 }
 
@@ -293,9 +232,9 @@ func TestCore_DisableCredential_Cleanup(t *testing.T) {
 	}
 
 	// Disable should cleanup
-	err = c.disableCredential("foo")
-	if err != nil {
-		t.Fatalf("err: %v", err)
+	existed, err := c.disableCredential("foo")
+	if !existed || err != nil {
+		t.Fatalf("existed: %v; err: %v", existed, err)
 	}
 
 	// Token should be revoked

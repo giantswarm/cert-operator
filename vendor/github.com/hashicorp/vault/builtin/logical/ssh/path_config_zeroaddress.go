@@ -25,7 +25,7 @@ func pathConfigZeroAddress(b *backend) *framework.Path {
 			},
 		},
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.UpdateOperation:  b.pathConfigZeroAddressWrite,
+			logical.UpdateOperation: b.pathConfigZeroAddressWrite,
 			logical.ReadOperation:   b.pathConfigZeroAddressRead,
 			logical.DeleteOperation: b.pathConfigZeroAddressDelete,
 		},
@@ -72,7 +72,7 @@ func (b *backend) pathConfigZeroAddressWrite(req *logical.Request, d *framework.
 			return nil, err
 		}
 		if role == nil {
-			return logical.ErrorResponse(fmt.Sprintf("Role [%s] does not exist", item)), nil
+			return logical.ErrorResponse(fmt.Sprintf("Role %q does not exist", item)), nil
 		}
 	}
 

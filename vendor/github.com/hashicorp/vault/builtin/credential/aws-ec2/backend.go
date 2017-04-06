@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/vault/helper/salt"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
@@ -49,6 +50,12 @@ type backend struct {
 	// the credentials are modified or deleted, all the cached client objects
 	// will be flushed.
 	EC2ClientsMap map[string]*ec2.EC2
+
+	// Map to hold the IAM client objects indexed by region. This avoids
+	// the overhead of creating a client object for every login request.
+	// When the credentials are modified or deleted, all the cached client
+	// objects will be flushed.
+	IAMClientsMap map[string]*iam.IAM
 }
 
 func Backend(conf *logical.BackendConfig) (*backend, error) {
@@ -65,6 +72,7 @@ func Backend(conf *logical.BackendConfig) (*backend, error) {
 		tidyCooldownPeriod: time.Hour,
 		Salt:               salt,
 		EC2ClientsMap:      make(map[string]*ec2.EC2),
+		IAMClientsMap:      make(map[string]*iam.IAM),
 	}
 
 	b.Backend = &framework.Backend{
@@ -110,7 +118,7 @@ func Backend(conf *logical.BackendConfig) (*backend, error) {
 func (b *backend) periodicFunc(req *logical.Request) error {
 	// Run the tidy operations for the first time. Then run it when current
 	// time matches the nextTidyTime.
-	if b.nextTidyTime.IsZero() || !time.Now().UTC().Before(b.nextTidyTime) {
+	if b.nextTidyTime.IsZero() || !time.Now().Before(b.nextTidyTime) {
 		// safety_buffer defaults to 180 days for roletag blacklist
 		safety_buffer := 15552000
 		tidyBlacklistConfigEntry, err := b.lockedConfigTidyRoleTags(req.Storage)
@@ -154,7 +162,7 @@ func (b *backend) periodicFunc(req *logical.Request) error {
 		}
 
 		// Update the time at which to run the tidy functions again.
-		b.nextTidyTime = time.Now().UTC().Add(b.tidyCooldownPeriod)
+		b.nextTidyTime = time.Now().Add(b.tidyCooldownPeriod)
 	}
 	return nil
 }

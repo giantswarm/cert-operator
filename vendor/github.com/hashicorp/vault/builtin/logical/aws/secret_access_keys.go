@@ -60,12 +60,7 @@ func genUsername(displayName, policyName, userType string) (ret string, warning 
 		// with, so don't insert display name or policy name at all
 	}
 
-	ret = fmt.Sprintf(
-		"vault-%s%d-%d",
-		midString,
-		time.Now().Unix(),
-		rand.Int31n(10000))
-
+	ret = fmt.Sprintf("vault-%s%d-%d", midString, time.Now().Unix(), rand.Int31n(10000))
 	return
 }
 
@@ -103,6 +98,9 @@ func (b *backend) secretTokenCreate(s logical.Storage,
 
 	// Set the secret TTL to appropriately match the expiration of the token
 	resp.Secret.TTL = tokenResp.Credentials.Expiration.Sub(time.Now())
+
+	// STS are purposefully short-lived and aren't renewable
+	resp.Secret.Renewable = false
 
 	if usernameWarning != "" {
 		resp.AddWarning(usernameWarning)
@@ -145,6 +143,9 @@ func (b *backend) assumeRole(s logical.Storage,
 
 	// Set the secret TTL to appropriately match the expiration of the token
 	resp.Secret.TTL = tokenResp.Credentials.Expiration.Sub(time.Now())
+
+	// STS are purposefully short-lived and aren't renewable
+	resp.Secret.Renewable = false
 
 	if usernameWarning != "" {
 		resp.AddWarning(usernameWarning)

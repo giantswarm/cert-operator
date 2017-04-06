@@ -1,6 +1,7 @@
 package transit
 
 import (
+	"github.com/hashicorp/vault/helper/keysutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -25,20 +26,26 @@ func Backend(conf *logical.BackendConfig) *backend {
 			b.pathRotate(),
 			b.pathRewrap(),
 			b.pathKeys(),
+			b.pathListKeys(),
 			b.pathEncrypt(),
 			b.pathDecrypt(),
 			b.pathDatakey(),
+			b.pathRandom(),
+			b.pathHash(),
+			b.pathHMAC(),
+			b.pathSign(),
+			b.pathVerify(),
 		},
 
 		Secrets: []*framework.Secret{},
 	}
 
-	b.lm = newLockManager(conf.System.CachingDisabled())
+	b.lm = keysutil.NewLockManager(conf.System.CachingDisabled())
 
 	return &b
 }
 
 type backend struct {
 	*framework.Backend
-	lm *lockManager
+	lm *keysutil.LockManager
 }

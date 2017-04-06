@@ -4,107 +4,223 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/vault/logical"
 	logicaltest "github.com/hashicorp/vault/logical/testing"
 	"github.com/mitchellh/mapstructure"
+	"github.com/ory-am/dockertest"
 )
 
-func TestBackend_basic(t *testing.T) {
-	b, _ := Factory(logical.TestBackendConfig())
+var (
+	testImagePull sync.Once
+)
 
-	d1 := map[string]interface{}{
-		"connection_url": os.Getenv("MYSQL_DSN"),
+func prepareTestContainer(t *testing.T, s logical.Storage, b logical.Backend) (cid dockertest.ContainerID, retURL string) {
+	if os.Getenv("MYSQL_DSN") != "" {
+		return "", os.Getenv("MYSQL_DSN")
 	}
-	d2 := map[string]interface{}{
-		"value": os.Getenv("MYSQL_DSN"),
+
+	// Without this the checks for whether the container has started seem to
+	// never actually pass. There's really no reason to expose the test
+	// containers, so don't.
+	dockertest.BindDockerToLocalhost = "yep"
+
+	testImagePull.Do(func() {
+		dockertest.Pull("mysql")
+	})
+
+	cid, connErr := dockertest.ConnectToMySQL(60, 500*time.Millisecond, func(connURL string) bool {
+		// This will cause a validation to run
+		resp, err := b.HandleRequest(&logical.Request{
+			Storage:   s,
+			Operation: logical.UpdateOperation,
+			Path:      "config/connection",
+			Data: map[string]interface{}{
+				"connection_url": connURL,
+			},
+		})
+		if err != nil || (resp != nil && resp.IsError()) {
+			// It's likely not up and running yet, so return false and try again
+			return false
+		}
+		if resp == nil {
+			t.Fatal("expected warning")
+		}
+
+		retURL = connURL
+		return true
+	})
+
+	if connErr != nil {
+		t.Fatalf("could not connect to database: %v", connErr)
 	}
+
+	return
+}
+
+func cleanupTestContainer(t *testing.T, cid dockertest.ContainerID) {
+	err := cid.KillRemove()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestBackend_config_connection(t *testing.T) {
+	var resp *logical.Response
+	var err error
+	config := logical.TestBackendConfig()
+	config.StorageView = &logical.InmemStorage{}
+	b, err := Factory(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	configData := map[string]interface{}{
+		"value":                "",
+		"connection_url":       "sample_connection_url",
+		"max_open_connections": 9,
+		"max_idle_connections": 7,
+		"verify_connection":    false,
+	}
+
+	configReq := &logical.Request{
+		Operation: logical.UpdateOperation,
+		Path:      "config/connection",
+		Storage:   config.StorageView,
+		Data:      configData,
+	}
+	resp, err = b.HandleRequest(configReq)
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("err:%s resp:%#v\n", err, resp)
+	}
+
+	configReq.Operation = logical.ReadOperation
+	resp, err = b.HandleRequest(configReq)
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("err:%s resp:%#v\n", err, resp)
+	}
+
+	delete(configData, "verify_connection")
+	if !reflect.DeepEqual(configData, resp.Data) {
+		t.Fatalf("bad: expected:%#v\nactual:%#v\n", configData, resp.Data)
+	}
+}
+
+func TestBackend_basic(t *testing.T) {
+	config := logical.TestBackendConfig()
+	config.StorageView = &logical.InmemStorage{}
+	b, err := Factory(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cid, connURL := prepareTestContainer(t, config.StorageView, b)
+	if cid != "" {
+		defer cleanupTestContainer(t, cid)
+	}
+	connData := map[string]interface{}{
+		"connection_url": connURL,
+	}
+
+	// for wildcard based mysql user
 	logicaltest.Test(t, logicaltest.TestCase{
-		AcceptanceTest: true,
-		PreCheck:       func() { testAccPreCheck(t) },
-		Backend:        b,
+		Backend: b,
 		Steps: []logicaltest.TestStep{
-			testAccStepConfig(t, d1, false),
-			testAccStepRole(t),
-			testAccStepReadCreds(t, "web"),
-			testAccStepConfig(t, d2, false),
-			testAccStepRole(t),
+			testAccStepConfig(t, connData, false),
+			testAccStepRole(t, true),
 			testAccStepReadCreds(t, "web"),
 		},
 	})
 }
 
-func TestBackend_configConnection(t *testing.T) {
-	b := Backend()
-	d1 := map[string]interface{}{
-		"value": os.Getenv("MYSQL_DSN"),
+func TestBackend_basicHostRevoke(t *testing.T) {
+	config := logical.TestBackendConfig()
+	config.StorageView = &logical.InmemStorage{}
+	b, err := Factory(config)
+	if err != nil {
+		t.Fatal(err)
 	}
-	d2 := map[string]interface{}{
-		"connection_url": os.Getenv("MYSQL_DSN"),
-	}
-	d3 := map[string]interface{}{
-		"value":          os.Getenv("MYSQL_DSN"),
-		"connection_url": os.Getenv("MYSQL_DSN"),
-	}
-	d4 := map[string]interface{}{}
 
+	cid, connURL := prepareTestContainer(t, config.StorageView, b)
+	if cid != "" {
+		defer cleanupTestContainer(t, cid)
+	}
+	connData := map[string]interface{}{
+		"connection_url": connURL,
+	}
+
+	// for host based mysql user
 	logicaltest.Test(t, logicaltest.TestCase{
-		AcceptanceTest: true,
-		PreCheck:       func() { testAccPreCheck(t) },
-		Backend:        b,
+		Backend: b,
 		Steps: []logicaltest.TestStep{
-			testAccStepConfig(t, d1, false),
-			testAccStepConfig(t, d2, false),
-			testAccStepConfig(t, d3, false),
-			testAccStepConfig(t, d4, true),
+			testAccStepConfig(t, connData, false),
+			testAccStepRole(t, false),
+			testAccStepReadCreds(t, "web"),
 		},
 	})
 }
 
 func TestBackend_roleCrud(t *testing.T) {
-	b := Backend()
-
-	d := map[string]interface{}{
-		"connection_url": os.Getenv("MYSQL_DSN"),
+	config := logical.TestBackendConfig()
+	config.StorageView = &logical.InmemStorage{}
+	b, err := Factory(config)
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	cid, connURL := prepareTestContainer(t, config.StorageView, b)
+	if cid != "" {
+		defer cleanupTestContainer(t, cid)
+	}
+	connData := map[string]interface{}{
+		"connection_url": connURL,
+	}
+
 	logicaltest.Test(t, logicaltest.TestCase{
-		AcceptanceTest: true,
-		PreCheck:       func() { testAccPreCheck(t) },
-		Backend:        b,
+		Backend: b,
 		Steps: []logicaltest.TestStep{
-			testAccStepConfig(t, d, false),
-			testAccStepRole(t),
-			testAccStepReadRole(t, "web", testRole),
+			testAccStepConfig(t, connData, false),
+			// test SQL with wildcard based user
+			testAccStepRole(t, true),
+			testAccStepReadRole(t, "web", testRoleWildCard),
 			testAccStepDeleteRole(t, "web"),
-			testAccStepReadRole(t, "web", ""),
+			// test SQL with host  based user
+			testAccStepRole(t, false),
+			testAccStepReadRole(t, "web", testRoleHost),
+			testAccStepDeleteRole(t, "web"),
 		},
 	})
 }
 
 func TestBackend_leaseWriteRead(t *testing.T) {
-	b := Backend()
-	d := map[string]interface{}{
-		"connection_url": os.Getenv("MYSQL_DSN"),
+	config := logical.TestBackendConfig()
+	config.StorageView = &logical.InmemStorage{}
+	b, err := Factory(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cid, connURL := prepareTestContainer(t, config.StorageView, b)
+	if cid != "" {
+		defer cleanupTestContainer(t, cid)
+	}
+	connData := map[string]interface{}{
+		"connection_url": connURL,
 	}
 
 	logicaltest.Test(t, logicaltest.TestCase{
-		AcceptanceTest: true,
-		PreCheck:       func() { testAccPreCheck(t) },
-		Backend:        b,
+		Backend: b,
 		Steps: []logicaltest.TestStep{
-			testAccStepConfig(t, d, false),
+			testAccStepConfig(t, connData, false),
 			testAccStepWriteLease(t),
 			testAccStepReadLease(t),
 		},
 	})
 
-}
-
-func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("MYSQL_DSN"); v == "" {
-		t.Fatal("MYSQL_DSN must be set for acceptance tests")
-	}
 }
 
 func testAccStepConfig(t *testing.T, d map[string]interface{}, expectError bool) logicaltest.TestStep {
@@ -125,25 +241,37 @@ func testAccStepConfig(t *testing.T, d map[string]interface{}, expectError bool)
 					return err
 				}
 				if len(e.Error) == 0 {
-					return fmt.Errorf("expected error, but write succeeded.")
+					return fmt.Errorf("expected error, but write succeeded")
 				}
 				return nil
-			} else if resp != nil {
-				return fmt.Errorf("response should be nil")
+			} else if resp != nil && resp.IsError() {
+				return fmt.Errorf("got an error response: %v", resp.Error())
 			}
 			return nil
 		},
 	}
 }
 
-func testAccStepRole(t *testing.T) logicaltest.TestStep {
+func testAccStepRole(t *testing.T, wildCard bool) logicaltest.TestStep {
+
+	pathData := make(map[string]interface{})
+	if wildCard == true {
+		pathData = map[string]interface{}{
+			"sql": testRoleWildCard,
+		}
+	} else {
+		pathData = map[string]interface{}{
+			"sql":            testRoleHost,
+			"revocation_sql": testRevocationSQL,
+		}
+	}
+
 	return logicaltest.TestStep{
 		Operation: logical.UpdateOperation,
 		Path:      "roles/web",
-		Data: map[string]interface{}{
-			"sql": testRole,
-		},
+		Data:      pathData,
 	}
+
 }
 
 func testAccStepDeleteRole(t *testing.T, n string) logicaltest.TestStep {
@@ -226,7 +354,15 @@ func testAccStepReadLease(t *testing.T) logicaltest.TestStep {
 	}
 }
 
-const testRole = `
+const testRoleWildCard = `
 CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';
 GRANT SELECT ON *.* TO '{{name}}'@'%';
+`
+const testRoleHost = `
+CREATE USER '{{name}}'@'10.1.1.2' IDENTIFIED BY '{{password}}';
+GRANT SELECT ON *.* TO '{{name}}'@'10.1.1.2';
+`
+const testRevocationSQL = `
+REVOKE ALL PRIVILEGES, GRANT OPTION FROM '{{name}}'@'10.1.1.2'; 
+DROP USER '{{name}}'@'10.1.1.2';
 `

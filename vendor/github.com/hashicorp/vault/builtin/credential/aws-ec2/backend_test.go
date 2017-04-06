@@ -562,6 +562,7 @@ func TestBackend_pathConfigCertificate(t *testing.T) {
 	}
 
 	data := map[string]interface{}{
+		"type": "pkcs7",
 		"aws_public_cert": `LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM3VENDQXEwQ0NRQ1d1a2paNVY0YVp6QUpC
 Z2NxaGtqT09BUURNRnd4Q3pBSkJnTlZCQVlUQWxWVE1Sa3cKRndZRFZRUUlFeEJYWVhOb2FXNW5k
 Rzl1SUZOMFlYUmxNUkF3RGdZRFZRUUhFd2RUWldGMGRHeGxNU0F3SGdZRApWUVFLRXhkQmJXRjZi
@@ -586,9 +587,9 @@ MlpCclZOR3JOOU4yZjZST2swazlLCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
 
 	certReq.Data = data
 	// test create operation
-	_, err = b.HandleRequest(certReq)
-	if err != nil {
-		t.Fatal(err)
+	resp, err := b.HandleRequest(certReq)
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("resp: %#v, err: %v", resp, err)
 	}
 
 	certReq.Data = nil
@@ -606,7 +607,7 @@ MlpCclZOR3JOOU4yZjZST2swazlLCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
 
 	certReq.Operation = logical.ReadOperation
 	// test read operation
-	resp, err := b.HandleRequest(certReq)
+	resp, err = b.HandleRequest(certReq)
 	expectedCert := `-----BEGIN CERTIFICATE-----
 MIIC7TCCAq0CCQCWukjZ5V4aZzAJBgcqhkjOOAQDMFwxCzAJBgNVBAYTAlVTMRkw
 FwYDVQQIExBXYXNoaW5ndG9uIFN0YXRlMRAwDgYDVQQHEwdTZWF0dGxlMSAwHgYD
@@ -1056,9 +1057,17 @@ func TestBackend_PathBlacklistRoleTag(t *testing.T) {
 }
 
 // This is an acceptance test.
-// Requires TEST_AWS_EC2_PKCS7, TEST_AWS_EC2_AMI_ID to be set.
-// If the test is not being run on an EC2 instance that has access to credentials using EC2RoleProvider,
-// then TEST_AWS_SECRET_KEY and TEST_AWS_ACCESS_KEY env vars are also required.
+// Requires the following env vars:
+// TEST_AWS_EC2_PKCS7
+// TEST_AWS_EC2_AMI_ID
+// TEST_AWS_EC2_ACCOUNT_ID
+// TEST_AWS_EC2_IAM_ROLE_ARN
+//
+// If the test is not being run on an EC2 instance that has access to
+// credentials using EC2RoleProvider, on top of the above vars, following
+// needs to be set:
+// TEST_AWS_SECRET_KEY
+// TEST_AWS_ACCESS_KEY
 func TestBackendAcc_LoginAndWhitelistIdentity(t *testing.T) {
 	// This test case should be run only when certain env vars are set and
 	// executed as an acceptance test.
@@ -1075,6 +1084,16 @@ func TestBackendAcc_LoginAndWhitelistIdentity(t *testing.T) {
 	amiID := os.Getenv("TEST_AWS_EC2_AMI_ID")
 	if amiID == "" {
 		t.Fatalf("env var TEST_AWS_EC2_AMI_ID not set")
+	}
+
+	iamARN := os.Getenv("TEST_AWS_EC2_IAM_ROLE_ARN")
+	if iamARN == "" {
+		t.Fatalf("env var TEST_AWS_EC2_IAM_ROLE_ARN not set")
+	}
+
+	accountID := os.Getenv("TEST_AWS_EC2_ACCOUNT_ID")
+	if accountID == "" {
+		t.Fatalf("env var TEST_AWS_EC2_ACCOUNT_ID not set")
 	}
 
 	roleName := amiID
@@ -1121,28 +1140,6 @@ func TestBackendAcc_LoginAndWhitelistIdentity(t *testing.T) {
 		}
 	}
 
-	// create an entry for the role. This is required for login to work.
-	data := map[string]interface{}{
-		"policies":     "root",
-		"max_ttl":      "120s",
-		"bound_ami_id": "wrong_ami_id",
-	}
-
-	roleReq := &logical.Request{
-		Operation: logical.UpdateOperation,
-		Path:      "role/" + roleName,
-		Storage:   storage,
-		Data:      data,
-	}
-
-	resp, err := b.HandleRequest(roleReq)
-	if resp != nil && resp.IsError() {
-		t.Fatalf("failed to create role")
-	}
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	loginInput := map[string]interface{}{
 		"pkcs7": pkcs7,
 		"nonce": "vault-client-nonce",
@@ -1156,34 +1153,77 @@ func TestBackendAcc_LoginAndWhitelistIdentity(t *testing.T) {
 		Storage:   storage,
 		Data:      loginInput,
 	}
+
+	// Place the wrong AMI ID in the role data.
+	data := map[string]interface{}{
+		"policies":           "root",
+		"max_ttl":            "120s",
+		"bound_ami_id":       "wrong_ami_id",
+		"bound_account_id":   accountID,
+		"bound_iam_role_arn": iamARN,
+	}
+
+	roleReq := &logical.Request{
+		Operation: logical.UpdateOperation,
+		Path:      "role/" + roleName,
+		Storage:   storage,
+		Data:      data,
+	}
+
+	// Save the role with wrong AMI ID
+	resp, err := b.HandleRequest(roleReq)
+	if err != nil && (resp != nil && resp.IsError()) {
+		t.Fatalf("bad: resp: %#v\nerr:%v", resp, err)
+	}
+
+	// Expect failure when tried to login with wrong AMI ID
 	resp, err = b.HandleRequest(loginRequest)
 	if err != nil || resp == nil || (resp != nil && !resp.IsError()) {
 		t.Fatalf("bad: expected error response: resp:%#v\nerr:%v", resp, err)
 	}
 
-	// Place the correct AMI ID on the role
+	// Place the correct AMI ID, but make the AccountID wrong
 	data["bound_ami_id"] = amiID
+	data["bound_account_id"] = "wrong-account-id"
 	resp, err = b.HandleRequest(roleReq)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("bad: failed to create role: resp:%#v\nerr:%v", resp, err)
 	}
 
-	// Try to login after the role has a matching AMI ID
+	// Expect failure when tried to login with incorrect AccountID
 	resp, err = b.HandleRequest(loginRequest)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if resp == nil || resp.Auth == nil || resp.IsError() {
-		t.Fatalf("first login attempt failed")
+	if err != nil || resp == nil || (resp != nil && !resp.IsError()) {
+		t.Fatalf("bad: expected error response: resp:%#v\nerr:%v", resp, err)
 	}
 
-	// Attempt to login again and see if it succeeds
+	// Place the correct AccountID, but make the wrong IAMRoleARN
+	data["bound_account_id"] = accountID
+	data["bound_iam_role_arn"] = "wrong_iam_role_arn"
+	resp, err = b.HandleRequest(roleReq)
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("bad: failed to create role: resp:%#v\nerr:%v", resp, err)
+	}
+
+	// Attempt to login and expect a fail because IAM Role ARN is wrong
+	resp, err = b.HandleRequest(loginRequest)
+	if err != nil || resp == nil || (resp != nil && !resp.IsError()) {
+		t.Fatalf("bad: expected error response: resp:%#v\nerr:%v", resp, err)
+	}
+
+	// Place the correct IAM Role ARN
+	data["bound_iam_role_arn"] = iamARN
+	resp, err = b.HandleRequest(roleReq)
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("bad: failed to create role: resp:%#v\nerr:%v", resp, err)
+	}
+
+	// Now, the login attempt should succeed
 	resp, err = b.HandleRequest(loginRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if resp == nil || resp.Auth == nil || resp.IsError() {
-		t.Fatalf("second login attempt failed")
+		t.Fatalf("bad: failed to login: resp:%#v\nerr:%v", resp, err)
 	}
 
 	// verify the presence of instance_id in the response object.

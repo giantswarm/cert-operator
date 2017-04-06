@@ -4,7 +4,7 @@ import (
 	"encoding/pem"
 	"fmt"
 
-	"github.com/hashicorp/vault/helper/certutil"
+	"github.com/hashicorp/vault/helper/errutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -13,6 +13,20 @@ import (
 func pathFetchCA(b *backend) *framework.Path {
 	return &framework.Path{
 		Pattern: `ca(/pem)?`,
+
+		Callbacks: map[logical.Operation]framework.OperationFunc{
+			logical.ReadOperation: b.pathFetchRead,
+		},
+
+		HelpSynopsis:    pathFetchHelpSyn,
+		HelpDescription: pathFetchHelpDesc,
+	}
+}
+
+// Returns the CA chain
+func pathFetchCAChain(b *backend) *framework.Path {
+	return &framework.Path{
+		Pattern: `(cert/)?ca_chain`,
 
 		Callbacks: map[logical.Operation]framework.OperationFunc{
 			logical.ReadOperation: b.pathFetchRead,
@@ -118,6 +132,11 @@ func (b *backend) pathFetchRead(req *logical.Request, data *framework.FieldData)
 		if req.Path == "ca/pem" {
 			pemType = "CERTIFICATE"
 		}
+	case req.Path == "ca_chain" || req.Path == "cert/ca_chain":
+		serial = "ca_chain"
+		if req.Path == "ca_chain" {
+			contentType = "application/pkix-cert"
+		}
 	case req.Path == "crl" || req.Path == "crl/pem":
 		serial = "crl"
 		contentType = "application/pkix-crl"
@@ -136,13 +155,35 @@ func (b *backend) pathFetchRead(req *logical.Request, data *framework.FieldData)
 		goto reply
 	}
 
+	if serial == "ca_chain" {
+		caInfo, err := fetchCAInfo(req)
+		switch err.(type) {
+		case errutil.UserError:
+			response = logical.ErrorResponse(funcErr.Error())
+			goto reply
+		case errutil.InternalError:
+			retErr = err
+			goto reply
+		}
+
+		caChain := caInfo.GetCAChain()
+		for _, ca := range caChain {
+			block := pem.Block{
+				Type:  "CERTIFICATE",
+				Bytes: ca.Bytes,
+			}
+			certificate = append(certificate, pem.EncodeToMemory(&block)...)
+		}
+		goto reply
+	}
+
 	certEntry, funcErr = fetchCertBySerial(req, req.Path, serial)
 	if funcErr != nil {
 		switch funcErr.(type) {
-		case certutil.UserError:
+		case errutil.UserError:
 			response = logical.ErrorResponse(funcErr.Error())
 			goto reply
-		case certutil.InternalError:
+		case errutil.InternalError:
 			retErr = funcErr
 			goto reply
 		}
@@ -165,10 +206,10 @@ func (b *backend) pathFetchRead(req *logical.Request, data *framework.FieldData)
 	revokedEntry, funcErr = fetchCertBySerial(req, "revoked/", serial)
 	if funcErr != nil {
 		switch funcErr.(type) {
-		case certutil.UserError:
+		case errutil.UserError:
 			response = logical.ErrorResponse(funcErr.Error())
 			goto reply
-		case certutil.InternalError:
+		case errutil.InternalError:
 			retErr = funcErr
 			goto reply
 		}
@@ -191,10 +232,16 @@ reply:
 				logical.HTTPRawBody:     certificate,
 			}}
 		if retErr != nil {
-			b.Logger().Printf("Possible error, but cannot return in raw response: %s. Note that an empty CA probably means none was configured, and an empty CRL is quite possibly correct", retErr)
+			if b.Logger().IsWarn() {
+				b.Logger().Warn("Possible error, but cannot return in raw response. Note that an empty CA probably means none was configured, and an empty CRL is possibly correct", "error", retErr)
+			}
 		}
 		retErr = nil
-		response.Data[logical.HTTPStatusCode] = 200
+		if len(certificate) > 0 {
+			response.Data[logical.HTTPStatusCode] = 200
+		} else {
+			response.Data[logical.HTTPStatusCode] = 204
+		}
 	case retErr != nil:
 		response = nil
 	default:
@@ -206,11 +253,13 @@ reply:
 }
 
 const pathFetchHelpSyn = `
-Fetch a CA, CRL, or non-revoked certificate.
+Fetch a CA, CRL, CA Chain, or non-revoked certificate.
 `
 
 const pathFetchHelpDesc = `
 This allows certificates to be fetched. If using the fetch/ prefix any non-revoked certificate can be fetched.
 
 Using "ca" or "crl" as the value fetches the appropriate information in DER encoding. Add "/pem" to either to get PEM encoding.
+
+Using "ca_chain" as the value fetches the certificate authority trust chain in PEM encoding.
 `

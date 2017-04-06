@@ -223,7 +223,7 @@ func (r *Router) routeCommon(req *logical.Request, existenceCheck bool) (*logica
 	}
 
 	// Adjust the path to exclude the routing prefix
-	original := req.Path
+	originalPath := req.Path
 	req.Path = strings.TrimPrefix(req.Path, mount)
 	req.MountPoint = mount
 	if req.Path == "/" {
@@ -236,8 +236,9 @@ func (r *Router) routeCommon(req *logical.Request, existenceCheck bool) (*logica
 	// Hash the request token unless this is the token backend
 	clientToken := req.ClientToken
 	switch {
-	case strings.HasPrefix(original, "auth/token/"):
-	case strings.HasPrefix(original, "cubbyhole/"):
+	case strings.HasPrefix(originalPath, "auth/token/"):
+	case strings.HasPrefix(originalPath, "sys/"):
+	case strings.HasPrefix(originalPath, "cubbyhole/"):
 		// In order for the token store to revoke later, we need to have the same
 		// salted ID, so we double-salt what's going to the cubbyhole backend
 		req.ClientToken = re.SaltID(r.tokenStoreSalt.SaltID(req.ClientToken))
@@ -248,13 +249,21 @@ func (r *Router) routeCommon(req *logical.Request, existenceCheck bool) (*logica
 	// Cache the pointer to the original connection object
 	originalConn := req.Connection
 
+	// Cache the identifier of the request
+	originalReqID := req.ID
+
+	// Cache the wrap TTL of the request
+	originalWrapTTL := req.WrapTTL
+
 	// Reset the request before returning
 	defer func() {
-		req.Path = original
+		req.Path = originalPath
 		req.MountPoint = ""
 		req.Connection = originalConn
+		req.ID = originalReqID
 		req.Storage = nil
 		req.ClientToken = clientToken
+		req.WrapTTL = originalWrapTTL
 	}()
 
 	// Invoke the backend

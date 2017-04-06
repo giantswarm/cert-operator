@@ -14,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/vault/command/server"
 	"github.com/hashicorp/vault/meta"
 	"github.com/mitchellh/cli"
 )
@@ -39,7 +38,7 @@ backend "consul" {
 	haconsulhcl = `
 ha_backend "consul" {
     prefix = "bar/"
-    advertise_addr = "http://127.0.0.1:8200"
+    redirect_addr = "http://127.0.0.1:8200"
     disable_registration = "true"
 }
 `
@@ -66,86 +65,6 @@ listener "tcp" {
 )
 
 // The following tests have a go-metrics/exp manager race condition
-func TestServer_CommonHA(t *testing.T) {
-	ui := new(cli.MockUi)
-	c := &ServerCommand{
-		Meta: meta.Meta{
-			Ui: ui,
-		},
-	}
-
-	tmpfile, err := ioutil.TempFile("", "")
-	if err != nil {
-		t.Fatalf("error creating temp dir: %v", err)
-	}
-
-	tmpfile.WriteString(basehcl + consulhcl)
-	tmpfile.Close()
-	defer os.Remove(tmpfile.Name())
-
-	args := []string{"-config", tmpfile.Name(), "-verify-only", "true"}
-
-	if code := c.Run(args); code != 0 {
-		t.Fatalf("bad: %d\n\n%s", code, ui.ErrorWriter.String())
-	}
-
-	if !strings.Contains(ui.OutputWriter.String(), "(HA available)") {
-		t.Fatalf("did not find HA available: %s", ui.OutputWriter.String())
-	}
-}
-
-func TestServer_GoodSeparateHA(t *testing.T) {
-	ui := new(cli.MockUi)
-	c := &ServerCommand{
-		Meta: meta.Meta{
-			Ui: ui,
-		},
-	}
-
-	tmpfile, err := ioutil.TempFile("", "")
-	if err != nil {
-		t.Fatalf("error creating temp dir: %v", err)
-	}
-
-	tmpfile.WriteString(basehcl + consulhcl + haconsulhcl)
-	tmpfile.Close()
-	defer os.Remove(tmpfile.Name())
-
-	args := []string{"-config", tmpfile.Name(), "-verify-only", "true"}
-
-	if code := c.Run(args); code != 0 {
-		t.Fatalf("bad: %d\n\n%s", code, ui.ErrorWriter.String())
-	}
-
-	if !strings.Contains(ui.OutputWriter.String(), "HA Backend:") {
-		t.Fatalf("did not find HA Backend: %s", ui.OutputWriter.String())
-	}
-}
-
-func TestServer_BadSeparateHA(t *testing.T) {
-	ui := new(cli.MockUi)
-	c := &ServerCommand{
-		Meta: meta.Meta{
-			Ui: ui,
-		},
-	}
-
-	tmpfile, err := ioutil.TempFile("", "")
-	if err != nil {
-		t.Fatalf("error creating temp dir: %v", err)
-	}
-
-	tmpfile.WriteString(basehcl + consulhcl + badhaconsulhcl)
-	tmpfile.Close()
-	defer os.Remove(tmpfile.Name())
-
-	args := []string{"-config", tmpfile.Name()}
-
-	if code := c.Run(args); code == 0 {
-		t.Fatalf("bad: should have gotten an error on a bad HA config")
-	}
-}
-
 func TestServer_ReloadListener(t *testing.T) {
 	wd, _ := os.Getwd()
 	wd += "/server/test-fixtures/reload/"
@@ -183,9 +102,8 @@ func TestServer_ReloadListener(t *testing.T) {
 		Meta: meta.Meta{
 			Ui: ui,
 		},
-		ShutdownCh:  MakeShutdownCh(),
-		SighupCh:    MakeSighupCh(),
-		ReloadFuncs: map[string][]server.ReloadFunc{},
+		ShutdownCh: MakeShutdownCh(),
+		SighupCh:   MakeSighupCh(),
 	}
 
 	finished := false
@@ -230,7 +148,7 @@ func TestServer_ReloadListener(t *testing.T) {
 	}
 
 	checkFinished()
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 	checkFinished()
 
 	if err := testCertificateName("foo.example.com"); err != nil {

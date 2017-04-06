@@ -162,14 +162,16 @@ func (c *serverNameCheckCreds) OverrideServerName(s string) error {
 }
 
 type remoteBalancer struct {
-	servers *lbpb.ServerList
-	done    chan struct{}
+	sls       []*lbpb.ServerList
+	intervals []time.Duration
+	done      chan struct{}
 }
 
-func newRemoteBalancer(servers *lbpb.ServerList) *remoteBalancer {
+func newRemoteBalancer(sls []*lbpb.ServerList, intervals []time.Duration) *remoteBalancer {
 	return &remoteBalancer{
-		servers: servers,
-		done:    make(chan struct{}),
+		sls:       sls,
+		intervals: intervals,
+		done:      make(chan struct{}),
 	}
 }
 
@@ -178,6 +180,14 @@ func (b *remoteBalancer) stop() {
 }
 
 func (b *remoteBalancer) BalanceLoad(stream lbpb.LoadBalancer_BalanceLoadServer) error {
+	req, err := stream.Recv()
+	if err != nil {
+		return err
+	}
+	initReq := req.GetInitialRequest()
+	if initReq.Name != besn {
+		return grpc.Errorf(codes.InvalidArgument, "invalid service name: %v", initReq.Name)
+	}
 	resp := &lbpb.LoadBalanceResponse{
 		LoadBalanceResponseType: &lbpb.LoadBalanceResponse_InitialResponse{
 			InitialResponse: new(lbpb.InitialLoadBalanceResponse),
@@ -186,13 +196,16 @@ func (b *remoteBalancer) BalanceLoad(stream lbpb.LoadBalancer_BalanceLoadServer)
 	if err := stream.Send(resp); err != nil {
 		return err
 	}
-	resp = &lbpb.LoadBalanceResponse{
-		LoadBalanceResponseType: &lbpb.LoadBalanceResponse_ServerList{
-			ServerList: b.servers,
-		},
-	}
-	if err := stream.Send(resp); err != nil {
-		return err
+	for k, v := range b.sls {
+		time.Sleep(b.intervals[k])
+		resp = &lbpb.LoadBalanceResponse{
+			LoadBalanceResponseType: &lbpb.LoadBalanceResponse_ServerList{
+				ServerList: v,
+			},
+		}
+		if err := stream.Send(resp); err != nil {
+			return err
+		}
 	}
 	<-b.done
 	return nil
@@ -259,7 +272,7 @@ func TestGRPCLB(t *testing.T) {
 		t.Fatalf("Failed to generate the port number %v", err)
 	}
 	be := &lbpb.Server{
-		IpAddress:        []byte(beAddr[0]),
+		IpAddress:        beLis.Addr().(*net.TCPAddr).IP,
 		Port:             int32(bePort),
 		LoadBalanceToken: lbToken,
 	}
@@ -268,7 +281,9 @@ func TestGRPCLB(t *testing.T) {
 	sl := &lbpb.ServerList{
 		Servers: bes,
 	}
-	ls := newRemoteBalancer(sl)
+	sls := []*lbpb.ServerList{sl}
+	intervals := []time.Duration{0}
+	ls := newRemoteBalancer(sls, intervals)
 	lbpb.RegisterLoadBalancerServer(lb, ls)
 	go func() {
 		lb.Serve(lbLis)
@@ -325,25 +340,21 @@ func TestDropRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to generate the port number %v", err)
 	}
-	var bes []*lbpb.Server
-	be := &lbpb.Server{
-		IpAddress:        []byte(beAddr1[0]),
-		Port:             int32(bePort1),
-		LoadBalanceToken: lbToken,
-		DropRequest:      true,
-	}
-	bes = append(bes, be)
-	be = &lbpb.Server{
-		IpAddress:        []byte(beAddr2[0]),
-		Port:             int32(bePort2),
-		LoadBalanceToken: lbToken,
-		DropRequest:      false,
-	}
-	bes = append(bes, be)
-	sl := &lbpb.ServerList{
-		Servers: bes,
-	}
-	ls := newRemoteBalancer(sl)
+	sls := []*lbpb.ServerList{{
+		Servers: []*lbpb.Server{{
+			IpAddress:        beLis1.Addr().(*net.TCPAddr).IP,
+			Port:             int32(bePort1),
+			LoadBalanceToken: lbToken,
+			DropRequest:      true,
+		}, {
+			IpAddress:        beLis2.Addr().(*net.TCPAddr).IP,
+			Port:             int32(bePort2),
+			LoadBalanceToken: lbToken,
+			DropRequest:      false,
+		}},
+	}}
+	intervals := []time.Duration{0}
+	ls := newRemoteBalancer(sls, intervals)
 	lbpb.RegisterLoadBalancerServer(lb, ls)
 	go func() {
 		lb.Serve(lbLis)
@@ -362,19 +373,23 @@ func TestDropRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to dial to the backend %v", err)
 	}
-	// The 1st fail-fast RPC should fail because the 1st backend has DropRequest set to true.
 	helloC := hwpb.NewGreeterClient(cc)
-	if _, err := helloC.SayHello(context.Background(), &hwpb.HelloRequest{Name: "grpc"}); grpc.Code(err) != codes.Unavailable {
-		t.Fatalf("%v.SayHello(_, _) = _, %v, want _, %s", helloC, err, codes.Unavailable)
-	}
-	// The 2nd fail-fast RPC should succeed since it chooses the non-drop-request backend according
-	// to the round robin policy.
-	if _, err := helloC.SayHello(context.Background(), &hwpb.HelloRequest{Name: "grpc"}); err != nil {
-		t.Fatalf("%v.SayHello(_, _) = _, %v, want _, <nil>", helloC, err)
-	}
-	// The 3nd non-fail-fast RPC should succeed.
+	// The 1st, non-fail-fast RPC should succeed.  This ensures both server
+	// connections are made, because the first one has DropRequest set to true.
 	if _, err := helloC.SayHello(context.Background(), &hwpb.HelloRequest{Name: "grpc"}, grpc.FailFast(false)); err != nil {
 		t.Fatalf("%v.SayHello(_, _) = _, %v, want _, <nil>", helloC, err)
+	}
+	for i := 0; i < 3; i++ {
+		// Odd fail-fast RPCs should fail, because the 1st backend has DropRequest
+		// set to true.
+		if _, err := helloC.SayHello(context.Background(), &hwpb.HelloRequest{Name: "grpc"}); grpc.Code(err) != codes.Unavailable {
+			t.Fatalf("%v.SayHello(_, _) = _, %v, want _, %s", helloC, err, codes.Unavailable)
+		}
+		// Even fail-fast RPCs should succeed since they choose the
+		// non-drop-request backend according to the round robin policy.
+		if _, err := helloC.SayHello(context.Background(), &hwpb.HelloRequest{Name: "grpc"}); err != nil {
+			t.Fatalf("%v.SayHello(_, _) = _, %v, want _, <nil>", helloC, err)
+		}
 	}
 	cc.Close()
 }
@@ -403,7 +418,7 @@ func TestDropRequestFailedNonFailFast(t *testing.T) {
 		t.Fatalf("Failed to generate the port number %v", err)
 	}
 	be := &lbpb.Server{
-		IpAddress:        []byte(beAddr[0]),
+		IpAddress:        beLis.Addr().(*net.TCPAddr).IP,
 		Port:             int32(bePort),
 		LoadBalanceToken: lbToken,
 		DropRequest:      true,
@@ -413,7 +428,9 @@ func TestDropRequestFailedNonFailFast(t *testing.T) {
 	sl := &lbpb.ServerList{
 		Servers: bes,
 	}
-	ls := newRemoteBalancer(sl)
+	sls := []*lbpb.ServerList{sl}
+	intervals := []time.Duration{0}
+	ls := newRemoteBalancer(sls, intervals)
 	lbpb.RegisterLoadBalancerServer(lb, ls)
 	go func() {
 		lb.Serve(lbLis)
@@ -436,6 +453,89 @@ func TestDropRequestFailedNonFailFast(t *testing.T) {
 	ctx, _ = context.WithTimeout(context.Background(), 10*time.Millisecond)
 	if _, err := helloC.SayHello(ctx, &hwpb.HelloRequest{Name: "grpc"}, grpc.FailFast(false)); grpc.Code(err) != codes.DeadlineExceeded {
 		t.Fatalf("%v.SayHello(_, _) = _, %v, want _, %s", helloC, err, codes.DeadlineExceeded)
+	}
+	cc.Close()
+}
+
+func TestServerExpiration(t *testing.T) {
+	// Start a backend.
+	beLis, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("Failed to listen %v", err)
+	}
+	beAddr := strings.Split(beLis.Addr().String(), ":")
+	bePort, err := strconv.Atoi(beAddr[1])
+	backends := startBackends(t, besn, beLis)
+	defer stopBackends(backends)
+
+	// Start a load balancer.
+	lbLis, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("Failed to create the listener for the load balancer %v", err)
+	}
+	lbCreds := &serverNameCheckCreds{
+		sn: lbsn,
+	}
+	lb := grpc.NewServer(grpc.Creds(lbCreds))
+	if err != nil {
+		t.Fatalf("Failed to generate the port number %v", err)
+	}
+	be := &lbpb.Server{
+		IpAddress:        beLis.Addr().(*net.TCPAddr).IP,
+		Port:             int32(bePort),
+		LoadBalanceToken: lbToken,
+	}
+	var bes []*lbpb.Server
+	bes = append(bes, be)
+	exp := &lbpb.Duration{
+		Seconds: 0,
+		Nanos:   100000000, // 100ms
+	}
+	var sls []*lbpb.ServerList
+	sl := &lbpb.ServerList{
+		Servers:            bes,
+		ExpirationInterval: exp,
+	}
+	sls = append(sls, sl)
+	sl = &lbpb.ServerList{
+		Servers: bes,
+	}
+	sls = append(sls, sl)
+	var intervals []time.Duration
+	intervals = append(intervals, 0)
+	intervals = append(intervals, 500*time.Millisecond)
+	ls := newRemoteBalancer(sls, intervals)
+	lbpb.RegisterLoadBalancerServer(lb, ls)
+	go func() {
+		lb.Serve(lbLis)
+	}()
+	defer func() {
+		ls.stop()
+		lb.Stop()
+	}()
+	creds := serverNameCheckCreds{
+		expected: besn,
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	cc, err := grpc.DialContext(ctx, besn, grpc.WithBalancer(Balancer(&testNameResolver{
+		addr: lbLis.Addr().String(),
+	})), grpc.WithBlock(), grpc.WithTransportCredentials(&creds))
+	if err != nil {
+		t.Fatalf("Failed to dial to the backend %v", err)
+	}
+	helloC := hwpb.NewGreeterClient(cc)
+	if _, err := helloC.SayHello(context.Background(), &hwpb.HelloRequest{Name: "grpc"}); err != nil {
+		t.Fatalf("%v.SayHello(_, _) = _, %v, want _, <nil>", helloC, err)
+	}
+	// Sleep and wake up when the first server list gets expired.
+	time.Sleep(150 * time.Millisecond)
+	if _, err := helloC.SayHello(context.Background(), &hwpb.HelloRequest{Name: "grpc"}); grpc.Code(err) != codes.Unavailable {
+		t.Fatalf("%v.SayHello(_, _) = _, %v, want _, %s", helloC, err, codes.Unavailable)
+	}
+	// A non-failfast rpc should be succeeded after the second server list is received from
+	// the remote load balancer.
+	if _, err := helloC.SayHello(context.Background(), &hwpb.HelloRequest{Name: "grpc"}, grpc.FailFast(false)); err != nil {
+		t.Fatalf("%v.SayHello(_, _) = _, %v, want _, <nil>", helloC, err)
 	}
 	cc.Close()
 }

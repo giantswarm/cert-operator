@@ -49,7 +49,7 @@ The response will be in JSON. For example:
   "auth": {
     "client_token": "c4f280f6-fdb2-18eb-89d3-589e2e834cdb",
     "policies": [
-      "root"
+      "admins"
     ],
     "metadata": {
       "username": "mitchellh"
@@ -85,12 +85,12 @@ Use `vault path-help` for more details.
 ```
 $ vault write auth/userpass/users/mitchellh \
     password=foo \
-    policies=root
+    policies=admins
 ...
 ```
 
 The above creates a new user "mitchellh" with the password "foo" that
-will be associated with the "root" policy. This is the only configuration
+will be associated with the "admins" policy. This is the only configuration
 necessary.
 
 ## API
@@ -163,6 +163,72 @@ necessary.
   <dd>`204` response code.
   </dd>
 </dl>
+
+#### GET
+<dl class="api">
+  <dt>Description</dt>
+  <dd>
+  Reads the properties of an existing username.
+  </dd>
+
+  <dt>Method</dt>
+  <dd>GET</dd>
+
+  <dt>URL</dt>
+  <dd>`/auth/userpass/users/[username]`</dd>
+
+  <dt>Parameters</dt>
+  <dd>
+    None.
+  </dd>
+
+  <dt>Returns</dt>
+  <dd>
+
+```javascript
+{
+        "request_id": "812229d7-a82e-0b20-c35b-81ce8c1b9fa6",
+        "lease_id": "",
+        "lease_duration": 0,
+        "renewable": false,
+        "data": {
+                "max_ttl": 0,
+                "policies": "default,dev",
+                "ttl": 0
+        },
+        "warnings": null
+}
+```
+
+  </dd>
+</dl>
+
+
+#### DELETE
+<dl class="api">
+  <dt>Description</dt>
+  <dd>
+  Deletes an existing username from the backend.
+  </dd>
+
+  <dt>Method</dt>
+  <dd>DELETE</dd>
+
+  <dt>URL</dt>
+  <dd>`/auth/userpass/users/[username]`</dd>
+
+  <dt>Parameters</dt>
+  <dd>
+    None.
+  </dd>
+
+  <dt>Returns</dt>
+  <dd>`204` response code.
+  </dd>
+</dl>
+
+
+
 
 ### /auth/userpass/users/[username]/password
 #### POST
@@ -295,3 +361,37 @@ necessary.
 
   </dd>
 </dl>
+
+### /auth/userpass/users
+#### LIST
+<dl class="api">
+  <dt>Description</dt>
+  <dd>
+List the users registered with the backend.
+  </dd>
+
+  <dt>Method</dt>
+  <dd>LIST/GET</dd>
+
+  <dt>URL</dt>
+  <dd>`/auth/userpass/users` (LIST) `/auth/userpass/users?list=true` (GET)</dd>
+
+  <dt>Parameters</dt>
+  <dd>
+None
+  </dd>
+
+  <dt>Returns</dt>
+  <dd>
+
+   ```javascript
+[
+        "devuser",
+	"produser"
+]
+   ```
+
+  </dd>
+</dl>
+
+

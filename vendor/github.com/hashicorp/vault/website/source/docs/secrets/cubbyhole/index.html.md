@@ -44,15 +44,15 @@ If a client requests wrapping:
 
 1. The original response is serialized to JSON
 2. A new single-use token is generated with a TTL as supplied by the client
-3. The original response JSON is stored in `cubbyhole/response` under the key
-   `"response"`
+3. Internally, the original response JSON is stored in the single-use token's
+   cubbyhole.
 4. A new response is generated, with the token ID and the token TTL stored in
    the new response's `wrap_info` dict
 5. The new response is returned to the caller
 
-To get the original value, if using the API, simply perform a read on
-`cubbyhole/response`. In the `data` dict in the Secret response, the value of
-the `response` key can be directly unmarshaled as JSON into a new API Secret.
+To get the original value, if using the API, perform a write on
+`sys/wrapping/unwrap`, passing in the wrapping token ID. The original value
+will be returned.
 
 If using the CLI, passing the wrapping token's ID to the `vault unwrap` command
 will return the original value; `-format` and `-field` can be set like with
@@ -137,10 +137,10 @@ As expected, the value previously set is returned to us.
   </dd>
 
   <dt>Method</dt>
-  <dd>GET</dd>
+  <dd>LIST/GET</dd>
 
   <dt>URL</dt>
-  <dd>`/cubbyhole/<path>?list=true`</dd>
+  <dd>`/cubbyhole/<path>` (LIST) or `/cubbyhole/<path>?list=true` (GET)</dd>
 
   <dt>Parameters</dt>
   <dd>
@@ -159,7 +159,7 @@ As expected, the value previously set is returned to us.
     "data": {
       "keys": ["foo", "foo/"]
     },
-    "lease_duration": 2592000,
+    "lease_duration": 2764800,
     "lease_id": "",
     "renewable": false
   }

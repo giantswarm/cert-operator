@@ -36,6 +36,29 @@ func TestDefaultConfig_envvar(t *testing.T) {
 	}
 }
 
+func TestClientNilConfig(t *testing.T) {
+	client, err := NewClient(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if client == nil {
+		t.Fatal("expected a non-nil client")
+	}
+}
+
+func TestClientSetAddress(t *testing.T) {
+	client, err := NewClient(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := client.SetAddress("http://172.168.2.1:8300"); err != nil {
+		t.Fatal(err)
+	}
+	if client.addr.Host != "172.168.2.1:8300" {
+		t.Fatalf("bad: expected: '172.168.2.1:8300' actual: %q", client.addr.Host)
+	}
+}
+
 func TestClientToken(t *testing.T) {
 	tokenValue := "foo"
 	handler := func(w http.ResponseWriter, req *http.Request) {}
@@ -107,16 +130,19 @@ func TestClientEnvSettings(t *testing.T) {
 	oldClientCert := os.Getenv(EnvVaultClientCert)
 	oldClientKey := os.Getenv(EnvVaultClientKey)
 	oldSkipVerify := os.Getenv(EnvVaultInsecure)
-	os.Setenv("VAULT_CACERT", cwd+"/test-fixtures/keys/cert.pem")
-	os.Setenv("VAULT_CAPATH", cwd+"/test-fixtures/keys")
-	os.Setenv("VAULT_CLIENT_CERT", cwd+"/test-fixtures/keys/cert.pem")
-	os.Setenv("VAULT_CLIENT_KEY", cwd+"/test-fixtures/keys/key.pem")
-	os.Setenv("VAULT_SKIP_VERIFY", "true")
-	defer os.Setenv("VAULT_CACERT", oldCACert)
-	defer os.Setenv("VAULT_CAPATH", oldCAPath)
-	defer os.Setenv("VAULT_CLIENT_CERT", oldClientCert)
-	defer os.Setenv("VAULT_CLIENT_KEY", oldClientKey)
-	defer os.Setenv("VAULT_SKIP_VERIFY", oldSkipVerify)
+	oldMaxRetries := os.Getenv(EnvVaultMaxRetries)
+	os.Setenv(EnvVaultCACert, cwd+"/test-fixtures/keys/cert.pem")
+	os.Setenv(EnvVaultCAPath, cwd+"/test-fixtures/keys")
+	os.Setenv(EnvVaultClientCert, cwd+"/test-fixtures/keys/cert.pem")
+	os.Setenv(EnvVaultClientKey, cwd+"/test-fixtures/keys/key.pem")
+	os.Setenv(EnvVaultInsecure, "true")
+	os.Setenv(EnvVaultMaxRetries, "5")
+	defer os.Setenv(EnvVaultCACert, oldCACert)
+	defer os.Setenv(EnvVaultCAPath, oldCAPath)
+	defer os.Setenv(EnvVaultClientCert, oldClientCert)
+	defer os.Setenv(EnvVaultClientKey, oldClientKey)
+	defer os.Setenv(EnvVaultInsecure, oldSkipVerify)
+	defer os.Setenv(EnvVaultMaxRetries, oldMaxRetries)
 
 	config := DefaultConfig()
 	if err := config.ReadEnvironment(); err != nil {

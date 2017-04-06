@@ -1,5 +1,5 @@
-hash: 9b337714f3195700f523b9025e711df3646b92387f5ae7445d1a8fb76fd06cbf
-updated: 2017-03-22T16:11:37.296511858Z
+hash: 2f34b256ec79ecad4882fb3df4ffb089b0c45097631274c66740ede7e119868b
+updated: 2017-04-06T14:01:13.399221349+01:00
 imports:
 - name: github.com/fatih/structs
   version: a720dfa8df582c51dee1b36feabb906bde1588bd
@@ -16,7 +16,7 @@ imports:
 - name: github.com/hashicorp/go-rootcerts
   version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
 - name: github.com/hashicorp/hcl
-  version: 630949a3c5fa3c613328e1b8256052cbc2327c9b
+  version: 39fa3a62ba92cf550eb0f9cfb84757ef79b8aa30
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -27,9 +27,11 @@ imports:
   - json/scanner
   - json/token
 - name: github.com/hashicorp/vault
-  version: f627c01df8d7bebb403cf899ca1beb24f5fc84cd
+  version: f4adc7fa960ed8e828f94bc6785bcdbae8d1b263
   subpackages:
   - api
+  - helper/compressutil
+  - helper/jsonutil
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/errgo
@@ -37,9 +39,11 @@ imports:
 - name: github.com/mitchellh/go-homedir
   version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/mitchellh/mapstructure
-  version: 53818660ed4955e899c0bcafa97299a388bd7c8e
+  version: ed105d635dfa9ea7133f7c79f1eb36203fc3a156
+- name: github.com/sethgrid/pester
+  version: 2c5fb962da6113d0968907fd81dba3ca35151d1c
 - name: github.com/spf13/cobra
-  version: 7be4beda01ec05d0b93d80b3facd2b6f44080d94
+  version: dc208f4211e7f6df7ec8cb62640f57d3e154910d
 - name: github.com/spf13/pflag
-  version: 9ff6c6923cfffbcd502984b8e0c80539a94968b7
+  version: 5ccb023bc27df288a957c5e994cd44fd19619465
 testImports: []

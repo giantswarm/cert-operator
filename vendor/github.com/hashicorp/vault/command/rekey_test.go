@@ -174,10 +174,13 @@ func TestRekey_init_pgp(t *testing.T) {
 		Logger: nil,
 		System: logical.StaticSystemView{
 			DefaultLeaseTTLVal: time.Hour * 24,
-			MaxLeaseTTLVal:     time.Hour * 24 * 30,
+			MaxLeaseTTLVal:     time.Hour * 24 * 32,
 		},
 	}
-	sysBackend := vault.NewSystemBackend(core, bc)
+	sysBackend, err := vault.NewSystemBackend(core, bc)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	ui := new(cli.MockUi)
 	c := &RekeyCommand{
@@ -227,7 +230,8 @@ func TestRekey_init_pgp(t *testing.T) {
 	}
 
 	type backupStruct struct {
-		Keys map[string][]string
+		Keys    map[string][]string
+		KeysB64 map[string][]string
 	}
 	backupVals := &backupStruct{}
 
@@ -247,6 +251,7 @@ func TestRekey_init_pgp(t *testing.T) {
 	}
 
 	backupVals.Keys = resp.Data["keys"].(map[string][]string)
+	backupVals.KeysB64 = resp.Data["keys_base64"].(map[string][]string)
 
 	// Now delete and try again; the values should be inaccessible
 	req = logical.TestRequest(t, logical.DeleteOperation, "rekey/backup")
@@ -269,7 +274,8 @@ func TestRekey_init_pgp(t *testing.T) {
 	// Sort, because it'll be tested with DeepEqual later
 	for k, _ := range backupVals.Keys {
 		sort.Strings(backupVals.Keys[k])
+		sort.Strings(backupVals.KeysB64[k])
 	}
 
-	parseDecryptAndTestUnsealKeys(t, ui.OutputWriter.String(), token, true, backupVals.Keys, core)
+	parseDecryptAndTestUnsealKeys(t, ui.OutputWriter.String(), token, true, backupVals.Keys, backupVals.KeysB64, core)
 }

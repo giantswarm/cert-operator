@@ -9,6 +9,8 @@ import (
 
 	"errors"
 
+	"github.com/hashicorp/vault/helper/jsonutil"
+	"github.com/hashicorp/vault/helper/salt"
 	"github.com/hashicorp/vault/logical"
 )
 
@@ -36,18 +38,24 @@ func TestFormatJSON_formatRequest(t *testing.T) {
 
 	for name, tc := range cases {
 		var buf bytes.Buffer
-		var format FormatJSON
-		if err := format.FormatRequest(&buf, tc.Auth, tc.Req, tc.Err); err != nil {
+		formatter := AuditFormatter{
+			AuditFormatWriter: &JSONFormatWriter{},
+		}
+		salter, _ := salt.NewSalt(nil, nil)
+		config := FormatterConfig{
+			Salt: salter,
+		}
+		if err := formatter.FormatRequest(&buf, config, tc.Auth, tc.Req, tc.Err); err != nil {
 			t.Fatalf("bad: %s\nerr: %s", name, err)
 		}
 
-		var expectedjson = new(JSONRequestEntry)
-		if err := json.Unmarshal([]byte(tc.Result), &expectedjson); err != nil {
+		var expectedjson = new(AuditRequestEntry)
+		if err := jsonutil.DecodeJSON([]byte(tc.Result), &expectedjson); err != nil {
 			t.Fatalf("bad json: %s", err)
 		}
 
-		var actualjson = new(JSONRequestEntry)
-		if err := json.Unmarshal([]byte(buf.String()), &actualjson); err != nil {
+		var actualjson = new(AuditRequestEntry)
+		if err := jsonutil.DecodeJSON([]byte(buf.String()), &actualjson); err != nil {
 			t.Fatalf("bad json: %s", err)
 		}
 

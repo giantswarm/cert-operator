@@ -10,10 +10,13 @@ import (
 	"net"
 	"strconv"
 	"sync"
+
+	"github.com/hashicorp/vault/helper/tlsutil"
+	"github.com/hashicorp/vault/vault"
 )
 
 // ListenerFactory is the factory function to create a listener.
-type ListenerFactory func(map[string]string, io.Writer) (net.Listener, map[string]string, ReloadFunc, error)
+type ListenerFactory func(map[string]string, io.Writer) (net.Listener, map[string]string, vault.ReloadFunc, error)
 
 // BuiltinListeners is the list of built-in listener types.
 var BuiltinListeners = map[string]ListenerFactory{
@@ -21,16 +24,9 @@ var BuiltinListeners = map[string]ListenerFactory{
 	"atlas": atlasListenerFactory,
 }
 
-// tlsLookup maps the tls_min_version configuration to the internal value
-var tlsLookup = map[string]uint16{
-	"tls10": tls.VersionTLS10,
-	"tls11": tls.VersionTLS11,
-	"tls12": tls.VersionTLS12,
-}
-
 // NewListener creates a new listener of the given type with the given
 // configuration. The type is looked up in the BuiltinListeners map.
-func NewListener(t string, config map[string]string, logger io.Writer) (net.Listener, map[string]string, ReloadFunc, error) {
+func NewListener(t string, config map[string]string, logger io.Writer) (net.Listener, map[string]string, vault.ReloadFunc, error) {
 	f, ok := BuiltinListeners[t]
 	if !ok {
 		return nil, nil, nil, fmt.Errorf("unknown listener type: %s", t)
@@ -42,7 +38,7 @@ func NewListener(t string, config map[string]string, logger io.Writer) (net.List
 func listenerWrapTLS(
 	ln net.Listener,
 	props map[string]string,
-	config map[string]string) (net.Listener, map[string]string, ReloadFunc, error) {
+	config map[string]string) (net.Listener, map[string]string, vault.ReloadFunc, error) {
 	props["tls"] = "disabled"
 
 	if v, ok := config["tls_disable"]; ok {
@@ -80,8 +76,8 @@ func listenerWrapTLS(
 
 	tlsConf := &tls.Config{}
 	tlsConf.GetCertificate = cg.getCertificate
-	tlsConf.NextProtos = []string{"http/1.1"}
-	tlsConf.MinVersion, ok = tlsLookup[tlsvers]
+	tlsConf.NextProtos = []string{"h2", "http/1.1"}
+	tlsConf.MinVersion, ok = tlsutil.TLSLookup[tlsvers]
 	if !ok {
 		return nil, nil, nil, fmt.Errorf("'tls_min_version' value %s not supported, please specify one of [tls10,tls11,tls12]", tlsvers)
 	}

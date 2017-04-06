@@ -2,9 +2,8 @@ package transit
 
 import (
 	"encoding/base64"
-	"fmt"
 
-	"github.com/hashicorp/vault/helper/certutil"
+	"github.com/hashicorp/vault/helper/errutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -27,6 +26,11 @@ func (b *backend) pathDecrypt() *framework.Path {
 				Type:        framework.TypeString,
 				Description: "Context for key derivation. Required for derived keys.",
 			},
+
+			"nonce": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: "Nonce for when convergent encryption is used",
+			},
 		},
 
 		Callbacks: map[logical.Operation]framework.OperationFunc{
@@ -46,14 +50,25 @@ func (b *backend) pathDecryptWrite(
 		return logical.ErrorResponse("missing ciphertext to decrypt"), logical.ErrInvalidRequest
 	}
 
+	var err error
+
 	// Decode the context if any
 	contextRaw := d.Get("context").(string)
 	var context []byte
 	if len(contextRaw) != 0 {
-		var err error
 		context, err = base64.StdEncoding.DecodeString(contextRaw)
 		if err != nil {
-			return logical.ErrorResponse("failed to decode context as base64"), logical.ErrInvalidRequest
+			return logical.ErrorResponse("failed to base64-decode context"), logical.ErrInvalidRequest
+		}
+	}
+
+	// Decode the nonce if any
+	nonceRaw := d.Get("nonce").(string)
+	var nonce []byte
+	if len(nonceRaw) != 0 {
+		nonce, err = base64.StdEncoding.DecodeString(nonceRaw)
+		if err != nil {
+			return logical.ErrorResponse("failed to base64-decode nonce"), logical.ErrInvalidRequest
 		}
 	}
 
@@ -69,20 +84,16 @@ func (b *backend) pathDecryptWrite(
 		return logical.ErrorResponse("policy not found"), logical.ErrInvalidRequest
 	}
 
-	plaintext, err := p.Decrypt(context, ciphertext)
+	plaintext, err := p.Decrypt(context, nonce, ciphertext)
 	if err != nil {
 		switch err.(type) {
-		case certutil.UserError:
+		case errutil.UserError:
 			return logical.ErrorResponse(err.Error()), logical.ErrInvalidRequest
-		case certutil.InternalError:
+		case errutil.InternalError:
 			return nil, err
 		default:
 			return nil, err
 		}
-	}
-
-	if plaintext == "" {
-		return nil, fmt.Errorf("empty plaintext returned")
 	}
 
 	// Generate the response

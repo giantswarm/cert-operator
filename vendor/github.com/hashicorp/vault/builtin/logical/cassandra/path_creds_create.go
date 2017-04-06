@@ -5,7 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gocql/gocql"
 	"github.com/hashicorp/go-uuid"
+	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -59,15 +61,35 @@ func (b *backend) pathCredsCreateRead(
 	if err != nil {
 		return nil, err
 	}
+	
+	// Set consistency
+	if role.Consistency != "" {
+		consistencyValue, err := gocql.ParseConsistencyWrapper(role.Consistency)
+		if err != nil {
+			return nil, err
+		}
+		
+		session.SetConsistency(consistencyValue)
+	}
 
 	// Execute each query
-	for _, query := range splitSQL(role.CreationCQL) {
+	for _, query := range strutil.ParseArbitraryStringSlice(role.CreationCQL, ";") {
+		query = strings.TrimSpace(query)
+		if len(query) == 0 {
+			continue
+		}
+
 		err = session.Query(substQuery(query, map[string]string{
 			"username": username,
 			"password": password,
 		})).Exec()
 		if err != nil {
-			for _, query := range splitSQL(role.RollbackCQL) {
+			for _, query := range strutil.ParseArbitraryStringSlice(role.RollbackCQL, ";") {
+				query = strings.TrimSpace(query)
+				if len(query) == 0 {
+					continue
+				}
+
 				session.Query(substQuery(query, map[string]string{
 					"username": username,
 					"password": password,

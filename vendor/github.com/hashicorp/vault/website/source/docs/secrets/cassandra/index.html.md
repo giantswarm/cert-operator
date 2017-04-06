@@ -182,6 +182,11 @@ subpath for interactive help output.
         <span class="param-flags">optional</span>
         The CQL protocol version to use. Defaults to 2.
       </li>
+      <li>
+        <span class="param">connect_timeout</span>
+        <span class="param-flags">optional</span>
+        The connection timeout to use. Defaults to 5 seconds.
+      </li>
     </ul>
   </dd>
 
@@ -212,26 +217,36 @@ subpath for interactive help output.
       <li>
         <span class="param">creation_cql</span>
         <span class="param-flags">optional</span>
-        The CQL statements executed to create and configure the new user.
-        Must be semi-colon separated. The '{{username}}' and '{{password}}'
-        values will be substituted; it is required that these parameters are
-        in single quotes. The default creates a non-superuser user with
-        no authorization grants.
+        The CQL statements executed to create and configure the new user. Must
+        be a semicolon-separated string, a base64-encoded semicolon-separated
+        string, a serialized JSON string array, or a base64-encoded serialized
+        JSON string array. The '{{username}}' and '{{password}}' values will be
+        substituted; it is required that these parameters are in single quotes.
+        The default creates a non-superuser user with no authorization grants.
       </li>
       <li>
         <span class="param">rollback_cql</span>
         <span class="param-flags">optional</span>
         The CQL statements executed to attempt a rollback if an error is
         encountered during user creation. The default is to delete the user.
-        Must be semi-colon separated. The '{{username}}' and '{{password}}'
-        values will be substituted; it is required that these parameters are
-        in single quotes.
+        Must be a semicolon-separated string, a base64-encoded
+        semicolon-separated string, a serialized JSON string array, or a
+        base64-encoded serialized JSON string array. The '{{username}}' and
+        '{{password}}' values will be substituted; it is required that these
+        parameters are in single quotes.
       </li>
       <li>
         <span class="param">lease</span>
         <span class="param-flags">optional</span>
         The lease value provided as a string duration
         with time suffix. Hour is the largest suffix.
+      </li>
+      <li>
+        <span class="param">consistency</span>
+        <span class="param-flags">optional</span>
+        The consistency level value provided as a string. Determines the 
+        consistency level used for operations performed on the Cassandra
+        database. Defaults to a consistency level of Quorum.
       </li>
     </ul>
   </dd>
@@ -270,6 +285,7 @@ subpath for interactive help output.
         "creation_cql": "CREATE USER...",
         "rollback_cql": "DROP USER...",
         "lease": "12h",
+        "consistency": "Quorum"
       }
     }
     ```
