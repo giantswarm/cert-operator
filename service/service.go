@@ -8,11 +8,11 @@ import (
 
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
+	k8sutil "github.com/giantswarm/operatorkit/client/k8s"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
 
-	k8sutil "github.com/giantswarm/cert-operator/client/k8s"
 	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
 	"github.com/giantswarm/cert-operator/service/ca"
@@ -72,8 +72,14 @@ func New(config Config) (*Service, error) {
 	{
 		k8sConfig := k8sutil.Config{
 			Logger: config.Logger,
-			Flag:   config.Flag,
-			Viper:  config.Viper,
+
+			TLS: k8sutil.TLSClientConfig{
+				CAFile:  config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CAFile),
+				CrtFile: config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CrtFile),
+				KeyFile: config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.KeyFile),
+			},
+			Address:   config.Viper.GetString(config.Flag.Service.Kubernetes.Address),
+			InCluster: config.Viper.GetBool(config.Flag.Service.Kubernetes.InCluster),
 		}
 
 		k8sClient, err = k8sutil.NewClient(k8sConfig)
