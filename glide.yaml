@@ -38,6 +38,8 @@ import:
   - rest
 - package: github.com/giantswarm/certificatetpr
   version: fa554d09f0137a91aa6ef007b92e170b31dbefd2
+- package: github.com/giantswarm/operatorkit
+  version: fe10aabcd73d425fd3133c239a64c6d4dc85c714
 testImport:
 - package: github.com/stretchr/testify
   version: ^1.1.4
