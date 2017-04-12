@@ -47,7 +47,7 @@ type Config struct {
 
 // certificateSecret stores a cert issued by Vault that will be stored as a k8s secret.
 type certificateSecret struct {
-	Certificate   *certificatetpr.CustomObject
+	Certificate   certificatetpr.Spec
 	IssueResponse spec.IssueResponse
 }
 
@@ -138,14 +138,14 @@ func (s *Service) Boot() {
 // addFunc issues a certificate using Vault for the certificate TPR. A PKI backend is
 // setup for the Cluster ID if it does not yet exist.
 func (s *Service) addFunc(obj interface{}) {
-	cert := obj.(*certificatetpr.CustomObject)
+	cert := *obj.(*certificatetpr.CustomObject)
 	s.Config.Logger.Log("debug", fmt.Sprintf("creating certificate '%s'", cert.Spec.CommonName))
 
-	if err := s.Config.CAService.SetupPKI(cert); err != nil {
+	if err := s.Config.CAService.SetupPKI(cert.Spec); err != nil {
 		s.Config.Logger.Log("error", fmt.Sprintf("could not setup PKI '%#v'", err))
 		return
 	}
-	if err := s.Issue(cert); err != nil {
+	if err := s.Issue(cert.Spec); err != nil {
 		s.Config.Logger.Log("error", fmt.Sprintf("could not issue cert '%#v'", err))
 		return
 	}
@@ -155,10 +155,10 @@ func (s *Service) addFunc(obj interface{}) {
 
 // deleteFunc deletes the k8s secret containing the certificate.
 func (s *Service) deleteFunc(obj interface{}) {
-	cert := obj.(*certificatetpr.CustomObject)
+	cert := *obj.(*certificatetpr.CustomObject)
 	s.Config.Logger.Log("debug", fmt.Sprintf("deleting certificate '%s'", cert.Spec.CommonName))
 
-	if err := s.DeleteCertificate(cert); err != nil {
+	if err := s.DeleteCertificate(cert.Spec); err != nil {
 		s.Config.Logger.Log("error", fmt.Sprintf("could not delete certificate '%#v'", err))
 		return
 	}

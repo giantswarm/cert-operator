@@ -11,19 +11,19 @@ import (
 )
 
 // SetupPKI creates a PKI backend and policy if one does not exists for the cluster.
-func (s *Service) SetupPKI(cert *certificatetpr.CustomObject) error {
-	s.Config.Logger.Log("debug", fmt.Sprintf("setting up PKI for cluster '%s'", cert.Spec.ClusterID))
+func (s *Service) SetupPKI(cert certificatetpr.Spec) error {
+	s.Config.Logger.Log("debug", fmt.Sprintf("setting up PKI for cluster '%s'", cert.ClusterID))
 
-	if err := s.setupPKIBackend(cert.Spec); err != nil {
+	if err := s.setupPKIBackend(cert); err != nil {
 		s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki backend '%#v'", err))
 		return err
 	}
-	if err := s.setupPKIPolicy(cert.Spec); err != nil {
+	if err := s.setupPKIPolicy(cert); err != nil {
 		s.Config.Logger.Log("error", fmt.Sprintf("could not setup pki policy '%#v'", err))
 		return err
 	}
 
-	s.Config.Logger.Log("debug", fmt.Sprintf("valid PKI exists for cluster '%s'", cert.Spec.ClusterID))
+	s.Config.Logger.Log("debug", fmt.Sprintf("valid PKI exists for cluster '%s'", cert.ClusterID))
 	return nil
 }
 
