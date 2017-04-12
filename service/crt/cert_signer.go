@@ -12,7 +12,7 @@ import (
 // Issue generates a certificate using the PKI backend signed by the certificate
 // authority associated with the configured cluster ID. The certificate is saved
 // as a set of k8s secrets.
-func (s *Service) Issue(cert *certificatetpr.CustomObject) error {
+func (s *Service) Issue(cert certificatetpr.Spec) error {
 	newCertSignerConfig := certsigner.DefaultConfig()
 	newCertSignerConfig.VaultClient = s.Config.VaultClient
 
@@ -23,11 +23,11 @@ func (s *Service) Issue(cert *certificatetpr.CustomObject) error {
 
 	// Generate a new signed certificate.
 	newIssueConfig := spec.IssueConfig{
-		ClusterID:  cert.Spec.ClusterID,
-		CommonName: cert.Spec.CommonName,
-		IPSANs:     strings.Join(cert.Spec.IPSANs, ","),
-		AltNames:   strings.Join(cert.Spec.AltNames, ","),
-		TTL:        cert.Spec.TTL,
+		ClusterID:  cert.ClusterID,
+		CommonName: cert.CommonName,
+		IPSANs:     strings.Join(cert.IPSANs, ","),
+		AltNames:   strings.Join(cert.AltNames, ","),
+		TTL:        cert.TTL,
 	}
 	newIssueResponse, err := newCertSigner.Issue(newIssueConfig)
 	if err != nil {

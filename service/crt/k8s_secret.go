@@ -17,8 +17,8 @@ func (s *Service) CreateCertificate(secret certificateSecret) error {
 		ObjectMeta: v1.ObjectMeta{
 			Name: getSecretName(secret.Certificate),
 			Labels: map[string]string{
-				certificatetpr.ClusterIDLabel: secret.Certificate.Spec.ClusterID,
-				certificatetpr.ComponentLabel: secret.Certificate.Spec.ClusterComponent,
+				certificatetpr.ClusterIDLabel: secret.Certificate.ClusterID,
+				certificatetpr.ComponentLabel: secret.Certificate.ClusterComponent,
 			},
 		},
 		StringData: map[string]string{
@@ -40,7 +40,7 @@ func (s *Service) CreateCertificate(secret certificateSecret) error {
 }
 
 // DeleteCertificate deletes the k8s secret that stores the certificate.
-func (s *Service) DeleteCertificate(cert *certificatetpr.CustomObject) error {
+func (s *Service) DeleteCertificate(cert certificatetpr.Spec) error {
 	// Delete the secret which should be idempotent.
 	err := s.Config.K8sClient.Core().Secrets(v1.NamespaceDefault).Delete(getSecretName(cert), &v1.DeleteOptions{})
 	if errors.IsNotFound(err) {
@@ -52,6 +52,6 @@ func (s *Service) DeleteCertificate(cert *certificatetpr.CustomObject) error {
 	return nil
 }
 
-func getSecretName(cert *certificatetpr.CustomObject) string {
-	return fmt.Sprintf("%s-%s", cert.Spec.ClusterID, cert.Spec.ClusterComponent)
+func getSecretName(cert certificatetpr.Spec) string {
+	return fmt.Sprintf("%s-%s", cert.ClusterID, cert.ClusterComponent)
 }
