@@ -52,5 +52,12 @@ spec:
         - daemon
         - --config.dirs="/var/run/cert-operator/configmap/ /var/run/cert-operator/secret/"
         - --config.files="config secret"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 20Mi
+          limits:
+            cpu: 250m
+            memory: 250Mi
       imagePullSecrets:
       - name: circleci-giantswarm-registry
