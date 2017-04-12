@@ -124,7 +124,6 @@ func (s *Service) Boot() {
 			cache.ResourceEventHandlerFuncs{
 				AddFunc:    s.addFunc,
 				DeleteFunc: s.deleteFunc,
-				UpdateFunc: s.updateFunc,
 			},
 		)
 
@@ -165,12 +164,6 @@ func (s *Service) deleteFunc(obj interface{}) {
 	}
 
 	s.Config.Logger.Log("info", fmt.Sprintf("certificate '%s' deleted", cert.Spec.CommonName))
-}
-
-// updateFunc is not yet implemented.
-func (s *Service) updateFunc(old, cur interface{}) {
-	cert := cur.(*certificatetpr.CustomObject)
-	s.Config.Logger.Log("info", fmt.Sprintf("updating certificate '%s' is not implemented yet", cert.Spec.CommonName))
 }
 
 // newCertificateListWatch returns a configured list watch for the certificate TPR.
