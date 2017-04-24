@@ -37,7 +37,7 @@ import:
   - kubernetes
   - rest
 - package: github.com/giantswarm/certificatetpr
-  version: fa554d09f0137a91aa6ef007b92e170b31dbefd2
+  version: 47a844363c25027d0c114042ec1503c5d743ef99
 testImport:
 - package: github.com/stretchr/testify
   version: ^1.1.4
