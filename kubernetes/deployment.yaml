@@ -50,8 +50,10 @@ spec:
           containerPort: 8000
         args:
         - daemon
-        - --config.dirs="/var/run/cert-operator/configmap/ /var/run/cert-operator/secret/"
-        - --config.files="config secret"
+        - --config.dirs=/var/run/cert-operator/configmap/
+        - --config.dirs=/var/run/cert-operator/secret/
+        - --config.files=config
+        - --config.files=secret
         resources:
           requests:
             cpu: 100m
