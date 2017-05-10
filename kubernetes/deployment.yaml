@@ -35,7 +35,7 @@ spec:
           path: /etc/ssl/certs/
       containers:
       - name: cert-operator
-        image: registry.giantswarm.io/giantswarm/cert-operator:{{ .BuildInfo.SHA }}
+        image: quay.io/giantswarm/cert-operator:{{ .BuildInfo.SHA }}
         volumeMounts:
         - name: cert-operator-configmap
           mountPath: /var/run/cert-operator/configmap/
@@ -62,4 +62,4 @@ spec:
             cpu: 250m
             memory: 250Mi
       imagePullSecrets:
-      - name: circleci-giantswarm-registry
+      - name: giantswarm-registry
