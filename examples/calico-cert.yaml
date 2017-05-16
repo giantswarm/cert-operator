@@ -3,6 +3,9 @@ kind: Certificate
 metadata:
   name: "example-cluster-calico"
   namespace: "default"
+  labels:
+    clusterID: "example-cluster"
+    clusterComponent: "calico"
 spec:
   clusterID: "example-cluster"
   clusterComponent: "calico"

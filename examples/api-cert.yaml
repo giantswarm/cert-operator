@@ -3,6 +3,9 @@ kind: Certificate
 metadata:
   name: "example-cluster-api"
   namespace: "default"
+  labels:
+    clusterID: "example-cluster"
+    clusterComponent: "api"
 spec:
   clusterID: "example-cluster"
   clusterComponent: "api"
