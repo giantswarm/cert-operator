@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+
+	vaultclient "github.com/hashicorp/vault/api"
 
 	"github.com/giantswarm/certctl/service/cert-signer"
 	"github.com/giantswarm/certctl/service/spec"
@@ -18,6 +19,7 @@ import (
 type issueFlags struct {
 	VaultAddress string
 	VaultToken   string
+	VaultTLS     *vaultclient.TLSConfig
 
 	// Cluster
 	ClusterID string
@@ -41,14 +43,22 @@ var (
 		Run:   issueRun,
 	}
 
-	newIssueFlags = &issueFlags{}
+	newIssueFlags = &issueFlags{
+		VaultTLS: &vaultclient.TLSConfig{},
+	}
 )
 
 func init() {
 	CLICmd.AddCommand(issueCmd)
 
-	issueCmd.Flags().StringVar(&newIssueFlags.VaultAddress, "vault-addr", fromEnv("VAULT_ADDR", "http://127.0.0.1:8200"), "Address used to connect to Vault.")
-	issueCmd.Flags().StringVar(&newIssueFlags.VaultToken, "vault-token", fromEnv("VAULT_TOKEN", ""), "Token used to authenticate against Vault.")
+	issueCmd.Flags().StringVar(&newIssueFlags.VaultAddress, "vault-addr", fromEnvToString(EnvVaultAddress, "http://127.0.0.1:8200"), "Address used to connect to Vault.")
+	issueCmd.Flags().StringVar(&newIssueFlags.VaultToken, "vault-token", fromEnvToString(EnvVaultToken, ""), "Token used to authenticate against Vault.")
+	issueCmd.Flags().StringVar(&newIssueFlags.VaultTLS.CACert, "vault-cacert", fromEnvToString(EnvVaultCACert, ""), "The path to a PEM-encoded CA cert file to use to verify the Vault server SSL certificate.")
+	issueCmd.Flags().StringVar(&newIssueFlags.VaultTLS.CAPath, "vault-capath", fromEnvToString(EnvVaultCAPath, ""), "The path to a directory of PEM-encoded CA cert files to verify the Vault server SSL certificate.")
+	issueCmd.Flags().StringVar(&newIssueFlags.VaultTLS.ClientCert, "vault-client-cert", fromEnvToString(EnvVaultClientCert, ""), "The path to the certificate for Vault communication.")
+	issueCmd.Flags().StringVar(&newIssueFlags.VaultTLS.ClientKey, "vault-client-key", fromEnvToString(EnvVaultClientKey, ""), "The path to the private key for Vault communication.")
+	issueCmd.Flags().StringVar(&newIssueFlags.VaultTLS.TLSServerName, "vault-tls-server-name", fromEnvToString(EnvVaultTLSServerName, ""), "If set, is used to set the SNI host when connecting via TLS.")
+	issueCmd.Flags().BoolVar(&newIssueFlags.VaultTLS.Insecure, "vault-tls-skip-verify", fromEnvBool(EnvVaultInsecure, false), "Do not verify TLS certificate.")
 
 	issueCmd.Flags().StringVar(&newIssueFlags.ClusterID, "cluster-id", "", "Cluster ID used to generate a new signed certificate for.")
 
@@ -93,9 +103,9 @@ func issueRun(cmd *cobra.Command, args []string) {
 
 	// Create a Vault client factory.
 	newVaultFactoryConfig := vaultfactory.DefaultConfig()
-	newVaultFactoryConfig.HTTPClient = &http.Client{}
 	newVaultFactoryConfig.Address = newIssueFlags.VaultAddress
 	newVaultFactoryConfig.AdminToken = newIssueFlags.VaultToken
+	newVaultFactoryConfig.TLS = newIssueFlags.VaultTLS
 	newVaultFactory, err := vaultfactory.New(newVaultFactoryConfig)
 	if err != nil {
 		log.Fatalf("%#v\n", maskAny(err))

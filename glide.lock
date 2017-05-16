@@ -1,5 +1,5 @@
-hash: dbc47292f0d7495d28638210a1897354221eb266998a902e5cc233ed3371e17a
-updated: 2017-04-24T08:27:17.881859892+02:00
+hash: 71d2eb206ab211278493d0c7f19db2f635fb885ee8c5d28c533dab9398dca28a
+updated: 2017-05-16T14:19:15.077815901+02:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -13,7 +13,7 @@ imports:
 - name: github.com/blang/semver
   version: 31b736133b98f26d5e078ec9eb591666edfd091f
 - name: github.com/coreos/etcd
-  version: e5b7ee2d03627ca33201da428b8110ef7c3e95f1
+  version: 43b75072bfaca5a7c35c718179defbcabd9a0886
   subpackages:
   - auth/authpb
   - client
@@ -59,14 +59,14 @@ imports:
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/giantswarm/certctl
-  version: 0b15172fab3ef7d0805680a90876a7d704e2e80e
+  version: 95ba833abc775e3955242ae1f8e697c58637bfe7
   subpackages:
   - service/cert-signer
   - service/pki
   - service/spec
   - service/token
 - name: github.com/giantswarm/certificatetpr
-  version: 47a844363c25027d0c114042ec1503c5d743ef99
+  version: 880d3a1d529cf58c0f56b3edd53cd6c36e6d2886
 - name: github.com/giantswarm/go-uuid
   version: ed3ca8a15a931b141440a7e98e4f716eec255f7d
   subpackages:
@@ -93,6 +93,10 @@ imports:
   - transaction
   - transaction/context/id
   - transaction/context/tracked
+- name: github.com/giantswarm/operatorkit
+  version: 2d3c599c5e848cf746667a89cac824f357d156fc
+  subpackages:
+  - client/k8s
 - name: github.com/go-kit/kit
   version: f66b0e13579bfc5a48b9e2a94b1209c107ea1f41
   subpackages:
@@ -110,7 +114,7 @@ imports:
 - name: github.com/go-openapi/swag
   version: 1d0bd113de87027671077d3c71eb3ac5d7dbba72
 - name: github.com/go-stack/stack
-  version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
+  version: 7a2f19628aabfe68f0766b59e74d6315f8347d22
 - name: github.com/gogo/protobuf
   version: e18d7aa8f8c624c915db340349aad4c49b10d173
   subpackages:
@@ -151,7 +155,7 @@ imports:
 - name: github.com/hashicorp/go-rootcerts
   version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
 - name: github.com/hashicorp/hcl
-  version: 7fa7fff964d035e8a162cce3a164b3ad02ad651b
+  version: a4b07c25de5ff55ad3b8936cea69a79a3d95a855
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -198,7 +202,7 @@ imports:
 - name: github.com/pelletier/go-buffruneio
   version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
-  version: fe206efb84b2bc8e8cfafe6b4c1826622be969e3
+  version: 97253b98df84f9eef872866d079e74b8265150f1
 - name: github.com/prometheus/client_golang
   version: c5b7fccd204277076155f10851dad72b76a49317
   subpackages:
@@ -209,13 +213,13 @@ imports:
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: 9e0844febd9e2856f839c9cb974fbd676d1755a8
+  version: 13ba4ddd0caa9c28ca7b7bffe1dfa9ed8d5ef207
   subpackages:
   - expfmt
   - internal/bitbucket.org/ww/goautoneg
   - model
 - name: github.com/prometheus/procfs
-  version: 332f6238064950a97bc3ed3f5421f6418537e707
+  version: d098ca18df8bc825079013daf7bacefbb1ee877e
   subpackages:
   - xfs
 - name: github.com/PuerkitoBio/purell
@@ -231,11 +235,11 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 63121c8814fc0b99184dbc1c8b7ef4fddae437c3
+  version: 4c05eb1145f16d0e6bb4a3e1b6d769f4713cb41f
 - name: github.com/spf13/jwalterweatherman
   version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag
-  version: 2300d0f8576fe575f71aaa5b9bbe4e1b0dc2eb51
+  version: 08b1a584251b5b62f458943640fc8ebd4d50aaa5
 - name: github.com/spf13/viper
   version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: github.com/tylerb/graceful
@@ -309,7 +313,7 @@ imports:
 - name: gopkg.in/inf.v0
   version: 3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4
 - name: gopkg.in/yaml.v2
-  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
+  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 - name: k8s.io/client-go
   version: e121606b0d09b2e1c467183ee46217fa85a6b672
   subpackages:

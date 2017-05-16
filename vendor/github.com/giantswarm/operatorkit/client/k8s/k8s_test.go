@@ -1,16 +1,13 @@
 package k8s
 
 import (
-	"os"
-
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/giantswarm/microkit/logger"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 
-	"github.com/giantswarm/cert-operator/flag"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetRawClientConfig(t *testing.T) {
@@ -62,20 +59,16 @@ func TestGetRawClientConfig(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		f := flag.New()
-		v := viper.New()
-
-		v.Set(f.Service.Kubernetes.InCluster, tc.inCluster)
-		v.Set(f.Service.Kubernetes.Address, tc.expectedAddress)
-		v.Set(f.Service.Kubernetes.TLS.CrtFile, crtFile)
-		v.Set(f.Service.Kubernetes.TLS.KeyFile, keyFile)
-		v.Set(f.Service.Kubernetes.TLS.CAFile, caFile)
-
 		config := Config{
 			Logger: newLogger,
 
-			Flag:  f,
-			Viper: v,
+			Address:   tc.expectedAddress,
+			InCluster: tc.inCluster,
+			TLS: TLSClientConfig{
+				CAFile:  caFile,
+				CrtFile: crtFile,
+				KeyFile: keyFile,
+			},
 		}
 
 		rawClientConfig, err := getRawClientConfig(config)

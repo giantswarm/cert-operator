@@ -2,7 +2,6 @@ package token
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/giantswarm/go-uuid/uuid"
 	vaultclient "github.com/hashicorp/vault/api"
@@ -18,7 +17,6 @@ type ServiceConfig struct {
 func DefaultServiceConfig() ServiceConfig {
 	newClientConfig := vaultclient.DefaultConfig()
 	newClientConfig.Address = "http://127.0.0.1:8200"
-	newClientConfig.HttpClient = http.DefaultClient
 	newVaultClient, err := vaultclient.NewClient(newClientConfig)
 	if err != nil {
 		panic(err)

@@ -5,11 +5,8 @@ import (
 
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
-	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-
-	"github.com/giantswarm/cert-operator/flag"
 )
 
 const (
@@ -19,23 +16,32 @@ const (
 	MaxBurst = 100
 )
 
+// TLSClientConfig contains settings to enable transport layer security.
+type TLSClientConfig struct {
+	CAFile  string
+	CrtFile string
+	KeyFile string
+}
+
+// Config contains the common attributes to create a Kubernetes Clientset.
 type Config struct {
 	// Dependencies.
 	Logger micrologger.Logger
 
-	// Settings.
-	Flag  *flag.Flag
-	Viper *viper.Viper
+	// Settings
+	Address   string
+	InCluster bool
+	TLS       TLSClientConfig
 }
 
 func newRawClientConfig(config Config) *rest.Config {
 	tlsClientConfig := rest.TLSClientConfig{
-		CertFile: config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CrtFile),
-		KeyFile:  config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.KeyFile),
-		CAFile:   config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CAFile),
+		CertFile: config.TLS.CrtFile,
+		KeyFile:  config.TLS.KeyFile,
+		CAFile:   config.TLS.CAFile,
 	}
 	rawClientConfig := &rest.Config{
-		Host:            config.Viper.GetString(config.Flag.Service.Kubernetes.Address),
+		Host:            config.Address,
 		QPS:             MaxQPS,
 		Burst:           MaxBurst,
 		TLSClientConfig: tlsClientConfig,
@@ -48,29 +54,21 @@ func getRawClientConfig(config Config) (*rest.Config, error) {
 	var rawClientConfig *rest.Config
 	var err error
 
-	address := config.Viper.GetString(config.Flag.Service.Kubernetes.Address)
-
-	if config.Viper.GetBool(config.Flag.Service.Kubernetes.InCluster) {
+	if config.InCluster {
 		config.Logger.Log("debug", "creating in-cluster config")
 		rawClientConfig, err = rest.InClusterConfig()
 		if err != nil {
 			return nil, microerror.MaskAny(err)
 		}
-
-		if address != "" {
-			config.Logger.Log("debug", "using explicit api server")
-			rawClientConfig.Host = address
-		}
-
 	} else {
-		if address == "" {
+		if config.Address == "" {
 			return nil, microerror.MaskAnyf(invalidConfigError, "kubernetes address must not be empty")
 		}
 
 		config.Logger.Log("debug", "creating out-cluster config")
 
 		// Kubernetes listen URL.
-		_, err := url.Parse(address)
+		_, err := url.Parse(config.Address)
 		if err != nil {
 			return nil, microerror.MaskAny(err)
 		}
@@ -81,6 +79,7 @@ func getRawClientConfig(config Config) (*rest.Config, error) {
 	return rawClientConfig, nil
 }
 
+// NewClient returns a Kubernetes Clientset with the provided configuration.
 func NewClient(config Config) (kubernetes.Interface, error) {
 	rawClientConfig, err := getRawClientConfig(config)
 	if err != nil {
