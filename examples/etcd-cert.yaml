@@ -3,6 +3,9 @@ kind: Certificate
 metadata:
   name: "example-cluster-etcd"
   namespace: "default"
+  labels:
+    clusterID: "example-cluster"
+    clusterComponent: "etcd"
 spec:
   clusterID: "example-cluster"
   clusterComponent: "etcd"
