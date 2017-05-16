@@ -1,5 +1,7 @@
 # certctl
 
+[![CircleCI](https://circleci.com/gh/giantswarm/certctl.svg?style=shield)](https://circleci.com/gh/giantswarm/certctl)
+[![Docker Repository on Quay](https://quay.io/repository/giantswarm/certctl/status "Docker Repository on Quay")](https://quay.io/repository/giantswarm/certctl)
 [![Go Report Card](https://goreportcard.com/badge/github.com/giantswarm/certctl)](https://goreportcard.com/report/github.com/giantswarm/certctl)
 [![Godoc](https://godoc.org/github.com/giantswarm/certctl?status.svg)](http://godoc.org/github.com/giantswarm/certctl)
 [![IRC Channel](https://img.shields.io/badge/irc-%23giantswarm-blue.svg)](https://kiwiirc.com/service/irc.freenode.net/#giantswarm)

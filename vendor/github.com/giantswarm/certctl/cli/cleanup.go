@@ -3,9 +3,10 @@ package cli
 import (
 	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/spf13/cobra"
+
+	vaultclient "github.com/hashicorp/vault/api"
 
 	"github.com/giantswarm/certctl/service/pki"
 	"github.com/giantswarm/certctl/service/token"
@@ -16,6 +17,7 @@ type cleanupFlags struct {
 	// Vault
 	VaultAddress string
 	VaultToken   string
+	VaultTLS     *vaultclient.TLSConfig
 
 	// Cluster
 	ClusterID string
@@ -28,14 +30,22 @@ var (
 		Run:   cleanupRun,
 	}
 
-	newCleanupFlags = &cleanupFlags{}
+	newCleanupFlags = &cleanupFlags{
+		VaultTLS: &vaultclient.TLSConfig{},
+	}
 )
 
 func init() {
 	CLICmd.AddCommand(cleanupCmd)
 
-	cleanupCmd.Flags().StringVar(&newCleanupFlags.VaultAddress, "vault-addr", fromEnv("VAULT_ADDR", "http://127.0.0.1:8200"), "Address used to connect to Vault.")
-	cleanupCmd.Flags().StringVar(&newCleanupFlags.VaultToken, "vault-token", fromEnv("VAULT_TOKEN", ""), "Token used to authenticate against Vault.")
+	cleanupCmd.Flags().StringVar(&newCleanupFlags.VaultAddress, "vault-addr", fromEnvToString(EnvVaultAddress, "http://127.0.0.1:8200"), "Address used to connect to Vault.")
+	cleanupCmd.Flags().StringVar(&newCleanupFlags.VaultToken, "vault-token", fromEnvToString(EnvVaultToken, ""), "Token used to authenticate against Vault.")
+	cleanupCmd.Flags().StringVar(&newCleanupFlags.VaultTLS.CACert, "vault-cacert", fromEnvToString(EnvVaultCACert, ""), "The path to a PEM-encoded CA cert file to use to verify the Vault server SSL certificate.")
+	cleanupCmd.Flags().StringVar(&newCleanupFlags.VaultTLS.CAPath, "vault-capath", fromEnvToString(EnvVaultCAPath, ""), "The path to a directory of PEM-encoded CA cert files to verify the Vault server SSL certificate.")
+	cleanupCmd.Flags().StringVar(&newCleanupFlags.VaultTLS.ClientCert, "vault-client-cert", fromEnvToString(EnvVaultClientCert, ""), "The path to the certificate for Vault communication.")
+	cleanupCmd.Flags().StringVar(&newCleanupFlags.VaultTLS.ClientKey, "vault-client-key", fromEnvToString(EnvVaultClientKey, ""), "The path to the private key for Vault communication.")
+	cleanupCmd.Flags().StringVar(&newCleanupFlags.VaultTLS.TLSServerName, "vault-tls-server-name", fromEnvToString(EnvVaultTLSServerName, ""), "If set, is used to set the SNI host when connecting via TLS.")
+	cleanupCmd.Flags().BoolVar(&newCleanupFlags.VaultTLS.Insecure, "vault-tls-skip-verify", fromEnvBool(EnvVaultInsecure, false), "Do not verify TLS certificate.")
 
 	cleanupCmd.Flags().StringVar(&newCleanupFlags.ClusterID, "cluster-id", "", "Cluster ID used to generate a new root CA for.")
 }
@@ -59,9 +69,9 @@ func cleanupRun(cmd *cobra.Command, args []string) {
 
 	// Create a Vault client factory.
 	newVaultFactoryConfig := vaultfactory.DefaultConfig()
-	newVaultFactoryConfig.HTTPClient = &http.Client{}
 	newVaultFactoryConfig.Address = newCleanupFlags.VaultAddress
 	newVaultFactoryConfig.AdminToken = newCleanupFlags.VaultToken
+	newVaultFactoryConfig.TLS = newCleanupFlags.VaultTLS
 	newVaultFactory, err := vaultfactory.New(newVaultFactoryConfig)
 	if err != nil {
 		log.Fatalf("%#v\n", maskAny(err))
