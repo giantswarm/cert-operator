@@ -34,7 +34,7 @@ the Kubernetes API. For development running Vault in dev mode is fine.
 
 ### Setup
 
-- The operator needs to connect to a Vault server. See this [example config](https://gist.github.com/rossf7/106fc1c97ebf24517d8be3cb30eb9a49) for running Vault as a deployment with a ClusterIP service.
+- The operator needs to connect to a Vault server. See [examples/vault.yaml](https://github.com/giantswarm/cert-operator/blob/master/examples/api-cert.yaml) for running Vault as a deployment with a ClusterIP service.
 - The cert-operator binary needs to be built into a docker image and tagged as `quay.io/giantswarm/cert-operator:local-dev`. The current pod need to be deleted for changes to apply.
 
 ```
