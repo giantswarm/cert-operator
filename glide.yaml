@@ -5,13 +5,14 @@ import:
 - package: google.golang.org/grpc
   version: b5071124392bfd416c713e6595ac149b387f7186
 - package: github.com/giantswarm/certctl
-  version: 0b15172fab3ef7d0805680a90876a7d704e2e80e
+  version: master
   subpackages:
   - service/cert-signer
   - service/pki
   - service/spec
   - service/token
 - package: github.com/giantswarm/microkit
+  version: master
   subpackages:
   - command
   - error
@@ -37,7 +38,9 @@ import:
   - kubernetes
   - rest
 - package: github.com/giantswarm/certificatetpr
-  version: 47a844363c25027d0c114042ec1503c5d743ef99
+  version: master
+- package: github.com/giantswarm/operatorkit
+  version: master
 testImport:
 - package: github.com/stretchr/testify
   version: ^1.1.4
