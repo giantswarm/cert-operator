@@ -35,11 +35,12 @@ the Kubernetes API. For development running Vault in dev mode is fine.
 ### Setup
 
 - The operator needs to connect to a Vault server. See this [example config](https://gist.github.com/rossf7/106fc1c97ebf24517d8be3cb30eb9a49) for running Vault as a deployment with a ClusterIP service.
-- The cert-operator binary needs to be built into a docker image and tagged as
-`quay.io/giantswarm/cert-operator:local-dev`.
+- The cert-operator binary needs to be built into a docker image and tagged as `quay.io/giantswarm/cert-operator:local-dev`. The current pod need to be deleted for changes to apply.
 
 ```
-GOOS=linux go build github.com/giantswarm/cert-operator && docker build -t quay.io/giantswarm/cert-operator:local-dev .
+GOOS=linux go build github.com/giantswarm/cert-operator \
+  && docker build -t quay.io/giantswarm/cert-operator:local-dev . \
+  && kubectl delete pod -l app=cert-operator-local
 ```
 
 - The docker image needs to be accessible from the k8s cluster. For Minikube see [reusing the docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md).
