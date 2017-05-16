@@ -79,7 +79,8 @@ spec:
         - --service.vault.config.pki.commonname.format=%s.g8s.aws.giantswarm.io
 ```
 
-- Note: this should only be used for development. See the [/kubernetes/](https://github.com/giantswarm/cert-operator/tree/master/kubernetes)
+- Note: Edit YOUR_VAULT_HOST to point at your Vault endpoint.
+- Note: This should only be used for development. See the [/kubernetes/](https://github.com/giantswarm/cert-operator/tree/master/kubernetes)
 directory and [Secrets](https://github.com/giantswarm/cert-operator#secrets) for a production ready configuration.
 
 ### Creating TPOs (Third Party Objects)
