@@ -16,7 +16,7 @@ type CustomObject struct {
 	unversioned.TypeMeta `json:",inline"`
 	Metadata             api.ObjectMeta `json:"metadata"`
 
-	Spec Spec `json:"spec" yaml:"spec"`
+	Spec Spec `json:"spec"`
 }
 
 // GetObjectKind is required to satisfy the Object interface.
