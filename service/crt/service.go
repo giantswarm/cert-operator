@@ -28,9 +28,9 @@ const (
 	CertificateWatchAPIEndpoint string = "/apis/giantswarm.io/v1/watch/certificates"
 
 	// resyncPeriod is the period for re-synchronizing the list of objects in k8s
-	// watcher. Set to 5 minutes to make the watch more robust.
-	// See https://github.com/giantswarm/cert-operator/issues/32
-	resyncPeriod time.Duration = time.Minute * 5
+	// watcher. 0 means that re-sync will be delayed as long as possible, until
+	// the watch will be closed or timed out.
+	resyncPeriod time.Duration = 0
 )
 
 // Config represents the configuration used to create a Crt service.
