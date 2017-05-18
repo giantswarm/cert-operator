@@ -2,6 +2,8 @@ package certificatetpr
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/meta"
@@ -34,12 +36,19 @@ func (c *CustomObject) GetObjectMeta() meta.Object {
 type CustomObjectCopy CustomObject
 
 func (c *CustomObject) UnmarshalJSON(data []byte) error {
+	fmt.Fprintf(os.Stdout, "IN CustomObject UnmarshalJSON data: %s \n", data)
+
 	tmp := CustomObjectCopy{}
 	err := json.Unmarshal(data, &tmp)
 	if err != nil {
 		return err
 	}
+
+	fmt.Fprintf(os.Stdout, "TMP CustomObject: #%v \n", tmp)
+
 	tmp2 := CustomObject(tmp)
 	*c = tmp2
+
+	fmt.Fprintf(os.Stdout, "RETURNED CustomObject: #%v \n", tmp2)
 	return nil
 }
