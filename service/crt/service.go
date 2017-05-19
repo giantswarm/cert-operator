@@ -18,7 +18,6 @@ import (
 	"k8s.io/client-go/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
-	k8sutil "github.com/giantswarm/cert-operator/client/k8s"
 	"github.com/giantswarm/cert-operator/flag"
 	"github.com/giantswarm/cert-operator/service/ca"
 )
@@ -28,9 +27,8 @@ const (
 	CertificateWatchAPIEndpoint string = "/apis/giantswarm.io/v1/watch/certificates"
 
 	// resyncPeriod is the period for re-synchronizing the list of objects in k8s
-	// watcher. 0 means that re-sync will be delayed as long as possible, until
-	// the watch will be closed or timed out.
-	resyncPeriod time.Duration = 0
+	// watcher. Set to 1 minute to make the watch more robust.
+	resyncPeriod time.Duration = time.Minute * 1
 )
 
 // Config represents the configuration used to create a Crt service.
@@ -194,11 +192,7 @@ func (s *Service) newCertificateListWatch() *cache.ListWatch {
 				return nil, err
 			}
 
-			watcher := watch.NewStreamWatcher(&k8sutil.CertificateDecoder{
-				Stream: stream,
-			})
-
-			return watcher, nil
+			return watch.NewStreamWatcher(newCertificateDecoder(stream)), nil
 		},
 	}
 
