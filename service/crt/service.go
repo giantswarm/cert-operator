@@ -18,7 +18,6 @@ import (
 	"k8s.io/client-go/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
-	k8sutil "github.com/giantswarm/cert-operator/client/k8s"
 	"github.com/giantswarm/cert-operator/flag"
 	"github.com/giantswarm/cert-operator/service/ca"
 )
@@ -193,8 +192,9 @@ func (s *Service) newCertificateListWatch() *cache.ListWatch {
 				return nil, err
 			}
 
-			watcher := watch.NewStreamWatcher(&k8sutil.CertificateDecoder{
-				Stream: stream,
+			watcher := watch.NewStreamWatcher(&certificateDecoder{
+				decoder: json.NewDecoder(stream),
+				close:   stream.Close,
 			})
 
 			return watcher, nil
