@@ -14,9 +14,9 @@ import (
 // specifications of the resource the Certificate operator is interested in.
 type CustomObject struct {
 	unversioned.TypeMeta `json:",inline"`
-	Metadata             api.ObjectMeta `json:"metadata"`
+	Metadata             api.ObjectMeta `json:"metadata" yaml:"metadata"`
 
-	Spec Spec `json:"spec"`
+	Spec Spec `json:"spec" yaml:"spec"`
 }
 
 // GetObjectKind is required to satisfy the Object interface.
