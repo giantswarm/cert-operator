@@ -3,6 +3,7 @@ package crt
 import (
 	"encoding/json"
 	microerror "github.com/giantswarm/microkit/error"
+	"io"
 
 	"github.com/giantswarm/certificatetpr"
 	"k8s.io/client-go/pkg/runtime"
@@ -13,6 +14,14 @@ import (
 type certificateDecoder struct {
 	decoder *json.Decoder
 	close   func() error
+}
+
+// newCertificateDecoder returns the decoder.
+func newCertificateDecoder(stream io.ReadCloser) *certificateDecoder {
+	return &certificateDecoder{
+		decoder: json.NewDecoder(stream),
+		close:   stream.Close,
+	}
 }
 
 // Decode deserializes a runtime object into a certificatetpr CustomObject.

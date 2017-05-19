@@ -192,12 +192,7 @@ func (s *Service) newCertificateListWatch() *cache.ListWatch {
 				return nil, err
 			}
 
-			watcher := watch.NewStreamWatcher(&certificateDecoder{
-				decoder: json.NewDecoder(stream),
-				close:   stream.Close,
-			})
-
-			return watcher, nil
+			return watch.NewStreamWatcher(newCertificateDecoder(stream)), nil
 		},
 	}
 
