@@ -1,5 +1,5 @@
 hash: 71d2eb206ab211278493d0c7f19db2f635fb885ee8c5d28c533dab9398dca28a
-updated: 2017-05-16T14:19:15.077815901+02:00
+updated: 2017-05-19T10:50:38.846429188+02:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -66,13 +66,13 @@ imports:
   - service/spec
   - service/token
 - name: github.com/giantswarm/certificatetpr
-  version: 880d3a1d529cf58c0f56b3edd53cd6c36e6d2886
+  version: 989414c916fafbc70d7e09fb48ef053b7290a9e4
 - name: github.com/giantswarm/go-uuid
   version: ed3ca8a15a931b141440a7e98e4f716eec255f7d
   subpackages:
   - uuid
 - name: github.com/giantswarm/microkit
-  version: ec5ad27d090ac37e07e55c3d4ac73e25d00aca72
+  version: ef2f8fdba32a0a0275d739abf84371e36880ecdc
   subpackages:
   - command
   - command/daemon
@@ -129,7 +129,7 @@ imports:
   - proto
   - ptypes/any
 - name: github.com/google/go-genproto
-  version: 411e09b969b1170a9f0c467558eb4c4c110d9c77
+  version: bb3573be0c484136831138976d444b8754777aff
   subpackages:
   - googleapis/rpc/status
 - name: github.com/google/gofuzz
