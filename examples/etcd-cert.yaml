@@ -9,7 +9,7 @@ metadata:
 spec:
   clusterID: "example-cluster"
   clusterComponent: "etcd"
-  commonName: "etcd.example-cluster.aws.giantswarm.io"
+  commonName: "etcd.example-cluster.g8s.eu-west-1.adidas.aws.giantswarm.io"
   altNames:
   ipSans:
   ttl: "720h"
