@@ -10,6 +10,7 @@ import (
 	"github.com/giantswarm/certificatetpr"
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
+	"github.com/giantswarm/operatorkit/tpr"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
@@ -29,6 +30,11 @@ const (
 	// resyncPeriod is the period for re-synchronizing the list of objects in k8s
 	// watcher. Set to 1 minute to make the watch more robust.
 	resyncPeriod time.Duration = time.Minute * 1
+
+	TPRName        = "certificate"
+	TPRDomain      = "giantswarm.io"
+	TPRVersion     = "v1"
+	TPRDescription = "Managed certificates on Kubernetes clusters"
 )
 
 // Config represents the configuration used to create a Crt service.
@@ -66,6 +72,15 @@ func DefaultConfig() Config {
 	}
 }
 
+// Service implements the Crt service interface.
+type Service struct {
+	Config
+
+	// Internals.
+	bootOnce sync.Once
+	tpr      *tpr.TPR
+}
+
 // New creates a new configured Crt service.
 func New(config Config) (*Service, error) {
 	// Dependencies.
@@ -90,28 +105,33 @@ func New(config Config) (*Service, error) {
 		return nil, microerror.MaskAnyf(invalidConfigError, "viper must not be empty")
 	}
 
+	tprConfig := tpr.Config{
+		Clientset:   config.K8sClient,
+		Name:        TPRName,
+		Domain:      TPRDomain,
+		Version:     TPRVersion,
+		Description: TPRDescription,
+	}
+	tpr, err := tpr.New(tprConfig)
+	if err != nil {
+		return nil, microerror.MaskAnyf(err, "creating TPR for %#v", tprConfig)
+	}
+
 	newService := &Service{
 		Config: config,
 
 		// Internals
 		bootOnce: sync.Once{},
+		tpr:      tpr,
 	}
 
 	return newService, nil
 }
 
-// Service implements the Crt service interface.
-type Service struct {
-	Config
-
-	// Internals.
-	bootOnce sync.Once
-}
-
 // Boot starts the service and implements the watch for the certificate TPR.
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		if err := s.createTPR(); err != nil {
+		if err := s.tpr.CreateAndWait(); err != nil {
 			panic(fmt.Sprintf("could not create certificate resource: %#v", err))
 		}
 		s.Config.Logger.Log("info", "successfully created third-party resource")
