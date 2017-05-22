@@ -113,7 +113,9 @@ func New(config Config) (*Service, error) {
 		Description: TPRDescription,
 	}
 	tpr, err := tpr.New(tprConfig)
-	microerror.PanicOnError(err)
+	if err != nil {
+		return nil, microerror.MaskAnyf(err, "creating TPR for %#v", tprConfig)
+	}
 
 	newService := &Service{
 		Config: config,
