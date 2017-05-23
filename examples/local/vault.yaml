@@ -23,7 +23,7 @@ spec:
           args:
           - server
           - -dev
-          - -dev-root-token-id=VAULT_TOKEN
+          - -dev-root-token-id=${VAULT_TOKEN}
           - -log-level=debug
 
 ---

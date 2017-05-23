@@ -1,0 +1,22 @@
+apiVersion: "giantswarm.io/v1"
+kind: Certificate
+metadata:
+  name: "${CLUSTER_NAME}-api"
+  namespace: "default"
+  labels:
+    clusterID: "${CLUSTER_NAME}"
+    clusterComponent: "api"
+spec:
+  clusterID: "${CLUSTER_NAME}"
+  clusterComponent: "api"
+  commonName: "api.${CLUSTER_NAME}.${COMMON_DOMAIN}"
+  altNames:
+  - "${CLUSTER_NAME}.${COMMON_DOMAIN}"
+  - "k8s-master-vm"
+  - "kubernetes"
+  - "kubernetes.default"
+  - "kubernetes.default.svc"
+  - "kubernetes.default.svc.cluster.local"
+  ipSans:
+  ttl: "720h"
+  allowBareDomains: true
