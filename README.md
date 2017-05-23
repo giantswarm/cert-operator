@@ -57,10 +57,10 @@ GOOS=linux go build github.com/giantswarm/cert-operator \
   && kubectl delete pod -l app=cert-operator-local
 ```
 
-- The docker image needs to be accessible from the k8s cluster. For Minikube
-  see [reusing the docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md).
-- The operator also needs a connection to the K8s API. The simplest approach is
-  to run as a deployment and use the "in cluster" configuration.
+- Note: The docker image needs to be accessible from the k8s cluster. For
+  Minikube see [reusing the docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md).
+- Note: The operator also needs a connection to the K8s API. The simplest
+  approach is to run as a deployment and use the "in cluster" configuration.
 
 ```
 apiVersion: extensions/v1beta1
@@ -89,13 +89,18 @@ spec:
           containerPort: 8000
         args:
         - daemon
-        - --service.vault.config.address=http://YOUR_VAULT_HOST:8200
-        - --service.vault.config.token=YOUR_TOKEN
+        - --service.vault.config.address=http://${VAULT_HOST}:8200
+        - --service.vault.config.token=VAULT_TOKEN
         - --service.vault.config.pki.ca.ttl=1440h
-        - --service.vault.config.pki.commonname.format=%s.g8s.aws.giantswarm.io
+        - --service.vault.config.pki.commonname.format=%s.${COMMON_DOMAIN}
 ```
 
-- Note: Edit YOUR_VAULT_HOST to point at your Vault endpoint.
+- Note: Edit `${VAULT_HOST}` to point at your Vault endpoint.
+- Note: Edit `${COMMON_DOMAIN}` to match common domain of your cluster
+  components.
+- Note: Leaving `VAULT_TOKEN` as it is is fine as long as it matches Vault's
+  root token. For dev server you can use `-dev-root-token-id=YOUR_TOKEN` flag
+  to achieve it.
 - Note: This should only be used for development. See the
   [/kubernetes/](https://github.com/giantswarm/cert-operator/tree/master/kubernetes)
   directory and [Secrets](https://github.com/giantswarm/cert-operator#secrets)
