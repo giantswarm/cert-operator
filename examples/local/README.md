@@ -20,10 +20,10 @@ All commands are assumed to be run from `examples/local` directory.
 ```bash
 for f in *.tmpl.yaml; do
     name="${f%.tmpl.yaml}.yaml"
-    sed -e 's/${CLUSTER_NAME}/YOUR_CLUSTER_NAME/g' ./$f > ./$name
-    sed -e 's/${COMMON_DOMAIN}/YOUR_COMMON_DOMAIN/g' ./$f > ./$name
-    sed -e 's/${VAULT_HOST}/YOUR_HOST/g' ./$f > ./$name
-    sed -e 's/${VAULT_TOKEN}/YOUR_TOKEN/g' ./$f > ./$name
+    sed -e 's/${CLUSTER_NAME}/example-cluster/g' ./$f > ./$name
+    sed -e 's/${COMMON_DOMAIN}/company.com/g' ./$f > ./$name
+    sed -e 's/${VAULT_HOST}/vault/g' ./$f > ./$name
+    sed -e 's/${VAULT_TOKEN}/secret_sauce/g' ./$f > ./$name
 done
 ```
 
