@@ -3,6 +3,7 @@
 ```
 * TODO: ignore examples/local/vault.yaml
 * TODO: ignore examples/local/*-cert.yaml
+* TODO: link in root README.md
 ```
 
 This should be used only for testing end development.
@@ -16,7 +17,7 @@ All commands are assumed to be run from `examples/local` directory.
 
 ## Preparing Templates
 
-```
+```bash
 for f in *.tmpl.yaml; do
     name="${f%.tmpl.yaml}.yaml"
     sed -e 's/${CLUSTER_NAME}/YOUR_CLUSTER_NAME/g' ./$f > ./$name
@@ -42,7 +43,7 @@ Steps below are optional. It's OK to use different Vault instance accessible
 from the operator pod. Remember to set `VAULT_HOST` during templates
 preparation accordingly. 
 
-```
+```bash
 kubectl apply -f ./vault.yaml
 ```
 
@@ -57,7 +58,7 @@ build`, see [reusing the Docker daemon] for details.
 
 [reusing the docker daemon]: https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md 
 
-```
+```bash
 # Optional. Only when using Minikube.
 eval $(minikube docker-env)
 
@@ -71,13 +72,13 @@ docker build -t quay.io/giantswarm/cert-operator:local-dev .
 
 ## Operator Startup
 
-```
+```bash
 kubectl apply -f ./deployment.yaml
 ```
 
 ## Creating Certificates ThirdPartyObjects
 
-```
+```bash
 for f in *.-cert.yaml; do
     kubectl create -f ./$f
 done
