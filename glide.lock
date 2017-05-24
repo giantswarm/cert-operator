@@ -1,5 +1,5 @@
-hash: 047f6d8f4e605236c0c49457510c657ccf374c6c98cefadacf0d1259f2a66f0b
-updated: 2017-05-22T12:47:37.412410074+02:00
+hash: 71d2eb206ab211278493d0c7f19db2f635fb885ee8c5d28c533dab9398dca28a
+updated: 2017-05-24T16:09:38.711196829+02:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -40,10 +40,6 @@ imports:
   - health
   - httputil
   - timeutil
-- name: github.com/cpuguy83/go-md2man
-  version: bcc0a711c5e6bbe72c7cb13d81c7109b45267fd2
-  subpackages:
-  - md2man
 - name: github.com/davecgh/go-spew
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
@@ -59,13 +55,13 @@ imports:
   - log
   - swagger
 - name: github.com/fatih/structs
-  version: a720dfa8df582c51dee1b36feabb906bde1588bd
+  version: 74a29b9fac7397d933f47e33eba94d2d83a464a2
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/giantswarm/certctl
-  version: 95ba833abc775e3955242ae1f8e697c58637bfe7
+  version: b07d0913d5cb369a6b605394bdd4be4633451be9
   subpackages:
   - service/cert-signer
   - service/pki
@@ -78,7 +74,7 @@ imports:
   subpackages:
   - uuid
 - name: github.com/giantswarm/microkit
-  version: ef2f8fdba32a0a0275d739abf84371e36880ecdc
+  version: ec5ad27d090ac37e07e55c3d4ac73e25d00aca72
   subpackages:
   - command
   - command/daemon
@@ -100,7 +96,7 @@ imports:
   - transaction/context/id
   - transaction/context/tracked
 - name: github.com/giantswarm/operatorkit
-  version: 31b81e1c5609e7fc499570878e85009f7c7cf63f
+  version: a571e5d6b72f6e46caeeb716133fd02c16a8231d
   subpackages:
   - client/k8s
   - tpr
@@ -136,7 +132,7 @@ imports:
   - proto
   - ptypes/any
 - name: github.com/google/go-genproto
-  version: bb3573be0c484136831138976d444b8754777aff
+  version: d80a6e20e776b0b17a324d0ba1ab50a39c8e8944
   subpackages:
   - googleapis/rpc/status
 - name: github.com/google/gofuzz
@@ -203,7 +199,7 @@ imports:
 - name: github.com/mitchellh/go-homedir
   version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/mitchellh/mapstructure
-  version: cc8532a8e9a55ea36402aa21efdf403a60d34096
+  version: d0303fe809921458f417bcf828397a65db30a7e4
 - name: github.com/pborman/uuid
   version: ca53cad383cad2479bbba7f7a1a05797ec1386e4
 - name: github.com/pelletier/go-buffruneio
@@ -233,8 +229,6 @@ imports:
   version: 8a290539e2e8629dbc4e6bad948158f790ec31f4
 - name: github.com/PuerkitoBio/urlesc
   version: 5bd2802263f21d8788851d5305584c82a5c75d7e
-- name: github.com/russross/blackfriday
-  version: 0ba0f2b6ed7c475a92e4df8641825cb7a11d1fa3
 - name: github.com/sethgrid/pester
   version: 4f4c0a67b6496764028e1ab9fd8dfb630282ed2f
 - name: github.com/spf13/afero
@@ -244,11 +238,11 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 83773614293e6c9406454a53ce5e263500ce6e44
+  version: 4c05eb1145f16d0e6bb4a3e1b6d769f4713cb41f
 - name: github.com/spf13/jwalterweatherman
-  version: 8f07c835e5cc1450c082fe3a439cf87b0cbb2d99
+  version: 0efa5202c04663c757d84f90f5219c1250baf94f
 - name: github.com/spf13/pflag
-  version: 5ccb023bc27df288a957c5e994cd44fd19619465
+  version: 08b1a584251b5b62f458943640fc8ebd4d50aaa5
 - name: github.com/spf13/viper
   version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: github.com/tylerb/graceful

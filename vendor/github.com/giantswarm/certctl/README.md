@@ -10,7 +10,7 @@ A command line tool able to request certificate generation from Vault to write c
 
 ## Getting `certctl`
 
-Images available at `registry.giantswarm.io/giantswarm/certctl`
+Images are available at `quay.io/giantswarm/certctl`
 
 Clone the git repository: https://github.com/giantswarm/certctl.git
 
