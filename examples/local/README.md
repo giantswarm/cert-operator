@@ -1,6 +1,6 @@
 # Running cert-operator Locally
 
-**Note:** This should be used only for testing end development. See the
+**Note:** This should only be used for testing and development. See the
 [/kubernetes/][kubernetes-dir] directory and [Secrets][secrets-doc] for
 a production ready configuration.
 
@@ -24,7 +24,7 @@ all placeholders must be replaced with sensible values.
 - *COMMON_DOMAIN* - Cluster name to be created by [aws-operator].
 - *VAULT_HOST* - When using Vault service from `vault.yaml` `VAULT_HOST` should
   be `vault`. See Vault Setup section below.
-- *VAULT_TOKEN* - It must match across Vault service and the operator
+- *VAULT_TOKEN* - It must match across the Vault service and the operator
   deployment flags.
 
 Below is handy snippet than can be used to make that painless. It works in bash and zsh.
@@ -41,7 +41,7 @@ done
 ```
 
 - Note: Single quotes are intentional. Strings like `${CLUSTER_NAME}` shouldn't
-  be interpolated. They are placeholders in template files.
+  be interpolated. These are placeholders in the template files.
 
 
 ## Vault Setup
@@ -49,7 +49,7 @@ done
 The operator needs a connection to Vault (currently v0.6.4 is supported) and to
 the Kubernetes API. For development running Vault in dev mode is fine.
 
-Steps below are optional. It's OK to use different Vault instance accessible
+Steps below are optional. It's OK to use a different Vault instance accessible
 from the operator pod. Remember to set `VAULT_HOST` during templates
 preparation accordingly. 
 
