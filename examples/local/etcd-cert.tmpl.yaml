@@ -1,0 +1,16 @@
+apiVersion: "giantswarm.io/v1"
+kind: Certificate
+metadata:
+  name: "${CLUSTER_NAME}-etcd"
+  namespace: "default"
+  labels:
+    clusterID: "${CLUSTER_NAME}"
+    clusterComponent: "etcd"
+spec:
+  clusterID: "${CLUSTER_NAME}"
+  clusterComponent: "etcd"
+  commonName: "etcd.${CLUSTER_NAME}.${COMMON_DOMAIN}"
+  altNames:
+  ipSans:
+  ttl: "720h"
+  allowBareDomains: false
