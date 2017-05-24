@@ -1,10 +1,5 @@
 # Running cert-operator Locally
 
-```
-* TODO: ignore examples/local/vault.yaml
-* TODO: ignore examples/local/*-cert.yaml
-```
-
 **Note:** This should be used only for testing end development. See the
 [/kubernetes/][kubernetes-dir] directory and [Secrets][secrets-doc] for
 a production ready configuration.
@@ -23,11 +18,12 @@ All commands are assumed to be run from `examples/local` directory.
 
 ```bash
 for f in *.tmpl.yaml; do
-    name="${f%.tmpl.yaml}.yaml"
-    sed -e 's/${CLUSTER_NAME}/example-cluster/g' ./$f > ./$name
-    sed -e 's/${COMMON_DOMAIN}/company.com/g' ./$f > ./$name
-    sed -e 's/${VAULT_HOST}/vault/g' ./$f > ./$name
-    sed -e 's/${VAULT_TOKEN}/secret_sauce/g' ./$f > ./$name
+    sed \
+        -e 's/${CLUSTER_NAME}/example-cluster/g' \
+        -e 's/${COMMON_DOMAIN}/company.com/g' \
+        -e 's/${VAULT_HOST}/vault/g' \
+        -e 's/${VAULT_TOKEN}/secret_sauce/g' \
+        ./$f > ./${f%.tmpl.yaml}.yaml
 done
 ```
 
