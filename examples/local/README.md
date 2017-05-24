@@ -3,10 +3,14 @@
 ```
 * TODO: ignore examples/local/vault.yaml
 * TODO: ignore examples/local/*-cert.yaml
-* TODO: link in root README.md
 ```
 
-This should be used only for testing end development.
+**Note:** This should be used only for testing end development. See the
+[/kubernetes/][kubernetes-dir] directory and [Secrets][secrets-doc] for
+a production ready configuration.
+
+[kubernetes-dir]: https://github.com/giantswarm/cert-operator/tree/master/kubernetes
+[secrests-doc]: https://github.com/giantswarm/cert-operator#secrets
 
 This guide explains how to get running cert-operator locally. For example on
 minikube. Certificates created here are meant to be used by [aws-operator].

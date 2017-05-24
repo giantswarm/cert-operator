@@ -38,90 +38,9 @@ go build github.com/giantswarm/cert-operator
 
 ## Running cert-operator
 
-The operator needs a connection to Vault (currently v0.6.4 is supported) and to
-the Kubernetes API. For development running Vault in dev mode is fine.
+See [this guide][examples-local].
 
-
-### Setup
-
-- The operator needs to connect to a Vault server. See
-  [examples/vault.yaml](https://github.com/giantswarm/cert-operator/blob/master/examples/vault.yaml)
-  for running Vault as a deployment with a ClusterIP service.
-- The cert-operator binary needs to be built into a docker image and tagged as
-  `quay.io/giantswarm/cert-operator:local-dev`. The current pod need to be
-  deleted for changes to apply.
-
-```
-GOOS=linux go build github.com/giantswarm/cert-operator \
-  && docker build -t quay.io/giantswarm/cert-operator:local-dev . \
-  && kubectl delete pod -l app=cert-operator-local
-```
-
-- Note: The docker image needs to be accessible from the k8s cluster. For
-  Minikube see [reusing the docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md).
-- Note: The operator also needs a connection to the K8s API. The simplest
-  approach is to run as a deployment and use the "in cluster" configuration.
-
-```
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: cert-operator-local
-  namespace: default
-  labels:
-    app: cert-operator-local
-spec:
-  replicas: 1
-  strategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app: cert-operator-local
-    spec:
-      volumes:
-      containers:
-      - name: cert-operator
-        image: quay.io/giantswarm/cert-operator:local-dev
-        imagePullPolicy: IfNotPresent
-        ports:
-        - name: http
-          containerPort: 8000
-        args:
-        - daemon
-        - --service.vault.config.address=http://${VAULT_HOST}:8200
-        - --service.vault.config.token=VAULT_TOKEN
-        - --service.vault.config.pki.ca.ttl=1440h
-        - --service.vault.config.pki.commonname.format=%s.${COMMON_DOMAIN}
-```
-
-- Note: Edit `${VAULT_HOST}` to point at your Vault endpoint.
-- Note: Edit `${COMMON_DOMAIN}` to match common domain of your cluster
-  components.
-- Note: Leaving `VAULT_TOKEN` as it is is fine as long as it matches Vault's
-  root token. For dev server you can use `-dev-root-token-id=YOUR_TOKEN` flag
-  to achieve it.
-- Note: This should only be used for development. See the
-  [/kubernetes/](https://github.com/giantswarm/cert-operator/tree/master/kubernetes)
-  directory and [Secrets](https://github.com/giantswarm/cert-operator#secrets)
-  for a production ready configuration.
-
-
-### Creating TPOs (Third Party Objects)
-
-- The [/examples/](https://github.com/giantswarm/cert-operator/tree/master/examples) directory contains a set of certificatetpr resources designed
-to work with the [example cluster](https://github.com/giantswarm/aws-operator/blob/master/examples/cluster.yml) in the `aws-operator`.
-
-```
-for i in examples/*-cert.yaml; do kubectl create -f $i; done
-```
-
-- The certificates are issued using Vault and stored as k8s secrets.
-
-```
-kubectl get secret -l clusterID=example-cluster
-```
-
+[examples-local]: https://github.com/giantswarm/cert-operator/blob/master/examples/local/README.md
 
 ### Cleaning up
 
