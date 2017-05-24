@@ -84,4 +84,8 @@ for f in *.-cert.yaml; do
 done
 ```
 
-After a while certificates should be created by the operator as K8s secrets.
+The certificates are issued using Vault and stored as K8s secrets.
+
+```bash
+kubectl get secret -l clusterID=CLUSTER_NAME
+```
