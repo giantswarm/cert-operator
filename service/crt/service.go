@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/giantswarm/certctl/service/spec"
 	"github.com/giantswarm/certificatetpr"
@@ -26,10 +25,6 @@ import (
 const (
 	CertificateListAPIEndpoint  string = "/apis/giantswarm.io/v1/certificates"
 	CertificateWatchAPIEndpoint string = "/apis/giantswarm.io/v1/watch/certificates"
-
-	// resyncPeriod is the period for re-synchronizing the list of objects in k8s
-	// watcher. Set to 1 minute to make the watch more robust.
-	resyncPeriod time.Duration = time.Minute * 1
 
 	TPRName        = "certificate"
 	TPRDomain      = "giantswarm.io"
@@ -139,7 +134,7 @@ func (s *Service) Boot() {
 		_, certInformer := cache.NewInformer(
 			s.newCertificateListWatch(),
 			&certificatetpr.CustomObject{},
-			resyncPeriod,
+			tpr.ResyncPeriod,
 			cache.ResourceEventHandlerFuncs{
 				AddFunc:    s.addFunc,
 				DeleteFunc: s.deleteFunc,
