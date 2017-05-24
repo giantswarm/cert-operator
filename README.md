@@ -17,7 +17,7 @@ https://github.com/giantswarm/cert-operator/releases/latest
 Clone the git repository: https://github.com/giantswarm/cert-operator.git
 
 Download the latest docker image from here:
-https://hub.docker.com/r/giantswarm/cert-operator/
+https://quay.io/repository/giantswarm/cert-operator
 
 
 ### How to build
