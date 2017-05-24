@@ -42,15 +42,6 @@ See [this guide][examples-local].
 
 [examples-local]: https://github.com/giantswarm/cert-operator/blob/master/examples/local/README.md
 
-### Cleaning up
-
-- Delete the certificate TPOs and the deployment.
-
-```
-kubectl delete certificate -l clusterID=example-cluster
-kubectl delete deployment cert-operator-local
-```
-
 
 ## Contact
 

@@ -14,6 +14,7 @@ All commands are assumed to be run from `examples/local` directory.
 
 [aws-operator]: https://github.com/giantswarm/aws-operator
 
+
 ## Preparing Templates
 
 All yaml files in this directory are templates. Before proceeding this guide
@@ -42,6 +43,7 @@ done
 - Note: Single quotes are intentional. Strings like `${CLUSTER_NAME}` shouldn't
   be interpolated. They are placeholders in template files.
 
+
 ## Vault Setup
 
 The operator needs a connection to Vault (currently v0.6.4 is supported) and to
@@ -54,6 +56,7 @@ preparation accordingly.
 ```bash
 kubectl apply -f ./vault.yaml
 ```
+
 
 ## Cluster-Local Docker Image
 
@@ -78,11 +81,13 @@ docker build -t quay.io/giantswarm/cert-operator:local-dev .
 #kubectl delete pod -l app=cert-operator-local
 ```
 
+
 ## Operator Startup
 
 ```bash
 kubectl apply -f ./deployment.yaml
 ```
+
 
 ## Creating Certificates ThirdPartyObjects
 
@@ -96,4 +101,17 @@ The certificates are issued using Vault and stored as K8s secrets.
 
 ```bash
 kubectl get secret -l clusterID=CLUSTER_NAME
+```
+
+
+## Cleaning Up
+
+Delete the certificate TPOs and the deployment.
+
+```bash
+kubectl delete certificate -l clusterID=example-cluster
+kubectl delete -f ./deployment.yaml
+
+# Optinal. Only when when Vault was set up.
+kubectl delete -f ./vault.yaml
 ```
