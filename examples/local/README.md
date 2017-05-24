@@ -16,6 +16,18 @@ All commands are assumed to be run from `examples/local` directory.
 
 ## Preparing Templates
 
+All yaml files in this directory are templates. Before proceeding this guide
+all placeholders must be replaced with sensible values.
+
+- *CLUSTER_NAME* - Cluster name to be created by [aws-operator].
+- *COMMON_DOMAIN* - Cluster name to be created by [aws-operator].
+- *VAULT_HOST* - When using Vault service from `vault.yaml` `VAULT_HOST` should
+  be `vault`. See Vault Setup section below.
+- *VAULT_TOKEN* - It must match across Vault service and the operator
+  deployment flags.
+
+Below is handy snippet than can be used to make that painless. It works in bash and zsh.
+
 ```bash
 for f in *.tmpl.yaml; do
     sed \
@@ -29,10 +41,6 @@ done
 
 - Note: Single quotes are intentional. Strings like `${CLUSTER_NAME}` shouldn't
   be interpolated. They are placeholders in template files.
-- Note: When using Vault service from `vault.yaml` `VAULT_HOST` should be
-  `vault`. See Vault Setup section below.
-- Note: `VAULT_TOKEN` value can be arbitrary. It must match across Vault
-  service and the operator deployment flags.
 
 ## Vault Setup
 
