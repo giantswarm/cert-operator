@@ -23,11 +23,6 @@ import (
 )
 
 const (
-	CertificateListAPIEndpoint  string = "/apis/giantswarm.io/v1/certificates"
-	CertificateWatchAPIEndpoint string = "/apis/giantswarm.io/v1/watch/certificates"
-
-	TPRName        = "certificate"
-	TPRDomain      = "giantswarm.io"
 	TPRVersion     = "v1"
 	TPRDescription = "Managed certificates on Kubernetes clusters"
 )
@@ -102,8 +97,7 @@ func New(config Config) (*Service, error) {
 
 	tprConfig := tpr.Config{
 		Clientset:   config.K8sClient,
-		Name:        TPRName,
-		Domain:      TPRDomain,
+		Name:        certificatetpr.Name,
 		Version:     TPRVersion,
 		Description: TPRDescription,
 	}
@@ -126,10 +120,15 @@ func New(config Config) (*Service, error) {
 // Boot starts the service and implements the watch for the certificate TPR.
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		if err := s.tpr.CreateAndWait(); err != nil {
+		err := s.tpr.CreateAndWait()
+		switch {
+		case tpr.IsAlreadyExists(err):
+			s.Config.Logger.Log("info", "certificate third-party resource already exists")
+		case err != nil:
 			panic(fmt.Sprintf("could not create certificate resource: %#v", err))
+		default:
+			s.Config.Logger.Log("info", "successfully created certificate third-party resource")
 		}
-		s.Config.Logger.Log("info", "successfully created third-party resource")
 
 		_, certInformer := cache.NewInformer(
 			s.newCertificateListWatch(),
@@ -186,7 +185,7 @@ func (s *Service) newCertificateListWatch() *cache.ListWatch {
 
 	listWatch := &cache.ListWatch{
 		ListFunc: func(options api.ListOptions) (runtime.Object, error) {
-			req := client.Get().AbsPath(CertificateListAPIEndpoint)
+			req := client.Get().AbsPath(s.tpr.Endpoint(""))
 			b, err := req.DoRaw()
 			if err != nil {
 				return nil, err
@@ -201,7 +200,7 @@ func (s *Service) newCertificateListWatch() *cache.ListWatch {
 		},
 
 		WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-			req := client.Get().AbsPath(CertificateWatchAPIEndpoint)
+			req := client.Get().AbsPath(s.tpr.WatchEndpoint(""))
 			stream, err := req.Stream()
 			if err != nil {
 				return nil, err
