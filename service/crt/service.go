@@ -121,13 +121,14 @@ func New(config Config) (*Service, error) {
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
 		err := s.tpr.CreateAndWait()
-		if err != nil && tpr.IsAlreadyExists(err) {
-			s.Config.Logger.Log("info", "certificate resource already exists")
-		}
-		if err != nil {
+		switch {
+		case tpr.IsAlreadyExists(err):
+			s.Config.Logger.Log("info", "certificate third-party resource already exists")
+		case err != nil:
 			panic(fmt.Sprintf("could not create certificate resource: %#v", err))
+		default:
+			s.Config.Logger.Log("info", "successfully created certificate third-party resource")
 		}
-		s.Config.Logger.Log("info", "successfully created third-party resource")
 
 		_, certInformer := cache.NewInformer(
 			s.newCertificateListWatch(),
