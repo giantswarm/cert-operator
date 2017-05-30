@@ -1,5 +1,5 @@
 hash: 71d2eb206ab211278493d0c7f19db2f635fb885ee8c5d28c533dab9398dca28a
-updated: 2017-05-24T16:09:38.711196829+02:00
+updated: 2017-05-30T16:24:22.200866984+02:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -40,6 +40,10 @@ imports:
   - health
   - httputil
   - timeutil
+- name: github.com/cpuguy83/go-md2man
+  version: bcc0a711c5e6bbe72c7cb13d81c7109b45267fd2
+  subpackages:
+  - md2man
 - name: github.com/davecgh/go-spew
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
@@ -55,7 +59,7 @@ imports:
   - log
   - swagger
 - name: github.com/fatih/structs
-  version: 74a29b9fac7397d933f47e33eba94d2d83a464a2
+  version: a720dfa8df582c51dee1b36feabb906bde1588bd
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/ghodss/yaml
@@ -74,7 +78,7 @@ imports:
   subpackages:
   - uuid
 - name: github.com/giantswarm/microkit
-  version: ec5ad27d090ac37e07e55c3d4ac73e25d00aca72
+  version: ef2f8fdba32a0a0275d739abf84371e36880ecdc
   subpackages:
   - command
   - command/daemon
@@ -96,7 +100,7 @@ imports:
   - transaction/context/id
   - transaction/context/tracked
 - name: github.com/giantswarm/operatorkit
-  version: a571e5d6b72f6e46caeeb716133fd02c16a8231d
+  version: 36e0e3721647690e12d26e2e2cf31da81b8559ff
   subpackages:
   - client/k8s
   - tpr
@@ -132,7 +136,7 @@ imports:
   - proto
   - ptypes/any
 - name: github.com/google/go-genproto
-  version: d80a6e20e776b0b17a324d0ba1ab50a39c8e8944
+  version: bb3573be0c484136831138976d444b8754777aff
   subpackages:
   - googleapis/rpc/status
 - name: github.com/google/gofuzz
@@ -205,7 +209,7 @@ imports:
 - name: github.com/pelletier/go-buffruneio
   version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
-  version: 5c26a6ff6fd178719e15decac1c8196da0d7d6d1
+  version: 048765b4491bcff26505dfbb8a7b920133a19fd2
 - name: github.com/prometheus/client_golang
   version: c5b7fccd204277076155f10851dad72b76a49317
   subpackages:
@@ -229,6 +233,8 @@ imports:
   version: 8a290539e2e8629dbc4e6bad948158f790ec31f4
 - name: github.com/PuerkitoBio/urlesc
   version: 5bd2802263f21d8788851d5305584c82a5c75d7e
+- name: github.com/russross/blackfriday
+  version: 0ba0f2b6ed7c475a92e4df8641825cb7a11d1fa3
 - name: github.com/sethgrid/pester
   version: 4f4c0a67b6496764028e1ab9fd8dfb630282ed2f
 - name: github.com/spf13/afero
@@ -238,11 +244,11 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 4c05eb1145f16d0e6bb4a3e1b6d769f4713cb41f
+  version: 83773614293e6c9406454a53ce5e263500ce6e44
 - name: github.com/spf13/jwalterweatherman
   version: 0efa5202c04663c757d84f90f5219c1250baf94f
 - name: github.com/spf13/pflag
-  version: 08b1a584251b5b62f458943640fc8ebd4d50aaa5
+  version: 2300d0f8576fe575f71aaa5b9bbe4e1b0dc2eb51
 - name: github.com/spf13/viper
   version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: github.com/tylerb/graceful
@@ -316,7 +322,7 @@ imports:
 - name: gopkg.in/inf.v0
   version: 3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4
 - name: gopkg.in/yaml.v2
-  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
+  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 - name: k8s.io/client-go
   version: e121606b0d09b2e1c467183ee46217fa85a6b672
   subpackages:
