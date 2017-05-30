@@ -9,9 +9,9 @@ metadata:
 spec:
   clusterID: "example-cluster"
   clusterComponent: "worker"
-  commonName: "worker.example-cluster.aws.giantswarm.io"
+  commonName: "worker.example-cluster.g8s.eu-west-1.adidas.aws.giantswarm.io"
   altNames:
-  - "example-cluster.aws.giantswarm.io"
+  - "example-cluster.g8s.eu-west-1.adidas.aws.giantswarm.io"
   - "k8s-master-vm"
   - "kubernetes"
   - "kubernetes.default"
