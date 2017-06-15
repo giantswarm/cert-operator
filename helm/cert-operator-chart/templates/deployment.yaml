@@ -1,0 +1,65 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cert-operator
+  namespace: giantswarm
+  labels:
+    app: cert-operator
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: cert-operator
+    spec:
+      volumes:
+      - name: cert-operator-configmap
+        configMap:
+          name: cert-operator-configmap
+          items:
+            - key: config.yml
+              path: config.yml
+      - name: cert-operator-secret
+        secret:
+          secretName: cert-operator-secret
+          items:
+            - key: secret.yml
+              path: secret.yml
+      - name: certs
+        hostPath:
+          path: /etc/ssl/certs/ca-certificates.crt
+      - name: ssl-certs
+        hostPath:
+          path: /etc/ssl/certs/
+      containers:
+      - name: cert-operator
+        image: quay.io/giantswarm/cert-operator:{{ .SHA }}
+        volumeMounts:
+        - name: cert-operator-configmap
+          mountPath: /var/run/cert-operator/configmap/
+        - name: cert-operator-secret
+          mountPath: /var/run/cert-operator/secret/
+        - name: certs
+          mountPath: /etc/ssl/certs/ca-certificate.crt
+        - name: ssl-certs
+          mountPath: /etc/ssl/certs/
+        ports:
+        - name: http
+          containerPort: 8000
+        args:
+        - daemon
+        - --config.dirs=/var/run/cert-operator/configmap/
+        - --config.dirs=/var/run/cert-operator/secret/
+        - --config.files=config
+        - --config.files=secret
+        resources:
+          requests:
+            cpu: 100m
+            memory: 20Mi
+          limits:
+            cpu: 250m
+            memory: 250Mi
+      imagePullSecrets:
+      - name: giantswarm-registry
