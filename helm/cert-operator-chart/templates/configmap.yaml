@@ -11,9 +11,9 @@ data:
     service:
       vault:
         config:
-          address: '{{ .Values.Installation.V1.Auth.Vault.Address | urlString }}'
+          address: '{{ .Values.Installation.V1.Auth.Vault.Address }}'
           pki:
             ca:
-              ttl: '{{ .Values.Installation.V1.Auth.Vault.CA.TTL | shortDuration }}'
+              ttl: '{{ .Values.Installation.V1.Auth.Vault.CA.TTL }}'
             commonname:
               format: '%s.{{ .Values.Installation.V1.Guest.Kubernetes.API.EndpointBase }}'
