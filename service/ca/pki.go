@@ -3,14 +3,40 @@ package ca
 import (
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/certctl/service/pki"
 	"github.com/giantswarm/certctl/service/token"
 	"github.com/giantswarm/certificatetpr"
 	microerror "github.com/giantswarm/microkit/error"
 )
 
-// SetupPKI creates a PKI backend and policy if one does not exists for the cluster.
+const (
+	setupPKIMaxElapsedTime = 30 * time.Second
+)
+
+// SetupPKIAndWait creates a PKI backend and policy if one does not exist for
+// the cluster. If an error occurs an exponential backoff is used. After the
+// max elapsed time the error is returned to the caller.
+func (s *Service) SetupPKIAndWait(cert certificatetpr.Spec) error {
+	initBackoff := backoff.NewExponentialBackOff()
+	initBackoff.MaxElapsedTime = setupPKIMaxElapsedTime
+
+	operation := func() error {
+		err := s.SetupPKI(cert)
+		if err != nil {
+			s.Logger.Log("info", "failed to setup PKI - retrying")
+			return microerror.MaskAny(err)
+		}
+
+		return nil
+	}
+
+	return backoff.Retry(operation, initBackoff)
+}
+
+// SetupPKI creates a PKI backend and policy if one does not exist for the cluster.
 func (s *Service) SetupPKI(cert certificatetpr.Spec) error {
 	s.Config.Logger.Log("debug", fmt.Sprintf("setting up PKI for cluster '%s'", cert.ClusterID))
 

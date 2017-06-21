@@ -154,11 +154,11 @@ func (s *Service) addFunc(obj interface{}) {
 	cert := *obj.(*certificatetpr.CustomObject)
 	s.Config.Logger.Log("debug", fmt.Sprintf("creating certificate '%s'", cert.Spec.CommonName))
 
-	if err := s.Config.CAService.SetupPKI(cert.Spec); err != nil {
+	if err := s.Config.CAService.SetupPKIAndWait(cert.Spec); err != nil {
 		s.Config.Logger.Log("error", fmt.Sprintf("could not setup PKI '%#v'", err))
 		return
 	}
-	if err := s.Issue(cert.Spec); err != nil {
+	if err := s.IssueAndWait(cert.Spec); err != nil {
 		s.Config.Logger.Log("error", fmt.Sprintf("could not issue cert '%#v'", err))
 		return
 	}
@@ -171,7 +171,7 @@ func (s *Service) deleteFunc(obj interface{}) {
 	cert := *obj.(*certificatetpr.CustomObject)
 	s.Config.Logger.Log("debug", fmt.Sprintf("deleting certificate '%s'", cert.Spec.CommonName))
 
-	if err := s.DeleteCertificate(cert.Spec); err != nil {
+	if err := s.DeleteCertificateAndWait(cert.Spec); err != nil {
 		s.Config.Logger.Log("error", fmt.Sprintf("could not delete certificate '%#v'", err))
 		return
 	}
