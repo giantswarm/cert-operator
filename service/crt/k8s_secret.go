@@ -2,11 +2,17 @@ package crt
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/certificatetpr"
 	microerror "github.com/giantswarm/microkit/error"
 	"k8s.io/client-go/pkg/api/errors"
 	"k8s.io/client-go/pkg/api/v1"
+)
+
+const (
+	deleteSecretMaxElapsedTime = 30 * time.Second
 )
 
 // CreateCertificate saves the certificate as a k8s secret.
@@ -39,7 +45,26 @@ func (s *Service) CreateCertificate(secret certificateSecret) error {
 	return nil
 }
 
-// DeleteCertificate deletes the k8s secret that stores the certificate.
+// DeleteCertificateAndWait tries to delete the k8s secret. If an error occurs
+// an exponential backoff is used. After the max elapsed time the error will be
+// returned to the caller. The secret deletion is idempotent so no error is
+// returned if the secret has already been deleted.
+func (s *Service) DeleteCertificateAndWait(cert certificatetpr.Spec) error {
+	initBackoff := backoff.NewExponentialBackOff()
+	initBackoff.MaxElapsedTime = deleteSecretMaxElapsedTime
+
+	operation := func() error {
+		err := s.DeleteCertificate(cert)
+		if err != nil {
+			s.Logger.Log("info", "failed to delete secret - retrying")
+		}
+
+		return err
+	}
+
+	return backoff.Retry(operation, initBackoff)
+}
+
 func (s *Service) DeleteCertificate(cert certificatetpr.Spec) error {
 	// Delete the secret which should be idempotent.
 	err := s.Config.K8sClient.Core().Secrets(v1.NamespaceDefault).Delete(getSecretName(cert), &v1.DeleteOptions{})
