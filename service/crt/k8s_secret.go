@@ -57,9 +57,10 @@ func (s *Service) DeleteCertificateAndWait(cert certificatetpr.Spec) error {
 		err := s.DeleteCertificate(cert)
 		if err != nil {
 			s.Logger.Log("info", "failed to delete secret - retrying")
+			return microerror.MaskAny(err)
 		}
 
-		return err
+		return nil
 	}
 
 	return backoff.Retry(operation, initBackoff)

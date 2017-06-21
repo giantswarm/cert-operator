@@ -27,9 +27,10 @@ func (s *Service) SetupPKIAndWait(cert certificatetpr.Spec) error {
 		err := s.SetupPKI(cert)
 		if err != nil {
 			s.Logger.Log("info", "failed to setup PKI - retrying")
+			return microerror.MaskAny(err)
 		}
 
-		return err
+		return nil
 	}
 
 	return backoff.Retry(operation, initBackoff)

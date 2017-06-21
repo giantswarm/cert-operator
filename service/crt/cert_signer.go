@@ -27,9 +27,10 @@ func (s *Service) IssueAndWait(cert certificatetpr.Spec) error {
 		err := s.Issue(cert)
 		if err != nil {
 			s.Logger.Log("info", "failed to issue cert - retrying")
+			return microerror.MaskAny(err)
 		}
 
-		return err
+		return nil
 	}
 
 	return backoff.Retry(operation, initBackoff)
