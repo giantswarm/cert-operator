@@ -65,8 +65,10 @@ func (s *Service) DeleteCertificateAndWait(cert certificatetpr.Spec) error {
 	return backoff.Retry(operation, initBackoff)
 }
 
+// DeleteCertificate deletes the k8s secret that stores the certificate. The secret
+// deletion is idempotent so no error is returned if the secret has already
+// been deleted.
 func (s *Service) DeleteCertificate(cert certificatetpr.Spec) error {
-	// Delete the secret which should be idempotent.
 	err := s.Config.K8sClient.Core().Secrets(v1.NamespaceDefault).Delete(getSecretName(cert), &v1.DeleteOptions{})
 	if errors.IsNotFound(err) {
 		return nil
