@@ -119,16 +119,18 @@ func (s *server) Shutdown() {
 func (s *server) newErrorEncoder() kithttp.ErrorEncoder {
 	return func(ctx context.Context, err error, w http.ResponseWriter) {
 		rErr := err.(microserver.ResponseError)
-		uErr := rErr.Underlying()
 
-		if rErr.IsEndpoint() {
-			json.NewEncoder(w).Encode(map[string]interface{}{
-				"code":    microserver.CodeFailure,
-				"message": uErr.Error(),
-				"from":    s.serviceName,
-			})
-		} else {
+		// Something unexpected happened so return a generic error.
+		if !rErr.IsEndpoint() {
+			rErr.SetCode(microserver.CodeInternalError)
+			rErr.SetMessage("An unexpected error occurred. Sorry for the inconvenience.")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
+
+		// This writes the error response body to the stream.
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"code":    rErr.Code(),
+			"message": rErr.Message(),
+		})
 	}
 }
