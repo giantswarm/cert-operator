@@ -3,6 +3,7 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 	"sync"
 
@@ -117,21 +118,16 @@ func (s *server) Shutdown() {
 
 func (s *server) newErrorEncoder() kithttp.ErrorEncoder {
 	return func(ctx context.Context, err error, w http.ResponseWriter) {
-		switch e := err.(type) {
-		case kithttp.Error:
-			err = e.Err
+		rErr := err.(microserver.ResponseError)
+		uErr := rErr.Underlying()
 
-			switch e.Domain {
-			case kithttp.DomainEncode:
-				w.WriteHeader(http.StatusBadRequest)
-			case kithttp.DomainDecode:
-				w.WriteHeader(http.StatusBadRequest)
-			case kithttp.DomainDo:
-				w.WriteHeader(http.StatusBadRequest)
-			default:
-				w.WriteHeader(http.StatusInternalServerError)
-			}
-		default:
+		if rErr.IsEndpoint() {
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"code":    microserver.CodeFailure,
+				"message": uErr.Error(),
+				"from":    s.serviceName,
+			})
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
