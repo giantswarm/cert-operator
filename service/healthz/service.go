@@ -7,13 +7,9 @@ import (
 
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
+	microserver "github.com/giantswarm/microkit/server"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/prometheus/client_golang/prometheus"
-)
-
-const (
-	ResponseCodeOk     = "OK"
-	ResponseCodeFailed = "FAILED"
 )
 
 var (
@@ -104,7 +100,7 @@ func (s *Service) Check(ctx context.Context, request Request) (*Response, error)
 	healthCheckRequests.WithLabelValues("successfull").Inc()
 
 	response := DefaultResponse()
-	response.Code = ResponseCodeOk
+	response.Code = microserver.CodeSuccess
 	response.Message = "Everything OK."
 
 	return response, nil
