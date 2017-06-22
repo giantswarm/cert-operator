@@ -1,6 +1,7 @@
 package healthz
 
 import (
+	"encoding/json"
 	"net/http"
 
 	microerror "github.com/giantswarm/microkit/error"
@@ -74,19 +75,23 @@ func (e *Endpoint) Decoder() kithttp.DecodeRequestFunc {
 
 func (e *Endpoint) Encoder() kithttp.EncodeResponseFunc {
 	return func(ctx context.Context, w http.ResponseWriter, response interface{}) error {
-		w.WriteHeader(http.StatusOK)
-		return nil
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		return json.NewEncoder(w).Encode(response)
 	}
 }
 
 func (e *Endpoint) Endpoint() kitendpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		_, err := e.Service.Healthz.Check(ctx, healthz.DefaultRequest())
+		healthzResponse, err := e.Service.Healthz.Check(ctx, healthz.DefaultRequest())
 		if err != nil {
 			return nil, microerror.MaskAny(err)
 		}
 
-		return nil, nil
+		response := DefaultResponse()
+		response.Code = healthzResponse.Code
+		response.Message = healthzResponse.Message
+
+		return response, nil
 	}
 }
 

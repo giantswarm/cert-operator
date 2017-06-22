@@ -9,7 +9,7 @@ type Response struct {
 // DefaultResponse provides a default response object by best effort.
 func DefaultResponse() *Response {
 	return &Response{
-		Code:    "200",
-		Message: "OK",
+		Code:    "",
+		Message: "",
 	}
 }
