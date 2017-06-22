@@ -17,6 +17,7 @@ import (
 	"github.com/giantswarm/cert-operator/flag"
 	"github.com/giantswarm/cert-operator/service/ca"
 	"github.com/giantswarm/cert-operator/service/crt"
+	"github.com/giantswarm/cert-operator/service/healthz"
 	"github.com/giantswarm/cert-operator/service/version"
 )
 
@@ -131,6 +132,19 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
+	var healthzService *healthz.Service
+	{
+		healthzConfig := healthz.DefaultConfig()
+
+		healthzConfig.Logger = config.Logger
+		healthzConfig.VaultClient = vaultClient
+
+		healthzService, err = healthz.New(healthzConfig)
+		if err != nil {
+			return nil, microerror.MaskAny(err)
+		}
+	}
+
 	var versionService *version.Service
 	{
 		versionConfig := version.DefaultConfig()
@@ -149,6 +163,7 @@ func New(config Config) (*Service, error) {
 	newService := &Service{
 		// Dependencies.
 		Crt:     crtService,
+		Healthz: healthzService,
 		Version: versionService,
 
 		// Internals
@@ -161,6 +176,7 @@ func New(config Config) (*Service, error) {
 type Service struct {
 	// Dependencies.
 	Crt     *crt.Service
+	Healthz *healthz.Service
 	Version *version.Service
 
 	// Internals.
