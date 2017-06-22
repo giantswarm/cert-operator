@@ -25,6 +25,11 @@ var (
 	})
 )
 
+func init() {
+	prometheus.MustRegister(healthCheckRequests)
+	prometheus.MustRegister(healthCheckRequestTime)
+}
+
 // Config represents the configuration used to create a healthz service.
 type Config struct {
 	// Dependencies.
