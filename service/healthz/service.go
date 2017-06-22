@@ -37,8 +37,8 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
-		VaultClient: nil,
 		Logger:      nil,
+		VaultClient: nil,
 	}
 }
 
