@@ -11,6 +11,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	ResponseCodeOk     = "OK"
+	ResponseCodeFailed = "FAILED"
+)
+
 var (
 	healthCheckRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -98,5 +103,9 @@ func (s *Service) Check(ctx context.Context, request Request) (*Response, error)
 
 	healthCheckRequests.WithLabelValues("successfull").Inc()
 
-	return DefaultResponse(), nil
+	response := DefaultResponse()
+	response.Code = ResponseCodeOk
+	response.Message = "Everything OK."
+
+	return response, nil
 }
