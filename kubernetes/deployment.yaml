@@ -56,7 +56,7 @@ spec:
         - --config.files=secret
         livenessProbe:
           httpGet:
-            path: /
+            path: /healthz
             port: 8000
           initialDelaySeconds: 30
           timeoutSeconds: 1
