@@ -3,7 +3,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 	"sync"
 
@@ -126,11 +125,5 @@ func (s *server) newErrorEncoder() kithttp.ErrorEncoder {
 			rErr.SetMessage("An unexpected error occurred. Sorry for the inconvenience.")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-
-		// This writes the error response body to the stream.
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"code":    rErr.Code(),
-			"message": rErr.Message(),
-		})
 	}
 }
