@@ -5,7 +5,7 @@ import:
 - package: google.golang.org/grpc
   version: b5071124392bfd416c713e6595ac149b387f7186
 - package: github.com/giantswarm/certctl
-  version: master
+  version: vault-upgrade
   subpackages:
   - service/cert-signer
   - service/pki
@@ -25,7 +25,7 @@ import:
   - endpoint
   - transport/http
 - package: github.com/hashicorp/vault
-  version: 0.6.4
+  version: ~0.7.3
   subpackages:
   - api
 - package: github.com/juju/errgo
