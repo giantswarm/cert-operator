@@ -55,7 +55,7 @@ Starting a local Consul instance takes only a few minutes. Just follow the
 up to the point where you have installed Consul and started it with this command:
 
 ```shell
-$ consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul
+$ consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul -bind 127.0.0.1
 ```
 
 ## Starting the Server
@@ -99,7 +99,7 @@ file.
 ```
 
 For guidance on dealing with this issue, see the discussion of
-`disable_mlock` in [Server Configuration](/docs/config/index.html).
+`disable_mlock` in [Server Configuration](/docs/configuration/index.html).
 
 ## Initializing the Vault
 

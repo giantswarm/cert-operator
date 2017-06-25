@@ -23,6 +23,21 @@ const (
 	testPlaintext = "the quick brown fox"
 )
 
+func createBackendWithStorage(t *testing.T) (*backend, logical.Storage) {
+	config := logical.TestBackendConfig()
+	config.StorageView = &logical.InmemStorage{}
+
+	b := Backend(config)
+	if b == nil {
+		t.Fatalf("failed to create backend")
+	}
+	_, err := b.Backend.Setup(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return b, config.StorageView
+}
+
 func TestBackend_basic(t *testing.T) {
 	decryptData := make(map[string]interface{})
 	logicaltest.Test(t, logicaltest.TestCase{
@@ -595,7 +610,7 @@ func TestKeyUpgrade(t *testing.T) {
 	if p.Key != nil ||
 		p.Keys == nil ||
 		len(p.Keys) != 1 ||
-		!reflect.DeepEqual(p.Keys[1].AESKey, key) {
+		!reflect.DeepEqual(p.Keys[1].Key, key) {
 		t.Errorf("bad key migration, result is %#v", p.Keys)
 	}
 }

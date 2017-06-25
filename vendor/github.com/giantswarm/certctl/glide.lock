@@ -1,8 +1,8 @@
-hash: 2f34b256ec79ecad4882fb3df4ffb089b0c45097631274c66740ede7e119868b
-updated: 2017-04-06T14:01:13.399221349+01:00
+hash: 180ae5ab84a66ba51cbb3d81843771f5e5da3a209cf06cf90dc46e0176c8c1d3
+updated: 2017-06-24T16:24:05.380459076+02:00
 imports:
 - name: github.com/fatih/structs
-  version: a720dfa8df582c51dee1b36feabb906bde1588bd
+  version: 7e5a8eef611ee84dd359503f3969f80df4c50723
 - name: github.com/giantswarm/go-uuid
   version: ed3ca8a15a931b141440a7e98e4f716eec255f7d
   subpackages:
@@ -12,11 +12,11 @@ imports:
 - name: github.com/hashicorp/go-cleanhttp
   version: 3573b8b52aa7b37b9358d966a898feb387f62437
 - name: github.com/hashicorp/go-multierror
-  version: ed905158d87462226a13fe39ddf685ea65f1c11f
+  version: 83588e72410abfbe4df460eeb6f30841ae47d4c4
 - name: github.com/hashicorp/go-rootcerts
   version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
 - name: github.com/hashicorp/hcl
-  version: 39fa3a62ba92cf550eb0f9cfb84757ef79b8aa30
+  version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -27,7 +27,7 @@ imports:
   - json/scanner
   - json/token
 - name: github.com/hashicorp/vault
-  version: f4adc7fa960ed8e828f94bc6785bcdbae8d1b263
+  version: 0b20ae0b9b7a748d607082b1add3663a28e31b68
   subpackages:
   - api
   - helper/compressutil
@@ -39,11 +39,17 @@ imports:
 - name: github.com/mitchellh/go-homedir
   version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/mitchellh/mapstructure
-  version: ed105d635dfa9ea7133f7c79f1eb36203fc3a156
+  version: d0303fe809921458f417bcf828397a65db30a7e4
 - name: github.com/sethgrid/pester
-  version: 2c5fb962da6113d0968907fd81dba3ca35151d1c
+  version: 99271bb5a99e5769f688c483eabb3c22d71ebf93
 - name: github.com/spf13/cobra
-  version: dc208f4211e7f6df7ec8cb62640f57d3e154910d
+  version: 4c05eb1145f16d0e6bb4a3e1b6d769f4713cb41f
 - name: github.com/spf13/pflag
-  version: 5ccb023bc27df288a957c5e994cd44fd19619465
+  version: 08b1a584251b5b62f458943640fc8ebd4d50aaa5
+- name: golang.org/x/net
+  version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
+  subpackages:
+  - http2
+  - http2/hpack
+  - lex/httplex
 testImports: []

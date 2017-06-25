@@ -16,7 +16,7 @@ You can tell if a data store supports high availability mode ("HA") by starting
 the server and seeing if "(HA available)" is output next to the data store
 information. If it is, then Vault will automatically use HA mode. This
 information is also available on the
-[Configuration](https://www.vaultproject.io/docs/config/index.html) page.
+[Configuration](https://www.vaultproject.io/docs/configuration/index.html) page.
 
 To be highly available, one of the Vault server nodes grabs a lock within the
 data store. The successful server node then becomes the active node; all other
@@ -127,13 +127,13 @@ it will start cluster listeners, and when it becomes standby it will stop them.
 
 ### Per-Node Cluster Address
 
-Similar to the `redirect_addr`, this is the value that each node, if active,
-should advertise to the standbys to use for server-to-server communications,
-and lives in the `backend` (or `ha_backend`) block.  On each node, this should
-be set to a host name or IP address that a standby can use to reach one of that
-node's `cluster_address` values set in the `listener` blocks, including port.
-(Note that this will always be forced to `https` since only TLS connections are
-used between servers.)
+Similar to the `redirect_addr`, `cluster_addr` is the value that each node, if
+active, should advertise to the standbys to use for server-to-server
+communications, and lives in the `backend` (or `ha_backend`) block. On each
+node, this should be set to a host name or IP address that a standby can use to
+reach one of that node's `cluster_address` values set in the `listener` blocks,
+including port. (Note that this will always be forced to `https` since only TLS
+connections are used between servers.)
 
 This value can also be specified by the `VAULT_CLUSTER_ADDR` environment
 variable, which takes precedence.
@@ -142,7 +142,7 @@ variable, which takes precedence.
 
 Currently there are several backends that support high availability mode,
 including Consul, ZooKeeper and etcd. These may change over time, and the
-[configuration page](/docs/config/index.html) should be referenced.
+[configuration page](/docs/configuration/index.html) should be referenced.
 
 The Consul backend is the recommended HA backend, as it is used in production
 by HashiCorp and its customers with commercial support.
