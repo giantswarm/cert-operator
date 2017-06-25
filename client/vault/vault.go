@@ -1,7 +1,6 @@
 package vault
 
 import (
-	"net/http"
 	"net/url"
 
 	microerror "github.com/giantswarm/microkit/error"
@@ -37,7 +36,6 @@ func NewClient(config Config) (*vaultapi.Client, error) {
 
 	newClientConfig := vaultapi.DefaultConfig()
 	newClientConfig.Address = address
-	newClientConfig.HttpClient = http.DefaultClient
 
 	newVaultClient, err := vaultapi.NewClient(newClientConfig)
 	if err != nil {
