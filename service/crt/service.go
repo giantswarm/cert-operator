@@ -96,7 +96,8 @@ func New(config Config) (*Service, error) {
 	}
 
 	tprConfig := tpr.Config{
-		Clientset:   config.K8sClient,
+		K8sClient:   config.K8sClient,
+		Logger:      config.Logger,
 		Name:        certificatetpr.Name,
 		Version:     TPRVersion,
 		Description: TPRDescription,

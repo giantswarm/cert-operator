@@ -17,12 +17,18 @@ type Router struct {
 	l              sync.RWMutex
 	root           *radix.Tree
 	tokenStoreSalt *salt.Salt
+
+	// storagePrefix maps the prefix used for storage (ala the BarrierView)
+	// to the backend. This is used to map a key back into the backend that owns it.
+	// For example, logical/uuid1/foobar -> secrets/ (generic backend) + foobar
+	storagePrefix *radix.Tree
 }
 
 // NewRouter returns a new router
 func NewRouter() *Router {
 	r := &Router{
-		root: radix.New(),
+		root:          radix.New(),
+		storagePrefix: radix.New(),
 	}
 	return r
 }
@@ -69,6 +75,7 @@ func (r *Router) Mount(backend logical.Backend, prefix string, mountEntry *Mount
 		loginPaths:  pathsToRadix(paths.Unauthenticated),
 	}
 	r.root.Insert(prefix, re)
+	r.storagePrefix.Insert(storageView.prefix, re)
 
 	return nil
 }
@@ -78,12 +85,19 @@ func (r *Router) Unmount(prefix string) error {
 	r.l.Lock()
 	defer r.l.Unlock()
 
-	// Call backend's Cleanup routine
-	re, ok := r.root.Get(prefix)
-	if ok {
-		re.(*routeEntry).backend.Cleanup()
+	// Fast-path out if the backend doesn't exist
+	raw, ok := r.root.Get(prefix)
+	if !ok {
+		return nil
 	}
+
+	// Call backend's Cleanup routine
+	re := raw.(*routeEntry)
+	re.backend.Cleanup()
+
+	// Purge from the radix trees
 	r.root.Delete(prefix)
+	r.storagePrefix.Delete(re.storageView.prefix)
 	return nil
 }
 
@@ -182,6 +196,23 @@ func (r *Router) MatchingSystemView(path string) logical.SystemView {
 	return raw.(*routeEntry).backend.System()
 }
 
+// MatchingStoragePrefix returns the mount path matching and storage prefix
+// matching the given path
+func (r *Router) MatchingStoragePrefix(path string) (string, string, bool) {
+	r.l.RLock()
+	_, raw, ok := r.storagePrefix.LongestPrefix(path)
+	r.l.RUnlock()
+	if !ok {
+		return "", "", false
+	}
+
+	// Extract the mount path and storage prefix
+	re := raw.(*routeEntry)
+	mountPath := re.mountEntry.Path
+	prefix := re.storageView.prefix
+	return mountPath, prefix, true
+}
+
 // Route is used to route a given request
 func (r *Router) Route(req *logical.Request) (*logical.Response, error) {
 	resp, _, _, err := r.routeCommon(req, false)
@@ -226,6 +257,7 @@ func (r *Router) routeCommon(req *logical.Request, existenceCheck bool) (*logica
 	originalPath := req.Path
 	req.Path = strings.TrimPrefix(req.Path, mount)
 	req.MountPoint = mount
+	req.MountType = re.mountEntry.Type
 	if req.Path == "/" {
 		req.Path = ""
 	}
@@ -252,18 +284,38 @@ func (r *Router) routeCommon(req *logical.Request, existenceCheck bool) (*logica
 	// Cache the identifier of the request
 	originalReqID := req.ID
 
-	// Cache the wrap TTL of the request
-	originalWrapTTL := req.WrapTTL
+	// Cache the client token's number of uses in the request
+	originalClientTokenRemainingUses := req.ClientTokenRemainingUses
+	req.ClientTokenRemainingUses = 0
+
+	// Cache the headers and hide them from backends
+	headers := req.Headers
+	req.Headers = nil
+
+	// Cache the wrap info of the request
+	var wrapInfo *logical.RequestWrapInfo
+	if req.WrapInfo != nil {
+		wrapInfo = &logical.RequestWrapInfo{
+			TTL:    req.WrapInfo.TTL,
+			Format: req.WrapInfo.Format,
+		}
+	}
 
 	// Reset the request before returning
 	defer func() {
 		req.Path = originalPath
-		req.MountPoint = ""
+		req.MountPoint = mount
+		req.MountType = re.mountEntry.Type
 		req.Connection = originalConn
 		req.ID = originalReqID
 		req.Storage = nil
 		req.ClientToken = clientToken
-		req.WrapTTL = originalWrapTTL
+		req.ClientTokenRemainingUses = originalClientTokenRemainingUses
+		req.WrapInfo = wrapInfo
+		req.Headers = headers
+		// This is only set in one place, after routing, so should never be set
+		// by a backend
+		req.SetLastRemoteWAL(0)
 	}()
 
 	// Invoke the backend

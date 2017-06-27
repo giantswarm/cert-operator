@@ -9,7 +9,7 @@ Vault [![Build Status](https://travis-ci.org/hashicorp/vault.svg)](https://travi
 -	Announcement list: [Google Groups](https://groups.google.com/group/hashicorp-announce)
 -	Discussion list: [Google Groups](https://groups.google.com/group/vault-tool)
 
-![Vault](https://raw.githubusercontent.com/hashicorp/vault/master/website/source/assets/images/logo-big.png?token=AAAFE8XmW6YF5TNuk3cosDGBK-sUGPEjks5VSAa2wA%3D%3D)
+<img width="300" alt="Vault Logo" src="https://cloud.githubusercontent.com/assets/416727/24112835/03b57de4-0d58-11e7-81f5-9056cac5b427.png">
 
 Vault is a tool for securely accessing secrets. A secret is anything that you want to tightly control access to, such as API keys, passwords, certificates, and more. Vault provides a unified interface to any secret, while providing tight access control and recording a detailed audit log.
 
@@ -56,9 +56,9 @@ All documentation is available on the [Vault website](https://www.vaultproject.i
 Developing Vault
 --------------------
 
-If you wish to work on Vault itself or any of its built-in systems,
-you'll first need [Go](https://www.golang.org) installed on your
-machine (version 1.7+ is *required*).
+If you wish to work on Vault itself or any of its built-in systems, you'll
+first need [Go](https://www.golang.org) installed on your machine (version 1.8+
+is *required*).
 
 For local dev first make sure Go is properly installed, including setting up a
 [GOPATH](https://golang.org/doc/code.html#GOPATH). Next, clone this repository

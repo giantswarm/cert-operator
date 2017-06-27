@@ -4,7 +4,7 @@ import:
   subpackages:
   - uuid
 - package: github.com/hashicorp/vault
-  version: 0.6.4
+  version: ~0.7.3
   subpackages:
   - api
 - package: github.com/juju/errgo
