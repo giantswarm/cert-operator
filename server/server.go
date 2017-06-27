@@ -72,11 +72,13 @@ func New(config Config) (microserver.Server, error) {
 		// Internals.
 		bootOnce:     sync.Once{},
 		config:       config.MicroServerConfig,
+		serviceName:  config.MicroServerConfig.ServiceName,
 		shutdownOnce: sync.Once{},
 	}
 
 	// Apply internals to the micro server config.
 	newServer.config.Endpoints = []microserver.Endpoint{
+		endpointCollection.Healthz,
 		endpointCollection.Version,
 	}
 	newServer.config.ErrorEncoder = newServer.newErrorEncoder()
@@ -91,6 +93,7 @@ type server struct {
 	// Internals.
 	bootOnce     sync.Once
 	config       microserver.Config
+	serviceName  string
 	shutdownOnce sync.Once
 }
 
@@ -114,21 +117,12 @@ func (s *server) Shutdown() {
 
 func (s *server) newErrorEncoder() kithttp.ErrorEncoder {
 	return func(ctx context.Context, err error, w http.ResponseWriter) {
-		switch e := err.(type) {
-		case kithttp.Error:
-			err = e.Err
+		rErr := err.(microserver.ResponseError)
 
-			switch e.Domain {
-			case kithttp.DomainEncode:
-				w.WriteHeader(http.StatusBadRequest)
-			case kithttp.DomainDecode:
-				w.WriteHeader(http.StatusBadRequest)
-			case kithttp.DomainDo:
-				w.WriteHeader(http.StatusBadRequest)
-			default:
-				w.WriteHeader(http.StatusInternalServerError)
-			}
-		default:
+		// Something unexpected happened so return a generic error.
+		if !rErr.IsEndpoint() {
+			rErr.SetCode(microserver.CodeInternalError)
+			rErr.SetMessage("An unexpected error occurred. Sorry for the inconvenience.")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
