@@ -5,7 +5,7 @@ import:
 - package: google.golang.org/grpc
   version: b5071124392bfd416c713e6595ac149b387f7186
 - package: github.com/giantswarm/certctl
-  version: vault-upgrade
+  version: master
   subpackages:
   - service/cert-signer
   - service/pki
