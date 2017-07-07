@@ -33,9 +33,7 @@ var _ = math.Inf
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
-// A compilation error at this line likely means your copy of the
-// proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion1
 
 type HatType int32
 
@@ -284,10 +282,10 @@ func (m *Request_SomeGroup) GetGroupField() int32 {
 }
 
 type Reply struct {
-	Found                        []*Reply_Entry `protobuf:"bytes,1,rep,name=found" json:"found,omitempty"`
-	CompactKeys                  []int32        `protobuf:"varint,2,rep,packed,name=compact_keys,json=compactKeys" json:"compact_keys,omitempty"`
-	proto.XXX_InternalExtensions `json:"-"`
-	XXX_unrecognized             []byte `json:"-"`
+	Found            []*Reply_Entry            `protobuf:"bytes,1,rep,name=found" json:"found,omitempty"`
+	CompactKeys      []int32                   `protobuf:"varint,2,rep,packed,name=compact_keys,json=compactKeys" json:"compact_keys,omitempty"`
+	XXX_extensions   map[int32]proto.Extension `json:"-"`
+	XXX_unrecognized []byte                    `json:"-"`
 }
 
 func (m *Reply) Reset()         { *m = Reply{} }
@@ -300,6 +298,12 @@ var extRange_Reply = []proto.ExtensionRange{
 
 func (*Reply) ExtensionRangeArray() []proto.ExtensionRange {
 	return extRange_Reply
+}
+func (m *Reply) ExtensionMap() map[int32]proto.Extension {
+	if m.XXX_extensions == nil {
+		m.XXX_extensions = make(map[int32]proto.Extension)
+	}
+	return m.XXX_extensions
 }
 
 func (m *Reply) GetFound() []*Reply_Entry {
@@ -319,7 +323,7 @@ func (m *Reply) GetCompactKeys() []int32 {
 type Reply_Entry struct {
 	KeyThatNeeds_1234Camel_CasIng *int64 `protobuf:"varint,1,req,name=key_that_needs_1234camel_CasIng,json=keyThatNeeds1234camelCasIng" json:"key_that_needs_1234camel_CasIng,omitempty"`
 	Value                         *int64 `protobuf:"varint,2,opt,name=value,def=7" json:"value,omitempty"`
-	XMyFieldName_2                *int64 `protobuf:"varint,3,opt,name=_my_field_name_2,json=MyFieldName2" json:"_my_field_name_2,omitempty"`
+	XMyFieldName_2                *int64 `protobuf:"varint,3,opt,name=_my_field_name_2,json=myFieldName2" json:"_my_field_name_2,omitempty"`
 	XXX_unrecognized              []byte `json:"-"`
 }
 
@@ -351,9 +355,9 @@ func (m *Reply_Entry) GetXMyFieldName_2() int64 {
 }
 
 type OtherBase struct {
-	Name                         *string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	proto.XXX_InternalExtensions `json:"-"`
-	XXX_unrecognized             []byte `json:"-"`
+	Name             *string                   `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	XXX_extensions   map[int32]proto.Extension `json:"-"`
+	XXX_unrecognized []byte                    `json:"-"`
 }
 
 func (m *OtherBase) Reset()         { *m = OtherBase{} }
@@ -366,6 +370,12 @@ var extRange_OtherBase = []proto.ExtensionRange{
 
 func (*OtherBase) ExtensionRangeArray() []proto.ExtensionRange {
 	return extRange_OtherBase
+}
+func (m *OtherBase) ExtensionMap() map[int32]proto.Extension {
+	if m.XXX_extensions == nil {
+		m.XXX_extensions = make(map[int32]proto.Extension)
+	}
+	return m.XXX_extensions
 }
 
 func (m *OtherBase) GetName() string {
@@ -389,7 +399,6 @@ var E_ReplyExtensions_Time = &proto.ExtensionDesc{
 	Field:         101,
 	Name:          "my.test.ReplyExtensions.time",
 	Tag:           "fixed64,101,opt,name=time",
-	Filename:      "my_test/test.proto",
 }
 
 var E_ReplyExtensions_Carrot = &proto.ExtensionDesc{
@@ -398,7 +407,6 @@ var E_ReplyExtensions_Carrot = &proto.ExtensionDesc{
 	Field:         105,
 	Name:          "my.test.ReplyExtensions.carrot",
 	Tag:           "bytes,105,opt,name=carrot",
-	Filename:      "my_test/test.proto",
 }
 
 var E_ReplyExtensions_Donut = &proto.ExtensionDesc{
@@ -407,7 +415,6 @@ var E_ReplyExtensions_Donut = &proto.ExtensionDesc{
 	Field:         101,
 	Name:          "my.test.ReplyExtensions.donut",
 	Tag:           "bytes,101,opt,name=donut",
-	Filename:      "my_test/test.proto",
 }
 
 type OtherReplyExtensions struct {
@@ -427,8 +434,8 @@ func (m *OtherReplyExtensions) GetKey() int32 {
 }
 
 type OldReply struct {
-	proto.XXX_InternalExtensions `json:"-"`
-	XXX_unrecognized             []byte `json:"-"`
+	XXX_extensions   map[int32]proto.Extension `json:"-"`
+	XXX_unrecognized []byte                    `json:"-"`
 }
 
 func (m *OldReply) Reset()         { *m = OldReply{} }
@@ -436,16 +443,16 @@ func (m *OldReply) String() string { return proto.CompactTextString(m) }
 func (*OldReply) ProtoMessage()    {}
 
 func (m *OldReply) Marshal() ([]byte, error) {
-	return proto.MarshalMessageSet(&m.XXX_InternalExtensions)
+	return proto.MarshalMessageSet(m.ExtensionMap())
 }
 func (m *OldReply) Unmarshal(buf []byte) error {
-	return proto.UnmarshalMessageSet(buf, &m.XXX_InternalExtensions)
+	return proto.UnmarshalMessageSet(buf, m.ExtensionMap())
 }
 func (m *OldReply) MarshalJSON() ([]byte, error) {
-	return proto.MarshalMessageSetJSON(&m.XXX_InternalExtensions)
+	return proto.MarshalMessageSetJSON(m.XXX_extensions)
 }
 func (m *OldReply) UnmarshalJSON(buf []byte) error {
-	return proto.UnmarshalMessageSetJSON(buf, &m.XXX_InternalExtensions)
+	return proto.UnmarshalMessageSetJSON(buf, m.XXX_extensions)
 }
 
 // ensure OldReply satisfies proto.Marshaler and proto.Unmarshaler
@@ -458,6 +465,12 @@ var extRange_OldReply = []proto.ExtensionRange{
 
 func (*OldReply) ExtensionRangeArray() []proto.ExtensionRange {
 	return extRange_OldReply
+}
+func (m *OldReply) ExtensionMap() map[int32]proto.Extension {
+	if m.XXX_extensions == nil {
+		m.XXX_extensions = make(map[int32]proto.Extension)
+	}
+	return m.XXX_extensions
 }
 
 type Communique struct {
@@ -835,7 +848,6 @@ var E_Tag = &proto.ExtensionDesc{
 	Field:         103,
 	Name:          "my.test.tag",
 	Tag:           "bytes,103,opt,name=tag",
-	Filename:      "my_test/test.proto",
 }
 
 var E_Donut = &proto.ExtensionDesc{
@@ -844,7 +856,6 @@ var E_Donut = &proto.ExtensionDesc{
 	Field:         106,
 	Name:          "my.test.donut",
 	Tag:           "bytes,106,opt,name=donut",
-	Filename:      "my_test/test.proto",
 }
 
 func init() {

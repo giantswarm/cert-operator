@@ -7,7 +7,8 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/certificatetpr"
 	microerror "github.com/giantswarm/microkit/error"
-	"k8s.io/client-go/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 )
 
@@ -20,7 +21,7 @@ func (s *Service) CreateCertificate(secret certificateSecret) error {
 	var err error
 
 	k8sSecret := &v1.Secret{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: apismetav1.ObjectMeta{
 			Name: getSecretName(secret.Certificate),
 			Labels: map[string]string{
 				certificatetpr.ClusterIDLabel: secret.Certificate.ClusterID,
@@ -36,7 +37,7 @@ func (s *Service) CreateCertificate(secret certificateSecret) error {
 
 	// Create the secret which should be idempotent.
 	_, err = s.Config.K8sClient.Core().Secrets(v1.NamespaceDefault).Create(k8sSecret)
-	if errors.IsAlreadyExists(err) {
+	if apierrors.IsAlreadyExists(err) {
 		return nil
 	} else if err != nil {
 		return microerror.MaskAny(err)
@@ -70,8 +71,8 @@ func (s *Service) DeleteCertificateAndWait(cert certificatetpr.Spec) error {
 // deletion is idempotent so no error is returned if the secret has already
 // been deleted.
 func (s *Service) DeleteCertificate(cert certificatetpr.Spec) error {
-	err := s.Config.K8sClient.Core().Secrets(v1.NamespaceDefault).Delete(getSecretName(cert), &v1.DeleteOptions{})
-	if errors.IsNotFound(err) {
+	err := s.Config.K8sClient.Core().Secrets(v1.NamespaceDefault).Delete(getSecretName(cert), &apismetav1.DeleteOptions{})
+	if apierrors.IsNotFound(err) {
 		return nil
 	} else if err != nil {
 		return microerror.MaskAny(err)
