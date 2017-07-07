@@ -6,7 +6,6 @@ import (
 
 	"github.com/giantswarm/certctl/service/spec"
 	"github.com/giantswarm/certificatetpr"
-	"github.com/giantswarm/flanneltpr"
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
 	"github.com/giantswarm/operatorkit/tpr"
@@ -134,8 +133,8 @@ func (s *Service) Boot() {
 			DeleteFunc: s.deleteFunc,
 		}
 		newZeroObjectFactory := &tpr.ZeroObjectFactoryFuncs{
-			NewObjectFunc:     func() runtime.Object { return &flanneltpr.CustomObject{} },
-			NewObjectListFunc: func() runtime.Object { return &flanneltpr.List{} },
+			NewObjectFunc:     func() runtime.Object { return &certificatetpr.CustomObject{} },
+			NewObjectListFunc: func() runtime.Object { return &certificatetpr.List{} },
 		}
 
 		s.tpr.NewInformer(newResourceEventHandler, newZeroObjectFactory).Run(nil)
