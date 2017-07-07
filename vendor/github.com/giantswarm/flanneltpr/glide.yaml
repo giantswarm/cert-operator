@@ -1,0 +1,3 @@
+package: github.com/giantswarm/flanneltpr
+import:
+- package: k8s.io/apimachinery

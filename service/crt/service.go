@@ -1,21 +1,19 @@
 package crt
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync"
 
 	"github.com/giantswarm/certctl/service/spec"
 	"github.com/giantswarm/certificatetpr"
+	"github.com/giantswarm/flanneltpr"
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
 	"github.com/giantswarm/operatorkit/tpr"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api"
-	"k8s.io/client-go/pkg/runtime"
-	"k8s.io/client-go/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/giantswarm/cert-operator/flag"
@@ -122,30 +120,25 @@ func New(config Config) (*Service, error) {
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
 		err := s.tpr.CreateAndWait()
-		switch {
-		case tpr.IsAlreadyExists(err):
-			s.Config.Logger.Log("info", "certificate third-party resource already exists")
-		case err != nil:
-			panic(fmt.Sprintf("could not create certificate resource: %#v", err))
-		default:
-			s.Config.Logger.Log("info", "successfully created certificate third-party resource")
+		if tpr.IsAlreadyExists(err) {
+			s.Logger.Log("debug", "third party resource already exists")
+		} else if err != nil {
+			s.Logger.Log("error", fmt.Sprintf("%#v", err))
+			return
 		}
 
-		_, certInformer := cache.NewInformer(
-			s.newCertificateListWatch(),
-			&certificatetpr.CustomObject{},
-			tpr.ResyncPeriod,
-			cache.ResourceEventHandlerFuncs{
-				AddFunc:    s.addFunc,
-				DeleteFunc: s.deleteFunc,
-			},
-		)
+		s.Logger.Log("debug", "starting list/watch")
 
-		s.Config.Logger.Log("info", "starting watch")
+		newResourceEventHandler := &cache.ResourceEventHandlerFuncs{
+			AddFunc:    s.addFunc,
+			DeleteFunc: s.deleteFunc,
+		}
+		newZeroObjectFactory := &tpr.ZeroObjectFactoryFuncs{
+			NewObjectFunc:     func() runtime.Object { return &flanneltpr.CustomObject{} },
+			NewObjectListFunc: func() runtime.Object { return &flanneltpr.List{} },
+		}
 
-		// Certificate informer lifecycle can be interrupted by putting a value into a "stop channel".
-		// We aren't currently using that functionality, so we are passing a nil here.
-		certInformer.Run(nil)
+		s.tpr.NewInformer(newResourceEventHandler, newZeroObjectFactory).Run(nil)
 	})
 }
 
@@ -178,38 +171,4 @@ func (s *Service) deleteFunc(obj interface{}) {
 	}
 
 	s.Config.Logger.Log("info", fmt.Sprintf("certificate '%s' deleted", cert.Spec.CommonName))
-}
-
-// newCertificateListWatch returns a configured list watch for the certificate TPR.
-func (s *Service) newCertificateListWatch() *cache.ListWatch {
-	client := s.Config.K8sClient.Core().RESTClient()
-
-	listWatch := &cache.ListWatch{
-		ListFunc: func(options api.ListOptions) (runtime.Object, error) {
-			req := client.Get().AbsPath(s.tpr.Endpoint(""))
-			b, err := req.DoRaw()
-			if err != nil {
-				return nil, err
-			}
-
-			var c certificatetpr.List
-			if err := json.Unmarshal(b, &c); err != nil {
-				return nil, err
-			}
-
-			return &c, nil
-		},
-
-		WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-			req := client.Get().AbsPath(s.tpr.WatchEndpoint(""))
-			stream, err := req.Stream()
-			if err != nil {
-				return nil, err
-			}
-
-			return watch.NewStreamWatcher(newCertificateDecoder(stream)), nil
-		},
-	}
-
-	return listWatch
 }
