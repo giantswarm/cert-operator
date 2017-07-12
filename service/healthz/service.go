@@ -8,27 +8,7 @@ import (
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
 	vaultapi "github.com/hashicorp/vault/api"
-	"github.com/prometheus/client_golang/prometheus"
 )
-
-var (
-	healthCheckRequests = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "health_check_request_total",
-			Help: "Number of health check requests",
-		},
-		[]string{"success"},
-	)
-	healthCheckRequestTime = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "health_check_request_milliseconds",
-		Help: "Time taken to respond to health check, in milliseconds",
-	})
-)
-
-func init() {
-	prometheus.MustRegister(healthCheckRequests)
-	prometheus.MustRegister(healthCheckRequestTime)
-}
 
 // Config represents the configuration used to create a healthz service.
 type Config struct {
@@ -72,8 +52,8 @@ func New(config Config) (*Service, error) {
 // Service implements the healthz service interface.
 type Service struct {
 	// Dependencies.
-	vaultClient *vaultapi.Client
 	logger      micrologger.Logger
+	vaultClient *vaultapi.Client
 
 	// Internals.
 	bootOnce sync.Once
@@ -92,11 +72,11 @@ func (s *Service) Check(ctx context.Context, request Request) (*Response, error)
 
 	_, err := sysBackend.ListMounts()
 	if err != nil {
-		healthCheckRequests.WithLabelValues("failed").Inc()
+		healthCheckRequests.WithLabelValues(PrometheusFailedLabel).Inc()
 		return nil, microerror.MaskAny(err)
 	}
 
-	healthCheckRequests.WithLabelValues("successfull").Inc()
+	healthCheckRequests.WithLabelValues(PrometheusSuccessfulLabel).Inc()
 
 	return DefaultResponse(), nil
 }
