@@ -25,6 +25,11 @@ var (
 	})
 )
 
+func init() {
+	prometheus.MustRegister(healthCheckRequests)
+	prometheus.MustRegister(healthCheckRequestTime)
+}
+
 // Config represents the configuration used to create a healthz service.
 type Config struct {
 	// Dependencies.
@@ -37,8 +42,8 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
-		VaultClient: nil,
 		Logger:      nil,
+		VaultClient: nil,
 	}
 }
 
