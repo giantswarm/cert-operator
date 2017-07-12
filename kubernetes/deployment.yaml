@@ -54,6 +54,18 @@ spec:
         - --config.dirs=/var/run/cert-operator/secret/
         - --config.files=config
         - --config.files=secret
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 15
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 15
+          timeoutSeconds: 1
         resources:
           requests:
             cpu: 100m
