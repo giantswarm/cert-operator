@@ -72,6 +72,7 @@ func New(config Config) (microserver.Server, error) {
 		// Internals.
 		bootOnce:     sync.Once{},
 		config:       config.MicroServerConfig,
+		serviceName:  config.MicroServerConfig.ServiceName,
 		shutdownOnce: sync.Once{},
 	}
 
@@ -92,6 +93,7 @@ type server struct {
 	// Internals.
 	bootOnce     sync.Once
 	config       microserver.Config
+	serviceName  string
 	shutdownOnce sync.Once
 }
 
