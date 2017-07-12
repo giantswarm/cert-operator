@@ -72,11 +72,13 @@ func New(config Config) (microserver.Server, error) {
 		// Internals.
 		bootOnce:     sync.Once{},
 		config:       config.MicroServerConfig,
+		serviceName:  config.MicroServerConfig.ServiceName,
 		shutdownOnce: sync.Once{},
 	}
 
 	// Apply internals to the micro server config.
 	newServer.config.Endpoints = []microserver.Endpoint{
+		endpointCollection.Healthz,
 		endpointCollection.Version,
 	}
 	newServer.config.ErrorEncoder = newServer.newErrorEncoder()
@@ -91,6 +93,7 @@ type server struct {
 	// Internals.
 	bootOnce     sync.Once
 	config       microserver.Config
+	serviceName  string
 	shutdownOnce sync.Once
 }
 
