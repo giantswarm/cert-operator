@@ -90,11 +90,11 @@ metadata:
   namespace: giantswarm
 type: Opaque
 data:
-  secret.yml: 'TODO'
+  secret.yaml: 'TODO'
 ```
 
 To create the secret manually do this.
 
 ```
-kubectl create -f ./path/to/secret.yml
+kubectl create -f ./path/to/secret.yaml
 ```

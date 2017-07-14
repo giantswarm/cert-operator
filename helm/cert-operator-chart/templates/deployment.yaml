@@ -19,14 +19,14 @@ spec:
         configMap:
           name: cert-operator-configmap
           items:
-            - key: config.yml
-              path: config.yml
+            - key: config.yaml
+              path: config.yaml
       - name: cert-operator-secret
         secret:
           secretName: cert-operator-secret
           items:
-            - key: secret.yml
-              path: secret.yml
+            - key: secret.yaml
+              path: secret.yaml
       - name: certs
         hostPath:
           path: /etc/ssl/certs/ca-certificates.crt
