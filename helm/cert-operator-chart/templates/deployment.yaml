@@ -35,7 +35,7 @@ spec:
           path: /etc/ssl/certs/
       containers:
       - name: cert-operator
-        image: quay.io/giantswarm/cert-operator:{{ .SHA }}
+        image: quay.io/giantswarm/cert-operator:[[ .SHA ]]
         volumeMounts:
         - name: cert-operator-configmap
           mountPath: /var/run/cert-operator/configmap/
