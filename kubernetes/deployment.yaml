@@ -74,4 +74,4 @@ spec:
             cpu: 250m
             memory: 250Mi
       imagePullSecrets:
-      - name: cert-operator-pull-secret
+      - name: giantswarm-registry
