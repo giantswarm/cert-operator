@@ -19,14 +19,14 @@ spec:
         configMap:
           name: cert-operator-configmap
           items:
-            - key: config.yaml
-              path: config.yaml
+            - key: config.yml
+              path: config.yml
       - name: cert-operator-secret
         secret:
           secretName: cert-operator-secret
           items:
-            - key: secret.yaml
-              path: secret.yaml
+            - key: secret.yml
+              path: secret.yml
       - name: certs
         hostPath:
           path: /etc/ssl/certs/ca-certificates.crt
@@ -74,4 +74,4 @@ spec:
             cpu: 250m
             memory: 250Mi
       imagePullSecrets:
-      - name: cert-operator-pull-secret
+      - name: giantswarm-registry
