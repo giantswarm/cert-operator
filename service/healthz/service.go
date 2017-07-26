@@ -3,7 +3,6 @@ package healthz
 import (
 	"context"
 	"sync"
-	"time"
 
 	microerror "github.com/giantswarm/microkit/error"
 	micrologger "github.com/giantswarm/microkit/logger"
@@ -63,20 +62,12 @@ type Service struct {
 // This checks that the operator can connect to the Vault API and the token is
 // valid.
 func (s *Service) Check(ctx context.Context, request Request) (*Response, error) {
-	start := time.Now()
-	defer func() {
-		healthCheckRequestTime.Set(float64(time.Since(start) / time.Millisecond))
-	}()
-
 	sysBackend := s.vaultClient.Sys()
 
 	_, err := sysBackend.ListMounts()
 	if err != nil {
-		healthCheckRequests.WithLabelValues(PrometheusFailedLabel).Inc()
 		return nil, microerror.MaskAny(err)
 	}
-
-	healthCheckRequests.WithLabelValues(PrometheusSuccessfulLabel).Inc()
 
 	return DefaultResponse(), nil
 }
