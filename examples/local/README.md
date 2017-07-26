@@ -51,10 +51,17 @@ the Kubernetes API. For development running Vault in dev mode is fine.
 
 Steps below are optional. It's OK to use a different Vault instance accessible
 from the operator pod. Remember to set `VAULT_HOST` during templates
-preparation accordingly. 
+preparation accordingly.
 
 ```bash
 kubectl apply -f ./vault.yaml
+```
+
+If you are using minikube you can access vault with:
+```bash
+export VAULT_TOKEN=<VAULT_TOKEN>
+export VAULT_ADDR=$(minikube service vault --url)
+vault status
 ```
 
 
@@ -67,13 +74,14 @@ In that case the Docker image needs to be accessible from the K8s cluster
 running the operator. For Minikube `eval $(minikube docker-env)` before `docker
 build`, see [reusing the Docker daemon] for details.
 
-[reusing the docker daemon]: https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md 
+[reusing the docker daemon]: https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md
 
 ```bash
 # Optional. Only when using Minikube.
 eval $(minikube docker-env)
 
-GOOS=linux go build github.com/giantswarm/cert-operator
+# From the root of the project, where the Dockerfile resides
+CGO_ENABLED=0 GOOS=linux go build github.com/giantswarm/cert-operator
 docker build -t quay.io/giantswarm/cert-operator:local-dev .
 
 # Optional. Restart running operator after image update.
@@ -89,10 +97,10 @@ kubectl apply -f ./deployment.yaml
 ```
 
 
-## Creating Certificates ThirdPartyObjects
+## Creating Certificates CustomObjects
 
 ```bash
-for f in *.-cert.yaml; do
+for f in *-cert.yaml; do
     kubectl create -f ./$f
 done
 ```
@@ -106,12 +114,12 @@ kubectl get secret -l clusterID=CLUSTER_NAME
 
 ## Cleaning Up
 
-Delete the certificate TPOs and the deployment.
+Delete the certificate custom objects and the deployment.
 
 ```bash
-kubectl delete certificate -l clusterID=example-cluster
+kubectl delete certificate -l clusterID=CLUSTER_NAME
 kubectl delete -f ./deployment.yaml
 
-# Optinal. Only when when Vault was set up.
+# Optional. Only when Vault was set up.
 kubectl delete -f ./vault.yaml
 ```

@@ -36,7 +36,7 @@ metadata:
   labels:
     app: vault
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - name: api
       port: 8200
