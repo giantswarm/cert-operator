@@ -120,6 +120,6 @@ Delete the certificate custom objects and the deployment.
 kubectl delete certificate -l clusterID=CLUSTER_NAME
 kubectl delete -f ./deployment.yaml
 
-# Optinal. Only when Vault was set up.
+# Optional. Only when Vault was set up.
 kubectl delete -f ./vault.yaml
 ```
