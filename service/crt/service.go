@@ -6,8 +6,8 @@ import (
 
 	"github.com/giantswarm/certctl/service/spec"
 	"github.com/giantswarm/certificatetpr"
-	microerror "github.com/giantswarm/microkit/error"
-	micrologger "github.com/giantswarm/microkit/logger"
+	"github.com/giantswarm/microerror"
+	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/tpr"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
@@ -72,24 +72,24 @@ type Service struct {
 func New(config Config) (*Service, error) {
 	// Dependencies.
 	if config.CAService == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "ca service must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "ca service must not be empty")
 	}
 	if config.K8sClient == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "kubernetes client must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "kubernetes client must not be empty")
 	}
 	if config.Logger == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "logger must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "logger must not be empty")
 	}
 	if config.VaultClient == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "vault client must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "vault client must not be empty")
 	}
 
 	// Settings.
 	if config.Flag == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "flag must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "flag must not be empty")
 	}
 	if config.Viper == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "viper must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "viper must not be empty")
 	}
 
 	tprConfig := tpr.Config{
@@ -101,7 +101,7 @@ func New(config Config) (*Service, error) {
 	}
 	tpr, err := tpr.New(tprConfig)
 	if err != nil {
-		return nil, microerror.MaskAnyf(err, "creating TPR for %#v", tprConfig)
+		return nil, microerror.Maskf(err, "creating TPR for %#v", tprConfig)
 	}
 
 	newService := &Service{

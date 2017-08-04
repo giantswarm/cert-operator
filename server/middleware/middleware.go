@@ -1,9 +1,8 @@
 package middleware
 
 import (
-	micrologger "github.com/giantswarm/microkit/logger"
-
 	"github.com/giantswarm/cert-operator/service"
+	"github.com/giantswarm/micrologger"
 )
 
 // Config represents the configuration used to create a middleware.

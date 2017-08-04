@@ -9,7 +9,7 @@ import (
 	"github.com/giantswarm/certctl/service/cert-signer"
 	"github.com/giantswarm/certctl/service/spec"
 	"github.com/giantswarm/certificatetpr"
-	microerror "github.com/giantswarm/microkit/error"
+	"github.com/giantswarm/microerror"
 )
 
 const (
@@ -27,7 +27,7 @@ func (s *Service) IssueAndWait(cert certificatetpr.Spec) error {
 		err := s.Issue(cert)
 		if err != nil {
 			s.Logger.Log("info", "failed to issue cert - retrying")
-			return microerror.MaskAny(err)
+			return microerror.Mask(err)
 		}
 
 		return nil
@@ -45,7 +45,7 @@ func (s *Service) Issue(cert certificatetpr.Spec) error {
 
 	newCertSigner, err := certsigner.New(newCertSignerConfig)
 	if err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 
 	// Generate a new signed certificate.
@@ -58,7 +58,7 @@ func (s *Service) Issue(cert certificatetpr.Spec) error {
 	}
 	newIssueResponse, err := newCertSigner.Issue(newIssueConfig)
 	if err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 
 	// Save the certificate as a k8s secret.
@@ -67,7 +67,7 @@ func (s *Service) Issue(cert certificatetpr.Spec) error {
 		IssueResponse: newIssueResponse,
 	}
 	if err := s.CreateCertificate(secret); err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 
 	return nil

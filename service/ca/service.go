@@ -3,8 +3,8 @@ package ca
 import (
 	"sync"
 
-	microerror "github.com/giantswarm/microkit/error"
-	micrologger "github.com/giantswarm/microkit/logger"
+	"github.com/giantswarm/microerror"
+	"github.com/giantswarm/micrologger"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 
@@ -40,18 +40,18 @@ func DefaultConfig() Config {
 func New(config Config) (*Service, error) {
 	// Dependencies.
 	if config.Logger == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "logger must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "logger must not be empty")
 	}
 	if config.VaultClient == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "vault client must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "vault client must not be empty")
 	}
 
 	// Settings.
 	if config.Flag == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "flag must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "flag must not be empty")
 	}
 	if config.Viper == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "viper must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "viper must not be empty")
 	}
 
 	newService := &Service{

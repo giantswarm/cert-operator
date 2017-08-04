@@ -9,7 +9,7 @@ import (
 	"github.com/giantswarm/certctl/service/pki"
 	"github.com/giantswarm/certctl/service/token"
 	"github.com/giantswarm/certificatetpr"
-	microerror "github.com/giantswarm/microkit/error"
+	"github.com/giantswarm/microerror"
 )
 
 const (
@@ -27,7 +27,7 @@ func (s *Service) SetupPKIAndWait(cert certificatetpr.Spec) error {
 		err := s.SetupPKI(cert)
 		if err != nil {
 			s.Logger.Log("info", "failed to setup PKI - retrying")
-			return microerror.MaskAny(err)
+			return microerror.Mask(err)
 		}
 
 		return nil
@@ -59,12 +59,12 @@ func (s *Service) setupPKIBackend(cert certificatetpr.Spec) error {
 
 	service, err := s.getPKIService()
 	if err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 
 	isValid, err := service.VerifyPKISetup(cert.ClusterID)
 	if err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 	if isValid {
 		s.Config.Logger.Log("debug", fmt.Sprintf("PKI backend already exists for cluster %s", cert.ClusterID))
@@ -92,12 +92,12 @@ func (s *Service) setupPKIPolicy(cert certificatetpr.Spec) error {
 
 	service, err := s.getTokenService()
 	if err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 
 	isCreated, err := service.IsPolicyCreated(cert.ClusterID)
 	if err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 	if isCreated {
 		s.Config.Logger.Log("debug", fmt.Sprintf("PKI policy already exists for cluster %s", cert.ClusterID))

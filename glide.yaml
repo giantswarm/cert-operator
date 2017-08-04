@@ -9,12 +9,6 @@ import:
   - service/token
 - package: github.com/giantswarm/microkit
   version: master
-  subpackages:
-  - command
-  - error
-  - flag
-  - logger
-  - server
 - package: github.com/giantswarm/certificatetpr
   version: master
 - package: github.com/giantswarm/operatorkit

@@ -6,7 +6,7 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/certificatetpr"
-	microerror "github.com/giantswarm/microkit/error"
+	"github.com/giantswarm/microerror"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
@@ -40,7 +40,7 @@ func (s *Service) CreateCertificate(secret certificateSecret) error {
 	if apierrors.IsAlreadyExists(err) {
 		return nil
 	} else if err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 
 	return nil
@@ -58,7 +58,7 @@ func (s *Service) DeleteCertificateAndWait(cert certificatetpr.Spec) error {
 		err := s.DeleteCertificate(cert)
 		if err != nil {
 			s.Logger.Log("info", "failed to delete secret - retrying")
-			return microerror.MaskAny(err)
+			return microerror.Mask(err)
 		}
 
 		return nil
@@ -75,7 +75,7 @@ func (s *Service) DeleteCertificate(cert certificatetpr.Spec) error {
 	if apierrors.IsNotFound(err) {
 		return nil
 	} else if err != nil {
-		return microerror.MaskAny(err)
+		return microerror.Mask(err)
 	}
 
 	return nil
