@@ -1,5 +1,5 @@
 hash: 67767772e67b0df0e61fc9d1287512ae17abdf28f2270ff1637ff8f7ffceaf22
-updated: 2017-08-04T17:17:54.838805293+02:00
+updated: 2017-08-07T15:45:59.465874414+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -58,7 +58,7 @@ imports:
   subpackages:
   - uuid
 - name: github.com/giantswarm/microendpoint
-  version: ac3c38c958e8efeae4174bd545277beaf3ad2410
+  version: fb3e124643cfb364625089c39a59393f8cfdf647
   subpackages:
   - endpoint/healthz
   - endpoint/version
@@ -90,9 +90,9 @@ imports:
   - transaction/context/id
   - transaction/context/tracked
 - name: github.com/giantswarm/micrologger
-  version: 3fc80a5b178fd25a757c8bbe54599b21b11a1110
+  version: 8a69b2ab80ba2d0bd40d609206518fefacfc8fdf
 - name: github.com/giantswarm/operatorkit
-  version: eb43a99a26b6dabf17e39b5006924308f9e78bf5
+  version: 2f2c2942ed86d1fd6def7f7367b19031883047db
   subpackages:
   - client/k8s
   - tpr
@@ -161,6 +161,7 @@ imports:
   - api
   - helper/compressutil
   - helper/jsonutil
+  - helper/parseutil
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/errgo
@@ -240,6 +241,7 @@ imports:
   version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
   subpackages:
   - context
+  - context/ctxhttp
   - http2
   - http2/hpack
   - idna
@@ -282,7 +284,7 @@ imports:
 - name: gopkg.in/inf.v0
   version: 3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4
 - name: gopkg.in/yaml.v2
-  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
+  version: 25c4ec802a7d637f88d584ab26798e94ad14c13b
 - name: k8s.io/apimachinery
   version: 85ace5365f33b16fc735c866a12e3c765b9700f2
   subpackages:

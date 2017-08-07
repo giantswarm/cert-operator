@@ -1,5 +1,5 @@
 hash: 91f8348218ab1365290e92bd64ec095d942f0fe72594a4cbc8189a0dbadec27f
-updated: 2017-08-04T15:08:09.615121337+02:00
+updated: 2017-08-07T14:50:19.180140178+02:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
@@ -22,7 +22,9 @@ imports:
 - name: github.com/giantswarm/microerror
   version: 5ade94eb4ee35ef72eb9382228470caeddb29989
 - name: github.com/giantswarm/micrologger
-  version: 3fc80a5b178fd25a757c8bbe54599b21b11a1110
+  version: 8a69b2ab80ba2d0bd40d609206518fefacfc8fdf
+  subpackages:
+  - microloggertest
 - name: github.com/go-kit/kit
   version: a9ca6725cbbea455e61c6bc8a1ed28e81eb3493b
   subpackages:
