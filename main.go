@@ -4,8 +4,8 @@ import (
 	"os"
 
 	"github.com/giantswarm/microkit/command"
-	"github.com/giantswarm/microkit/logger"
 	microserver "github.com/giantswarm/microkit/server"
+	"github.com/giantswarm/micrologger"
 	"github.com/spf13/viper"
 
 	"github.com/giantswarm/cert-operator/flag"
@@ -25,11 +25,11 @@ func main() {
 	var err error
 
 	// Create a new logger which is used by all packages.
-	var newLogger logger.Logger
+	var newLogger micrologger.Logger
 	{
-		loggerConfig := logger.DefaultConfig()
+		loggerConfig := micrologger.DefaultConfig()
 		loggerConfig.IOWriter = os.Stdout
-		newLogger, err = logger.New(loggerConfig)
+		newLogger, err = micrologger.New(loggerConfig)
 		if err != nil {
 			panic(err)
 		}

@@ -3,7 +3,7 @@ package vault
 import (
 	"net/url"
 
-	microerror "github.com/giantswarm/microkit/error"
+	"github.com/giantswarm/microerror"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 
@@ -21,17 +21,17 @@ func NewClient(config Config) (*vaultapi.Client, error) {
 	token := config.Viper.GetString(config.Flag.Service.Vault.Config.Token)
 
 	if address == "" {
-		return nil, microerror.MaskAnyf(invalidConfigError, "vault address must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "vault address must not be empty")
 	}
 
 	// Check Vault address is valid.
 	_, err := url.ParseRequestURI(address)
 	if err != nil {
-		return nil, microerror.MaskAny(err)
+		return nil, microerror.Mask(err)
 	}
 
 	if token == "" {
-		return nil, microerror.MaskAnyf(invalidConfigError, "vault token must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "vault token must not be empty")
 	}
 
 	newClientConfig := vaultapi.DefaultConfig()

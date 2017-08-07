@@ -1,11 +1,12 @@
 package endpoint
 
 import (
-	microerror "github.com/giantswarm/microkit/error"
-	micrologger "github.com/giantswarm/microkit/logger"
+	"github.com/giantswarm/microendpoint/endpoint/healthz"
+	"github.com/giantswarm/microendpoint/endpoint/version"
+	healthzservice "github.com/giantswarm/microendpoint/service/healthz"
+	"github.com/giantswarm/microerror"
+	"github.com/giantswarm/micrologger"
 
-	"github.com/giantswarm/cert-operator/server/endpoint/healthz"
-	"github.com/giantswarm/cert-operator/server/endpoint/version"
 	"github.com/giantswarm/cert-operator/server/middleware"
 	"github.com/giantswarm/cert-operator/service"
 )
@@ -37,11 +38,13 @@ func New(config Config) (*Endpoint, error) {
 	{
 		healthzConfig := healthz.DefaultConfig()
 		healthzConfig.Logger = config.Logger
-		healthzConfig.Middleware = config.Middleware
-		healthzConfig.Service = config.Service
+		healthzConfig.Services = []healthzservice.Service{
+			config.Service.Healthz.K8s,
+			config.Service.Healthz.Vault,
+		}
 		healthzEndpoint, err = healthz.New(healthzConfig)
 		if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 
@@ -49,11 +52,10 @@ func New(config Config) (*Endpoint, error) {
 	{
 		versionConfig := version.DefaultConfig()
 		versionConfig.Logger = config.Logger
-		versionConfig.Middleware = config.Middleware
-		versionConfig.Service = config.Service
+		versionConfig.Service = config.Service.Version
 		versionEndpoint, err = version.New(versionConfig)
 		if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 

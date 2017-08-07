@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"sync"
 
-	microerror "github.com/giantswarm/microkit/error"
-	micrologger "github.com/giantswarm/microkit/logger"
+	"github.com/giantswarm/microendpoint/service/version"
+	"github.com/giantswarm/microerror"
+	"github.com/giantswarm/micrologger"
 	k8sutil "github.com/giantswarm/operatorkit/client/k8s"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
@@ -18,7 +19,6 @@ import (
 	"github.com/giantswarm/cert-operator/service/ca"
 	"github.com/giantswarm/cert-operator/service/crt"
 	"github.com/giantswarm/cert-operator/service/healthz"
-	"github.com/giantswarm/cert-operator/service/version"
 )
 
 // Config represents the configuration used to create a new service.
@@ -62,7 +62,7 @@ func DefaultConfig() Config {
 func New(config Config) (*Service, error) {
 	// Dependencies.
 	if config.Logger == nil {
-		return nil, microerror.MaskAnyf(invalidConfigError, "logger must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "logger must not be empty")
 	}
 
 	config.Logger.Log("debug", fmt.Sprintf("creating cert-operator with config: %#v", config))
@@ -85,7 +85,7 @@ func New(config Config) (*Service, error) {
 
 		k8sClient, err = k8sutil.NewClient(k8sConfig)
 		if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 
@@ -98,7 +98,7 @@ func New(config Config) (*Service, error) {
 
 		vaultClient, err = vaultutil.NewClient(vaultConfig)
 		if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 
@@ -112,7 +112,7 @@ func New(config Config) (*Service, error) {
 
 		caService, err = ca.New(caConfig)
 		if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 
@@ -128,7 +128,7 @@ func New(config Config) (*Service, error) {
 
 		crtService, err = crt.New(crtConfig)
 		if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 
@@ -136,12 +136,13 @@ func New(config Config) (*Service, error) {
 	{
 		healthzConfig := healthz.DefaultConfig()
 
+		healthzConfig.K8sClient = k8sClient
 		healthzConfig.Logger = config.Logger
 		healthzConfig.VaultClient = vaultClient
 
 		healthzService, err = healthz.New(healthzConfig)
 		if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 
@@ -156,7 +157,7 @@ func New(config Config) (*Service, error) {
 
 		versionService, err = version.New(versionConfig)
 		if err != nil {
-			return nil, microerror.MaskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 

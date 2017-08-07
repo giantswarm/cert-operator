@@ -1,14 +1,13 @@
 package: github.com/giantswarm/operatorkit
 import:
+- package: github.com/giantswarm/microerror
+  version: master
+- package: github.com/giantswarm/micrologger
+  version: master
 - package: github.com/cenkalti/backoff
   version: v1.0.0
-- package: github.com/giantswarm/microkit
-  subpackages:
-  - error
-  - logger
-- package: github.com/juju/errgo
 - package: k8s.io/client-go
-  version: v3.0.0-beta.0
+  version: v3.0.0
 testImport:
 - package: github.com/stretchr/testify
   version: v1.1.4
