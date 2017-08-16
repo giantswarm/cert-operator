@@ -3,6 +3,7 @@ package pki
 import (
 	"fmt"
 
+	"github.com/giantswarm/microerror"
 	vaultclient "github.com/hashicorp/vault/api"
 )
 
@@ -33,7 +34,7 @@ func DefaultServiceConfig() ServiceConfig {
 func NewService(config ServiceConfig) (Service, error) {
 	// Dependencies.
 	if config.VaultClient == nil {
-		return nil, maskAnyf(invalidConfigError, "Vault client must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "Vault client must not be empty")
 	}
 
 	newService := &service{
@@ -57,12 +58,12 @@ func (s *service) Delete(clusterID string) error {
 	// Unmount the PKI backend, if it exists.
 	mounted, err := s.IsMounted(clusterID)
 	if err != nil {
-		return maskAny(err)
+		return microerror.Mask(err)
 	}
 	if mounted {
 		err = sysBackend.Unmount(s.MountPKIPath(clusterID))
 		if err != nil {
-			return maskAny(err)
+			return microerror.Mask(err)
 		}
 	}
 
@@ -79,7 +80,7 @@ func (s *service) IsCAGenerated(clusterID string) (bool, error) {
 	if IsNoVaultHandlerDefined(err) {
 		return false, nil
 	} else if err != nil {
-		return false, maskAny(err)
+		return false, microerror.Mask(err)
 	}
 
 	// If the secret is nil, the CA has not been generated.
@@ -107,7 +108,7 @@ func (s *service) IsMounted(clusterID string) (bool, error) {
 	if IsNoVaultHandlerDefined(err) {
 		return false, nil
 	} else if err != nil {
-		return false, maskAny(err)
+		return false, microerror.Mask(err)
 	}
 	mountOutput, ok := mounts[s.ListMountsPath(clusterID)+"/"]
 	if !ok || mountOutput.Type != "pki" {
@@ -127,7 +128,7 @@ func (s *service) IsRoleCreated(clusterID string) (bool, error) {
 	if IsNoVaultHandlerDefined(err) {
 		return false, nil
 	} else if err != nil {
-		return false, maskAny(err)
+		return false, microerror.Mask(err)
 	}
 
 	// In case there is not a single role for this PKI backend, secret is nil.
@@ -154,7 +155,7 @@ func (s *service) IsRoleCreated(clusterID string) (bool, error) {
 func (s *service) VerifyPKISetup(clusterID string) (bool, error) {
 	mounted, err := s.IsMounted(clusterID)
 	if err != nil {
-		return false, maskAny(err)
+		return false, microerror.Mask(err)
 	}
 	if !mounted {
 		return false, nil
@@ -162,7 +163,7 @@ func (s *service) VerifyPKISetup(clusterID string) (bool, error) {
 
 	caGenerated, err := s.IsCAGenerated(clusterID)
 	if err != nil {
-		return false, maskAny(err)
+		return false, microerror.Mask(err)
 	}
 	if !caGenerated {
 		return false, nil
@@ -170,7 +171,7 @@ func (s *service) VerifyPKISetup(clusterID string) (bool, error) {
 
 	roleCreated, err := s.IsRoleCreated(clusterID)
 	if !roleCreated || err != nil {
-		return false, maskAny(err)
+		return false, microerror.Mask(err)
 	}
 	if !roleCreated {
 		return false, nil
@@ -192,7 +193,7 @@ func (s *service) Create(config CreateConfig) error {
 	// Mount a new PKI backend for the cluster, if it does not already exist.
 	mounted, err := s.IsMounted(config.ClusterID)
 	if err != nil {
-		return maskAny(err)
+		return microerror.Mask(err)
 	}
 	if !mounted {
 		newMountConfig := &vaultclient.MountInput{
@@ -204,7 +205,7 @@ func (s *service) Create(config CreateConfig) error {
 		}
 		err = sysBackend.Mount(s.MountPKIPath(config.ClusterID), newMountConfig)
 		if err != nil {
-			return maskAny(err)
+			return microerror.Mask(err)
 		}
 	}
 
@@ -216,7 +217,7 @@ func (s *service) Create(config CreateConfig) error {
 	// already exist.
 	generated, err := s.IsCAGenerated(config.ClusterID)
 	if err != nil {
-		return maskAny(err)
+		return microerror.Mask(err)
 	}
 	if !generated {
 		data := map[string]interface{}{
@@ -225,14 +226,14 @@ func (s *service) Create(config CreateConfig) error {
 		}
 		_, err = logicalBackend.Write(s.WriteCAPath(config.ClusterID), data)
 		if err != nil {
-			return maskAny(err)
+			return microerror.Mask(err)
 		}
 	}
 
 	// Create a role for the mounted PKI backend, if it does not already exist.
 	created, err := s.IsRoleCreated(config.ClusterID)
 	if err != nil {
-		return maskAny(err)
+		return microerror.Mask(err)
 	}
 	if !created {
 		data := map[string]interface{}{
@@ -244,7 +245,7 @@ func (s *service) Create(config CreateConfig) error {
 
 		_, err = logicalBackend.Write(s.WriteRolePath(config.ClusterID), data)
 		if err != nil {
-			return maskAny(err)
+			return microerror.Mask(err)
 		}
 	}
 

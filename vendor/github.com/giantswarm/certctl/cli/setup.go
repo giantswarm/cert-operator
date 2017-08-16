@@ -11,6 +11,7 @@ import (
 	"github.com/giantswarm/certctl/service/pki"
 	"github.com/giantswarm/certctl/service/token"
 	"github.com/giantswarm/certctl/service/vault-factory"
+	"github.com/giantswarm/microerror"
 )
 
 type setupFlags struct {
@@ -70,16 +71,16 @@ func init() {
 
 func setupValidate(newSetupFlags *setupFlags) error {
 	if newSetupFlags.VaultToken == "" {
-		return maskAnyf(invalidConfigError, "Vault token must not be empty")
+		return microerror.Maskf(invalidConfigError, "Vault token must not be empty")
 	}
 	if newSetupFlags.AllowedDomains == "" {
-		return maskAnyf(invalidConfigError, "allowed domains must not be empty")
+		return microerror.Maskf(invalidConfigError, "allowed domains must not be empty")
 	}
 	if newSetupFlags.ClusterID == "" {
-		return maskAnyf(invalidConfigError, "cluster ID must not be empty")
+		return microerror.Maskf(invalidConfigError, "cluster ID must not be empty")
 	}
 	if newSetupFlags.CommonName == "" {
-		return maskAnyf(invalidConfigError, "common name must not be empty")
+		return microerror.Maskf(invalidConfigError, "common name must not be empty")
 	}
 
 	return nil
@@ -88,7 +89,7 @@ func setupValidate(newSetupFlags *setupFlags) error {
 func setupRun(cmd *cobra.Command, args []string) {
 	err := setupValidate(newSetupFlags)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Create a Vault client factory.
@@ -98,14 +99,14 @@ func setupRun(cmd *cobra.Command, args []string) {
 	newVaultFactoryConfig.TLS = newSetupFlags.VaultTLS
 	newVaultFactory, err := vaultfactory.New(newVaultFactoryConfig)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Create a Vault client and configure it with the provided admin token
 	// through the factory.
 	newVaultClient, err := newVaultFactory.NewClient()
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Create a PKI controller to setup the cluster's PKI backend including its
@@ -116,7 +117,7 @@ func setupRun(cmd *cobra.Command, args []string) {
 		pkiConfig.VaultClient = newVaultClient
 		pkiService, err = pki.NewService(pkiConfig)
 		if err != nil {
-			log.Fatalf("%#v\n", maskAny(err))
+			log.Fatalf("%#v\n", microerror.Mask(err))
 		}
 	}
 
@@ -127,7 +128,7 @@ func setupRun(cmd *cobra.Command, args []string) {
 		tokenConfig.VaultClient = newVaultClient
 		tokenService, err = token.NewService(tokenConfig)
 		if err != nil {
-			log.Fatalf("%#v\n", maskAny(err))
+			log.Fatalf("%#v\n", microerror.Mask(err))
 		}
 	}
 
@@ -142,7 +143,7 @@ func setupRun(cmd *cobra.Command, args []string) {
 		}
 		err = pkiService.Create(createConfig)
 		if err != nil {
-			log.Fatalf("%#v\n", maskAny(err))
+			log.Fatalf("%#v\n", microerror.Mask(err))
 		}
 	}
 
@@ -156,7 +157,7 @@ func setupRun(cmd *cobra.Command, args []string) {
 		}
 		tokens, err = tokenService.Create(createConfig)
 		if err != nil {
-			log.Fatalf("%#v\n", maskAny(err))
+			log.Fatalf("%#v\n", microerror.Mask(err))
 		}
 	}
 

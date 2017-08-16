@@ -11,6 +11,7 @@ import (
 	"github.com/giantswarm/certctl/service/pki"
 	"github.com/giantswarm/certctl/service/token"
 	"github.com/giantswarm/certctl/service/vault-factory"
+	"github.com/giantswarm/microerror"
 )
 
 type inspectFlags struct {
@@ -52,10 +53,10 @@ func init() {
 
 func inspectValidate(newInspectFlags *inspectFlags) error {
 	if newInspectFlags.VaultToken == "" {
-		return maskAnyf(invalidConfigError, "Vault token must not be empty")
+		return microerror.Maskf(invalidConfigError, "Vault token must not be empty")
 	}
 	if newInspectFlags.ClusterID == "" {
-		return maskAnyf(invalidConfigError, "cluster ID must not be empty")
+		return microerror.Maskf(invalidConfigError, "cluster ID must not be empty")
 	}
 
 	return nil
@@ -64,7 +65,7 @@ func inspectValidate(newInspectFlags *inspectFlags) error {
 func inspectRun(cmd *cobra.Command, args []string) {
 	err := inspectValidate(newInspectFlags)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Create a Vault client factory.
@@ -74,14 +75,14 @@ func inspectRun(cmd *cobra.Command, args []string) {
 	newVaultFactoryConfig.TLS = newInspectFlags.VaultTLS
 	newVaultFactory, err := vaultfactory.New(newVaultFactoryConfig)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Create a Vault client and configure it with the provided admin token
 	// through the factory.
 	newVaultClient, err := newVaultFactory.NewClient()
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Create a PKI controller to check for PKI backend specific operations.
@@ -91,7 +92,7 @@ func inspectRun(cmd *cobra.Command, args []string) {
 		pkiConfig.VaultClient = newVaultClient
 		pkiService, err = pki.NewService(pkiConfig)
 		if err != nil {
-			log.Fatalf("%#v\n", maskAny(err))
+			log.Fatalf("%#v\n", microerror.Mask(err))
 		}
 	}
 
@@ -102,25 +103,25 @@ func inspectRun(cmd *cobra.Command, args []string) {
 		tokenConfig.VaultClient = newVaultClient
 		tokenService, err = token.NewService(tokenConfig)
 		if err != nil {
-			log.Fatalf("%#v\n", maskAny(err))
+			log.Fatalf("%#v\n", microerror.Mask(err))
 		}
 	}
 
 	mounted, err := pkiService.IsMounted(newInspectFlags.ClusterID)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 	generated, err := pkiService.IsCAGenerated(newInspectFlags.ClusterID)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 	roleCreated, err := pkiService.IsRoleCreated(newInspectFlags.ClusterID)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 	policyCreated, err := tokenService.IsPolicyCreated(newInspectFlags.ClusterID)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	fmt.Printf("Inspecting cluster for ID '%s':\n", newInspectFlags.ClusterID)
