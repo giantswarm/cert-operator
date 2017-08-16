@@ -11,6 +11,11 @@ import (
 	"github.com/giantswarm/operatorkit/framework"
 )
 
+const (
+	// Name is the identifier of the resource.
+	Name = "retry"
+)
+
 // Config represents the configuration used to create a new retry resource.
 type Config struct {
 	// Dependencies.
@@ -56,8 +61,10 @@ func New(config Config) (*Resource, error) {
 
 	newResource := &Resource{
 		// Dependencies.
-		backOff:  config.BackOff,
-		logger:   config.Logger,
+		backOff: config.BackOff,
+		logger: config.Logger.With(
+			"underlyingResource", config.Resource.Underlying().Name(),
+		),
 		resource: config.Resource,
 	}
 
@@ -171,6 +178,38 @@ func (r *Resource) GetDeleteState(obj, currentState, desiredState interface{}) (
 	return v, nil
 }
 
+func (r *Resource) GetUpdateState(obj, currentState, desiredState interface{}) (interface{}, interface{}, interface{}, error) {
+	var err error
+
+	var createState interface{}
+	var deleteState interface{}
+	var updateState interface{}
+
+	o := func() error {
+		createState, deleteState, updateState, err = r.resource.GetUpdateState(obj, currentState, desiredState)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		return nil
+	}
+
+	n := func(err error, dur time.Duration) {
+		r.logger.Log("warning", fmt.Sprintf("retrying 'GetUpdateState' due to error (%s)", err.Error()))
+	}
+
+	err = backoff.RetryNotify(o, r.backOff, n)
+	if err != nil {
+		return nil, nil, nil, microerror.Mask(err)
+	}
+
+	return createState, deleteState, updateState, nil
+}
+
+func (r *Resource) Name() string {
+	return Name
+}
+
 func (r *Resource) ProcessCreateState(obj, createState interface{}) error {
 	o := func() error {
 		err := r.resource.ProcessCreateState(obj, createState)
@@ -213,4 +252,30 @@ func (r *Resource) ProcessDeleteState(obj, deleteState interface{}) error {
 	}
 
 	return nil
+}
+
+func (r *Resource) ProcessUpdateState(obj, updateState interface{}) error {
+	o := func() error {
+		err := r.resource.ProcessUpdateState(obj, updateState)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		return nil
+	}
+
+	n := func(err error, dur time.Duration) {
+		r.logger.Log("warning", fmt.Sprintf("retrying 'ProcessUpdateState' due to error (%s)", err.Error()))
+	}
+
+	err := backoff.RetryNotify(o, r.backOff, n)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	return nil
+}
+
+func (r *Resource) Underlying() framework.Resource {
+	return r.resource.Underlying()
 }

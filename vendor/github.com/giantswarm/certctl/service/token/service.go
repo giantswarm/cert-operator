@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/giantswarm/go-uuid/uuid"
+	"github.com/giantswarm/microerror"
 	vaultclient "github.com/hashicorp/vault/api"
 )
 
@@ -34,7 +35,7 @@ func DefaultServiceConfig() ServiceConfig {
 func NewService(config ServiceConfig) (Service, error) {
 	// Dependencies.
 	if config.VaultClient == nil {
-		return nil, maskAnyf(invalidConfigError, "Vault client must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "Vault client must not be empty")
 	}
 
 	newService := &service{
@@ -53,12 +54,12 @@ func (s *service) Create(config CreateConfig) ([]string, error) {
 	// PKI backend, create one.
 	created, err := s.IsPolicyCreated(config.ClusterID)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, microerror.Mask(err)
 	}
 	if !created {
 		err := s.CreatePolicy(config.ClusterID)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 
@@ -81,7 +82,7 @@ func (s *service) Create(config CreateConfig) ([]string, error) {
 		}
 		_, err := tokenAuth.Create(newCreateRequest)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, microerror.Mask(err)
 		}
 	}
 
@@ -96,13 +97,13 @@ func (s *service) CreatePolicy(clusterID string) error {
 	policyName := s.PolicyName(clusterID)
 	rules, err := execTemplate(pkiIssuePolicyTemplate, pkiIssuePolicyContext{ClusterID: clusterID})
 	if err != nil {
-		return maskAny(err)
+		return microerror.Mask(err)
 	}
 
 	// Actually create the policy within Vault.
 	err = sysBackend.PutPolicy(policyName, rules)
 	if err != nil {
-		return maskAny(err)
+		return microerror.Mask(err)
 	}
 
 	return nil
@@ -115,12 +116,12 @@ func (s *service) DeletePolicy(clusterID string) error {
 	// Delete the policy by name if it is created.
 	created, err := s.IsPolicyCreated(clusterID)
 	if err != nil {
-		return maskAny(err)
+		return microerror.Mask(err)
 	}
 	if created {
 		err := sysBackend.DeletePolicy(s.PolicyName(clusterID))
 		if err != nil {
-			return maskAny(err)
+			return microerror.Mask(err)
 		}
 	}
 
@@ -134,7 +135,7 @@ func (s *service) IsPolicyCreated(clusterID string) (bool, error) {
 	// Check if the policy is already there.
 	policies, err := sysBackend.ListPolicies()
 	if err != nil {
-		return false, maskAny(err)
+		return false, microerror.Mask(err)
 	}
 	for _, p := range policies {
 		if p == s.PolicyName(clusterID) {

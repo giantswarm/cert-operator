@@ -6,6 +6,7 @@ import (
 	vaultclient "github.com/hashicorp/vault/api"
 
 	"github.com/giantswarm/certctl/service/spec"
+	"github.com/giantswarm/microerror"
 )
 
 // Config represents the configuration used to create a new certificate signer.
@@ -40,7 +41,7 @@ func New(config Config) (spec.CertSigner, error) {
 
 	// Dependencies.
 	if newCertSigner.VaultClient == nil {
-		return nil, maskAnyf(invalidConfigError, "Vault client must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "Vault client must not be empty")
 	}
 
 	return newCertSigner, nil
@@ -65,28 +66,28 @@ func (cs *certSigner) Issue(config spec.IssueConfig) (spec.IssueResponse, error)
 
 	secret, err := logicalStore.Write(cs.SignedPath(config.ClusterID), data)
 	if err != nil {
-		return spec.IssueResponse{}, maskAny(err)
+		return spec.IssueResponse{}, microerror.Mask(err)
 	}
 
 	// Collect the certificate data from the secret response.
 	vCrt, ok := secret.Data["certificate"]
 	if !ok {
-		return spec.IssueResponse{}, maskAnyf(keyPairNotFoundError, "public key missing")
+		return spec.IssueResponse{}, microerror.Maskf(keyPairNotFoundError, "public key missing")
 	}
 	crt := vCrt.(string)
 	vKey, ok := secret.Data["private_key"]
 	if !ok {
-		return spec.IssueResponse{}, maskAnyf(keyPairNotFoundError, "private key missing")
+		return spec.IssueResponse{}, microerror.Maskf(keyPairNotFoundError, "private key missing")
 	}
 	key := vKey.(string)
 	vCA, ok := secret.Data["issuing_ca"]
 	if !ok {
-		return spec.IssueResponse{}, maskAnyf(keyPairNotFoundError, "root CA missing")
+		return spec.IssueResponse{}, microerror.Maskf(keyPairNotFoundError, "root CA missing")
 	}
 	ca := vCA.(string)
 	vSerial, ok := secret.Data["serial_number"]
 	if !ok {
-		return spec.IssueResponse{}, maskAnyf(keyPairNotFoundError, "root CA missing")
+		return spec.IssueResponse{}, microerror.Maskf(keyPairNotFoundError, "root CA missing")
 	}
 	serial := vSerial.(string)
 

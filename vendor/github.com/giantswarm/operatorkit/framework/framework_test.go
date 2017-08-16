@@ -23,6 +23,15 @@ func Test_Framework_ProcessDelete_NoResource(t *testing.T) {
 	}
 }
 
+// Test_Framework_ProcessUpdate_NoResource ensures there is an error thrown when
+// executing ProcessUpdate without having any resources provided.
+func Test_Framework_ProcessUpdate_NoResource(t *testing.T) {
+	err := testMustNewFramework(t).ProcessUpdate(nil, nil)
+	if !IsExecutionFailed(err) {
+		t.Fatal("expected", true, "got", false)
+	}
+}
+
 // Test_Framework_ProcessCreate_ResourceOrder ensures the resource's methods are
 // executed as expected when creating resources.
 func Test_Framework_ProcessCreate_ResourceOrder(t *testing.T) {
@@ -65,6 +74,32 @@ func Test_Framework_ProcessDelete_ResourceOrder(t *testing.T) {
 		"GetDesiredState",
 		"GetDeleteState",
 		"ProcessDeleteState",
+	}
+	if !reflect.DeepEqual(e, tr.Order) {
+		t.Fatal("expected", e, "got", tr.Order)
+	}
+}
+
+// Test_Framework_ProcessUpdate_ResourceOrder ensures the resource's methods are
+// executed as expected when updating resources.
+func Test_Framework_ProcessUpdate_ResourceOrder(t *testing.T) {
+	tr := &testResource{}
+	rs := []Resource{
+		tr,
+	}
+
+	err := testMustNewFramework(t).ProcessUpdate(nil, rs)
+	if err != nil {
+		t.Fatal("expected", nil, "got", err)
+	}
+
+	e := []string{
+		"GetCurrentState",
+		"GetDesiredState",
+		"GetUpdateState",
+		"ProcessCreateState",
+		"ProcessDeleteState",
+		"ProcessUpdateState",
 	}
 	if !reflect.DeepEqual(e, tr.Order) {
 		t.Fatal("expected", e, "got", tr.Order)
@@ -134,6 +169,21 @@ func (r *testResource) GetDeleteState(obj, currentState, desiredState interface{
 	return nil, nil
 }
 
+func (r *testResource) GetUpdateState(obj, currentState, desiredState interface{}) (interface{}, interface{}, interface{}, error) {
+	m := "GetUpdateState"
+	r.Order = append(r.Order, m)
+
+	if r.returnErrorFor(m) {
+		return nil, nil, nil, r.Error
+	}
+
+	return nil, nil, nil, nil
+}
+
+func (r *testResource) Name() string {
+	return "testResource"
+}
+
 func (r *testResource) ProcessCreateState(obj, createState interface{}) error {
 	m := "ProcessCreateState"
 	r.Order = append(r.Order, m)
@@ -154,6 +204,21 @@ func (r *testResource) ProcessDeleteState(obj, deleteState interface{}) error {
 	}
 
 	return nil
+}
+
+func (r *testResource) ProcessUpdateState(obj, updateState interface{}) error {
+	m := "ProcessUpdateState"
+	r.Order = append(r.Order, m)
+
+	if r.returnErrorFor(m) {
+		return r.Error
+	}
+
+	return nil
+}
+
+func (r *testResource) Underlying() Resource {
+	return r
 }
 
 func (r *testResource) returnErrorFor(errorMethod string) bool {

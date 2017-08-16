@@ -14,6 +14,7 @@ import (
 	"github.com/giantswarm/certctl/service/cert-signer"
 	"github.com/giantswarm/certctl/service/spec"
 	"github.com/giantswarm/certctl/service/vault-factory"
+	"github.com/giantswarm/microerror"
 )
 
 type issueFlags struct {
@@ -74,22 +75,22 @@ func init() {
 
 func issueValidate(newIssueFlags *issueFlags) error {
 	if newIssueFlags.VaultToken == "" {
-		return maskAnyf(invalidConfigError, "Vault token must not be empty")
+		return microerror.Maskf(invalidConfigError, "Vault token must not be empty")
 	}
 	if newIssueFlags.ClusterID == "" {
-		return maskAnyf(invalidConfigError, "cluster ID must not be empty")
+		return microerror.Maskf(invalidConfigError, "cluster ID must not be empty")
 	}
 	if newIssueFlags.CommonName == "" {
-		return maskAnyf(invalidConfigError, "--common-name must not be empty")
+		return microerror.Maskf(invalidConfigError, "--common-name must not be empty")
 	}
 	if newIssueFlags.CrtFilePath == "" {
-		return maskAnyf(invalidConfigError, "--crt-file name must not be empty")
+		return microerror.Maskf(invalidConfigError, "--crt-file name must not be empty")
 	}
 	if newIssueFlags.KeyFilePath == "" {
-		return maskAnyf(invalidConfigError, "--key-file name must not be empty")
+		return microerror.Maskf(invalidConfigError, "--key-file name must not be empty")
 	}
 	if newIssueFlags.CAFilePath == "" {
-		return maskAnyf(invalidConfigError, "--ca-file name must not be empty")
+		return microerror.Maskf(invalidConfigError, "--ca-file name must not be empty")
 	}
 
 	return nil
@@ -98,7 +99,7 @@ func issueValidate(newIssueFlags *issueFlags) error {
 func issueRun(cmd *cobra.Command, args []string) {
 	err := issueValidate(newIssueFlags)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Create a Vault client factory.
@@ -108,14 +109,14 @@ func issueRun(cmd *cobra.Command, args []string) {
 	newVaultFactoryConfig.TLS = newIssueFlags.VaultTLS
 	newVaultFactory, err := vaultfactory.New(newVaultFactoryConfig)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Create a Vault client and configure it with the provided admin token
 	// through the factory.
 	newVaultClient, err := newVaultFactory.NewClient()
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Create a certificate signer to generate a new signed certificate.
@@ -123,7 +124,7 @@ func issueRun(cmd *cobra.Command, args []string) {
 	newCertSignerConfig.VaultClient = newVaultClient
 	newCertSigner, err := certsigner.New(newCertSignerConfig)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Generate a new signed certificate.
@@ -136,32 +137,32 @@ func issueRun(cmd *cobra.Command, args []string) {
 	}
 	newIssueResponse, err := newCertSigner.Issue(newIssueConfig)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	err = os.MkdirAll(filepath.Dir(newIssueFlags.CrtFilePath), os.FileMode(0744))
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 	err = ioutil.WriteFile(newIssueFlags.CrtFilePath, []byte(newIssueResponse.Certificate), os.FileMode(0644))
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 	err = os.MkdirAll(filepath.Dir(newIssueFlags.KeyFilePath), os.FileMode(0744))
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 	err = ioutil.WriteFile(newIssueFlags.KeyFilePath, []byte(newIssueResponse.PrivateKey), os.FileMode(0644))
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 	err = os.MkdirAll(filepath.Dir(newIssueFlags.CAFilePath), os.FileMode(0744))
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 	err = ioutil.WriteFile(newIssueFlags.CAFilePath, []byte(newIssueResponse.IssuingCA), os.FileMode(0644))
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	fmt.Printf("Issued new signed certificate with the following serial number.\n")

@@ -11,6 +11,7 @@ import (
 	"github.com/giantswarm/certctl/service/pki"
 	"github.com/giantswarm/certctl/service/token"
 	"github.com/giantswarm/certctl/service/vault-factory"
+	"github.com/giantswarm/microerror"
 )
 
 type cleanupFlags struct {
@@ -52,10 +53,10 @@ func init() {
 
 func cleanupValidate(newCleanupFlags *cleanupFlags) error {
 	if newCleanupFlags.VaultToken == "" {
-		return maskAnyf(invalidConfigError, "Vault token must not be empty")
+		return microerror.Maskf(invalidConfigError, "Vault token must not be empty")
 	}
 	if newCleanupFlags.ClusterID == "" {
-		return maskAnyf(invalidConfigError, "cluster ID must not be empty")
+		return microerror.Maskf(invalidConfigError, "cluster ID must not be empty")
 	}
 
 	return nil
@@ -64,7 +65,7 @@ func cleanupValidate(newCleanupFlags *cleanupFlags) error {
 func cleanupRun(cmd *cobra.Command, args []string) {
 	err := cleanupValidate(newCleanupFlags)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Create a Vault client factory.
@@ -74,14 +75,14 @@ func cleanupRun(cmd *cobra.Command, args []string) {
 	newVaultFactoryConfig.TLS = newCleanupFlags.VaultTLS
 	newVaultFactory, err := vaultfactory.New(newVaultFactoryConfig)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Create a Vault client and configure it with the provided admin token
 	// through the factory.
 	newVaultClient, err := newVaultFactory.NewClient()
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	// Create a PKI controller to cleanup PKI backend specific operations.
@@ -91,7 +92,7 @@ func cleanupRun(cmd *cobra.Command, args []string) {
 		pkiConfig.VaultClient = newVaultClient
 		pkiService, err = pki.NewService(pkiConfig)
 		if err != nil {
-			log.Fatalf("%#v\n", maskAny(err))
+			log.Fatalf("%#v\n", microerror.Mask(err))
 		}
 	}
 
@@ -102,17 +103,17 @@ func cleanupRun(cmd *cobra.Command, args []string) {
 		tokenConfig.VaultClient = newVaultClient
 		tokenService, err = token.NewService(tokenConfig)
 		if err != nil {
-			log.Fatalf("%#v\n", maskAny(err))
+			log.Fatalf("%#v\n", microerror.Mask(err))
 		}
 	}
 
 	err = pkiService.Delete(newCleanupFlags.ClusterID)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 	err = tokenService.DeletePolicy(newCleanupFlags.ClusterID)
 	if err != nil {
-		log.Fatalf("%#v\n", maskAny(err))
+		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
 
 	fmt.Printf("Cleaning up cluster for ID '%s':\n", newCleanupFlags.ClusterID)

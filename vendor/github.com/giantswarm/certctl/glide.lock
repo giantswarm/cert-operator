@@ -1,5 +1,5 @@
-hash: 180ae5ab84a66ba51cbb3d81843771f5e5da3a209cf06cf90dc46e0176c8c1d3
-updated: 2017-06-24T16:24:05.380459076+02:00
+hash: fb9037075934864edf583d2a761245d011d49892c7de2695ee87e9468bebed77
+updated: 2017-08-07T16:26:01.775593739+02:00
 imports:
 - name: github.com/fatih/structs
   version: 7e5a8eef611ee84dd359503f3969f80df4c50723
@@ -7,6 +7,10 @@ imports:
   version: ed3ca8a15a931b141440a7e98e4f716eec255f7d
   subpackages:
   - uuid
+- name: github.com/giantswarm/microerror
+  version: 5ade94eb4ee35ef72eb9382228470caeddb29989
+- name: github.com/giantswarm/micrologger
+  version: 8a69b2ab80ba2d0bd40d609206518fefacfc8fdf
 - name: github.com/hashicorp/errwrap
   version: 7554cd9344cec97297fa6649b055a8c98c2a1e55
 - name: github.com/hashicorp/go-cleanhttp
@@ -43,9 +47,9 @@ imports:
 - name: github.com/sethgrid/pester
   version: 99271bb5a99e5769f688c483eabb3c22d71ebf93
 - name: github.com/spf13/cobra
-  version: 4c05eb1145f16d0e6bb4a3e1b6d769f4713cb41f
+  version: b26b538f693051ac6518e65672de3144ce3fbedc
 - name: github.com/spf13/pflag
-  version: 08b1a584251b5b62f458943640fc8ebd4d50aaa5
+  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
 - name: golang.org/x/net
   version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
   subpackages:

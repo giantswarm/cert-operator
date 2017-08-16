@@ -4,6 +4,7 @@ import (
 	vaultclient "github.com/hashicorp/vault/api"
 
 	"github.com/giantswarm/certctl/service/spec"
+	"github.com/giantswarm/microerror"
 )
 
 // Config represents the configuration used to create a new Vault factory.
@@ -33,10 +34,10 @@ func New(config Config) (spec.VaultFactory, error) {
 
 	// Dependencies.
 	if newVaultFactory.Address == "" {
-		return nil, maskAnyf(invalidConfigError, "Vault address must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "Vault address must not be empty")
 	}
 	if newVaultFactory.AdminToken == "" {
-		return nil, maskAnyf(invalidConfigError, "Vault admin token must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "Vault admin token must not be empty")
 	}
 
 	return newVaultFactory, nil
@@ -53,12 +54,12 @@ func (vf *vaultFactory) NewClient() (*vaultclient.Client, error) {
 	// Setup TLS
 	err := newClientConfig.ConfigureTLS(vf.TLS)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, microerror.Mask(err)
 	}
 
 	newVaultClient, err := vaultclient.NewClient(newClientConfig)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, microerror.Mask(err)
 	}
 	newVaultClient.SetToken(vf.AdminToken)
 

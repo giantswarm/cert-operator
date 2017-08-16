@@ -1,5 +1,5 @@
-hash: 67767772e67b0df0e61fc9d1287512ae17abdf28f2270ff1637ff8f7ffceaf22
-updated: 2017-08-07T15:45:59.465874414+02:00
+hash: 3642b86c55bdf3db5500378521c7344b28f2a6a3e12d95055477e99d2c487849
+updated: 2017-08-16T15:30:21.983122139+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -45,7 +45,7 @@ imports:
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/giantswarm/certctl
-  version: 5b65fea538dc6ae7fb6cf44e94a5d92bd6753031
+  version: 0af4f5a6fa82e041133252e9fb4f801d373d6dc4
   subpackages:
   - service/cert-signer
   - service/pki
@@ -58,7 +58,7 @@ imports:
   subpackages:
   - uuid
 - name: github.com/giantswarm/microendpoint
-  version: fb3e124643cfb364625089c39a59393f8cfdf647
+  version: d87e124e567b3ca452dc201d72edd5cc27ab08dc
   subpackages:
   - endpoint/healthz
   - endpoint/version
@@ -92,7 +92,7 @@ imports:
 - name: github.com/giantswarm/micrologger
   version: 8a69b2ab80ba2d0bd40d609206518fefacfc8fdf
 - name: github.com/giantswarm/operatorkit
-  version: 2f2c2942ed86d1fd6def7f7367b19031883047db
+  version: 7f7b7fea307a52987696f78b6c6ec1b86ab756db
   subpackages:
   - client/k8s
   - tpr
@@ -127,7 +127,7 @@ imports:
   - proto
   - ptypes/any
 - name: github.com/google/go-genproto
-  version: 09f6ed296fc66555a25fe4ce95173148778dfa85
+  version: 6b7d9516179cd47f4714cfeb0103ad1dede756c4
   subpackages:
   - googleapis/rpc/status
 - name: github.com/google/gofuzz
@@ -284,7 +284,7 @@ imports:
 - name: gopkg.in/inf.v0
   version: 3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4
 - name: gopkg.in/yaml.v2
-  version: 25c4ec802a7d637f88d584ab26798e94ad14c13b
+  version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 - name: k8s.io/apimachinery
   version: 85ace5365f33b16fc735c866a12e3c765b9700f2
   subpackages:
