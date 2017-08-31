@@ -19,7 +19,6 @@ Inspecting cluster for ID '123':
 
     PKI backend mounted: false
     Root CA generated:   false
-    PKI role created:    false
     PKI policy created:  false
 
 Tokens may have been generated for this cluster. Created tokens
@@ -41,7 +40,6 @@ Set up cluster for ID '123':
 
     - PKI backend mounted
     - Root CA generated
-    - PKI role created
     - PKI policy created
 
 The following tokens have been generated for this cluster:
@@ -57,7 +55,6 @@ Inspecting cluster for ID '123':
 
     PKI backend mounted: true
     Root CA generated:   true
-    PKI role created:    true
     PKI policy created:  true
 
 Tokens may have been generated for this cluster. Created tokens
@@ -114,7 +111,6 @@ Inspecting cluster for ID '123':
 
     PKI backend mounted: false
     Root CA generated:   false
-    PKI role created:    false
     PKI policy created:  false
 
 Tokens may have been generated for this cluster. Created tokens
