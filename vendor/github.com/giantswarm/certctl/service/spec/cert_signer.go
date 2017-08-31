@@ -11,6 +11,10 @@ type IssueConfig struct {
 	// that is being requested.
 	CommonName string `json:"common_name"`
 
+	// Organizations is a comma seperated list of organizations ("O"'s) for the issued cert's
+	// subject line.
+	Organizations string `json:"organizations"`
+
 	// IPSANs represents a comma separate lists of IPs.
 	IPSANs string `json:"ip_sans"`
 
@@ -20,6 +24,21 @@ type IssueConfig struct {
 	// TTL configures the time to live for the requested certificate. This is a
 	// golang time string with the allowed units s, m and h.
 	TTL string `json:"ttl"`
+
+	//// QUESTIONABLE ATTRIBUTES
+	///
+
+	// It seem weird to have these attributes here (AllowedDomains, AllowBareDomains, and RoleTTL)
+	// and in the PKI setup call, but we need to know them again because issuing a certificate
+	// might also create a role in vault on the fly, and these attributes are part of a role
+	// definition.
+
+	AllowedDomains   string `json:"allowed_domains"`
+	AllowBareDomains bool   `json:"allow_bare_domains"`
+	RoleTTL          string `json:"role_ttl"`
+
+	///
+	//// END QUESTIONABLE
 }
 
 type IssueResponse struct {
@@ -39,7 +58,14 @@ type CertSigner interface {
 	// This is very specific to Vault. The path structure is the following. See
 	// also https://github.com/hashicorp/vault/blob/6f0f46deb622ba9c7b14b2ec0be24cab3916f3d8/website/source/docs/secrets/pki/index.html.md#pkiissue.
 	//
+	//		 When organizations is blank:
 	//     pki-<clusterID>/issue/role-<clusterID>
 	//
-	SignedPath(clusterID string) string
+	//     When organizations is not blank
+	//     pki-<clusterID>/issue/role-org-<organizationsHash>
+	//
+	//     organizationsHash is a deterministic urlsafe hash that is always the
+	//     same regardless of what order you give the organizations in.
+	//
+	SignedPath(clusterID string, organizations string) string
 }
