@@ -1,7 +1,7 @@
 package: github.com/giantswarm/cert-operator
 import:
 - package: github.com/giantswarm/certctl
-  version: master
+  version: 0af4f5a6fa82e041133252e9fb4f801d373d6dc4
   subpackages:
   - service/cert-signer
   - service/pki

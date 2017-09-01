@@ -26,14 +26,10 @@ type issueFlags struct {
 	ClusterID string
 
 	// Certificate
-	CommonName       string
-	IPSANs           string
-	AltNames         string
-	TTL              string
-	Organizations    string
-	AllowedDomains   string
-	AllowBareDomains bool
-	RoleTTL          string
+	CommonName string
+	IPSANs     string
+	AltNames   string
+	TTL        string
 
 	// Path
 	CrtFilePath string
@@ -71,10 +67,6 @@ func init() {
 	issueCmd.Flags().StringVar(&newIssueFlags.IPSANs, "ip-sans", "", "IPSANs used to generate a new signed certificate for.")
 	issueCmd.Flags().StringVar(&newIssueFlags.AltNames, "alt-names", "", "Alternative names used to generate a new signed certificate for.")
 	issueCmd.Flags().StringVar(&newIssueFlags.TTL, "ttl", "8640h", "TTL used to generate a new signed certificate for.") // 1 year
-	issueCmd.Flags().StringVar(&newIssueFlags.Organizations, "organizations", "", "Organizations that you want this new certificate to have in its subject.")
-	issueCmd.Flags().StringVar(&newIssueFlags.AllowedDomains, "allowed-domains", "", "Comma separated domains allowed to authenticate against the cluster's root CA.")
-	issueCmd.Flags().BoolVar(&newIssueFlags.AllowBareDomains, "allow-bare-domains", false, "Allow issuing certs for bare domains. (Default false)")
-	issueCmd.Flags().StringVar(&newIssueFlags.RoleTTL, "role-ttl", "8640h", "TTL used for the role that might get created (if it doesn't exist yet) while issuing this certificate.") // 1 year
 
 	issueCmd.Flags().StringVar(&newIssueFlags.CrtFilePath, "crt-file", "", "File path used to write the generated public key to.")
 	issueCmd.Flags().StringVar(&newIssueFlags.KeyFilePath, "key-file", "", "File path used to write the generated private key to.")
@@ -137,14 +129,11 @@ func issueRun(cmd *cobra.Command, args []string) {
 
 	// Generate a new signed certificate.
 	newIssueConfig := spec.IssueConfig{
-		ClusterID:      newIssueFlags.ClusterID,
-		CommonName:     newIssueFlags.CommonName,
-		Organizations:  newIssueFlags.Organizations,
-		AllowedDomains: newIssueFlags.AllowedDomains,
-		IPSANs:         newIssueFlags.IPSANs,
-		AltNames:       newIssueFlags.AltNames,
-		TTL:            newIssueFlags.TTL,
-		RoleTTL:        newIssueFlags.RoleTTL,
+		ClusterID:  newIssueFlags.ClusterID,
+		CommonName: newIssueFlags.CommonName,
+		IPSANs:     newIssueFlags.IPSANs,
+		AltNames:   newIssueFlags.AltNames,
+		TTL:        newIssueFlags.TTL,
 	}
 	newIssueResponse, err := newCertSigner.Issue(newIssueConfig)
 	if err != nil {
