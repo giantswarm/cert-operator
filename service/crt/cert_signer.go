@@ -1,6 +1,7 @@
 package crt
 
 import (
+	"fmt"
 	"strings"
 
 	"time"
@@ -48,13 +49,25 @@ func (s *Service) Issue(cert certificatetpr.Spec) error {
 		return microerror.Mask(err)
 	}
 
+	// Set allowed domains so the Vault role is correct.
+	domainPrefix := fmt.Sprintf("%s.", cert.ClusterComponent)
+	baseEndpoint := strings.Replace(cert.CommonName, domainPrefix, "", 1)
+
+	allowedDomains := []string{
+		baseEndpoint,
+	}
+	for _, domain := range cert.AltNames {
+		allowedDomains = append(allowedDomains, domain)
+	}
+
 	// Generate a new signed certificate.
 	newIssueConfig := spec.IssueConfig{
-		ClusterID:  cert.ClusterID,
-		CommonName: cert.CommonName,
-		IPSANs:     strings.Join(cert.IPSANs, ","),
-		AltNames:   strings.Join(cert.AltNames, ","),
-		TTL:        cert.TTL,
+		ClusterID:      cert.ClusterID,
+		CommonName:     cert.CommonName,
+		IPSANs:         strings.Join(cert.IPSANs, ","),
+		AltNames:       strings.Join(cert.AltNames, ","),
+		TTL:            cert.TTL,
+		AllowedDomains: strings.Join(allowedDomains, ","),
 	}
 	newIssueResponse, err := newCertSigner.Issue(newIssueConfig)
 	if err != nil {
