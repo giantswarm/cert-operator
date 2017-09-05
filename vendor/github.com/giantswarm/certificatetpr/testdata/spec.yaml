@@ -1,4 +1,10 @@
 allowBareDomains: true
+allowedDomains:
+- giantswarm.io
+- kubernetes
+- kubernetes.default
+- kubernetes.default.svc
+- kubernetes.default.svc.cluster.local
 altNames:
 - kubernetes
 - kubernetes.default

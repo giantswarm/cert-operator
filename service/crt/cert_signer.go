@@ -50,11 +50,12 @@ func (s *Service) Issue(cert certificatetpr.Spec) error {
 
 	// Generate a new signed certificate.
 	newIssueConfig := spec.IssueConfig{
-		ClusterID:  cert.ClusterID,
-		CommonName: cert.CommonName,
-		IPSANs:     strings.Join(cert.IPSANs, ","),
-		AltNames:   strings.Join(cert.AltNames, ","),
-		TTL:        cert.TTL,
+		ClusterID:      cert.ClusterID,
+		CommonName:     cert.CommonName,
+		IPSANs:         strings.Join(cert.IPSANs, ","),
+		AltNames:       strings.Join(cert.AltNames, ","),
+		TTL:            cert.TTL,
+		AllowedDomains: strings.Join(cert.AllowedDomains, ","),
 	}
 	newIssueResponse, err := newCertSigner.Issue(newIssueConfig)
 	if err != nil {

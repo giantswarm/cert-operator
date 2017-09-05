@@ -13,6 +13,13 @@ func TestSpecYamlEncoding(t *testing.T) {
 
 	spec := Spec{
 		AllowBareDomains: true,
+		AllowedDomains: []string{
+			"giantswarm.io",
+			"kubernetes",
+			"kubernetes.default",
+			"kubernetes.default.svc",
+			"kubernetes.default.svc.cluster.local",
+		},
 		AltNames: []string{
 			"kubernetes",
 			"kubernetes.default",
