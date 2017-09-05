@@ -1,5 +1,5 @@
-hash: 3642b86c55bdf3db5500378521c7344b28f2a6a3e12d95055477e99d2c487849
-updated: 2017-08-31T15:55:24.731397728+01:00
+hash: 79f3d92c9b2b5960defa181d500f3fa4758e0f1c3da6364deff402fe9c4b8180
+updated: 2017-09-05T18:21:36.634385231+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -36,7 +36,7 @@ imports:
   - service/spec
   - service/token
 - name: github.com/giantswarm/certificatetpr
-  version: deb9963e88123d43dcdf5fd071e042734918ddf0
+  version: 482c7ad90bf53dc8e5639e6176dceec289e68d9f
 - name: github.com/giantswarm/go-uuid
   version: ed3ca8a15a931b141440a7e98e4f716eec255f7d
   subpackages:
@@ -73,8 +73,10 @@ imports:
   version: 8a69b2ab80ba2d0bd40d609206518fefacfc8fdf
 - name: github.com/giantswarm/microstorage
   version: f5c68d40459f0021cf8266501b7d8615ea4ff641
+  subpackages:
+  - memory
 - name: github.com/giantswarm/operatorkit
-  version: 911fad9e4a4fb20e05d16c6e967f7da50fdc3cfc
+  version: ebba313a2a521c384192e0011959d58682220cb3
   subpackages:
   - client/k8s
   - tpr
@@ -122,7 +124,7 @@ imports:
 - name: github.com/hashicorp/go-rootcerts
   version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
 - name: github.com/hashicorp/hcl
-  version: 8f6b1344a92ff8877cf24a5de9177bf7d0a2a187
+  version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -164,9 +166,9 @@ imports:
 - name: github.com/mitchellh/mapstructure
   version: d0303fe809921458f417bcf828397a65db30a7e4
 - name: github.com/pelletier/go-toml
-  version: 9c1b4e331f1e3d98e72600677699fbe212cd6d16
+  version: 4692b8f9babfc93db58cc592ba2689d8736781de
 - name: github.com/prometheus/client_golang
-  version: 967789050ba94deca04a5e84cce8ad472ce313c1
+  version: 00e08dd66dbea933650a515c3ceb71a54337d187
   subpackages:
   - prometheus
   - prometheus/promhttp
@@ -175,13 +177,13 @@ imports:
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: 49fee292b27bfff7f354ee0f64e1bc4850462edf
+  version: 61f87aac8082fa8c3c5655c7608d7478d46ac2ad
   subpackages:
   - expfmt
   - internal/bitbucket.org/ww/goautoneg
   - model
 - name: github.com/prometheus/procfs
-  version: a1dba9ce8baed984a2495b658c82687f8157b98f
+  version: e645f4e5aaa8506fc71d6edbc5c4ff02c04c46f2
   subpackages:
   - xfs
 - name: github.com/PuerkitoBio/purell
@@ -191,7 +193,7 @@ imports:
 - name: github.com/sethgrid/pester
   version: a86a2d88f4dc3c7dbf3a6a6bbbfb095690b834b6
 - name: github.com/spf13/afero
-  version: 36f8810e2e3d7eeac4ac05b57f65690fbfba62a2
+  version: 9be650865eab0c12963d8753212f4f9c66cdcf12
   subpackages:
   - mem
 - name: github.com/spf13/cast
@@ -245,7 +247,7 @@ imports:
 - name: gopkg.in/inf.v0
   version: 3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4
 - name: gopkg.in/yaml.v2
-  version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
+  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 - name: k8s.io/apimachinery
   version: 85ace5365f33b16fc735c866a12e3c765b9700f2
   subpackages:

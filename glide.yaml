@@ -10,7 +10,7 @@ import:
 - package: github.com/giantswarm/microkit
   version: master
 - package: github.com/giantswarm/certificatetpr
-  version: master
+  version: allowed-domains
 - package: github.com/giantswarm/operatorkit
   version: master
 - package: github.com/giantswarm/microendpoint

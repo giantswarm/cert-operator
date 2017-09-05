@@ -6,6 +6,7 @@ type Searcher interface {
 
 type Spec struct {
 	AllowBareDomains bool     `json:"allowBareDomains" yaml:"allowBareDomains"`
+	AllowedDomains   []string `json:"allowedDomains" yaml:"allowedDomains"`
 	AltNames         []string `json:"altNames" yaml:"altNames"`
 	ClusterComponent string   `json:"clusterComponent" yaml:"clusterComponent"`
 	ClusterID        string   `json:"clusterID" yaml:"clusterID"`
