@@ -1,6 +1,7 @@
 package crt
 
 import (
+	"fmt"
 	"strings"
 
 	"time"
@@ -48,13 +49,21 @@ func (s *Service) Issue(cert certificatetpr.Spec) error {
 		return microerror.Mask(err)
 	}
 
+	allowedDomainsFormat := s.Viper.GetString(s.Flag.Service.Vault.Config.Certificate.AllowedDomainsFormat)
+	if allowedDomainsFormat == "" {
+		return microerror.Maskf(invalidConfigError, "certificate allowed domains must not be empty")
+	}
+	allowedDomains := fmt.Sprintf(allowedDomainsFormat, cert.ClusterID)
+
 	// Generate a new signed certificate.
 	newIssueConfig := spec.IssueConfig{
-		ClusterID:  cert.ClusterID,
-		CommonName: cert.CommonName,
-		IPSANs:     strings.Join(cert.IPSANs, ","),
-		AltNames:   strings.Join(cert.AltNames, ","),
-		TTL:        cert.TTL,
+		ClusterID:        cert.ClusterID,
+		CommonName:       cert.CommonName,
+		IPSANs:           strings.Join(cert.IPSANs, ","),
+		AltNames:         strings.Join(cert.AltNames, ","),
+		TTL:              cert.TTL,
+		AllowedDomains:   allowedDomains,
+		AllowBareDomains: true,
 	}
 	newIssueResponse, err := newCertSigner.Issue(newIssueConfig)
 	if err != nil {
