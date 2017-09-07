@@ -17,7 +17,7 @@ kubectl apply -f ./vault.yaml
 eval $(minikube docker-env)
 (
     cd ../..
-    CGO_ENABLED=0 GOOS=linux go build github.com/giantswarm/cert-operator
+    CGO_ENABLED=0 GOOS=linux go build .
     docker build -t quay.io/giantswarm/cert-operator:local-dev .
 )
 
