@@ -28,3 +28,4 @@ spec:
         - --service.vault.config.token=${VAULT_TOKEN}
         - --service.vault.config.pki.ca.ttl=1440h
         - --service.vault.config.pki.commonname.format=%s.${COMMON_DOMAIN}
+        - --service.vault.config.certificate.alloweddomainsformat=%s.${COMMON_DOMAIN},k8s-master-vm,kubernetes,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster.local
