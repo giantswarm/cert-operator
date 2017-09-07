@@ -1,5 +1,5 @@
-hash: 3642b86c55bdf3db5500378521c7344b28f2a6a3e12d95055477e99d2c487849
-updated: 2017-08-31T15:55:24.731397728+01:00
+hash: 2bc6d15245fc95ef89d811e50ae630a69871cd826712393850e2c70327103099
+updated: 2017-09-01T14:10:15.418575121+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -28,11 +28,10 @@ imports:
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/giantswarm/certctl
-  version: 1d50c11ee7c2d115234686545dea43084e18e91b
+  version: 0af4f5a6fa82e041133252e9fb4f801d373d6dc4
   subpackages:
   - service/cert-signer
   - service/pki
-  - service/role
   - service/spec
   - service/token
 - name: github.com/giantswarm/certificatetpr
@@ -73,6 +72,8 @@ imports:
   version: 8a69b2ab80ba2d0bd40d609206518fefacfc8fdf
 - name: github.com/giantswarm/microstorage
   version: f5c68d40459f0021cf8266501b7d8615ea4ff641
+  subpackages:
+  - memory
 - name: github.com/giantswarm/operatorkit
   version: 911fad9e4a4fb20e05d16c6e967f7da50fdc3cfc
   subpackages:
@@ -138,7 +139,6 @@ imports:
   - api
   - helper/compressutil
   - helper/jsonutil
-  - helper/parseutil
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/errgo
@@ -191,7 +191,7 @@ imports:
 - name: github.com/sethgrid/pester
   version: a86a2d88f4dc3c7dbf3a6a6bbbfb095690b834b6
 - name: github.com/spf13/afero
-  version: 36f8810e2e3d7eeac4ac05b57f65690fbfba62a2
+  version: ee1bd8ee15a1306d1f9201acc41ef39cd9f99a1b
   subpackages:
   - mem
 - name: github.com/spf13/cast
@@ -218,7 +218,6 @@ imports:
   version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
   subpackages:
   - context
-  - context/ctxhttp
   - http2
   - http2/hpack
   - idna
