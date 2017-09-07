@@ -30,18 +30,22 @@ all placeholders must be replaced with sensible values.
 Below is handy snippet than can be used to make that painless. It works in bash and zsh.
 
 ```bash
+export CLUSTER_NAME="example-cluster"
+export COMMON_DOMAIN="company.com"
+export VAULT_HOST="vault"
+export VAULT_TOKEN="XXXXX"
+
 for f in *.tmpl.yaml; do
     sed \
-        -e 's/${CLUSTER_NAME}/example-cluster/g' \
-        -e 's/${COMMON_DOMAIN}/company.com/g' \
-        -e 's/${VAULT_HOST}/vault/g' \
-        -e 's/${VAULT_TOKEN}/secret_sauce/g' \
+        -e 's|${CLUSTER_NAME}|'"${CLUSTER_NAME}"'|g' \
+        -e 's|${COMMON_DOMAIN}|'"${COMMON_DOMAIN}"'|g' \
+        -e 's|${VAULT_HOST}|'"${VAULT_HOST}"'|g' \
+        -e 's|${VAULT_TOKEN}|'"${VAULT_TOKEN}"'|g' \
         ./$f > ./${f%.tmpl.yaml}.yaml
 done
 ```
 
-- Note: Single quotes are intentional. Strings like `${CLUSTER_NAME}` shouldn't
-  be interpolated. These are placeholders in the template files.
+- Note: `|` characters are used in `sed` substitution to avoid escaping.
 
 
 ## Vault Setup
