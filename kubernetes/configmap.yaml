@@ -12,8 +12,6 @@ data:
       vault:
         config:
           address: '{{ .Installation.V1.Auth.Vault.Address | urlString }}'
-          certificate:
-            allowedDomainsFormat: '%s.{{ .Values.Installation.V1.Guest.Kubernetes.API.EndpointBase }},kubernetes,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster.local'
           pki:
             ca:
               ttl: '{{ .Installation.V1.Auth.Vault.CA.TTL | shortDuration }}'
