@@ -2,8 +2,11 @@ package crt
 
 import (
 	"fmt"
+	"os"
 	"sync"
+	"time"
 
+	"github.com/cenk/backoff"
 	"github.com/giantswarm/certctl/service/spec"
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
@@ -27,6 +30,7 @@ const (
 // Config represents the configuration used to create a Crt service.
 type Config struct {
 	// Dependencies.
+	BackOff     backoff.BackOff
 	CAService   *ca.Service
 	Logger      micrologger.Logger
 	K8sClient   kubernetes.Interface
@@ -48,6 +52,7 @@ type certificateSecret struct {
 func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
+		BackOff:     nil,
 		CAService:   nil,
 		K8sClient:   nil,
 		Logger:      nil,
@@ -71,6 +76,9 @@ type Service struct {
 // New creates a new configured Crt service.
 func New(config Config) (*Service, error) {
 	// Dependencies.
+	if config.BackOff == nil {
+		return nil, microerror.Maskf(invalidConfigError, "config.BackOff must not be empty")
+	}
 	if config.CAService == nil {
 		return nil, microerror.Maskf(invalidConfigError, "ca service must not be empty")
 	}
@@ -118,27 +126,49 @@ func New(config Config) (*Service, error) {
 // Boot starts the service and implements the watch for the certificate TPR.
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		err := s.tpr.CreateAndWait()
-		if tpr.IsAlreadyExists(err) {
-			s.Logger.Log("debug", "third party resource already exists")
-		} else if err != nil {
-			s.Logger.Log("error", fmt.Sprintf("%#v", err))
-			return
+		o := func() error {
+			err := s.bootWithError()
+			if err != nil {
+				return microerror.Mask(err)
+			}
+
+			return nil
 		}
 
-		s.Logger.Log("debug", "starting list/watch")
-
-		newResourceEventHandler := &cache.ResourceEventHandlerFuncs{
-			AddFunc:    s.addFunc,
-			DeleteFunc: s.deleteFunc,
-		}
-		newZeroObjectFactory := &tpr.ZeroObjectFactoryFuncs{
-			NewObjectFunc:     func() runtime.Object { return &certificatetpr.CustomObject{} },
-			NewObjectListFunc: func() runtime.Object { return &certificatetpr.List{} },
+		n := func(err error, d time.Duration) {
+			s.Logger.Log("warning", fmt.Sprintf("retrying operator boot due to error: %#v", microerror.Mask(err)))
 		}
 
-		s.tpr.NewInformer(newResourceEventHandler, newZeroObjectFactory).Run(nil)
+		err := backoff.RetryNotify(o, s.BackOff, n)
+		if err != nil {
+			s.Logger.Log("error", fmt.Sprintf("stop operator boot retries due to too many errors: %#v", microerror.Mask(err)))
+			os.Exit(1)
+		}
 	})
+}
+
+func (s *Service) bootWithError() error {
+	err := s.tpr.CreateAndWait()
+	if tpr.IsAlreadyExists(err) {
+		s.Logger.Log("debug", "third party resource already exists")
+	} else if err != nil {
+		return microerror.Mask(err)
+	}
+
+	s.Logger.Log("debug", "starting list/watch")
+
+	newResourceEventHandler := &cache.ResourceEventHandlerFuncs{
+		AddFunc:    s.addFunc,
+		DeleteFunc: s.deleteFunc,
+	}
+	newZeroObjectFactory := &tpr.ZeroObjectFactoryFuncs{
+		NewObjectFunc:     func() runtime.Object { return &certificatetpr.CustomObject{} },
+		NewObjectListFunc: func() runtime.Object { return &certificatetpr.List{} },
+	}
+
+	s.tpr.NewInformer(newResourceEventHandler, newZeroObjectFactory).Run(nil)
+
+	return nil
 }
 
 // addFunc issues a certificate using Vault for the certificate TPR. A PKI backend is
