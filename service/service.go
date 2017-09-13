@@ -5,7 +5,9 @@ package service
 import (
 	"fmt"
 	"sync"
+	"time"
 
+	"github.com/cenk/backoff"
 	"github.com/giantswarm/microendpoint/service/version"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
@@ -112,14 +114,23 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
+	var operatorBackOff *backoff.ExponentialBackOff
+	{
+		operatorBackOff = backoff.NewExponentialBackOff()
+		operatorBackOff.MaxElapsedTime = 5 * time.Minute
+	}
+
 	var crtService *crt.Service
 	{
 		crtConfig := crt.DefaultConfig()
-		crtConfig.Flag = config.Flag
+
+		crtConfig.BackOff = operatorBackOff
 		crtConfig.CAService = caService
 		crtConfig.K8sClient = k8sClient
 		crtConfig.Logger = config.Logger
 		crtConfig.VaultClient = vaultClient
+
+		crtConfig.Flag = config.Flag
 		crtConfig.Viper = config.Viper
 
 		crtService, err = crt.New(crtConfig)
