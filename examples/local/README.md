@@ -14,61 +14,6 @@ All commands are assumed to be run from `examples/local` directory.
 
 [aws-operator]: https://github.com/giantswarm/aws-operator
 
-
-## Preparing Templates
-
-All yaml files in this directory are templates. Before proceeding this guide
-all placeholders must be replaced with sensible values.
-
-- *CLUSTER_NAME* - Cluster name to be created by [aws-operator].
-- *COMMON_DOMAIN* - Cluster name to be created by [aws-operator].
-- *VAULT_HOST* - When using Vault service from `vault.yaml` `VAULT_HOST` should
-  be `vault`. See Vault Setup section below.
-- *VAULT_TOKEN* - It must match across the Vault service and the operator
-  deployment flags.
-
-Below is handy snippet than can be used to make that painless. It works in bash and zsh.
-
-```bash
-export CLUSTER_NAME="example-cluster"
-export COMMON_DOMAIN="company.com"
-export VAULT_HOST="vault"
-export VAULT_TOKEN="XXXXX"
-
-for f in *.tmpl.yaml; do
-    sed \
-        -e 's|${CLUSTER_NAME}|'"${CLUSTER_NAME}"'|g' \
-        -e 's|${COMMON_DOMAIN}|'"${COMMON_DOMAIN}"'|g' \
-        -e 's|${VAULT_HOST}|'"${VAULT_HOST}"'|g' \
-        -e 's|${VAULT_TOKEN}|'"${VAULT_TOKEN}"'|g' \
-        ./$f > ./${f%.tmpl.yaml}.yaml
-done
-```
-
-- Note: `|` characters are used in `sed` substitution to avoid escaping.
-
-
-## Vault Setup
-
-The operator needs a connection to Vault (currently v0.6.4 is supported) and to
-the Kubernetes API. For development running Vault in dev mode is fine.
-
-Steps below are optional. It's OK to use a different Vault instance accessible
-from the operator pod. Remember to set `VAULT_HOST` during templates
-preparation accordingly.
-
-```bash
-kubectl apply -f ./vault.yaml
-```
-
-If you are using minikube you can access vault with:
-```bash
-export VAULT_TOKEN=<VAULT_TOKEN>
-export VAULT_ADDR=$(minikube service vault --url)
-vault status
-```
-
-
 ## Cluster-Local Docker Image
 
 The operator needs a connection to the K8s API. The simplest approach is to run
@@ -93,37 +38,46 @@ docker build -t quay.io/giantswarm/cert-operator:local-dev .
 #kubectl delete pod -l app=cert-operator-local
 ```
 
+## Deploying the lab charts
 
-## Operator Startup
+The lab consist of two Helm charts, `cert-operator-lab-chart`, which sets up vault and cert-operator,
+and `certificates-lab-chart`, which puts in place the required certificates.
 
-```bash
-kubectl apply -f ./deployment.yaml
-```
-
-
-## Creating Certificates CustomObjects
+With a working Helm installation they can be created from the `examples/local` dir with:
 
 ```bash
-for f in *-cert.yaml; do
-    kubectl create -f ./$f
-done
+$ helm install -n cert-operator-lab ./cert-operator-lab-chart/ --wait
+$ helm install -n certificates-lab ./certificates-lab-chart/ --wait
 ```
 
 The certificates are issued using Vault and stored as K8s secrets.
 
 ```bash
-kubectl get secret -l clusterID=CLUSTER_NAME
+kubectl get secret -l clusterID=test-cluster # or the actual value of `clusterName`
 ```
 
+`cert-operator-lab-chart` accepts the following configuration parameters:
+* `clusterName` - Cluster name to be created by [aws-operator], by default `test-cluster`
+* `commonDomain` - Domain to be used by [aws-operator].
+* `vaultToken` - It must match across the Vault service and the operator deployment flags.
+* `certOperatorTag` - Tag of the cert-operator image to be used, by default `local-dev` to use a locally created
+image.
+
+`certificates-lab-chart` is also configurable with `clusterName` and `commonDomain` (should match the ones
+used in `cert-operator-lab-chart`).
+
+
+You can sspecify different values of the configuration parameters changing the `values.yaml` file on each
+chart directory or specifying them on the install command:
+```bash
+$ helm install -n cert-operator-lab --set clusterName=my-cluste-name ./cert-operator-lab-chart/ --wait
+```
 
 ## Cleaning Up
 
-Delete the certificate custom objects and the deployment.
+Delete the cert-operator and certificates lab releases:
 
 ```bash
-kubectl delete certificate -l clusterID=CLUSTER_NAME
-kubectl delete -f ./deployment.yaml
-
-# Optional. Only when Vault was set up.
-kubectl delete -f ./vault.yaml
+$ helm delete certificates-lab --purge
+$ helm delete cert-operator-lab --purge
 ```

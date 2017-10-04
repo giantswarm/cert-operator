@@ -1,15 +1,15 @@
 apiVersion: "giantswarm.io/v1"
 kind: Certificate
 metadata:
-  name: "${CLUSTER_NAME}-calico"
+  name: "{{.Values.clusterName}}-calico"
   namespace: "default"
   labels:
-    clusterID: "${CLUSTER_NAME}"
+    clusterID: "{{.Values.clusterName}}"
     clusterComponent: "calico"
 spec:
-  clusterID: "${CLUSTER_NAME}"
+  clusterID: "{{.Values.clusterName}}"
   clusterComponent: "calico"
-  commonName: "calico.${CLUSTER_NAME}.${COMMON_DOMAIN}"
+  commonName: "calico.{{.Values.clusterName}}.{{.Values.commonDomain}}"
   altNames:
   ipSans:
   ttl: "720h"

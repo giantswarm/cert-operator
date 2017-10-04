@@ -1,0 +1,4 @@
+clusterName: "test-cluster"
+commonDomain: "aws.gigantic.io"
+vaultToken: "myToken"
+certOperatorTag: "local-dev"
