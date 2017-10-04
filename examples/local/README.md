@@ -59,6 +59,7 @@ kubectl get secret -l clusterID=test-cluster # or the actual value of `clusterNa
 `cert-operator-lab-chart` accepts the following configuration parameters:
 * `clusterName` - Cluster name to be created by [aws-operator], by default `test-cluster`
 * `commonDomain` - Domain to be used by [aws-operator].
+* `vaultHost` - Deafults to `vault` for the local setup.
 * `vaultToken` - It must match across the Vault service and the operator deployment flags.
 * `certOperatorTag` - Tag of the cert-operator image to be used, by default `local-dev` to use a locally created
 image.
@@ -67,7 +68,7 @@ image.
 used in `cert-operator-lab-chart`).
 
 
-You can sspecify different values of the configuration parameters changing the `values.yaml` file on each
+You can specify different values of the configuration parameters changing the `values.yaml` file on each
 chart directory or specifying them on the install command:
 ```bash
 $ helm install -n cert-operator-lab --set clusterName=my-cluste-name ./cert-operator-lab-chart/ --wait

@@ -25,7 +25,7 @@ spec:
           containerPort: 8000
         args:
         - daemon
-        - --service.vault.config.address=http://vault:8200
+        - --service.vault.config.address=http://{{.Values.vaultHost}}:8200
         - --service.vault.config.token={{.Values.vaultToken}}
         - --service.vault.config.pki.ca.ttl=1440h
         - --service.vault.config.pki.commonname.format=%s.{{.Values.commonDomain}}
