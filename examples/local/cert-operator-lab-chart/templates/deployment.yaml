@@ -18,7 +18,7 @@ spec:
       volumes:
       containers:
       - name: cert-operator
-        image: quay.io/giantswarm/cert-operator:{{.Values.certOperatorTag}}
+        image: quay.io/giantswarm/cert-operator:{{.Values.imageTag}}
         imagePullPolicy: IfNotPresent
         ports:
         - name: http

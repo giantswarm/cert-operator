@@ -61,7 +61,7 @@ kubectl get secret -l clusterID=test-cluster # or the actual value of `clusterNa
 * `commonDomain` - Domain to be used by [aws-operator].
 * `vaultHost` - Deafults to `vault` for the local setup.
 * `vaultToken` - It must match across the Vault service and the operator deployment flags.
-* `certOperatorTag` - Tag of the cert-operator image to be used, by default `local-dev` to use a locally created
+* `imageTag` - Tag of the cert-operator image to be used, by default `local-dev` to use a locally created
 image.
 
 `cert-resource-lab-chart` is also configurable with `clusterName` and `commonDomain` (should match the ones

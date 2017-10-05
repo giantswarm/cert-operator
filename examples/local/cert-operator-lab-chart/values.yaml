@@ -2,6 +2,6 @@ clusterName: "test-cluster"
 commonDomain: "aws.gigantic.io"
 vaultToken: "myToken"
 vaultHost: "vault"
-certOperatorTag: "local-lab"
+imageTag: "local-lab"
 externalCertOperator:
   enabled: false
