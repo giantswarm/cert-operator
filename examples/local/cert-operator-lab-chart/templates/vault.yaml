@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: vault
@@ -20,10 +20,13 @@ spec:
           ports:
           - name: http
             containerPort: 8200
+          securityContext:
+            capabilities:
+              add: ["IPC_LOCK"]
           args:
           - server
           - -dev
-          - -dev-root-token-id=${VAULT_TOKEN}
+          - -dev-root-token-id={{.Values.vaultToken}}
           - -log-level=debug
 
 ---

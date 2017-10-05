@@ -1,17 +1,17 @@
 apiVersion: "giantswarm.io/v1"
 kind: Certificate
 metadata:
-  name: "${CLUSTER_NAME}-api"
+  name: "{{.Values.clusterName}}-api"
   namespace: "default"
   labels:
-    clusterID: "${CLUSTER_NAME}"
+    clusterID: "{{.Values.clusterName}}"
     clusterComponent: "api"
 spec:
-  clusterID: "${CLUSTER_NAME}"
+  clusterID: "{{.Values.clusterName}}"
   clusterComponent: "api"
-  commonName: "api.${CLUSTER_NAME}.${COMMON_DOMAIN}"
+  commonName: "api.{{.Values.clusterName}}.{{.Values.commonDomain}}"
   altNames:
-  - "${CLUSTER_NAME}.${COMMON_DOMAIN}"
+  - "{{.Values.clusterName}}.{{.Values.commonDomain}}"
   - "k8s-master-vm"
   - "kubernetes"
   - "kubernetes.default"
