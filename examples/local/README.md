@@ -41,13 +41,13 @@ docker build -t quay.io/giantswarm/cert-operator:local-dev .
 ## Deploying the lab charts
 
 The lab consist of two Helm charts, `cert-operator-lab-chart`, which sets up vault and cert-operator,
-and `certificates-lab-chart`, which puts in place the required certificates.
+and `cert-resource-lab-chart`, which puts in place the required certificates.
 
 With a working Helm installation they can be created from the `examples/local` dir with:
 
 ```bash
 $ helm install -n cert-operator-lab ./cert-operator-lab-chart/ --wait
-$ helm install -n certificates-lab ./certificates-lab-chart/ --wait
+$ helm install -n cert-resource-lab ./cert-resource-lab-chart/ --wait
 ```
 
 The certificates are issued using Vault and stored as K8s secrets.
@@ -64,7 +64,7 @@ kubectl get secret -l clusterID=test-cluster # or the actual value of `clusterNa
 * `certOperatorTag` - Tag of the cert-operator image to be used, by default `local-dev` to use a locally created
 image.
 
-`certificates-lab-chart` is also configurable with `clusterName` and `commonDomain` (should match the ones
+`cert-resource-lab-chart` is also configurable with `clusterName` and `commonDomain` (should match the ones
 used in `cert-operator-lab-chart`).
 
 
@@ -79,6 +79,6 @@ $ helm install -n cert-operator-lab --set clusterName=my-cluste-name ./cert-oper
 Delete the cert-operator and certificates lab releases:
 
 ```bash
-$ helm delete certificates-lab --purge
+$ helm delete cert-resource-lab --purge
 $ helm delete cert-operator-lab --purge
 ```
