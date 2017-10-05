@@ -31,7 +31,7 @@ eval $(minikube docker-env)
 
 # From the root of the project, where the Dockerfile resides
 CGO_ENABLED=0 GOOS=linux go build github.com/giantswarm/cert-operator
-docker build -t quay.io/giantswarm/cert-operator:local-dev .
+docker build -t quay.io/giantswarm/cert-operator:local-lab .
 
 # Optional. Restart running operator after image update.
 # Does nothing when the operator is not deployed.
