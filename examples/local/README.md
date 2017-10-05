@@ -40,7 +40,7 @@ docker build -t quay.io/giantswarm/cert-operator:local-lab .
 
 ## Deploying the lab charts
 
-The lab consist of two Helm charts, `cert-operator-lab-chart`, which sets up vault and cert-operator,
+The lab consist of two Helm charts, `cert-operator-lab-chart`, which sets up Vault and cert-operator,
 and `cert-resource-lab-chart`, which puts in place the required certificates.
 
 With a working Helm installation they can be created from the `examples/local` dir with:
@@ -59,7 +59,7 @@ kubectl get secret -l clusterID=test-cluster # or the actual value of `clusterNa
 `cert-operator-lab-chart` accepts the following configuration parameters:
 * `clusterName` - Cluster name to be created by [aws-operator], by default `test-cluster`
 * `commonDomain` - Domain to be used by [aws-operator].
-* `vaultHost` - Deafults to `vault` for the local setup.
+* `vaultHost` - Defaults to `vault` for the local setup.
 * `vaultToken` - It must match across the Vault service and the operator deployment flags.
 * `imageTag` - Tag of the cert-operator image to be used, by default `local-dev` to use a locally created
 image.
