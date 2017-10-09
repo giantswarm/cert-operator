@@ -1,11 +1,11 @@
 package healthz
 
 import (
+	"github.com/giantswarm/k8shealthz"
 	"github.com/giantswarm/microendpoint/service/healthz"
-	"github.com/giantswarm/microendpoint/service/healthz/k8s"
-	"github.com/giantswarm/microendpoint/service/healthz/vault"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+	"github.com/giantswarm/vaulthealthz"
 	vaultapi "github.com/hashicorp/vault/api"
 	"k8s.io/client-go/kubernetes"
 )
@@ -35,10 +35,12 @@ func New(config Config) (*Service, error) {
 
 	var k8sService healthz.Service
 	{
-		k8sConfig := k8s.DefaultConfig()
+		k8sConfig := k8shealthz.DefaultConfig()
+
 		k8sConfig.K8sClient = config.K8sClient
 		k8sConfig.Logger = config.Logger
-		k8sService, err = k8s.New(k8sConfig)
+
+		k8sService, err = k8shealthz.New(k8sConfig)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -46,10 +48,12 @@ func New(config Config) (*Service, error) {
 
 	var vaultService healthz.Service
 	{
-		vaultConfig := vault.DefaultConfig()
+		vaultConfig := vaulthealthz.DefaultConfig()
+
 		vaultConfig.Logger = config.Logger
 		vaultConfig.VaultClient = config.VaultClient
-		vaultService, err = vault.New(vaultConfig)
+
+		vaultService, err = vaulthealthz.New(vaultConfig)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
