@@ -2,11 +2,6 @@ package: github.com/giantswarm/cert-operator
 import:
 - package: github.com/giantswarm/certctl
   version: master
-  subpackages:
-  - service/cert-signer
-  - service/pki
-  - service/spec
-  - service/token
 - package: github.com/giantswarm/microkit
   version: master
 - package: github.com/giantswarm/certificatetpr
@@ -15,14 +10,9 @@ import:
   version: master
 - package: github.com/giantswarm/microendpoint
   version: master
+- package: github.com/giantswarm/k8shealthz
+  version: master
+- package: github.com/giantswarm/vaulthealthz
+  version: master
 - package: github.com/stretchr/testify
   version: ^1.1.4
-  subpackages:
-  - assert
-# Pinned versions.
-- package: google.golang.org/grpc
-  version: b5071124392bfd416c713e6595ac149b387f7186
-- package: github.com/spf13/pflag
-  version: 08b1a584251b5b62f458943640fc8ebd4d50aaa5
-- package: github.com/spf13/cobra
-  version: 4c05eb1145f16d0e6bb4a3e1b6d769f4713cb41f
