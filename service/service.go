@@ -82,6 +82,14 @@ type Service struct {
 
 // New creates a new configured service object.
 func New(config Config) (*Service, error) {
+	// Settings.
+	if config.Flag == nil {
+		return nil, microerror.Maskf(invalidConfigError, "config.Flag must not be empty")
+	}
+	if config.Viper == nil {
+		return nil, microerror.Maskf(invalidConfigError, "config.Viper must not be empty")
+	}
+
 	var err error
 
 	var k8sClient kubernetes.Interface
