@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/giantswarm/microkit/command"
@@ -34,7 +35,7 @@ func main() {
 		loggerConfig.IOWriter = os.Stdout
 		newLogger, err = micrologger.New(loggerConfig)
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("%#v\n", err))
 		}
 	}
 
@@ -57,7 +58,7 @@ func main() {
 
 			newService, err = service.New(serviceConfig)
 			if err != nil {
-				panic(err)
+				panic(fmt.Sprintf("%#v\n", err))
 			}
 			go newService.Boot()
 		}
@@ -66,7 +67,7 @@ func main() {
 		{
 			storage, err = memory.New(memory.DefaultConfig())
 			if err != nil {
-				panic(err)
+				panic(fmt.Sprintf("%#v\n", err))
 			}
 		}
 
@@ -78,7 +79,7 @@ func main() {
 
 			transactionResponder, err = transaction.NewResponder(c)
 			if err != nil {
-				panic(err)
+				panic(fmt.Sprintf("%#v\n", err))
 			}
 		}
 
@@ -95,7 +96,7 @@ func main() {
 
 			newServer, err = server.New(serverConfig)
 			if err != nil {
-				panic(err)
+				panic(fmt.Sprintf("%#v\n", err))
 			}
 		}
 
@@ -117,7 +118,7 @@ func main() {
 
 		newCommand, err = command.New(commandConfig)
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("%#v\n", err))
 		}
 	}
 
