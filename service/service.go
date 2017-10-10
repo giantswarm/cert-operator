@@ -281,6 +281,7 @@ func New(config Config) (*Service, error) {
 
 		healthzConfig.K8sClient = k8sClient
 		healthzConfig.Logger = config.Logger
+		healthzConfig.VaultClient = vaultClient
 
 		healthzService, err = healthz.New(healthzConfig)
 		if err != nil {
