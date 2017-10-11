@@ -1,19 +1,27 @@
-// Package service implements business logic to issue certificates for clusters
-// running on the Giantnetes platform.
+// Package service implements business logic to create Kubernetes resources
+// against the Kubernetes API.
 package service
 
 import (
-	"fmt"
+	"context"
 	"sync"
 	"time"
 
 	"github.com/cenk/backoff"
+	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microendpoint/service/version"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/client/k8s"
+	"github.com/giantswarm/operatorkit/framework"
+	"github.com/giantswarm/operatorkit/framework/logresource"
+	"github.com/giantswarm/operatorkit/framework/metricsresource"
+	"github.com/giantswarm/operatorkit/framework/retryresource"
+	"github.com/giantswarm/operatorkit/informer"
+	"github.com/giantswarm/operatorkit/tpr"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 
 	vaultutil "github.com/giantswarm/cert-operator/client/vault"
@@ -21,14 +29,18 @@ import (
 	"github.com/giantswarm/cert-operator/service/ca"
 	"github.com/giantswarm/cert-operator/service/crt"
 	"github.com/giantswarm/cert-operator/service/healthz"
+	"github.com/giantswarm/cert-operator/service/operator"
+	legacyresource "github.com/giantswarm/cert-operator/service/resource/legacy"
+)
+
+const (
+	ResourceRetries uint64 = 3
 )
 
 // Config represents the configuration used to create a new service.
 type Config struct {
 	// Dependencies.
-	KubernetesClient *kubernetes.Clientset
-	Logger           micrologger.Logger
-	VaultClient      *vaultapi.Client
+	Logger micrologger.Logger
 
 	// Settings.
 	Flag  *flag.Flag
@@ -45,9 +57,7 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
-		KubernetesClient: nil,
-		Logger:           nil,
-		VaultClient:      nil,
+		Logger: nil,
 
 		// Settings.
 		Flag:  nil,
@@ -60,20 +70,32 @@ func DefaultConfig() Config {
 	}
 }
 
+type Service struct {
+	// Dependencies.
+	Healthz  *healthz.Service
+	Operator *operator.Operator
+	Version  *version.Service
+
+	// Internals.
+	bootOnce sync.Once
+}
+
 // New creates a new configured service object.
 func New(config Config) (*Service, error) {
-	// Dependencies.
-	if config.Logger == nil {
-		return nil, microerror.Maskf(invalidConfigError, "logger must not be empty")
+	// Settings.
+	if config.Flag == nil {
+		return nil, microerror.Maskf(invalidConfigError, "config.Flag must not be empty")
 	}
-
-	config.Logger.Log("debug", fmt.Sprintf("creating cert-operator with config: %#v", config))
+	if config.Viper == nil {
+		return nil, microerror.Maskf(invalidConfigError, "config.Viper must not be empty")
+	}
 
 	var err error
 
 	var k8sClient kubernetes.Interface
 	{
 		k8sConfig := k8s.DefaultConfig()
+
 		k8sConfig.Address = config.Viper.GetString(config.Flag.Service.Kubernetes.Address)
 		k8sConfig.Logger = config.Logger
 		k8sConfig.InCluster = config.Viper.GetBool(config.Flag.Service.Kubernetes.InCluster)
@@ -102,29 +124,23 @@ func New(config Config) (*Service, error) {
 
 	var caService *ca.Service
 	{
-		caConfig := ca.DefaultConfig()
-		caConfig.Flag = config.Flag
-		caConfig.Logger = config.Logger
-		caConfig.VaultClient = vaultClient
-		caConfig.Viper = config.Viper
+		c := ca.DefaultConfig()
 
-		caService, err = ca.New(caConfig)
+		c.Flag = config.Flag
+		c.Logger = config.Logger
+		c.VaultClient = vaultClient
+		c.Viper = config.Viper
+
+		caService, err = ca.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
-	}
-
-	var operatorBackOff *backoff.ExponentialBackOff
-	{
-		operatorBackOff = backoff.NewExponentialBackOff()
-		operatorBackOff.MaxElapsedTime = 5 * time.Minute
 	}
 
 	var crtService *crt.Service
 	{
 		crtConfig := crt.DefaultConfig()
 
-		crtConfig.BackOff = operatorBackOff
 		crtConfig.CAService = caService
 		crtConfig.K8sClient = k8sClient
 		crtConfig.Logger = config.Logger
@@ -139,6 +155,126 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
+	var legacyResource framework.Resource
+	{
+		c := legacyresource.DefaultConfig()
+
+		c.CrtService = crtService
+		c.Logger = config.Logger
+
+		legacyResource, err = legacyresource.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	// We create the list of resources and wrap each resource around some common
+	// resources like metrics and retry resources.
+	//
+	// NOTE that the retry resources wrap the underlying resources first. The
+	// wrapped resources are then wrapped around the metrics resource. That way
+	// the metrics also consider execution times and execution attempts including
+	// retries.
+	//
+	// NOTE that the order of the namespace resource is important. We have to
+	// start the namespace resource at first because all other resources are
+	// created within this namespace.
+	var resources []framework.Resource
+	{
+		resources = []framework.Resource{
+			legacyResource,
+		}
+
+		logWrapConfig := logresource.DefaultWrapConfig()
+		logWrapConfig.Logger = config.Logger
+		resources, err = logresource.Wrap(resources, logWrapConfig)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+
+		retryWrapConfig := retryresource.DefaultWrapConfig()
+		retryWrapConfig.BackOffFactory = func() backoff.BackOff { return backoff.WithMaxTries(backoff.NewExponentialBackOff(), ResourceRetries) }
+		retryWrapConfig.Logger = config.Logger
+		resources, err = retryresource.Wrap(resources, retryWrapConfig)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+
+		metricsWrapConfig := metricsresource.DefaultWrapConfig()
+		metricsWrapConfig.Name = config.Name
+		resources, err = metricsresource.Wrap(resources, metricsWrapConfig)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	initCtxFunc := func(ctx context.Context, obj interface{}) (context.Context, error) {
+		return ctx, nil
+	}
+
+	var frameworkBackOff *backoff.ExponentialBackOff
+	{
+		frameworkBackOff = backoff.NewExponentialBackOff()
+		frameworkBackOff.MaxElapsedTime = 5 * time.Minute
+	}
+
+	var operatorFramework *framework.Framework
+	{
+		frameworkConfig := framework.DefaultConfig()
+
+		frameworkConfig.BackOff = frameworkBackOff
+		frameworkConfig.InitCtxFunc = initCtxFunc
+		frameworkConfig.Logger = config.Logger
+		frameworkConfig.Resources = resources
+
+		operatorFramework, err = framework.New(frameworkConfig)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	var newTPR *tpr.TPR
+	{
+		c := tpr.DefaultConfig()
+
+		c.K8sClient = k8sClient
+		c.Logger = config.Logger
+
+		c.Description = certificatetpr.Description
+		c.Name = certificatetpr.Name
+		c.Version = certificatetpr.VersionV1
+
+		newTPR, err = tpr.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	var newWatcherFactory informer.WatcherFactory
+	{
+		zeroObjectFactory := &informer.ZeroObjectFactoryFuncs{
+			NewObjectFunc:     func() runtime.Object { return &certificatetpr.CustomObject{} },
+			NewObjectListFunc: func() runtime.Object { return &certificatetpr.List{} },
+		}
+		newWatcherFactory = informer.NewWatcherFactory(k8sClient.Discovery().RESTClient(), newTPR.WatchEndpoint(""), zeroObjectFactory)
+	}
+
+	var newInformer *informer.Informer
+	{
+		informerConfig := informer.DefaultConfig()
+
+		informerConfig.BackOff = backoff.NewExponentialBackOff()
+		informerConfig.WatcherFactory = newWatcherFactory
+
+		informerConfig.RateWait = time.Second * 10
+		informerConfig.ResyncPeriod = time.Minute * 5
+
+		newInformer, err = informer.New(informerConfig)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
 	var healthzService *healthz.Service
 	{
 		healthzConfig := healthz.DefaultConfig()
@@ -148,6 +284,28 @@ func New(config Config) (*Service, error) {
 		healthzConfig.VaultClient = vaultClient
 
 		healthzService, err = healthz.New(healthzConfig)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	var operatorBackOff *backoff.ExponentialBackOff
+	{
+		operatorBackOff = backoff.NewExponentialBackOff()
+		operatorBackOff.MaxElapsedTime = 5 * time.Minute
+	}
+
+	var operatorService *operator.Operator
+	{
+		operatorConfig := operator.DefaultConfig()
+
+		operatorConfig.BackOff = operatorBackOff
+		operatorConfig.Framework = operatorFramework
+		operatorConfig.Informer = newInformer
+		operatorConfig.Logger = config.Logger
+		operatorConfig.TPR = newTPR
+
+		operatorService, err = operator.New(operatorConfig)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -170,9 +328,9 @@ func New(config Config) (*Service, error) {
 
 	newService := &Service{
 		// Dependencies.
-		Crt:     crtService,
-		Healthz: healthzService,
-		Version: versionService,
+		Healthz:  healthzService,
+		Operator: operatorService,
+		Version:  versionService,
 
 		// Internals
 		bootOnce: sync.Once{},
@@ -181,18 +339,8 @@ func New(config Config) (*Service, error) {
 	return newService, nil
 }
 
-type Service struct {
-	// Dependencies.
-	Crt     *crt.Service
-	Healthz *healthz.Service
-	Version *version.Service
-
-	// Internals.
-	bootOnce sync.Once
-}
-
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		s.Crt.Boot()
+		s.Operator.Boot()
 	})
 }
