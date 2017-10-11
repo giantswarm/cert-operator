@@ -26,10 +26,10 @@ import (
 
 	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
-	"github.com/giantswarm/cert-operator/service/ca"
 	"github.com/giantswarm/cert-operator/service/crt"
 	"github.com/giantswarm/cert-operator/service/healthz"
 	"github.com/giantswarm/cert-operator/service/operator"
+	caresource "github.com/giantswarm/cert-operator/service/resource/ca"
 	legacyresource "github.com/giantswarm/cert-operator/service/resource/legacy"
 )
 
@@ -122,21 +122,6 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var caService *ca.Service
-	{
-		c := ca.DefaultConfig()
-
-		c.Flag = config.Flag
-		c.Logger = config.Logger
-		c.VaultClient = vaultClient
-		c.Viper = config.Viper
-
-		caService, err = ca.New(c)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
-
 	var crtService *crt.Service
 	{
 		crtConfig := crt.DefaultConfig()
@@ -150,6 +135,22 @@ func New(config Config) (*Service, error) {
 		crtConfig.Viper = config.Viper
 
 		crtService, err = crt.New(crtConfig)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	var caResource framework.Resource
+	{
+		c := caresource.DefaultConfig()
+
+		c.Logger = config.Logger
+		c.VaultClient = vaultClient
+
+		c.CATTL = s.Config.Viper.GetString(s.Config.Flag.Service.Vault.Config.PKI.CA.TTL)
+		c.CommonNameFormat = config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format)
+
+		caResource, err = caresource.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -182,6 +183,7 @@ func New(config Config) (*Service, error) {
 	var resources []framework.Resource
 	{
 		resources = []framework.Resource{
+			caResource,
 			legacyResource,
 		}
 
