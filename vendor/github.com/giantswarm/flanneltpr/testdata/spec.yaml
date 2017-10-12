@@ -1,0 +1,26 @@
+bridge:
+  spec:
+    dns:
+      servers:
+      - 10.1.101.1
+      - 10.1.101.2
+    interface: ens4f1
+    ntp:
+      servers:
+      - 10.1.101.1
+      - 10.1.101.2
+    privateNetwork: 10.4.10.0/24
+  docker:
+    image: quay.io/giantswarm/k8s-network-bridge
+cluster:
+  customer: batman
+  id: 85f2g
+  namespace: 85f2g
+flannel:
+  spec:
+    network: 172.26.0.0/16
+    runDir: /run/flannel
+    subnetLen: 30
+    vni: 26
+  docker:
+    image: quay.io/coreos/flannel
