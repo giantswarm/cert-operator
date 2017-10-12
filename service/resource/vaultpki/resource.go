@@ -1,4 +1,4 @@
-package pkibackend
+package vaultpki
 
 import (
 	"github.com/giantswarm/microerror"
@@ -9,7 +9,7 @@ import (
 
 const (
 	// Name is the identifier of the resource.
-	Name = "pkibackend"
+	Name = "vaultpki"
 	// VaultAllowSubDomains defines whether to allow the generated root CA of the
 	// PKI backend to allow sub domains as common names.
 	VaultAllowSubDomains = "true"
@@ -21,7 +21,7 @@ const (
 type Config struct {
 	// Dependencies.
 	Logger      micrologger.Logger
-	vaultClient *vaultclient.Client
+	VaultClient *vaultclient.Client
 
 	// Settings.
 	CATTL            string
@@ -64,10 +64,10 @@ func New(config Config) (*Resource, error) {
 	}
 
 	// Settings.
-	if config.CATTL == nil {
+	if config.CATTL == "" {
 		return nil, microerror.Maskf(invalidConfigError, "config.CATTL must not be empty")
 	}
-	if config.CommonNameFormat == nil {
+	if config.CommonNameFormat == "" {
 		return nil, microerror.Maskf(invalidConfigError, "config.CommonNameFormat must not be empty")
 	}
 
@@ -94,15 +94,15 @@ func (r *Resource) Underlying() framework.Resource {
 	return r
 }
 
-func toCAState(v interface{}) (CAState, error) {
+func toVaultPKIState(v interface{}) (VaultPKIState, error) {
 	if v == nil {
-		return CAState{}, nil
+		return VaultPKIState{}, nil
 	}
 
-	caState, ok := v.(CAState)
+	vaultPKIState, ok := v.(VaultPKIState)
 	if !ok {
-		return nil, microerror.Maskf(wrongTypeError, "expected '%T', got '%T'", CAState{}, v)
+		return VaultPKIState{}, microerror.Maskf(wrongTypeError, "expected '%T', got '%T'", VaultPKIState{}, v)
 	}
 
-	return caState, nil
+	return vaultPKIState, nil
 }

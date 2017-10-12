@@ -1,4 +1,4 @@
-package pkibackend
+package vaultpki
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	apiv1 "k8s.io/client-go/pkg/api/v1"
 )
 
-func Test_Resource_Namespace_GetCreateState(t *testing.T) {
+func Test_Resource_Namespace_GetDeleteState(t *testing.T) {
 	testCases := []struct {
 		Obj               interface{}
 		Cur               interface{}
@@ -53,7 +53,19 @@ func Test_Resource_Namespace_GetCreateState(t *testing.T) {
 					},
 				},
 			},
-			ExpectedNamespace: nil,
+			ExpectedNamespace: &apiv1.Namespace{
+				TypeMeta: apismetav1.TypeMeta{
+					Kind:       "Namespace",
+					APIVersion: "v1",
+				},
+				ObjectMeta: apismetav1.ObjectMeta{
+					Name: "al9qy",
+					Labels: map[string]string{
+						"cluster":  "al9qy",
+						"customer": "test-customer",
+					},
+				},
+			},
 		},
 
 		{
@@ -78,19 +90,7 @@ func Test_Resource_Namespace_GetCreateState(t *testing.T) {
 					},
 				},
 			},
-			ExpectedNamespace: &apiv1.Namespace{
-				TypeMeta: apismetav1.TypeMeta{
-					Kind:       "Namespace",
-					APIVersion: "v1",
-				},
-				ObjectMeta: apismetav1.ObjectMeta{
-					Name: "al9qy",
-					Labels: map[string]string{
-						"cluster":  "al9qy",
-						"customer": "test-customer",
-					},
-				},
-			},
+			ExpectedNamespace: nil,
 		},
 	}
 
@@ -107,7 +107,7 @@ func Test_Resource_Namespace_GetCreateState(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.GetCreateState(context.TODO(), tc.Obj, tc.Cur, tc.Des)
+		result, err := newResource.GetDeleteState(context.TODO(), tc.Obj, tc.Cur, tc.Des)
 		if err != nil {
 			t.Fatal("case", i+1, "expected", nil, "got", err)
 		}

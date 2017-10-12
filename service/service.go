@@ -19,6 +19,7 @@ import (
 	"github.com/giantswarm/operatorkit/framework/retryresource"
 	"github.com/giantswarm/operatorkit/informer"
 	"github.com/giantswarm/operatorkit/tpr"
+	"github.com/giantswarm/vaultpki"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,8 +30,8 @@ import (
 	"github.com/giantswarm/cert-operator/service/crt"
 	"github.com/giantswarm/cert-operator/service/healthz"
 	"github.com/giantswarm/cert-operator/service/operator"
-	caresource "github.com/giantswarm/cert-operator/service/resource/ca"
 	legacyresource "github.com/giantswarm/cert-operator/service/resource/legacy"
+	vaultpkiresource "github.com/giantswarm/cert-operator/service/resource/vaultpki"
 )
 
 const (
@@ -140,9 +141,9 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var caResource framework.Resource
+	var vaultPKI *vaultpki.VaultPKI
 	{
-		c := caresource.DefaultConfig()
+		c := vaultpki.DefaultConfig()
 
 		c.Logger = config.Logger
 		c.VaultClient = vaultClient
@@ -150,7 +151,20 @@ func New(config Config) (*Service, error) {
 		c.CATTL = s.Config.Viper.GetString(s.Config.Flag.Service.Vault.Config.PKI.CA.TTL)
 		c.CommonNameFormat = config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format)
 
-		caResource, err = caresource.New(c)
+		vaultPKI, err = vaultpki.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	var vaultPKIResource framework.Resource
+	{
+		c := vaultpkiresource.DefaultConfig()
+
+		c.Logger = config.Logger
+		c.VaultPKI = vaultPKI
+
+		vaultPKIResource, err = vaultpkiresource.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -183,7 +197,7 @@ func New(config Config) (*Service, error) {
 	var resources []framework.Resource
 	{
 		resources = []framework.Resource{
-			caResource,
+			vaultPKIResource,
 			legacyResource,
 		}
 

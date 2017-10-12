@@ -1,11 +1,11 @@
-package pkibackend
+package vaultpki
 
 import (
 	"context"
 
 	"github.com/giantswarm/microerror"
 
-	"github.com/giantswarm/flannel-operator/service/key"
+	"github.com/giantswarm/cert-operator/service/key"
 )
 
 func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interface{}, error) {
@@ -16,13 +16,14 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computing the desired PKI backend state")
 
-	caState := CAState{
-		IsBackendMounted: true,
-		IsCAGenerated:    true,
+	vaultPKIState := VaultPKIState{
+		BackendExists: true,
+		CAExists:    true,
+		IsPolicyCreated:  true,
 		IsRoleCreated:    true,
 	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computed the desired PKI backend state")
 
-	return caState, nil
+	return vaultPKIState, nil
 }

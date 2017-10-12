@@ -1,13 +1,11 @@
-package pkibackend
+package vaultpki
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/giantswarm/microerror"
-	vaultclient "github.com/hashicorp/vault/api"
 
-	"github.com/giantswarm/flannel-operator/service/key"
+	"github.com/giantswarm/cert-operator/service/key"
 )
 
 func (r *Resource) GetCreateState(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
@@ -15,25 +13,25 @@ func (r *Resource) GetCreateState(ctx context.Context, obj, currentState, desire
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
-	currentCAState, err := toCAState(currentState)
+	currentVaultPKIState, err := toVaultPKIState(currentState)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
-	desiredCAState, err := toCAState(desiredState)
+	desiredVaultPKIState, err := toVaultPKIState(desiredState)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the PKI backend has to be created")
 
-	var caStateToCreate CAState
-	if !currentCAState.IsBackendMounted || !currentCAState.IsCAGenerated || !currentCAState.IsRoleCreated {
-		caStateToCreate = desiredCAState
+	var vaultPKIStateToCreate VaultPKIState
+	if !currentVaultPKIState.BackendExists || !currentVaultPKIState.CAExists || !currentVaultPKIState.IsPolicyCreated || !currentVaultPKIState.IsRoleCreated {
+		vaultPKIStateToCreate = desiredVaultPKIState
 	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the PKI backend has to be created")
 
-	return caStateToCreate, nil
+	return vaultPKIStateToCreate, nil
 }
 
 func (r *Resource) ProcessCreateState(ctx context.Context, obj, createState interface{}) error {
@@ -41,44 +39,43 @@ func (r *Resource) ProcessCreateState(ctx context.Context, obj, createState inte
 	if err != nil {
 		return microerror.Mask(err)
 	}
-	caStateToCreate, err := toCAState(createState)
+	vaultPKIStateToCreate, err := toVaultPKIState(createState)
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	if !caStateToCreate.IsBackendMounted || !caStateToCreate.IsCAGenerated || !caStateToCreate.IsRoleCreated {
+	if !vaultPKIStateToCreate.BackendExists || !vaultPKIStateToCreate.CAExists || !vaultPKIStateToCreate.IsRoleCreated {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "creating the PKI backend in the Kubernetes API")
 
-		if !caStateToCreate.IsBackendMounted {
-			k := key.VaultMountPKIPath(customObject)
-			v := &vaultclient.MountInput{
-				Config: vaultclient.MountConfigInput{
-					MaxLeaseTTL: r.caTTL,
-				},
-				Description: fmt.Sprintf("PKI backend for cluster ID '%s'", key.ClusterID(customObject)),
-				Type:        VaultMountType,
-			}
-
-			err := r.vaultClient.Sys().Mount(k, v)
+		if !vaultPKIStateToCreate.BackendExists {
+			err := r.vaultPKI.CreateBackend(key.ClusterID(customObject))
 			if err != nil {
 				return microerror.Mask(err)
 			}
 		}
 
-		if !caStateToCreate.IsCAGenerated {
-			k := key.VaultWriteCAPath(customObject)
-			v := map[string]interface{}{
-				"common_name": key.VaultCommonName(customObject, r.commonNameFormat),
-				"ttl":         r.caTTL,
-			}
-
-			_, err := r.vaultClient.Logical().Write(k, v)
+		if !vaultPKIStateToCreate.CAExists {
+			err := r.vaultPKI.CreateCA(key.ClusterID(customObject))
 			if err != nil {
 				return microerror.Mask(err)
 			}
 		}
 
-		if !caStateToCreate.IsRoleCreated {
+		if !vaultPKIStateToCreate.IsPolicyCreated {
+			k := key.VaultPolicyName(customObject)
+			v := `
+				path "pki-` + key.ClusterID(customObject) + `/issue/role-` + key.ClusterID(customObject) + `" {
+					policy = "write"
+				}
+			`
+
+			err := r.vaultClient.Sys().PutPolicy(k, v)
+			if err != nil {
+				return microerror.Mask(err)
+			}
+		}
+
+		if !vaultPKIStateToCreate.IsRoleCreated {
 			k := key.VaultWriteRolePath(customObject)
 			v := map[string]interface{}{
 				"allow_bare_domains": key.VaultAllowBareDomains(customObject),

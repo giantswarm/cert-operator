@@ -1,4 +1,4 @@
-package pkibackend
+package vaultpki
 
 import (
 	"strings"

@@ -10,13 +10,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/giantswarm/cert-operator/flag"
-	"github.com/giantswarm/cert-operator/service/ca"
 )
 
 // Config represents the configuration used to create a Crt service.
 type Config struct {
 	// Dependencies.
-	CAService   *ca.Service
 	Logger      micrologger.Logger
 	K8sClient   kubernetes.Interface
 	VaultClient *vaultapi.Client
@@ -37,7 +35,6 @@ type certificateSecret struct {
 func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
-		CAService:   nil,
 		K8sClient:   nil,
 		Logger:      nil,
 		VaultClient: nil,
@@ -56,9 +53,6 @@ type Service struct {
 // New creates a new configured Crt service.
 func New(config Config) (*Service, error) {
 	// Dependencies.
-	if config.CAService == nil {
-		return nil, microerror.Maskf(invalidConfigError, "ca service must not be empty")
-	}
 	if config.K8sClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "kubernetes client must not be empty")
 	}

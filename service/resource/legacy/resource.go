@@ -62,11 +62,7 @@ func (r *Resource) GetCreateState(ctx context.Context, obj, currentState, desire
 	cert := *obj.(*certificatetpr.CustomObject)
 	r.logger.Log("debug", fmt.Sprintf("creating certificate '%s'", cert.Spec.CommonName))
 
-	err := r.crtService.Config.CAService.SetupPKIAndWait(cert.Spec)
-	if err != nil {
-		return nil, microerror.Maskf(err, "could not setup PKI")
-	}
-	err = r.crtService.IssueAndWait(cert.Spec)
+	err := r.crtService.IssueAndWait(cert.Spec)
 	if err != nil {
 		return nil, microerror.Maskf(err, "could not issue cert")
 	}

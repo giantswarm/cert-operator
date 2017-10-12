@@ -32,36 +32,24 @@ func VaultAltNames(customObject certificatetpr.CustomObject) []string {
 	return customObject.Spec.AltNames
 }
 
-func VaultAllowBareDomains(customObject certificatetpr.CustomObject) string {
-	return customObject.AllowBareDomains
+func VaultAllowBareDomains(customObject certificatetpr.CustomObject) bool {
+	return customObject.Spec.AllowBareDomains
 }
 
 func VaultCommonName(customObject certificatetpr.CustomObject, commonNameFormat string) string {
 	return fmt.Sprintf(commonNameFormat, ClusterID(customObject))
 }
 
-func VaultListMountsPath(customObject certificatetpr.CustomObject) string {
-	return fmt.Sprintf("pki-%s", ClusterID(customObject))
-}
-
 func VaultListRolesPath(customObject certificatetpr.CustomObject) string {
 	return fmt.Sprintf("pki-%s/roles/", ClusterID(customObject))
 }
 
-func VaultMountPKIPath(customObject certificatetpr.CustomObject) string {
-	return fmt.Sprintf("pki-%s", ClusterID(customObject))
-}
-
-func VaultReadCAPath(customObject certificatetpr.CustomObject) string {
-	return fmt.Sprintf("pki-%s/cert/ca", ClusterID(customObject))
+func VaultPolicyName(customObject certificatetpr.CustomObject) string {
+	return fmt.Sprintf("pki-issue-policy-%s", ClusterID(customObject))
 }
 
 func VaultRoleName(customObject certificatetpr.CustomObject) string {
 	return fmt.Sprintf("role-%s", ClusterID(customObject))
-}
-
-func VaultWriteCAPath(customObject certificatetpr.CustomObject) string {
-	return fmt.Sprintf("pki-%s/root/generate/internal", ClusterID(customObject))
 }
 
 func VaultWriteRolePath(customObject certificatetpr.CustomObject) string {

@@ -1,4 +1,4 @@
-package pkibackend
+package vaultpki
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
 
-	"github.com/giantswarm/flannel-operator/service/key"
+	"github.com/giantswarm/cert-operator/service/key"
 )
 
 func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interface{}, error) {
@@ -17,19 +17,24 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "looking for the PKI backend state in the Vault API")
 
-	var caState CAState
+	var vaultPKIState VaultPKIState
 	{
-		caState.isBackendMounted, err = r.isBackendMounted(customObject)
+		vaultPKIState.BackendExists, err = r.vaultPKI.BackendExists(key.ClusterID(customObject))
 		if err != nil {
 			return false, microerror.Mask(err)
 		}
 
-		catState.IsCAGenerated, err = r.IsCAGenerated(customObject)
+		vaultPKIState.CAExists, err = r.vaultPKI.CAExists(key.ClusterID(customObject))
 		if err != nil {
 			return false, microerror.Mask(err)
 		}
 
-		caState.IsRoleCreated, err = r.IsRoleCreated(customObject)
+		vaultPKIState.IsPolicyCreated, err = r.isPolicyCreated(customObject)
+		if err != nil {
+			return false, microerror.Mask(err)
+		}
+
+		vaultPKIState.IsRoleCreated, err = r.isRoleCreated(customObject)
 		if err != nil {
 			return false, microerror.Mask(err)
 		}
@@ -37,57 +42,25 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found the PKI backend state in the Vault API")
 
-	return validPKIBackend, nil
+	return vaultPKIState, nil
 }
 
-func (r *Resource) isBackendMounted(customObject certificatetpr.CustomObject) (bool, error) {
-	// Create a client for the system backend configured with the Vault token
-	// used for the current cluster's PKI backend.
+func (r *Resource) isPolicyCreated(customObject certificatetpr.CustomObject) (bool, error) {
+	// Get the system backend for policy operations.
 	sysBackend := r.vaultClient.Sys()
 
-	// Check if a PKI for the given cluster ID exists.
-	mounts, err := sysBackend.ListMounts()
-	if IsNoVaultHandlerDefined(err) {
-		return false, nil
-	} else if err != nil {
+	// Check if the policy is already there.
+	policies, err := sysBackend.ListPolicies()
+	if err != nil {
 		return false, microerror.Mask(err)
 	}
-	mountOutput, ok := mounts[key.VaultListMountsPath(customObject)+"/"]
-	if !ok || mountOutput.Type != "pki" {
-		return false, nil
+	for _, p := range policies {
+		if p == key.VaultPolicyName(customObject) {
+			return true, nil
+		}
 	}
 
-	return true, nil
-}
-
-func (r *Resource) isCAGenerated(customObject certificatetpr.CustomObject) (bool, error) {
-	// Create a client for the logical backend configured with the Vault token
-	// used for the current cluster's PKI backend.
-	logicalBackend := r.vaultClient.Logical()
-
-	// Check if a root CA for the given cluster ID exists.
-	secret, err := logicalBackend.Read(key.VaultReadCAPath(customObject))
-	if IsNoVaultHandlerDefined(err) {
-		return false, nil
-	} else if err != nil {
-		return false, microerror.Mask(err)
-	}
-
-	// If the secret is nil, the CA has not been generated.
-	if secret == nil {
-		return false, nil
-	}
-
-	certificate, ok := secret.Data["certificate"]
-	if ok && certificate == "" {
-		return false, nil
-	}
-	err, ok = secret.Data["error"]
-	if ok && err != "" {
-		return false, nil
-	}
-
-	return true, nil
+	return false, nil
 }
 
 func (r *Resource) isRoleCreated(customObject certificatetpr.CustomObject) (bool, error) {
