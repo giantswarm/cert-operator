@@ -3,7 +3,7 @@ package vaultpki
 import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	vaultclient "github.com/hashicorp/vault/api"
+	vaultapi "github.com/hashicorp/vault/api"
 )
 
 const (
@@ -13,7 +13,7 @@ const (
 
 type Config struct {
 	Logger      micrologger.Logger
-	VaultClient *vaultclient.Client
+	VaultClient *vaultapi.Client
 
 	CATTL            string
 	CommonNameFormat string
@@ -31,7 +31,7 @@ func DefaultConfig() Config {
 
 type VaultPKI struct {
 	logger      micrologger.Logger
-	vaultClient *vaultclient.Client
+	vaultClient *vaultapi.Client
 
 	caTTL            string
 	commonNameFormat string

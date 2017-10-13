@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	"github.com/giantswarm/microerror"
-	vaultclient "github.com/hashicorp/vault/api"
+	vaultapi "github.com/hashicorp/vault/api"
 
 	"github.com/giantswarm/vaultpki/key"
 )
 
 func (p *VaultPKI) CreateBackend(ID string) error {
 	k := key.MountPKIPath(ID)
-	v := &vaultclient.MountInput{
-		Config: vaultclient.MountConfigInput{
+	v := &vaultapi.MountInput{
+		Config: vaultapi.MountConfigInput{
 			MaxLeaseTTL: p.caTTL,
 		},
 		Description: fmt.Sprintf("PKI backend for cluster ID '%s'", ID),
