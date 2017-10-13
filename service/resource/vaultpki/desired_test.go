@@ -2,39 +2,29 @@ package vaultpki
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
-	"github.com/giantswarm/flanneltpr"
-	flanneltprspec "github.com/giantswarm/flanneltpr/spec"
+	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/micrologger/microloggertest"
-	"k8s.io/client-go/kubernetes/fake"
-	apiv1 "k8s.io/client-go/pkg/api/v1"
+	"github.com/giantswarm/vaultpki/vaultpkitest"
 )
 
-func Test_Resource_Namespace_GetDesiredState(t *testing.T) {
+func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 	testCases := []struct {
-		Obj          interface{}
-		ExpectedName string
+		Obj           interface{}
+		ExpectedState VaultPKIState
 	}{
 		{
-			Obj: &flanneltpr.CustomObject{
-				Spec: flanneltpr.Spec{
-					Cluster: flanneltprspec.Cluster{
-						ID: "al9qy",
-					},
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID: "foobar",
 				},
 			},
-			ExpectedName: "flannel-network-al9qy",
-		},
-		{
-			Obj: &flanneltpr.CustomObject{
-				Spec: flanneltpr.Spec{
-					Cluster: flanneltprspec.Cluster{
-						ID: "foobar",
-					},
-				},
+			ExpectedState: VaultPKIState{
+				BackendExists: true,
+				CAExists:      true,
 			},
-			ExpectedName: "flannel-network-foobar",
 		},
 	}
 
@@ -42,8 +32,10 @@ func Test_Resource_Namespace_GetDesiredState(t *testing.T) {
 	var newResource *Resource
 	{
 		resourceConfig := DefaultConfig()
-		resourceConfig.K8sClient = fake.NewSimpleClientset()
+
 		resourceConfig.Logger = microloggertest.New()
+		resourceConfig.VaultPKI = vaultpkitest.New()
+
 		newResource, err = New(resourceConfig)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
@@ -55,9 +47,9 @@ func Test_Resource_Namespace_GetDesiredState(t *testing.T) {
 		if err != nil {
 			t.Fatal("case", i+1, "expected", nil, "got", err)
 		}
-		name := result.(*apiv1.Namespace).Name
-		if tc.ExpectedName != name {
-			t.Fatalf("case %d expected %#v got %#v", i+1, tc.ExpectedName, name)
+		r := result.(VaultPKIState)
+		if !reflect.DeepEqual(r, tc.ExpectedState) {
+			t.Fatalf("case %d expected %#v got %#v", i+1, tc.ExpectedState, r)
 		}
 	}
 }

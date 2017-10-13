@@ -14,16 +14,14 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computing the desired PKI backend state")
+	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computing the desired Vault PKI")
 
 	vaultPKIState := VaultPKIState{
 		BackendExists: true,
-		CAExists:    true,
-		IsPolicyCreated:  true,
-		IsRoleCreated:    true,
+		CAExists:      true,
 	}
 
-	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computed the desired PKI backend state")
+	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computed the desired Vault PKI")
 
 	return vaultPKIState, nil
 }
