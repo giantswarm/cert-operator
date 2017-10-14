@@ -21,6 +21,7 @@ import (
 	"github.com/giantswarm/operatorkit/tpr"
 	"github.com/giantswarm/vaultcrt"
 	"github.com/giantswarm/vaultpki"
+	"github.com/giantswarm/vaultrole"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -30,6 +31,7 @@ import (
 	"github.com/giantswarm/cert-operator/flag"
 	"github.com/giantswarm/cert-operator/service/healthz"
 	"github.com/giantswarm/cert-operator/service/operator"
+	vaultcrtresource "github.com/giantswarm/cert-operator/service/resource/vaultcrt"
 	vaultpkiresource "github.com/giantswarm/cert-operator/service/resource/vaultpki"
 )
 
@@ -144,7 +146,7 @@ func New(config Config) (*Service, error) {
 		c.Logger = config.Logger
 		c.VaultClient = vaultClient
 
-		c.CATTL = s.Config.Viper.GetString(s.Config.Flag.Service.Vault.Config.PKI.CA.TTL)
+		c.CATTL = config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CA.TTL)
 		c.CommonNameFormat = config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format)
 
 		vaultPKI, err = vaultpki.New(c)
@@ -153,16 +155,16 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var vaultRole vaultcrt.Interface
+	var vaultRole vaultrole.Interface
 	{
-		c := vaultcrt.DefaultConfig()
+		c := vaultrole.DefaultConfig()
 
 		c.Logger = config.Logger
 		c.VaultClient = vaultClient
 
 		c.CommonNameFormat = config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format)
 
-		vaultRole, err = vaultcrt.New(c)
+		vaultRole, err = vaultrole.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}

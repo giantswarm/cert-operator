@@ -6,6 +6,7 @@ import (
 	"github.com/giantswarm/microerror"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apiv1 "k8s.io/client-go/pkg/api/v1"
 
 	"github.com/giantswarm/cert-operator/service/key"
 )
@@ -26,7 +27,7 @@ func (r *Resource) GetDeleteState(ctx context.Context, obj, currentState, desire
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the secret has to be deleted")
 
-	var secretToDelete Secret
+	var secretToDelete *apiv1.Secret
 	if currentSecret != nil {
 		secretToDelete = desiredSecret
 	}

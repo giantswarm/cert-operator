@@ -7,6 +7,7 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/vaultcrt"
 	"github.com/giantswarm/vaultrole"
+	apiv1 "k8s.io/client-go/pkg/api/v1"
 
 	"github.com/giantswarm/cert-operator/service/key"
 )
@@ -64,7 +65,7 @@ func (r *Resource) ProcessCreateState(ctx context.Context, obj, createState inte
 	if secretToCreate != nil {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "creating the secret in the Kubernetes API")
 
-		err := r.k8sClient.Core().Secrets(r.namespace).Create(secretToCreate)
+		_, err := r.k8sClient.Core().Secrets(r.namespace).Create(secretToCreate)
 		if err != nil {
 			return microerror.Mask(err)
 		}
@@ -81,7 +82,7 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 	// NOTE we do not set organizations yet because the TPR does not support it.
 	c := vaultrole.ExistsConfig{
 		ID:            key.ClusterID(customObject),
-		Organizations: "",
+		Organizations: nil,
 	}
 	exists, err := r.vaultRole.Exists(c)
 	if err != nil {
@@ -94,7 +95,7 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 			AllowSubdomains:  AllowSubDomains,
 			AltNames:         key.AltNames(customObject),
 			ID:               key.ClusterID(customObject),
-			Organizations:    "",
+			Organizations:    nil,
 			TTL:              key.RoleTTL(customObject),
 		}
 		err := r.vaultRole.Create(c)
@@ -115,7 +116,7 @@ func (r *Resource) issueCertificate(customObject certificatetpr.CustomObject) (s
 	}
 	result, err := r.vaultCrt.Create(c)
 	if err != nil {
-		return microerror.Mask(err)
+		return "", "", "", microerror.Mask(err)
 	}
 
 	return result.CA, result.Crt, result.Key, nil

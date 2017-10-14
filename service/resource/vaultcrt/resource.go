@@ -7,6 +7,7 @@ import (
 	"github.com/giantswarm/vaultcrt"
 	"github.com/giantswarm/vaultrole"
 	"k8s.io/client-go/kubernetes"
+	apiv1 "k8s.io/client-go/pkg/api/v1"
 )
 
 const (
@@ -41,6 +42,8 @@ type Resource struct {
 	logger    micrologger.Logger
 	vaultCrt  vaultcrt.Interface
 	vaultRole vaultrole.Interface
+
+	namespace string
 }
 
 func New(config Config) (*Resource, error) {
