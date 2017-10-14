@@ -2,11 +2,18 @@ package key
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
 )
+
+func AllowBareDomains(customObject certificatetpr.CustomObject) bool {
+	return customObject.Spec.AllowBareDomains
+}
+
+func AltNames(customObject certificatetpr.CustomObject) []string {
+	return customObject.Spec.AltNames
+}
 
 func ClusterID(customObject certificatetpr.CustomObject) string {
 	return customObject.Spec.ClusterID
@@ -16,8 +23,24 @@ func ClusterComponent(customObject certificatetpr.CustomObject) string {
 	return customObject.Spec.ClusterComponent
 }
 
+func CommonName(customObject certificatetpr.CustomObject, commonNameFormat string) string {
+	return fmt.Sprintf(commonNameFormat, ClusterID(customObject))
+}
+
+func CrtTTL(customObject certificatetpr.CustomObject) string {
+	return customObject.Spec.TTL
+}
+
+func IPSANs(customObject certificatetpr.CustomObject) []string {
+	return customObject.Spec.IPSANs
+}
+
 func SecretName(customObject certificatetpr.CustomObject) string {
 	return fmt.Sprintf("%s-%s", customObject.Spec.ClusterID, customObject.Spec.ClusterComponent)
+}
+
+func RoleTTL(customObject certificatetpr.CustomObject) string {
+	return customObject.Spec.TTL
 }
 
 func ToCustomObject(v interface{}) (certificatetpr.CustomObject, error) {
@@ -32,22 +55,8 @@ func ToCustomObject(v interface{}) (certificatetpr.CustomObject, error) {
 
 // TODO move these keys to the vault* repos.
 
-func VaultAllowedDomains(customObject certificatetpr.CustomObject, commonNameFormat string) string {
-	commonName := VaultCommonName(customObject, commonNameFormat)
-	domains := append([]string{commonName}, VaultAltNames(customObject)...)
-	return strings.Join(domains, ",")
-}
-
-func VaultAltNames(customObject certificatetpr.CustomObject) []string {
-	return customObject.Spec.AltNames
-}
-
 func VaultAllowBareDomains(customObject certificatetpr.CustomObject) bool {
 	return customObject.Spec.AllowBareDomains
-}
-
-func VaultCommonName(customObject certificatetpr.CustomObject, commonNameFormat string) string {
-	return fmt.Sprintf(commonNameFormat, ClusterID(customObject))
 }
 
 func VaultListRolesPath(customObject certificatetpr.CustomObject) string {

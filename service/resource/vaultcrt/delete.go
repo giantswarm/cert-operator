@@ -4,7 +4,8 @@ import (
 	"context"
 
 	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/operatorkit/context/deletionallowedcontext"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/giantswarm/cert-operator/service/key"
 )
@@ -23,18 +24,14 @@ func (r *Resource) GetDeleteState(ctx context.Context, obj, currentState, desire
 		return nil, microerror.Mask(err)
 	}
 
+	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the secret has to be deleted")
+
 	var secretToDelete Secret
-	if deletionallowedcontext.IsDeletionAllowed(ctx) {
-		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the PKI backend has to be deleted")
-
-		if currentSecret.BackendExists || currentSecret.CAExists || currentSecret.IsPolicyCreated || currentSecret.IsRoleCreated {
-			secretToDelete = desiredSecret
-		}
-
-		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the PKI backend has to be deleted")
-	} else {
-		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "not computing delete state because PKI backends are not allowed to be deleted")
+	if currentSecret != nil {
+		secretToDelete = desiredSecret
 	}
+
+	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the secret has to be deleted")
 
 	return secretToDelete, nil
 }
@@ -49,31 +46,19 @@ func (r *Resource) ProcessDeleteState(ctx context.Context, obj, deleteState inte
 		return microerror.Mask(err)
 	}
 
-	if secretToDelete.BackendExists || secretToDelete.CAExists || secretToDelete.IsPolicyCreated || secretToDelete.IsRoleCreated {
-		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "deleting the PKI backend in the Vault API")
+	if secretToDelete != nil {
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "deleting the sercet in the Kubernetes API")
 
-		if secretToDelete.BackendExists || secretToDelete.CAExists {
-			err := r.vaultPKI.DeleteBackend(key.ClusterID(customObject))
-			if err != nil {
-				return microerror.Mask(err)
-			}
+		err = r.k8sClient.CoreV1().Namespaces().Delete(secretToDelete.Name, &apismetav1.DeleteOptions{})
+		if apierrors.IsNotFound(err) {
+			// fall through
+		} else if err != nil {
+			return microerror.Mask(err)
 		}
 
-		if secretToDelete.IsPolicyCreated {
-			// TODO
-		}
-
-		if secretToDelete.IsRoleCreated {
-			k := key.VaultPolicyName(customObject)
-			err := r.vaultClient.Sys().DeletePolicy(k)
-			if err != nil {
-				return microerror.Mask(err)
-			}
-		}
-
-		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "deleted the PKI backend in the Vault API")
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "deleted the sercet in the Kubernetes API")
 	} else {
-		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "the PKI backend does not need to be deleted from the Vault API")
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "the sercet does not need to be deleted from the Kubernetes API")
 	}
 
 	return nil

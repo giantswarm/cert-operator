@@ -129,6 +129,8 @@ func New(config Config) (*Service, error) {
 		c.Logger = config.Logger
 		c.VaultClient = vaultClient
 
+		c.CommonNameFormat = config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format)
+
 		vaultCrt, err = vaultcrt.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
@@ -157,6 +159,8 @@ func New(config Config) (*Service, error) {
 
 		c.Logger = config.Logger
 		c.VaultClient = vaultClient
+
+		c.CommonNameFormat = config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format)
 
 		vaultRole, err = vaultcrt.New(c)
 		if err != nil {
