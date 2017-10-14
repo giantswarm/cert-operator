@@ -1,0 +1,60 @@
+hash: 82d5fa193eff4720901455c9b475f5a7773658331bf2ec4b53d4b5c4ea7f9bd5
+updated: 2017-10-14T17:51:34.88710793+02:00
+imports:
+- name: github.com/fatih/structs
+  version: 7e5a8eef611ee84dd359503f3969f80df4c50723
+- name: github.com/giantswarm/microerror
+  version: 5ade94eb4ee35ef72eb9382228470caeddb29989
+- name: github.com/giantswarm/micrologger
+  version: 8a69b2ab80ba2d0bd40d609206518fefacfc8fdf
+- name: github.com/go-kit/kit
+  version: a9ca6725cbbea455e61c6bc8a1ed28e81eb3493b
+  subpackages:
+  - log
+- name: github.com/go-logfmt/logfmt
+  version: 390ab7935ee28ec6b286364bba9b4dd6410cb3d5
+- name: github.com/go-stack/stack
+  version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
+- name: github.com/hashicorp/errwrap
+  version: 7554cd9344cec97297fa6649b055a8c98c2a1e55
+- name: github.com/hashicorp/go-cleanhttp
+  version: 3573b8b52aa7b37b9358d966a898feb387f62437
+- name: github.com/hashicorp/go-multierror
+  version: 83588e72410abfbe4df460eeb6f30841ae47d4c4
+- name: github.com/hashicorp/go-rootcerts
+  version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
+- name: github.com/hashicorp/hcl
+  version: 42e33e2d55a0ff1d6263f738896ea8c13571a8d0
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
+- name: github.com/hashicorp/vault
+  version: 0b20ae0b9b7a748d607082b1add3663a28e31b68
+  subpackages:
+  - api
+  - helper/compressutil
+  - helper/jsonutil
+- name: github.com/juju/errgo
+  version: 08cceb5d0b5331634b9826762a8fd53b29b86ad8
+- name: github.com/kr/logfmt
+  version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
+- name: github.com/mitchellh/go-homedir
+  version: b8bc1bf767474819792c23f32d8286a45736f1c6
+- name: github.com/mitchellh/mapstructure
+  version: d0303fe809921458f417bcf828397a65db30a7e4
+- name: github.com/sethgrid/pester
+  version: 0af5bab1e1ea2860c5aef8e77427bab011d774d8
+- name: golang.org/x/net
+  version: f2499483f923065a842d38eb4c7f1927e6fc6e6d
+  subpackages:
+  - http2
+  - http2/hpack
+  - idna
+  - lex/httplex
+testImports: []

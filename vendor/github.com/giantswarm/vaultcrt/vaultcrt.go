@@ -1,43 +1,37 @@
-package vaultpki
+package vaultcrt
 
 import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	vaultapi "github.com/hashicorp/vault/api"
-)
-
-const (
-	// MountType is the mount type used to mount a PKI backend in Vault.
-	MountType = "pki"
+	vaultclient "github.com/hashicorp/vault/api"
 )
 
 type Config struct {
 	Logger      micrologger.Logger
-	VaultClient *vaultapi.Client
+	VaultClient *vaultclient.Client
 
-	CATTL            string
 	CommonNameFormat string
 }
 
 func DefaultConfig() Config {
-	return Config{
+	config := Config{
 		Logger:      nil,
 		VaultClient: nil,
 
-		CATTL:            "",
 		CommonNameFormat: "",
 	}
+
+	return config
 }
 
-type VaultPKI struct {
+type VaultCrt struct {
 	logger      micrologger.Logger
-	vaultClient *vaultapi.Client
+	vaultClient *vaultclient.Client
 
-	caTTL            string
 	commonNameFormat string
 }
 
-func New(config Config) (*VaultPKI, error) {
+func New(config Config) (*VaultCrt, error) {
 	if config.Logger == nil {
 		return nil, microerror.Maskf(invalidConfigError, "config.Logger must not be empty")
 	}
@@ -45,20 +39,16 @@ func New(config Config) (*VaultPKI, error) {
 		return nil, microerror.Maskf(invalidConfigError, "config.VaultClient must not be empty")
 	}
 
-	if config.CATTL == "" {
-		return nil, microerror.Maskf(invalidConfigError, "config.CATTL must not be empty")
-	}
 	if config.CommonNameFormat == "" {
 		return nil, microerror.Maskf(invalidConfigError, "config.CommonNameFormat must not be empty")
 	}
 
-	p := &VaultPKI{
+	c := &VaultCrt{
 		logger:      config.Logger,
 		vaultClient: config.VaultClient,
 
-		caTTL:            config.CATTL,
 		commonNameFormat: config.CommonNameFormat,
 	}
 
-	return p, nil
+	return c, nil
 }
