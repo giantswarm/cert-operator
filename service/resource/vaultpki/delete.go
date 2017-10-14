@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/operatorkit/context/deletionallowedcontext"
+	"github.com/giantswarm/operatorkit/framework/context/deletionallowedcontext"
 
 	"github.com/giantswarm/cert-operator/service/key"
 )
