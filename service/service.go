@@ -12,11 +12,11 @@ import (
 	"github.com/giantswarm/microendpoint/service/version"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	"github.com/giantswarm/operatorkit/client/k8s"
+	"github.com/giantswarm/operatorkit/client/k8sclient"
 	"github.com/giantswarm/operatorkit/framework"
-	"github.com/giantswarm/operatorkit/framework/logresource"
-	"github.com/giantswarm/operatorkit/framework/metricsresource"
-	"github.com/giantswarm/operatorkit/framework/retryresource"
+	"github.com/giantswarm/operatorkit/framework/resource/logresource"
+	"github.com/giantswarm/operatorkit/framework/resource/metricsresource"
+	"github.com/giantswarm/operatorkit/framework/resource/retryresource"
 	"github.com/giantswarm/operatorkit/informer"
 	"github.com/giantswarm/operatorkit/tpr"
 	vaultapi "github.com/hashicorp/vault/api"
@@ -94,7 +94,7 @@ func New(config Config) (*Service, error) {
 
 	var k8sClient kubernetes.Interface
 	{
-		k8sConfig := k8s.DefaultConfig()
+		k8sConfig := k8sclient.DefaultConfig()
 
 		k8sConfig.Address = config.Viper.GetString(config.Flag.Service.Kubernetes.Address)
 		k8sConfig.Logger = config.Logger
@@ -103,7 +103,7 @@ func New(config Config) (*Service, error) {
 		k8sConfig.TLS.CrtFile = config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CrtFile)
 		k8sConfig.TLS.KeyFile = config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.KeyFile)
 
-		k8sClient, err = k8s.NewClient(k8sConfig)
+		k8sClient, err = k8sclient.New(k8sConfig)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
