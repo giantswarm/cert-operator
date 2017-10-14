@@ -1,5 +1,5 @@
 hash: 6dd190af3fd1cbd042399da3c6e0ecedd13d37afbebb20f5fa07d9d5171e0302
-updated: 2017-10-10T18:42:06.690143095+02:00
+updated: 2017-10-14T22:04:14.664576703+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
@@ -80,14 +80,13 @@ imports:
   subpackages:
   - memory
 - name: github.com/giantswarm/operatorkit
-  version: 6ed6f05e679d8c9d07e6176e138f89bdea3e24bc
+  version: 98c6de5ed3f51c956402ec46bdbf473f6394bb64
   subpackages:
-  - client/k8s
   - framework
-  - framework/canceledcontext
-  - framework/logresource
-  - framework/metricsresource
-  - framework/retryresource
+  - framework/context/canceledcontext
+  - framework/resource/logresource
+  - framework/resource/metricsresource
+  - framework/resource/retryresource
   - informer
   - tpr
 - name: github.com/giantswarm/vaulthealthz
@@ -218,7 +217,7 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 4d6af280c76ff7d266434f2dba207c4b75dfc076
+  version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
 - name: github.com/spf13/jwalterweatherman
   version: 12bd96e66386c1960ab0f74ced1362f66f552f7b
 - name: github.com/spf13/pflag
