@@ -14,7 +14,11 @@ import:
   version: master
 - package: github.com/giantswarm/vaulthealthz
   version: master
+- package: github.com/giantswarm/vaultcrt
+  version: init
 - package: github.com/giantswarm/vaultpki
+  version: init
+- package: github.com/giantswarm/vaultrole
   version: init
 - package: github.com/stretchr/testify
   version: ^1.1.4

@@ -12,6 +12,14 @@ func ClusterID(customObject certificatetpr.CustomObject) string {
 	return customObject.Spec.ClusterID
 }
 
+func ClusterComponent(customObject certificatetpr.CustomObject) string {
+	return customObject.Spec.ClusterComponent
+}
+
+func SecretName(customObject certificatetpr.CustomObject) string {
+	return fmt.Sprintf("%s-%s", customObject.Spec.ClusterID, customObject.Spec.ClusterComponent)
+}
+
 func ToCustomObject(v interface{}) (certificatetpr.CustomObject, error) {
 	customObjectPointer, ok := v.(*certificatetpr.CustomObject)
 	if !ok {
@@ -21,6 +29,8 @@ func ToCustomObject(v interface{}) (certificatetpr.CustomObject, error) {
 
 	return customObject, nil
 }
+
+// TODO move these keys to the vault* repos.
 
 func VaultAllowedDomains(customObject certificatetpr.CustomObject, commonNameFormat string) string {
 	commonName := VaultCommonName(customObject, commonNameFormat)
@@ -50,8 +60,4 @@ func VaultPolicyName(customObject certificatetpr.CustomObject) string {
 
 func VaultRoleName(customObject certificatetpr.CustomObject) string {
 	return fmt.Sprintf("role-%s", ClusterID(customObject))
-}
-
-func VaultWriteRolePath(customObject certificatetpr.CustomObject) string {
-	return fmt.Sprintf("pki-%s/roles/%s", ClusterID(customObject), VaultRoleName(customObject))
 }

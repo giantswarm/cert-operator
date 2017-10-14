@@ -19,6 +19,7 @@ import (
 	"github.com/giantswarm/operatorkit/framework/retryresource"
 	"github.com/giantswarm/operatorkit/informer"
 	"github.com/giantswarm/operatorkit/tpr"
+	"github.com/giantswarm/vaultcrt"
 	"github.com/giantswarm/vaultpki"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
@@ -27,10 +28,8 @@ import (
 
 	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
-	"github.com/giantswarm/cert-operator/service/crt"
 	"github.com/giantswarm/cert-operator/service/healthz"
 	"github.com/giantswarm/cert-operator/service/operator"
-	legacyresource "github.com/giantswarm/cert-operator/service/resource/legacy"
 	vaultpkiresource "github.com/giantswarm/cert-operator/service/resource/vaultpki"
 )
 
@@ -123,25 +122,20 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var crtService *crt.Service
+	var vaultCrt vaultcrt.Interface
 	{
-		crtConfig := crt.DefaultConfig()
+		c := vaultcrt.DefaultConfig()
 
-		crtConfig.CAService = caService
-		crtConfig.K8sClient = k8sClient
-		crtConfig.Logger = config.Logger
-		crtConfig.VaultClient = vaultClient
+		c.Logger = config.Logger
+		c.VaultClient = vaultClient
 
-		crtConfig.Flag = config.Flag
-		crtConfig.Viper = config.Viper
-
-		crtService, err = crt.New(crtConfig)
+		vaultCrt, err = vaultcrt.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
 	}
 
-	var vaultPKI *vaultpki.VaultPKI
+	var vaultPKI vaultpki.Interface
 	{
 		c := vaultpki.DefaultConfig()
 
@@ -157,6 +151,34 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
+	var vaultRole vaultcrt.Interface
+	{
+		c := vaultcrt.DefaultConfig()
+
+		c.Logger = config.Logger
+		c.VaultClient = vaultClient
+
+		vaultRole, err = vaultcrt.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	var vaultCrtResource framework.Resource
+	{
+		c := vaultcrtresource.DefaultConfig()
+
+		c.K8sClient = k8sClient
+		c.Logger = config.Logger
+		c.VaultCrt = vaultCrt
+		c.VaultRole = vaultRole
+
+		vaultCrtResource, err = vaultcrtresource.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
 	var vaultPKIResource framework.Resource
 	{
 		c := vaultpkiresource.DefaultConfig()
@@ -165,19 +187,6 @@ func New(config Config) (*Service, error) {
 		c.VaultPKI = vaultPKI
 
 		vaultPKIResource, err = vaultpkiresource.New(c)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
-
-	var legacyResource framework.Resource
-	{
-		c := legacyresource.DefaultConfig()
-
-		c.CrtService = crtService
-		c.Logger = config.Logger
-
-		legacyResource, err = legacyresource.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -198,7 +207,7 @@ func New(config Config) (*Service, error) {
 	{
 		resources = []framework.Resource{
 			vaultPKIResource,
-			legacyResource,
+			vaultCrtResource,
 		}
 
 		logWrapConfig := logresource.DefaultWrapConfig()

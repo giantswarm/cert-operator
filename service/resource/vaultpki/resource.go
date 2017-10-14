@@ -8,13 +8,7 @@ import (
 )
 
 const (
-	// Name is the identifier of the resource.
 	Name = "vaultpki"
-	// VaultAllowSubDomains defines whether to allow the generated root CA of the
-	// Vault PKI to allow sub domains as common names.
-	VaultAllowSubDomains = "true"
-	// VaultMountType is the mount type used to mount a PKI backend in Vault.
-	VaultMountType = "pki"
 )
 
 type Config struct {
