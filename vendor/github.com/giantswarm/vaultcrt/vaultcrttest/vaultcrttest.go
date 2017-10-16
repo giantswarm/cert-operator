@@ -10,5 +10,11 @@ func New() *VaultCrtTest {
 }
 
 func (r *VaultCrtTest) Create(config vaultcrt.CreateConfig) (vaultcrt.CreateResult, error) {
-	return vaultcrt.CreateResult{}, nil
+	result := vaultcrt.CreateResult{
+		CA:           "test CA",
+		Crt:          "test crt",
+		Key:          "test key",
+		SerialNumber: "test serial number",
+	}
+	return result, nil
 }
