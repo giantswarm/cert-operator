@@ -23,6 +23,10 @@ func ClusterComponent(customObject certificatetpr.CustomObject) string {
 	return customObject.Spec.ClusterComponent
 }
 
+func CommonName(customObject certificatetpr.CustomObject) string {
+	return customObject.Spec.CommonName
+}
+
 func CrtTTL(customObject certificatetpr.CustomObject) string {
 	return customObject.Spec.TTL
 }
