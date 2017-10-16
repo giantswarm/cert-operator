@@ -13,8 +13,8 @@ import (
 func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 	testCases := []struct {
 		Obj           interface{}
-		Cur           interface{}
-		Des           interface{}
+		CurrentState  interface{}
+		DesiredState  interface{}
 		ExpectedState VaultPKIState
 	}{
 		{
@@ -23,8 +23,8 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 					ClusterID: "foobar",
 				},
 			},
-			Cur:           VaultPKIState{},
-			Des:           VaultPKIState{},
+			CurrentState:  VaultPKIState{},
+			DesiredState:  VaultPKIState{},
 			ExpectedState: VaultPKIState{},
 		},
 
@@ -34,8 +34,8 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 					ClusterID: "foobar",
 				},
 			},
-			Cur: VaultPKIState{},
-			Des: VaultPKIState{
+			CurrentState: VaultPKIState{},
+			DesiredState: VaultPKIState{
 				BackendExists: true,
 				CAExists:      true,
 			},
@@ -51,11 +51,11 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 					ClusterID: "foobar",
 				},
 			},
-			Cur: VaultPKIState{
+			CurrentState: VaultPKIState{
 				BackendExists: false,
 				CAExists:      true,
 			},
-			Des: VaultPKIState{
+			DesiredState: VaultPKIState{
 				BackendExists: true,
 				CAExists:      true,
 			},
@@ -71,11 +71,11 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 					ClusterID: "foobar",
 				},
 			},
-			Cur: VaultPKIState{
+			CurrentState: VaultPKIState{
 				BackendExists: false,
 				CAExists:      false,
 			},
-			Des: VaultPKIState{
+			DesiredState: VaultPKIState{
 				BackendExists: true,
 				CAExists:      true,
 			},
@@ -101,7 +101,7 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.GetCreateState(context.TODO(), tc.Obj, tc.Cur, tc.Des)
+		result, err := newResource.GetCreateState(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
 		if err != nil {
 			t.Fatal("case", i+1, "expected", nil, "got", err)
 		}
