@@ -26,14 +26,14 @@ func (r *Resource) GetCreateState(ctx context.Context, obj, currentState, desire
 	fmt.Printf("1\n")
 
 	var vaultPKIStateToCreate VaultPKIState
-	if currentVaultPKIState.BackendExists {
+	if currentVaultPKIState.BackendMissing {
 		fmt.Printf("2\n")
-		vaultPKIStateToCreate.BackendExists = currentVaultPKIState.BackendExists
+		vaultPKIStateToCreate.BackendMissing = currentVaultPKIState.BackendMissing
 	}
 	fmt.Printf("3\n")
-	if currentVaultPKIState.CAExists {
+	if currentVaultPKIState.CAMissing {
 		fmt.Printf("4\n")
-		vaultPKIStateToCreate.CAExists = currentVaultPKIState.CAExists
+		vaultPKIStateToCreate.CAMissing = currentVaultPKIState.CAMissing
 	}
 
 	fmt.Printf("5\n")
@@ -55,25 +55,29 @@ func (r *Resource) ProcessCreateState(ctx context.Context, obj, createState inte
 		return microerror.Mask(err)
 	}
 
-	fmt.Printf("%#v\n", vaultPKIStateToCreate)
+	fmt.Printf("vaultPKIStateToCreate: %#v\n", vaultPKIStateToCreate)
 
-	if !vaultPKIStateToCreate.BackendExists {
+	if vaultPKIStateToCreate.BackendMissing {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "creating the Vault PKI in the Vault API")
+
 		err := r.vaultPKI.CreateBackend(key.ClusterID(customObject))
 		if err != nil {
 			return microerror.Mask(err)
 		}
+
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "created the Vault PKI in the Vault API")
 	} else {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "the Vault PKI does not need to be created in the Vault API")
 	}
 
-	if !vaultPKIStateToCreate.CAExists {
+	if vaultPKIStateToCreate.CAMissing {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "creating the root CA in the Vault PKI")
+
 		err := r.vaultPKI.CreateCA(key.ClusterID(customObject))
 		if err != nil {
 			return microerror.Mask(err)
 		}
+
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "created the root CA in the Vault PKI")
 	} else {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "the root CA does not need to be created in the Vault PKI")

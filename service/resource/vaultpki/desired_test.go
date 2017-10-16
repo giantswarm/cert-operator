@@ -22,8 +22,8 @@ func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 				},
 			},
 			ExpectedState: VaultPKIState{
-				BackendExists: true,
-				CAExists:      true,
+				BackendMissing: false,
+				CAMissing:      false,
 			},
 		},
 	}

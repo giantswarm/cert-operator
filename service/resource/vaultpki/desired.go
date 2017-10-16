@@ -17,8 +17,8 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computing the desired Vault PKI")
 
 	vaultPKIState := VaultPKIState{
-		BackendExists: true,
-		CAExists:      true,
+		BackendMissing: false,
+		CAMissing:      false,
 	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computed the desired Vault PKI")

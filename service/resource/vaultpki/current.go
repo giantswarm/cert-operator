@@ -18,15 +18,17 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 
 	var vaultPKIState VaultPKIState
 	{
-		vaultPKIState.BackendExists, err = r.vaultPKI.BackendExists(key.ClusterID(customObject))
+		backendExists, err := r.vaultPKI.BackendExists(key.ClusterID(customObject))
 		if err != nil {
 			return false, microerror.Mask(err)
 		}
+		vaultPKIState.BackendMissing = !backendExists
 
-		vaultPKIState.CAExists, err = r.vaultPKI.CAExists(key.ClusterID(customObject))
+		caExists, err := r.vaultPKI.CAExists(key.ClusterID(customObject))
 		if err != nil {
 			return false, microerror.Mask(err)
 		}
+		vaultPKIState.CAMissing = !caExists
 	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found the Vault PKI in the Vault API")

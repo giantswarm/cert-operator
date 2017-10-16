@@ -1,6 +1,6 @@
 package vaultpki
 
 type VaultPKIState struct {
-	BackendExists bool
-	CAExists      bool
+	BackendMissing bool
+	CAMissing      bool
 }

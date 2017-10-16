@@ -36,16 +36,16 @@ func Test_Resource_VaultPKI_GetDeleteState(t *testing.T) {
 				},
 			},
 			CurrentState: VaultPKIState{
-				BackendExists: true,
-				CAExists:      true,
+				BackendMissing: true,
+				CAMissing:      true,
 			},
 			DesiredState: VaultPKIState{
-				BackendExists: true,
-				CAExists:      true,
+				BackendMissing: true,
+				CAMissing:      true,
 			},
 			ExpectedState: VaultPKIState{
-				BackendExists: false,
-				CAExists:      false,
+				BackendMissing: false,
+				CAMissing:      false,
 			},
 		},
 
@@ -57,12 +57,12 @@ func Test_Resource_VaultPKI_GetDeleteState(t *testing.T) {
 				},
 			},
 			CurrentState: VaultPKIState{
-				BackendExists: false,
-				CAExists:      false,
+				BackendMissing: false,
+				CAMissing:      false,
 			},
 			DesiredState: VaultPKIState{
-				BackendExists: false,
-				CAExists:      false,
+				BackendMissing: false,
+				CAMissing:      false,
 			},
 			ExpectedState: VaultPKIState{},
 		},

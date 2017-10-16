@@ -37,8 +37,8 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 			CurrentState: VaultPKIState{},
 			DesiredState: VaultPKIState{},
 			ExpectedState: VaultPKIState{
-				BackendExists: false,
-				CAExists:      false,
+				BackendMissing: false,
+				CAMissing:      false,
 			},
 		},
 
@@ -49,13 +49,13 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 				},
 			},
 			CurrentState: VaultPKIState{
-				BackendExists: false,
-				CAExists:      true,
+				BackendMissing: false,
+				CAMissing:      true,
 			},
 			DesiredState: VaultPKIState{},
 			ExpectedState: VaultPKIState{
-				BackendExists: false,
-				CAExists:      true,
+				BackendMissing: false,
+				CAMissing:      true,
 			},
 		},
 
@@ -66,13 +66,13 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 				},
 			},
 			CurrentState: VaultPKIState{
-				BackendExists: true,
-				CAExists:      false,
+				BackendMissing: true,
+				CAMissing:      false,
 			},
 			DesiredState: VaultPKIState{},
 			ExpectedState: VaultPKIState{
-				BackendExists: true,
-				CAExists:      false,
+				BackendMissing: true,
+				CAMissing:      false,
 			},
 		},
 
@@ -83,13 +83,13 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 				},
 			},
 			CurrentState: VaultPKIState{
-				BackendExists: true,
-				CAExists:      true,
+				BackendMissing: true,
+				CAMissing:      true,
 			},
 			DesiredState: VaultPKIState{},
 			ExpectedState: VaultPKIState{
-				BackendExists: true,
-				CAExists:      true,
+				BackendMissing: true,
+				CAMissing:      true,
 			},
 		},
 	}
