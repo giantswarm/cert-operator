@@ -8,6 +8,7 @@ import (
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultpki/vaultpkitest"
+	vaultapi "github.com/hashicorp/vault/api"
 )
 
 func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
@@ -34,11 +35,21 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 					ClusterID: "foobar",
 				},
 			},
-			CurrentState: VaultPKIState{},
-			DesiredState: VaultPKIState{},
+			CurrentState: VaultPKIState{
+				Backend:       nil,
+				CACertificate: "placeholder",
+			},
+			DesiredState: VaultPKIState{
+				Backend: &vaultapi.MountOutput{
+					Type: "pki",
+				},
+				CACertificate: "placeholder",
+			},
 			ExpectedState: VaultPKIState{
-				BackendMissing: false,
-				CAMissing:      false,
+				Backend: &vaultapi.MountOutput{
+					Type: "pki",
+				},
+				CACertificate: "",
 			},
 		},
 
@@ -49,13 +60,20 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 				},
 			},
 			CurrentState: VaultPKIState{
-				BackendMissing: false,
-				CAMissing:      true,
+				Backend: &vaultapi.MountOutput{
+					Type: "pki",
+				},
+				CACertificate: "",
 			},
-			DesiredState: VaultPKIState{},
+			DesiredState: VaultPKIState{
+				Backend: &vaultapi.MountOutput{
+					Type: "pki",
+				},
+				CACertificate: "placeholder",
+			},
 			ExpectedState: VaultPKIState{
-				BackendMissing: false,
-				CAMissing:      true,
+				Backend:       nil,
+				CACertificate: "placeholder",
 			},
 		},
 
@@ -66,30 +84,20 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 				},
 			},
 			CurrentState: VaultPKIState{
-				BackendMissing: true,
-				CAMissing:      false,
-			},
-			DesiredState: VaultPKIState{},
-			ExpectedState: VaultPKIState{
-				BackendMissing: true,
-				CAMissing:      false,
-			},
-		},
-
-		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+				Backend: &vaultapi.MountOutput{
+					Type: "pki",
 				},
+				CACertificate: "placeholder",
 			},
-			CurrentState: VaultPKIState{
-				BackendMissing: true,
-				CAMissing:      true,
+			DesiredState: VaultPKIState{
+				Backend: &vaultapi.MountOutput{
+					Type: "pki",
+				},
+				CACertificate: "placeholder",
 			},
-			DesiredState: VaultPKIState{},
 			ExpectedState: VaultPKIState{
-				BackendMissing: true,
-				CAMissing:      true,
+				Backend:       nil,
+				CACertificate: "",
 			},
 		},
 	}

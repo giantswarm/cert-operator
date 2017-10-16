@@ -8,6 +8,7 @@ import (
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultpki/vaultpkitest"
+	vaultapi "github.com/hashicorp/vault/api"
 )
 
 func Test_Resource_VaultPKI_GetDeleteState(t *testing.T) {
@@ -36,16 +37,20 @@ func Test_Resource_VaultPKI_GetDeleteState(t *testing.T) {
 				},
 			},
 			CurrentState: VaultPKIState{
-				BackendMissing: true,
-				CAMissing:      true,
+				Backend: &vaultapi.MountOutput{
+					Type: "pki",
+				},
+				CACertificate: "placeholder",
 			},
 			DesiredState: VaultPKIState{
-				BackendMissing: true,
-				CAMissing:      true,
+				Backend: &vaultapi.MountOutput{
+					Type: "pki",
+				},
+				CACertificate: "placeholder",
 			},
 			ExpectedState: VaultPKIState{
-				BackendMissing: false,
-				CAMissing:      false,
+				Backend:       nil,
+				CACertificate: "",
 			},
 		},
 
@@ -57,14 +62,19 @@ func Test_Resource_VaultPKI_GetDeleteState(t *testing.T) {
 				},
 			},
 			CurrentState: VaultPKIState{
-				BackendMissing: false,
-				CAMissing:      false,
+				Backend:       nil,
+				CACertificate: "",
 			},
 			DesiredState: VaultPKIState{
-				BackendMissing: false,
-				CAMissing:      false,
+				Backend: &vaultapi.MountOutput{
+					Type: "pki",
+				},
+				CACertificate: "placeholder",
 			},
-			ExpectedState: VaultPKIState{},
+			ExpectedState: VaultPKIState{
+				Backend:       nil,
+				CACertificate: "",
+			},
 		},
 	}
 

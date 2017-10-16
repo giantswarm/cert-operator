@@ -8,6 +8,7 @@ import (
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultpki/vaultpkitest"
+	vaultapi "github.com/hashicorp/vault/api"
 )
 
 func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
@@ -22,8 +23,24 @@ func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 				},
 			},
 			ExpectedState: VaultPKIState{
-				BackendMissing: false,
-				CAMissing:      false,
+				Backend: &vaultapi.MountOutput{
+					Type: "pki",
+				},
+				CACertificate: "placeholder",
+			},
+		},
+
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID: "al9qy",
+				},
+			},
+			ExpectedState: VaultPKIState{
+				Backend: &vaultapi.MountOutput{
+					Type: "pki",
+				},
+				CACertificate: "placeholder",
 			},
 		},
 	}

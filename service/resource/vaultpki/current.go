@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/giantswarm/microerror"
+	"github.com/giantswarm/vaultpki"
 
 	"github.com/giantswarm/cert-operator/service/key"
 )
@@ -18,17 +19,19 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 
 	var vaultPKIState VaultPKIState
 	{
-		backendExists, err := r.vaultPKI.BackendExists(key.ClusterID(customObject))
-		if err != nil {
+		vaultPKIState.Backend, err = r.vaultPKI.GetBackend(key.ClusterID(customObject))
+		if vaultpki.IsNotFound(err) {
+			// fall through
+		} else if err != nil {
 			return false, microerror.Mask(err)
 		}
-		vaultPKIState.BackendMissing = !backendExists
 
-		caExists, err := r.vaultPKI.CAExists(key.ClusterID(customObject))
-		if err != nil {
+		vaultPKIState.CACertificate, err = r.vaultPKI.GetCACertificate(key.ClusterID(customObject))
+		if vaultpki.IsNotFound(err) {
+			// fall through
+		} else if err != nil {
 			return false, microerror.Mask(err)
 		}
-		vaultPKIState.CAMissing = !caExists
 	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found the Vault PKI in the Vault API")

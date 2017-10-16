@@ -1,6 +1,8 @@
 package vaultpki
 
+import vaultapi "github.com/hashicorp/vault/api"
+
 type VaultPKIState struct {
-	BackendMissing bool
-	CAMissing      bool
+	Backend       *vaultapi.MountOutput
+	CACertificate string
 }

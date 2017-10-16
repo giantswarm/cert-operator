@@ -18,13 +18,20 @@ func (r *Resource) GetDeleteState(ctx context.Context, obj, currentState, desire
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
+	desiredVaultPKIState, err := toVaultPKIState(desiredState)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
 
 	var vaultPKIStateToDelete VaultPKIState
 	if deletionallowedcontext.IsDeletionAllowed(ctx) {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the Vault PKI has to be deleted")
 
-		if !currentVaultPKIState.BackendMissing || !currentVaultPKIState.CAMissing {
-			vaultPKIStateToDelete = currentVaultPKIState
+		if currentVaultPKIState.Backend == nil {
+			vaultPKIStateToDelete.Backend = desiredVaultPKIState.Backend
+		}
+		if currentVaultPKIState.CACertificate == "" {
+			vaultPKIStateToDelete.CACertificate = desiredVaultPKIState.CACertificate
 		}
 
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the Vault PKI has to be deleted")
@@ -45,7 +52,7 @@ func (r *Resource) ProcessDeleteState(ctx context.Context, obj, deleteState inte
 		return microerror.Mask(err)
 	}
 
-	if !vaultPKIStateToDelete.BackendMissing || !vaultPKIStateToDelete.CAMissing {
+	if vaultPKIStateToDelete.Backend != nil || vaultPKIStateToDelete.CACertificate != "" {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "deleting the Vault PKI in the Vault API")
 
 		err := r.vaultPKI.DeleteBackend(key.ClusterID(customObject))

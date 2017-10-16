@@ -17,15 +17,19 @@ func (r *Resource) GetCreateState(ctx context.Context, obj, currentState, desire
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
+	desiredVaultPKIState, err := toVaultPKIState(desiredState)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the Vault PKI has to be created")
 
 	var vaultPKIStateToCreate VaultPKIState
-	if currentVaultPKIState.BackendMissing {
-		vaultPKIStateToCreate.BackendMissing = currentVaultPKIState.BackendMissing
+	if currentVaultPKIState.Backend == nil {
+		vaultPKIStateToCreate.Backend = desiredVaultPKIState.Backend
 	}
-	if currentVaultPKIState.CAMissing {
-		vaultPKIStateToCreate.CAMissing = currentVaultPKIState.CAMissing
+	if currentVaultPKIState.CACertificate == "" {
+		vaultPKIStateToCreate.CACertificate = desiredVaultPKIState.CACertificate
 	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the Vault PKI has to be created")
@@ -43,7 +47,7 @@ func (r *Resource) ProcessCreateState(ctx context.Context, obj, createState inte
 		return microerror.Mask(err)
 	}
 
-	if vaultPKIStateToCreate.BackendMissing {
+	if vaultPKIStateToCreate.Backend == nil {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "creating the Vault PKI in the Vault API")
 
 		err := r.vaultPKI.CreateBackend(key.ClusterID(customObject))
@@ -56,7 +60,7 @@ func (r *Resource) ProcessCreateState(ctx context.Context, obj, createState inte
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "the Vault PKI does not need to be created in the Vault API")
 	}
 
-	if vaultPKIStateToCreate.CAMissing {
+	if vaultPKIStateToCreate.CACertificate == "" {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "creating the root CA in the Vault PKI")
 
 		err := r.vaultPKI.CreateCA(key.ClusterID(customObject))
