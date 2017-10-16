@@ -12,6 +12,7 @@ func (r *VaultRole) Create(config CreateConfig) error {
 	fmt.Printf("start VaultRole.Create\n")
 	defer fmt.Printf("end VaultRole.Create\n")
 
+	fmt.Printf("config: %#v\n", config)
 	fmt.Printf("key.RoleName: %#v\n", key.RoleName(config.ID, config.Organizations))
 
 	k := key.WriteRolePath(config.ID, config.Organizations)

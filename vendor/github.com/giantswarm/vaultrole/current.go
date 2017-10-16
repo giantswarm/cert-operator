@@ -12,6 +12,7 @@ func (r *VaultRole) Exists(config ExistsConfig) (bool, error) {
 	fmt.Printf("start VaultRole.Exists\n")
 	defer fmt.Printf("end VaultRole.Exists\n")
 
+	fmt.Printf("config: %#v\n", config)
 	fmt.Printf("key.RoleName: %#v\n", key.RoleName(config.ID, config.Organizations))
 
 	fmt.Printf("1\n")
