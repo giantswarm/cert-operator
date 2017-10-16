@@ -1,8 +1,8 @@
 package vaultcrt
 
 type Secret struct {
-	BackendExists bool
-	CAExists    bool
-	IsPolicyCreated  bool
-	IsRoleCreated    bool
+	BackendExists   bool
+	CAExists        bool
+	IsPolicyCreated bool
+	IsRoleCreated   bool
 }
