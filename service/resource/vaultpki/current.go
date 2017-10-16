@@ -15,26 +15,33 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "looking for the Vault PKI in the Vault API")
-
 	var vaultPKIState VaultPKIState
+
 	{
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "looking for the Vault PKI in the Vault API")
+
 		vaultPKIState.Backend, err = r.vaultPKI.GetBackend(key.ClusterID(customObject))
 		if vaultpki.IsNotFound(err) {
-			// fall through
+			r.logger.Log("cluster", key.ClusterID(customObject), "debug", "did not find the Vault PKI in the Vault API")
 		} else if err != nil {
 			return false, microerror.Mask(err)
-		}
-
-		vaultPKIState.CACertificate, err = r.vaultPKI.GetCACertificate(key.ClusterID(customObject))
-		if vaultpki.IsNotFound(err) {
-			// fall through
-		} else if err != nil {
-			return false, microerror.Mask(err)
+		} else {
+			r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found the Vault PKI in the Vault API")
 		}
 	}
 
-	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found the Vault PKI in the Vault API")
+	{
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "looking for the root CA in the Vault PKI")
+
+		vaultPKIState.CACertificate, err = r.vaultPKI.GetCACertificate(key.ClusterID(customObject))
+		if vaultpki.IsNotFound(err) {
+			r.logger.Log("cluster", key.ClusterID(customObject), "debug", "did not find the root CA in the Vault PKI")
+		} else if err != nil {
+			return false, microerror.Mask(err)
+		} else {
+			r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found the root CA in the Vault PKI")
+		}
+	}
 
 	return vaultPKIState, nil
 }
