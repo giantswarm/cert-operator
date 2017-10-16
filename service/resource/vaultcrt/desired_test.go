@@ -14,7 +14,7 @@ import (
 	apiv1 "k8s.io/client-go/pkg/api/v1"
 )
 
-func Test_Resource_Namespace_GetDesiredState(t *testing.T) {
+func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 	testCases := []struct {
 		Obj            interface{}
 		ExpectedSecret *apiv1.Secret
@@ -32,6 +32,29 @@ func Test_Resource_Namespace_GetDesiredState(t *testing.T) {
 					Labels: map[string]string{
 						"clusterID":        "foobar",
 						"clusterComponent": "api",
+					},
+				},
+				StringData: map[string]string{
+					"ca":  "",
+					"crt": "",
+					"key": "",
+				},
+			},
+		},
+
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID:        "al9qy",
+					ClusterComponent: "worker",
+				},
+			},
+			ExpectedSecret: &apiv1.Secret{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Name: "al9qy-worker",
+					Labels: map[string]string{
+						"clusterID":        "al9qy",
+						"clusterComponent": "worker",
 					},
 				},
 				StringData: map[string]string{

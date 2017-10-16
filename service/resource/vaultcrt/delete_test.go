@@ -9,11 +9,12 @@ import (
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
 	"github.com/giantswarm/vaultrole/vaultroletest"
+	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
 )
 
-func Test_Resource_Namespace_GetDeleteState(t *testing.T) {
+func Test_Resource_VaultCrt_GetDeleteState(t *testing.T) {
 	testCases := []struct {
 		Obj            interface{}
 		CurrentState   interface{}
@@ -26,9 +27,57 @@ func Test_Resource_Namespace_GetDeleteState(t *testing.T) {
 					ClusterID: "foobar",
 				},
 			},
+			CurrentState:   nil,
+			DesiredState:   &apiv1.Secret{},
+			ExpectedSecret: nil,
+		},
+
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID: "foobar",
+				},
+			},
 			CurrentState:   &apiv1.Secret{},
 			DesiredState:   &apiv1.Secret{},
 			ExpectedSecret: &apiv1.Secret{},
+		},
+
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID: "foobar",
+				},
+			},
+			CurrentState: &apiv1.Secret{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Name: "al9qy-worker",
+					Labels: map[string]string{
+						"clusterID":        "al9qy",
+						"clusterComponent": "worker",
+					},
+				},
+				StringData: map[string]string{
+					"ca":  "",
+					"crt": "",
+					"key": "",
+				},
+			},
+			DesiredState: &apiv1.Secret{},
+			ExpectedSecret: &apiv1.Secret{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Name: "al9qy-worker",
+					Labels: map[string]string{
+						"clusterID":        "al9qy",
+						"clusterComponent": "worker",
+					},
+				},
+				StringData: map[string]string{
+					"ca":  "",
+					"crt": "",
+					"key": "",
+				},
+			},
 		},
 	}
 

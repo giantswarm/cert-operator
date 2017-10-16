@@ -20,16 +20,12 @@ func (r *Resource) GetDeleteState(ctx context.Context, obj, currentState, desire
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
-	desiredSecret, err := toSecret(desiredState)
-	if err != nil {
-		return nil, microerror.Mask(err)
-	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the secret has to be deleted")
 
 	var secretToDelete *apiv1.Secret
 	if currentSecret != nil {
-		secretToDelete = desiredSecret
+		secretToDelete = currentSecret
 	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the secret has to be deleted")
