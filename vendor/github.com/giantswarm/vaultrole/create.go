@@ -2,6 +2,7 @@ package vaultrole
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/giantswarm/microerror"
 
@@ -20,7 +21,7 @@ func (r *VaultRole) Create(config CreateConfig) error {
 		"allow_bare_domains": config.AllowBareDomains,
 		"allow_subdomains":   config.AllowSubdomains,
 		"allowed_domains":    key.AllowedDomains(config.ID, r.commonNameFormat, config.AltNames),
-		"organization":       config.Organizations,
+		"organization":       strings.Join(config.Organizations, ","),
 		"ttl":                config.TTL,
 	}
 	fmt.Printf("k: %#v\n", k)
