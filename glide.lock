@@ -1,5 +1,5 @@
 hash: 89e140d153e515f5886c31d2d7c0b8c88b4ba314631df3698f80566d828d257d
-updated: 2017-10-16T15:08:20.122020758+02:00
+updated: 2017-10-16T15:55:21.513867736+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
@@ -91,7 +91,7 @@ imports:
 - name: github.com/giantswarm/vaulthealthz
   version: 383f97510e39ec4e653fa320c5672b9eb166a53d
 - name: github.com/giantswarm/vaultpki
-  version: e9524a547a9a873b945e1f5d5921699985bc4944
+  version: bbc7cc2ea47c23f2f1703bbe5662cc496c73ab43
   subpackages:
   - key
   - vaultpkitest

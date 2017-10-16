@@ -1,17 +1,12 @@
 package vaultrole
 
 import (
-	"fmt"
-
 	"github.com/giantswarm/microerror"
 
 	"github.com/giantswarm/vaultrole/key"
 )
 
 func (r *VaultRole) Exists(config ExistsConfig) (bool, error) {
-	fmt.Printf("start VaultRole.Exists\n")
-	defer fmt.Printf("end VaultRole.Exists\n")
-
 	// Check if a PKI for the given cluster ID exists.
 	secret, err := r.vaultClient.Logical().List(key.ListRolesPath(config.ID))
 	if IsNoVaultHandlerDefined(err) {
@@ -31,7 +26,6 @@ func (r *VaultRole) Exists(config ExistsConfig) (bool, error) {
 	if keys, ok := secret.Data["keys"]; ok {
 		if list, ok := keys.([]interface{}); ok {
 			for _, k := range list {
-				fmt.Printf("k: %#v\n", k)
 				if str, ok := k.(string); ok && str == key.RoleName(config.ID, config.Organizations) {
 					return true, nil
 				}

@@ -1,5 +1,9 @@
 package vaultpkitest
 
+import (
+	vaultapi "github.com/hashicorp/vault/api"
+)
+
 type VaultPKITest struct {
 }
 
@@ -25,4 +29,12 @@ func (p *VaultPKITest) CreateCA(ID string) error {
 
 func (p *VaultPKITest) DeleteBackend(ID string) error {
 	return nil
+}
+
+func (p *VaultPKITest) GetBackend(ID string) (*vaultapi.MountOutput, error) {
+	return nil, nil
+}
+
+func (p *VaultPKITest) GetCACertificate(ID string) (string, error) {
+	return "", nil
 }

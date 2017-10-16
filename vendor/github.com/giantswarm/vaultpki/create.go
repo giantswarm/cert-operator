@@ -15,7 +15,7 @@ func (p *VaultPKI) CreateBackend(ID string) error {
 		Config: vaultapi.MountConfigInput{
 			MaxLeaseTTL: p.caTTL,
 		},
-		Description: fmt.Sprintf("PKI backend for cluster ID '%s'", ID),
+		Description: fmt.Sprintf("PKI backend for ID '%s'", ID),
 		Type:        MountType,
 	}
 

@@ -2,48 +2,75 @@ package vaultpki
 
 import (
 	"github.com/giantswarm/microerror"
+	vaultapi "github.com/hashicorp/vault/api"
 
 	"github.com/giantswarm/vaultpki/key"
 )
 
 func (p *VaultPKI) BackendExists(ID string) (bool, error) {
-	// Check if a PKI for the given cluster ID exists.
-	mounts, err := p.vaultClient.Sys().ListMounts()
-	if IsNoVaultHandlerDefined(err) {
+	_, err := p.GetBackend(ID)
+	if IsNotFound(err) {
 		return false, nil
 	} else if err != nil {
 		return false, microerror.Mask(err)
-	}
-	mountOutput, ok := mounts[key.ListMountsPath(ID)]
-	if !ok || mountOutput.Type != "pki" {
-		return false, nil
 	}
 
 	return true, nil
 }
 
 func (p *VaultPKI) CAExists(ID string) (bool, error) {
-	// Check if a root CA for the given cluster ID exists.
-	secret, err := p.vaultClient.Logical().Read(key.ReadCAPath(ID))
-	if IsNoVaultHandlerDefined(err) {
+	_, err := p.GetCACertificate(ID)
+	if IsNotFound(err) {
 		return false, nil
 	} else if err != nil {
 		return false, microerror.Mask(err)
 	}
 
+	return true, nil
+}
+
+func (p *VaultPKI) GetBackend(ID string) (*vaultapi.MountOutput, error) {
+	mounts, err := p.vaultClient.Sys().ListMounts()
+	if IsNoVaultHandlerDefined(err) {
+		return nil, microerror.Maskf(notFoundError, "PKI backend for ID '%s'", ID)
+	} else if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
+	mountOutput, ok := mounts[key.ListMountsPath(ID)]
+	if !ok || mountOutput.Type != MountType {
+		return nil, microerror.Maskf(notFoundError, "PKI backend for ID '%s'", ID)
+	}
+
+	return mountOutput, nil
+}
+
+// GetCACertificate returns the public key of the root CA of the PKI backend
+// associated to the given ID, if any.
+func (p *VaultPKI) GetCACertificate(ID string) (string, error) {
+	secret, err := p.vaultClient.Logical().Read(key.ReadCAPath(ID))
+	if IsNoVaultHandlerDefined(err) {
+		return "", microerror.Maskf(notFoundError, "root CA for ID '%s'", ID)
+	} else if err != nil {
+		return "", microerror.Mask(err)
+	}
+
 	// If the secret is nil, the CA has not been generated.
 	if secret == nil {
-		return false, nil
+		return "", microerror.Maskf(notFoundError, "root CA for ID '%s'", ID)
 	}
 
-	dataCertificate, ok := secret.Data["certificate"]
-	if ok && dataCertificate == "" {
-		return false, nil
-	}
-	dataError, ok := secret.Data["error"]
-	if ok && dataError != "" {
-		return false, nil
+	var crt string
+	{
+		v, ok := secret.Data["certificate"]
+		if !ok {
+			return "", microerror.Maskf(executionFailedError, "certificate missing")
+		}
+		crt, ok = v.(string)
+		if !ok {
+			return "", microerror.Maskf(executionFailedError, "certificate must be string")
+		}
 	}
 
-	return true, nil
+	return crt, nil
 }
