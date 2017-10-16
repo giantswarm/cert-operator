@@ -4,6 +4,47 @@ import (
 	"testing"
 )
 
+func Test_AllowedDomains(t *testing.T) {
+	testCases := []struct {
+		ID               string
+		CommonNameFormat string
+		AltNames         []string
+		ExpectedResult   string
+	}{
+		{
+			ID:               "al9qy",
+			CommonNameFormat: "%s.g8s.gigantic.io",
+			AltNames: []string{
+				"kubernetes",
+				"kubernetes.default.svc.cluster.local",
+			},
+			ExpectedResult: "al9qy.g8s.gigantic.io,kubernetes,kubernetes.default.svc.cluster.local",
+		},
+
+		{
+			ID:               "al9qy",
+			CommonNameFormat: "%s.g8s.gigantic.io",
+			AltNames:         []string{},
+			ExpectedResult:   "al9qy.g8s.gigantic.io",
+		},
+
+		{
+			ID:               "al9qy",
+			CommonNameFormat: "%s.g8s.gigantic.io",
+			AltNames:         nil,
+			ExpectedResult:   "al9qy.g8s.gigantic.io",
+		},
+	}
+
+	for i, tc := range testCases {
+		result := AllowedDomains(tc.ID, tc.CommonNameFormat, tc.AltNames)
+
+		if result != tc.ExpectedResult {
+			t.Fatalf("case %d expected %#v got %#v", i+1, tc.ExpectedResult, result)
+		}
+	}
+}
+
 func Test_RoleName(t *testing.T) {
 	testCases := []struct {
 		ID             string

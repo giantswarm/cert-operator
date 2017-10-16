@@ -1,7 +1,6 @@
 package vaultrole
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/giantswarm/microerror"
@@ -10,12 +9,6 @@ import (
 )
 
 func (r *VaultRole) Create(config CreateConfig) error {
-	fmt.Printf("start VaultRole.Create\n")
-	defer fmt.Printf("end VaultRole.Create\n")
-
-	fmt.Printf("config: %#v\n", config)
-	fmt.Printf("key.RoleName: %#v\n", key.RoleName(config.ID, config.Organizations))
-
 	k := key.WriteRolePath(config.ID, config.Organizations)
 	v := map[string]interface{}{
 		"allow_bare_domains": config.AllowBareDomains,
@@ -24,8 +17,6 @@ func (r *VaultRole) Create(config CreateConfig) error {
 		"organization":       strings.Join(config.Organizations, ","),
 		"ttl":                config.TTL,
 	}
-	fmt.Printf("k: %#v\n", k)
-	fmt.Printf("v: %#v\n", v)
 
 	_, err := r.vaultClient.Logical().Write(k, v)
 	if err != nil {

@@ -1,5 +1,5 @@
 hash: 89e140d153e515f5886c31d2d7c0b8c88b4ba314631df3698f80566d828d257d
-updated: 2017-10-16T15:55:21.513867736+02:00
+updated: 2017-10-16T19:54:07.854839966+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
@@ -84,7 +84,7 @@ imports:
   - informer
   - tpr
 - name: github.com/giantswarm/vaultcrt
-  version: 4b721a61be13acbfea70e044277bde5a32668815
+  version: 6df4f963123f4f08fc2a413015e4432666ca7e7e
   subpackages:
   - key
   - vaultcrttest
@@ -96,7 +96,7 @@ imports:
   - key
   - vaultpkitest
 - name: github.com/giantswarm/vaultrole
-  version: 320d40f6905d75bb54e1076051113e1835965ae5
+  version: 64b191e6aebef10cd5e0cdf4aea73432d491bab8
   subpackages:
   - key
   - vaultroletest
@@ -230,7 +230,7 @@ imports:
 - name: github.com/spf13/jwalterweatherman
   version: 12bd96e66386c1960ab0f74ced1362f66f552f7b
 - name: github.com/spf13/pflag
-  version: a9789e855c7696159b7db0db7f440b449edf2b31
+  version: 1f33b80956cde38911d1f23d764deb8d77a649ce
 - name: github.com/spf13/viper
   version: d9cca5ef33035202efb1586825bdbb15ff9ec3ba
 - name: github.com/stretchr/testify
