@@ -79,10 +79,11 @@ func (r *Resource) ProcessCreateState(ctx context.Context, obj, createState inte
 }
 
 func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) error {
-	// NOTE we do not set organizations yet because the TPR does not support it.
 	c := vaultrole.ExistsConfig{
-		ID:            key.ClusterID(customObject),
-		Organizations: nil,
+		ID: key.ClusterID(customObject),
+		Organizations: []string{
+			key.ClusterComponent(customObject),
+		},
 	}
 	exists, err := r.vaultRole.Exists(c)
 	if err != nil {
@@ -95,8 +96,10 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 			AllowSubdomains:  AllowSubDomains,
 			AltNames:         key.AltNames(customObject),
 			ID:               key.ClusterID(customObject),
-			Organizations:    nil,
-			TTL:              key.RoleTTL(customObject),
+			Organizations: []string{
+				key.ClusterComponent(customObject),
+			},
+			TTL: key.RoleTTL(customObject),
 		}
 		err := r.vaultRole.Create(c)
 		if err != nil {
