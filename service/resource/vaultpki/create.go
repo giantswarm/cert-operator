@@ -44,26 +44,26 @@ func (r *Resource) ProcessCreateState(ctx context.Context, obj, createState inte
 		return microerror.Mask(err)
 	}
 
-	if !vaultPKIStateToCreate.BackendExists || !vaultPKIStateToCreate.CAExists {
-		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "creating the Vault PKI in the Kubernetes API")
-
-		if !vaultPKIStateToCreate.BackendExists {
-			err := r.vaultPKI.CreateBackend(key.ClusterID(customObject))
-			if err != nil {
-				return microerror.Mask(err)
-			}
+	if !vaultPKIStateToCreate.BackendExists {
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "creating the Vault PKI in the Vault API")
+		err := r.vaultPKI.CreateBackend(key.ClusterID(customObject))
+		if err != nil {
+			return microerror.Mask(err)
 		}
-
-		if !vaultPKIStateToCreate.CAExists {
-			err := r.vaultPKI.CreateCA(key.ClusterID(customObject))
-			if err != nil {
-				return microerror.Mask(err)
-			}
-		}
-
-		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "created the Vault PKI in the Kubernetes API")
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "created the Vault PKI in the Vault API")
 	} else {
-		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "the Vault PKI does not need to be created in the Kubernetes API")
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "the Vault PKI does not need to be created in the Vault API")
+	}
+
+	if !vaultPKIStateToCreate.CAExists {
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "creating the root CA in the Vault PKI")
+		err := r.vaultPKI.CreateCA(key.ClusterID(customObject))
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "created the root CA in the Vault PKI")
+	} else {
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "the root CA does not need to be created in the Vault PKI")
 	}
 
 	return nil
