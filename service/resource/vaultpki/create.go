@@ -2,7 +2,6 @@ package vaultpki
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/giantswarm/microerror"
 
@@ -21,24 +20,13 @@ func (r *Resource) GetCreateState(ctx context.Context, obj, currentState, desire
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the Vault PKI has to be created")
 
-	fmt.Printf("%#v\n", currentVaultPKIState)
-
-	fmt.Printf("1\n")
-
 	var vaultPKIStateToCreate VaultPKIState
 	if currentVaultPKIState.BackendMissing {
-		fmt.Printf("2\n")
 		vaultPKIStateToCreate.BackendMissing = currentVaultPKIState.BackendMissing
 	}
-	fmt.Printf("3\n")
 	if currentVaultPKIState.CAMissing {
-		fmt.Printf("4\n")
 		vaultPKIStateToCreate.CAMissing = currentVaultPKIState.CAMissing
 	}
-
-	fmt.Printf("5\n")
-
-	fmt.Printf("%#v\n", vaultPKIStateToCreate)
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the Vault PKI has to be created")
 
@@ -54,8 +42,6 @@ func (r *Resource) ProcessCreateState(ctx context.Context, obj, createState inte
 	if err != nil {
 		return microerror.Mask(err)
 	}
-
-	fmt.Printf("vaultPKIStateToCreate: %#v\n", vaultPKIStateToCreate)
 
 	if vaultPKIStateToCreate.BackendMissing {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "creating the Vault PKI in the Vault API")
