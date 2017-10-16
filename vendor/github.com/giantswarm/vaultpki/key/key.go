@@ -9,7 +9,7 @@ func CommonName(ID string, commonNameFormat string) string {
 }
 
 func ListMountsPath(ID string) string {
-	return fmt.Sprintf("pki-%s", ID)
+	return fmt.Sprintf("pki-%s/", ID)
 }
 
 func MountPKIPath(ID string) string {
