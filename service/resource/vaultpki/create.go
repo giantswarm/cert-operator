@@ -17,16 +17,15 @@ func (r *Resource) GetCreateState(ctx context.Context, obj, currentState, desire
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
-	desiredVaultPKIState, err := toVaultPKIState(desiredState)
-	if err != nil {
-		return nil, microerror.Mask(err)
-	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the Vault PKI has to be created")
 
 	var vaultPKIStateToCreate VaultPKIState
-	if !currentVaultPKIState.BackendExists || !currentVaultPKIState.CAExists {
-		vaultPKIStateToCreate = desiredVaultPKIState
+	if currentVaultPKIState.BackendExists {
+		vaultPKIStateToCreate.BackendExists = currentVaultPKIState.BackendExists
+	}
+	if currentVaultPKIState.CAExists {
+		vaultPKIStateToCreate.CAExists = currentVaultPKIState.CAExists
 	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the Vault PKI has to be created")

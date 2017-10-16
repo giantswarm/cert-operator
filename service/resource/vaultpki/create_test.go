@@ -35,50 +35,58 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 				},
 			},
 			CurrentState: VaultPKIState{},
-			DesiredState: VaultPKIState{
-				BackendExists: true,
-				CAExists:      true,
-			},
+			DesiredState: VaultPKIState{},
 			ExpectedState: VaultPKIState{
-				BackendExists: true,
-				CAExists:      true,
-			},
-		},
-
-		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
-				},
-			},
-			CurrentState: VaultPKIState{
-				BackendExists: false,
-				CAExists:      true,
-			},
-			DesiredState: VaultPKIState{
-				BackendExists: true,
-				CAExists:      true,
-			},
-			ExpectedState: VaultPKIState{
-				BackendExists: true,
-				CAExists:      true,
-			},
-		},
-
-		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
-				},
-			},
-			CurrentState: VaultPKIState{
 				BackendExists: false,
 				CAExists:      false,
 			},
-			DesiredState: VaultPKIState{
+		},
+
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID: "foobar",
+				},
+			},
+			CurrentState: VaultPKIState{
+				BackendExists: false,
+				CAExists:      true,
+			},
+			DesiredState: VaultPKIState{},
+			ExpectedState: VaultPKIState{
+				BackendExists: false,
+				CAExists:      true,
+			},
+		},
+
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID: "foobar",
+				},
+			},
+			CurrentState: VaultPKIState{
+				BackendExists: true,
+				CAExists:      false,
+			},
+			DesiredState: VaultPKIState{},
+			ExpectedState: VaultPKIState{
+				BackendExists: true,
+				CAExists:      false,
+			},
+		},
+
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID: "foobar",
+				},
+			},
+			CurrentState: VaultPKIState{
 				BackendExists: true,
 				CAExists:      true,
 			},
+			DesiredState: VaultPKIState{},
 			ExpectedState: VaultPKIState{
 				BackendExists: true,
 				CAExists:      true,
