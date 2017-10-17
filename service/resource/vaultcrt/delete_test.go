@@ -21,6 +21,7 @@ func Test_Resource_VaultCrt_GetDeleteState(t *testing.T) {
 		DesiredState   interface{}
 		ExpectedSecret *apiv1.Secret
 	}{
+		// Test 0 ensures that zero value input results in zero value output.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -32,6 +33,7 @@ func Test_Resource_VaultCrt_GetDeleteState(t *testing.T) {
 			ExpectedSecret: nil,
 		},
 
+		// Test 1 is the same as 0 but with initialized empty pointer values.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -43,6 +45,8 @@ func Test_Resource_VaultCrt_GetDeleteState(t *testing.T) {
 			ExpectedSecret: &apiv1.Secret{},
 		},
 
+		// Test 2 ensures that the delete state is defined by the current state
+		// since we want to remove the current state in case a delete event happens.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -100,11 +104,11 @@ func Test_Resource_VaultCrt_GetDeleteState(t *testing.T) {
 	for i, tc := range testCases {
 		result, err := newResource.GetDeleteState(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
 		if err != nil {
-			t.Fatal("case", i+1, "expected", nil, "got", err)
+			t.Fatal("case", i, "expected", nil, "got", err)
 		}
 		secret := result.(*apiv1.Secret)
 		if !reflect.DeepEqual(tc.ExpectedSecret, secret) {
-			t.Fatalf("case %d expected %#v got %#v", i+1, tc.ExpectedSecret, secret)
+			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedSecret, secret)
 		}
 	}
 }

@@ -16,6 +16,7 @@ func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 		Obj           interface{}
 		ExpectedState VaultPKIState
 	}{
+		// test 0 ensures the desired state is always the same placeholder state.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -30,6 +31,7 @@ func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 			},
 		},
 
+		// test 1 is the same as 0 but with a different custom object.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -62,11 +64,11 @@ func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 	for i, tc := range testCases {
 		result, err := newResource.GetDesiredState(context.TODO(), tc.Obj)
 		if err != nil {
-			t.Fatal("case", i+1, "expected", nil, "got", err)
+			t.Fatal("case", i, "expected", nil, "got", err)
 		}
 		r := result.(VaultPKIState)
 		if !reflect.DeepEqual(r, tc.ExpectedState) {
-			t.Fatalf("case %d expected %#v got %#v", i+1, tc.ExpectedState, r)
+			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedState, r)
 		}
 	}
 }

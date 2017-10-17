@@ -18,6 +18,7 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 		DesiredState  interface{}
 		ExpectedState VaultPKIState
 	}{
+		// Test 0 ensures that zero value input results in zero value output.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -29,6 +30,11 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 			ExpectedState: VaultPKIState{},
 		},
 
+		// Test 1 ensures that the current state is reversed using the desired
+		// state. In case the backend state is nil and the CA certificate state is
+		// not empty within the current state, the create state should contain the
+		// backend state from the desired state and the CA certificate state should
+		// be empty.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -53,6 +59,11 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 			},
 		},
 
+		// Test 2 ensures that the current state is reversed using the desired
+		// state. In case the backend state is not nil and the CA certificate state
+		// is empty within the current state, the create state should contain a nil
+		// backend state and the CA certificate state should be defined by the
+		// desired state.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -77,6 +88,8 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 			},
 		},
 
+		// Test 3 ensures that a complete current state results in a completely
+		// empty create state.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -119,11 +132,11 @@ func Test_Resource_VaultPKI_GetCreateState(t *testing.T) {
 	for i, tc := range testCases {
 		result, err := newResource.GetCreateState(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
 		if err != nil {
-			t.Fatal("case", i+1, "expected", nil, "got", err)
+			t.Fatal("case", i, "expected", nil, "got", err)
 		}
 		r := result.(VaultPKIState)
 		if !reflect.DeepEqual(r, tc.ExpectedState) {
-			t.Fatalf("case %d expected %#v got %#v", i+1, tc.ExpectedState, r)
+			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedState, r)
 		}
 	}
 }

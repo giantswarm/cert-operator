@@ -18,6 +18,7 @@ func Test_Resource_VaultPKI_GetDeleteState(t *testing.T) {
 		DesiredState  interface{}
 		ExpectedState VaultPKIState
 	}{
+		// Test 0 ensures that zero value input results in zero value output.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -29,7 +30,9 @@ func Test_Resource_VaultPKI_GetDeleteState(t *testing.T) {
 			ExpectedState: VaultPKIState{},
 		},
 
-		// NOTE deletion is not allowed so delete state will always be false.
+		// Test 1 ensures that any input results in zero value output because
+		// deletion of PKI backends is not allowed. Thus delete state will always be
+		// empty.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -54,7 +57,7 @@ func Test_Resource_VaultPKI_GetDeleteState(t *testing.T) {
 			},
 		},
 
-		// NOTE deletion is not allowed so delete state will always be false.
+		// Test 2 is the same as 1 but with different input values.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -95,11 +98,11 @@ func Test_Resource_VaultPKI_GetDeleteState(t *testing.T) {
 	for i, tc := range testCases {
 		result, err := newResource.GetDeleteState(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
 		if err != nil {
-			t.Fatal("case", i+1, "expected", nil, "got", err)
+			t.Fatal("case", i, "expected", nil, "got", err)
 		}
 		r := result.(VaultPKIState)
 		if !reflect.DeepEqual(r, tc.ExpectedState) {
-			t.Fatalf("case %d expected %#v got %#v", i+1, tc.ExpectedState, r)
+			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedState, r)
 		}
 	}
 }

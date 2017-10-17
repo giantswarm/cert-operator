@@ -21,7 +21,7 @@ func Test_Resource_VaultCrt_GetCreateState(t *testing.T) {
 		DesiredState   interface{}
 		ExpectedSecret *apiv1.Secret
 	}{
-		// Test 1 ensures a non-nil current state results in the create state to be
+		// Test 0 ensures a non-nil current state results in the create state to be
 		// empty.
 		{
 			Obj: &certificatetpr.CustomObject{
@@ -34,7 +34,7 @@ func Test_Resource_VaultCrt_GetCreateState(t *testing.T) {
 			ExpectedSecret: nil,
 		},
 
-		// Test 2 is the same 1 but with different content for the current state.
+		// Test 1 is the same 1 but with different content for the current state.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -59,7 +59,7 @@ func Test_Resource_VaultCrt_GetCreateState(t *testing.T) {
 			ExpectedSecret: nil,
 		},
 
-		// Test 3 ensures an empty current state results in a create state that
+		// Test 2 ensures an empty current state results in a create state that
 		// equals the desired state. NOTE that the secret data is extended with
 		// actual certificate content, which in this case is some fake content from
 		// the fake VaultCrt service.
@@ -120,11 +120,11 @@ func Test_Resource_VaultCrt_GetCreateState(t *testing.T) {
 	for i, tc := range testCases {
 		result, err := newResource.GetCreateState(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
 		if err != nil {
-			t.Fatal("case", i+1, "expected", nil, "got", err)
+			t.Fatal("case", i, "expected", nil, "got", err)
 		}
 		secret := result.(*apiv1.Secret)
 		if !reflect.DeepEqual(tc.ExpectedSecret, secret) {
-			t.Fatalf("case %d expected %#v got %#v", i+1, tc.ExpectedSecret, secret)
+			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedSecret, secret)
 		}
 	}
 }

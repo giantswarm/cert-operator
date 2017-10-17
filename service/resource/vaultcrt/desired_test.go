@@ -19,6 +19,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 		Obj            interface{}
 		ExpectedSecret *apiv1.Secret
 	}{
+		// Test 0 ensures the desired state is always the same placeholder state.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -42,6 +43,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 			},
 		},
 
+		// Test 1 is the same as 0 but with a different custom object.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -85,11 +87,11 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 	for i, tc := range testCases {
 		result, err := newResource.GetDesiredState(context.TODO(), tc.Obj)
 		if err != nil {
-			t.Fatal("case", i+1, "expected", nil, "got", err)
+			t.Fatal("case", i, "expected", nil, "got", err)
 		}
 		secret := result.(*apiv1.Secret)
 		if !reflect.DeepEqual(tc.ExpectedSecret, secret) {
-			t.Fatalf("case %d expected %#v got %#v", i+1, tc.ExpectedSecret, secret)
+			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedSecret, secret)
 		}
 	}
 }
