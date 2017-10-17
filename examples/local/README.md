@@ -112,7 +112,7 @@ done
 The certificates are issued using Vault and stored as K8s secrets.
 
 ```bash
-kubectl get secret -l clusterID=CLUSTER_NAME
+kubectl get secret -l clusterID=${CLUSTER_NAME}
 ```
 
 
@@ -121,7 +121,7 @@ kubectl get secret -l clusterID=CLUSTER_NAME
 Delete the certificate custom objects and the deployment.
 
 ```bash
-kubectl delete certificate -l clusterID=CLUSTER_NAME
+kubectl delete certificate -l clusterID=${CLUSTER_NAME}
 kubectl delete -f ./deployment.yaml
 
 # Optional. Only when Vault was set up.
