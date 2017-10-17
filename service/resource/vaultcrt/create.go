@@ -107,7 +107,7 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 		}
 	}
 
-	return microerror.Mask(err)
+	return nil
 }
 
 func (r *Resource) issueCertificate(customObject certificatetpr.CustomObject) (string, string, string, error) {
