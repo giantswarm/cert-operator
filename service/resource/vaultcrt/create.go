@@ -116,7 +116,10 @@ func (r *Resource) issueCertificate(customObject certificatetpr.CustomObject) (s
 		CommonName: key.CommonName(customObject),
 		ID:         key.ClusterID(customObject),
 		IPSANs:     key.IPSANs(customObject),
-		TTL:        key.CrtTTL(customObject),
+		Organizations: []string{
+			key.ClusterComponent(customObject),
+		},
+		TTL: key.CrtTTL(customObject),
 	}
 	result, err := r.vaultCrt.Create(c)
 	if err != nil {
