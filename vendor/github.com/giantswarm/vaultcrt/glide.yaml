@@ -1,0 +1,10 @@
+package: github.com/giantswarm/vaultcrt
+import:
+- package: github.com/giantswarm/microerror
+  version: master
+- package: github.com/giantswarm/micrologger
+  version: master
+- package: github.com/giantswarm/vaultrole
+  version: master
+- package: github.com/hashicorp/vault
+  version: ~0.7.3

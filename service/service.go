@@ -19,6 +19,9 @@ import (
 	"github.com/giantswarm/operatorkit/framework/resource/retryresource"
 	"github.com/giantswarm/operatorkit/informer"
 	"github.com/giantswarm/operatorkit/tpr"
+	"github.com/giantswarm/vaultcrt"
+	"github.com/giantswarm/vaultpki"
+	"github.com/giantswarm/vaultrole"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,11 +29,10 @@ import (
 
 	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
-	"github.com/giantswarm/cert-operator/service/ca"
-	"github.com/giantswarm/cert-operator/service/crt"
 	"github.com/giantswarm/cert-operator/service/healthz"
 	"github.com/giantswarm/cert-operator/service/operator"
-	legacyresource "github.com/giantswarm/cert-operator/service/resource/legacy"
+	vaultcrtresource "github.com/giantswarm/cert-operator/service/resource/vaultcrt"
+	vaultpkiresource "github.com/giantswarm/cert-operator/service/resource/vaultpki"
 )
 
 const (
@@ -122,47 +124,73 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var caService *ca.Service
+	var vaultCrt vaultcrt.Interface
 	{
-		c := ca.DefaultConfig()
+		c := vaultcrt.DefaultConfig()
 
-		c.Flag = config.Flag
 		c.Logger = config.Logger
 		c.VaultClient = vaultClient
-		c.Viper = config.Viper
 
-		caService, err = ca.New(c)
+		vaultCrt, err = vaultcrt.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
 	}
 
-	var crtService *crt.Service
+	var vaultPKI vaultpki.Interface
 	{
-		crtConfig := crt.DefaultConfig()
+		c := vaultpki.DefaultConfig()
 
-		crtConfig.CAService = caService
-		crtConfig.K8sClient = k8sClient
-		crtConfig.Logger = config.Logger
-		crtConfig.VaultClient = vaultClient
-
-		crtConfig.Flag = config.Flag
-		crtConfig.Viper = config.Viper
-
-		crtService, err = crt.New(crtConfig)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
-
-	var legacyResource framework.Resource
-	{
-		c := legacyresource.DefaultConfig()
-
-		c.CrtService = crtService
 		c.Logger = config.Logger
+		c.VaultClient = vaultClient
 
-		legacyResource, err = legacyresource.New(c)
+		c.CATTL = config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CA.TTL)
+		c.CommonNameFormat = config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format)
+
+		vaultPKI, err = vaultpki.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	var vaultRole vaultrole.Interface
+	{
+		c := vaultrole.DefaultConfig()
+
+		c.Logger = config.Logger
+		c.VaultClient = vaultClient
+
+		c.CommonNameFormat = config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format)
+
+		vaultRole, err = vaultrole.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	var vaultCrtResource framework.Resource
+	{
+		c := vaultcrtresource.DefaultConfig()
+
+		c.K8sClient = k8sClient
+		c.Logger = config.Logger
+		c.VaultCrt = vaultCrt
+		c.VaultRole = vaultRole
+
+		vaultCrtResource, err = vaultcrtresource.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	var vaultPKIResource framework.Resource
+	{
+		c := vaultpkiresource.DefaultConfig()
+
+		c.Logger = config.Logger
+		c.VaultPKI = vaultPKI
+
+		vaultPKIResource, err = vaultpkiresource.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -182,7 +210,8 @@ func New(config Config) (*Service, error) {
 	var resources []framework.Resource
 	{
 		resources = []framework.Resource{
-			legacyResource,
+			vaultPKIResource,
+			vaultCrtResource,
 		}
 
 		logWrapConfig := logresource.DefaultWrapConfig()

@@ -163,7 +163,7 @@ func issueRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
-	err = ioutil.WriteFile(newIssueFlags.KeyFilePath, []byte(newIssueResponse.PrivateKey), os.FileMode(0644))
+	err = ioutil.WriteFile(newIssueFlags.KeyFilePath, []byte(newIssueResponse.PrivateKey), os.FileMode(0600))
 	if err != nil {
 		log.Fatalf("%#v\n", microerror.Mask(err))
 	}
