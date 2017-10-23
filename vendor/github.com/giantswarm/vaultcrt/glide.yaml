@@ -5,6 +5,6 @@ import:
 - package: github.com/giantswarm/micrologger
   version: master
 - package: github.com/giantswarm/vaultrole
-  version: init
+  version: master
 - package: github.com/hashicorp/vault
   version: ~0.7.3
