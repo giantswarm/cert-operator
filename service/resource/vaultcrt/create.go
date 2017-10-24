@@ -65,7 +65,12 @@ func (r *Resource) ProcessCreateState(ctx context.Context, obj, createState inte
 	if secretToCreate != nil {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "creating the secret in the Kubernetes API")
 
-		_, err := r.k8sClient.CoreV1().Secrets(r.namespace).Create(secretToCreate)
+		ns := key.SecretNamespace(customObject)
+		if ns == "" {
+			ns = r.namespace
+		}
+
+		_, err := r.k8sClient.CoreV1().Secrets(ns).Create(secretToCreate)
 		if err != nil {
 			return microerror.Mask(err)
 		}
