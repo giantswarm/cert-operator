@@ -10,7 +10,6 @@ import (
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/v1"
 )
 
@@ -88,7 +87,7 @@ func (s *Service) SearchCerts(clusterID string) (AssetsBundle, error) {
 func (s *Service) SearchCertsForComponent(clusterID, componentName string) (AssetsBundle, error) {
 	// TODO we should also do a list. In case the secrets have already been
 	// created we might miss them with only watching.
-	watcher, err := s.k8sClient.Core().Secrets(api.NamespaceDefault).Watch(apismetav1.ListOptions{
+	watcher, err := s.k8sClient.Core().Secrets("").Watch(apismetav1.ListOptions{
 		// Select only secrets that match the given component and the given cluster
 		// clusterID.
 		LabelSelector: fmt.Sprintf(

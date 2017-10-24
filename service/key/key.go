@@ -39,6 +39,10 @@ func SecretName(customObject certificatetpr.CustomObject) string {
 	return fmt.Sprintf("%s-%s", ClusterID(customObject), ClusterComponent(customObject))
 }
 
+func SecretNamespace(customObject certificatetpr.CustomObject) string {
+	return customObject.Spec.SecretNamespace
+}
+
 func RoleTTL(customObject certificatetpr.CustomObject) string {
 	return customObject.Spec.TTL
 }

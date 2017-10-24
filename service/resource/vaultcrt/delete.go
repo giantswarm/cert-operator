@@ -46,7 +46,12 @@ func (r *Resource) ProcessDeleteState(ctx context.Context, obj, deleteState inte
 	if secretToDelete != nil {
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "deleting the sercet in the Kubernetes API")
 
-		err = r.k8sClient.CoreV1().Secrets(r.namespace).Delete(secretToDelete.Name, &apismetav1.DeleteOptions{})
+		ns := key.SecretNamespace(customObject)
+		if ns == "" {
+			ns = r.namespace
+		}
+
+		err = r.k8sClient.CoreV1().Secrets(ns).Delete(secretToDelete.Name, &apismetav1.DeleteOptions{})
 		if apierrors.IsNotFound(err) {
 			// fall through
 		} else if err != nil {
