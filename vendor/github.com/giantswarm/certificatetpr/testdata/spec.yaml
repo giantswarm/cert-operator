@@ -9,4 +9,5 @@ clusterID: 0yxr7
 commonName: api.giantswarm.io
 ipSans:
 - 172.31.0.1
+secretNamespace: default
 ttl: 4320h

@@ -25,7 +25,8 @@ func TestSpecYamlEncoding(t *testing.T) {
 		IPSANs: []string{
 			"172.31.0.1",
 		},
-		TTL: "4320h",
+		SecretNamespace: "default",
+		TTL:             "4320h",
 	}
 
 	var got map[string]interface{}
