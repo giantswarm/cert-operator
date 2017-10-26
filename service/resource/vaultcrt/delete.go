@@ -11,34 +11,12 @@ import (
 	"github.com/giantswarm/cert-operator/service/key"
 )
 
-func (r *Resource) GetDeleteState(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
-	customObject, err := key.ToCustomObject(obj)
-	if err != nil {
-		return nil, microerror.Mask(err)
-	}
-	currentSecret, err := toSecret(currentState)
-	if err != nil {
-		return nil, microerror.Mask(err)
-	}
-
-	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the secret has to be deleted")
-
-	var secretToDelete *apiv1.Secret
-	if currentSecret != nil {
-		secretToDelete = currentSecret
-	}
-
-	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the secret has to be deleted")
-
-	return secretToDelete, nil
-}
-
-func (r *Resource) ProcessDeleteState(ctx context.Context, obj, deleteState interface{}) error {
+func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteChange interface{}) error {
 	customObject, err := key.ToCustomObject(obj)
 	if err != nil {
 		return microerror.Mask(err)
 	}
-	secretToDelete, err := toSecret(deleteState)
+	secretToDelete, err := toSecret(deleteChange)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -59,4 +37,26 @@ func (r *Resource) ProcessDeleteState(ctx context.Context, obj, deleteState inte
 	}
 
 	return nil
+}
+
+func (r *Resource) newDeleteChange(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
+	customObject, err := key.ToCustomObject(obj)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+	currentSecret, err := toSecret(currentState)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
+	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the secret has to be deleted")
+
+	var secretToDelete *apiv1.Secret
+	if currentSecret != nil {
+		secretToDelete = currentSecret
+	}
+
+	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the secret has to be deleted")
+
+	return secretToDelete, nil
 }

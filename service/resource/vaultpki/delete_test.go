@@ -11,7 +11,7 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 )
 
-func Test_Resource_VaultPKI_GetDeleteState(t *testing.T) {
+func Test_Resource_VaultPKI_NewDeleteChange(t *testing.T) {
 	testCases := []struct {
 		Obj           interface{}
 		CurrentState  interface{}
@@ -96,7 +96,7 @@ func Test_Resource_VaultPKI_GetDeleteState(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.GetDeleteState(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
+		result, err := newResource.newDeleteChange(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
 		if err != nil {
 			t.Fatal("case", i, "expected", nil, "got", err)
 		}
