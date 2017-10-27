@@ -32,7 +32,7 @@ type levelFlag string
 
 // String implements flag.Value.
 func (f levelFlag) String() string {
-	return fmt.Sprintf("%q", origLogger.Level.String())
+	return fmt.Sprintf("%q", string(f))
 }
 
 // Set implements flag.Value.

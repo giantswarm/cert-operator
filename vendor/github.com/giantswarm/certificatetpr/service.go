@@ -86,14 +86,9 @@ func (s *Service) SearchCerts(clusterID string) (AssetsBundle, error) {
 // SearchCertsForComponent watches for secrets of a single cluster component and
 // returns it as assets bundle.
 func (s *Service) SearchCertsForComponent(clusterID, componentName string) (AssetsBundle, error) {
-	return s.SearchCertsForComponentInNamespace(api.NamespaceDefault, clusterID, componentName)
-}
-
-// Watches secrets in namespace. If namespace is empty string this function will look up secrets in all namespaces.
-func (s *Service) SearchCertsForComponentInNamespace(namespace, clusterID, componentName string) (AssetsBundle, error) {
 	// TODO we should also do a list. In case the secrets have already been
 	// created we might miss them with only watching.
-	watcher, err := s.k8sClient.Core().Secrets(namespace).Watch(apismetav1.ListOptions{
+	watcher, err := s.k8sClient.Core().Secrets(api.NamespaceDefault).Watch(apismetav1.ListOptions{
 		// Select only secrets that match the given component and the given cluster
 		// clusterID.
 		LabelSelector: fmt.Sprintf(

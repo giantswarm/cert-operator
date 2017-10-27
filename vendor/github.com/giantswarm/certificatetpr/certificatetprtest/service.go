@@ -16,7 +16,3 @@ func (s Service) SearchCerts(clusterID string) (certificatetpr.AssetsBundle, err
 func (s Service) SearchCertsForComponent(clusterID, componentName string) (certificatetpr.AssetsBundle, error) {
 	return certificatetpr.AssetsBundle{}, nil
 }
-
-func (s Service) SearchCertsForComponentInNamespace(namespace, clusterID, componentName string) (certificatetpr.AssetsBundle, error) {
-	return certificatetpr.AssetsBundle{}, nil
-}

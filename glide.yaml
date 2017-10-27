@@ -7,7 +7,7 @@ import:
 - package: github.com/giantswarm/certificatetpr
   version: master
 - package: github.com/giantswarm/operatorkit
-  version: d306448fd014890db29087494a772af93e429d71
+  version: 57dd6cec0cc811e2bc2e2c8a56ea40f163673514
 - package: github.com/giantswarm/microendpoint
   version: master
 - package: github.com/giantswarm/k8shealthz
