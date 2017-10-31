@@ -40,7 +40,7 @@ go build github.com/giantswarm/cert-operator
 
 See [this guide][examples-local].
 
-[examples-local]: https://github.com/giantswarm/cert-operator/blob/master/examples/local/README.md
+[examples-local]: https://github.com/giantswarm/cert-operator/blob/master/examples/README.md
 
 
 ## Contact
