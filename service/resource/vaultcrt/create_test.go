@@ -14,7 +14,7 @@ import (
 	apiv1 "k8s.io/client-go/pkg/api/v1"
 )
 
-func Test_Resource_VaultCrt_GetCreateState(t *testing.T) {
+func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 	testCases := []struct {
 		Obj            interface{}
 		CurrentState   interface{}
@@ -118,7 +118,7 @@ func Test_Resource_VaultCrt_GetCreateState(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.GetCreateState(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
+		result, err := newResource.newCreateChange(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
 		if err != nil {
 			t.Fatal("case", i, "expected", nil, "got", err)
 		}

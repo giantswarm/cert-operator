@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/giantswarm/microerror"
+	"github.com/giantswarm/operatorkit/framework"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
@@ -11,34 +12,24 @@ import (
 	"github.com/giantswarm/cert-operator/service/key"
 )
 
-func (r *Resource) GetDeleteState(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
-	customObject, err := key.ToCustomObject(obj)
-	if err != nil {
-		return nil, microerror.Mask(err)
-	}
-	currentSecret, err := toSecret(currentState)
+func (r *Resource) NewDeletePatch(ctx context.Context, obj, currentState, desiredState interface{}) (*framework.Patch, error) {
+	delete, err := r.newDeleteChange(ctx, obj, currentState, desiredState)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the secret has to be deleted")
+	patch := framework.NewPatch()
+	patch.SetDeleteChange(delete)
 
-	var secretToDelete *apiv1.Secret
-	if currentSecret != nil {
-		secretToDelete = currentSecret
-	}
-
-	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the secret has to be deleted")
-
-	return secretToDelete, nil
+	return patch, nil
 }
 
-func (r *Resource) ProcessDeleteState(ctx context.Context, obj, deleteState interface{}) error {
+func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteChange interface{}) error {
 	customObject, err := key.ToCustomObject(obj)
 	if err != nil {
 		return microerror.Mask(err)
 	}
-	secretToDelete, err := toSecret(deleteState)
+	secretToDelete, err := toSecret(deleteChange)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -59,4 +50,26 @@ func (r *Resource) ProcessDeleteState(ctx context.Context, obj, deleteState inte
 	}
 
 	return nil
+}
+
+func (r *Resource) newDeleteChange(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
+	customObject, err := key.ToCustomObject(obj)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+	currentSecret, err := toSecret(currentState)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
+	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the secret has to be deleted")
+
+	var secretToDelete *apiv1.Secret
+	if currentSecret != nil {
+		secretToDelete = currentSecret
+	}
+
+	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the secret has to be deleted")
+
+	return secretToDelete, nil
 }
