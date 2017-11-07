@@ -8,26 +8,25 @@ import (
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultpki/vaultpkitest"
-	vaultapi "github.com/hashicorp/vault/api"
 )
 
 func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 	testCases := []struct {
 		Obj           interface{}
+		Deleted       bool
 		ExpectedState VaultPKIState
 	}{
-		// test 0 ensures the desired state is always the same placeholder state.
+		// test 0 ensures the desired state for created/updated object.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
 					ClusterID: "foobar",
 				},
 			},
+			Deleted: false,
 			ExpectedState: VaultPKIState{
-				Backend: &vaultapi.MountOutput{
-					Type: "pki",
-				},
-				CACertificate: "placeholder",
+				BackendExists:       true,
+				CACertificateExists: true,
 			},
 		},
 
@@ -38,11 +37,38 @@ func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 					ClusterID: "al9qy",
 				},
 			},
+			Deleted: false,
 			ExpectedState: VaultPKIState{
-				Backend: &vaultapi.MountOutput{
-					Type: "pki",
+				BackendExists:       true,
+				CACertificateExists: true,
+			},
+		},
+
+		// test 2 ensures the desired state is always the same for deleted custom object.
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID: "foobar",
 				},
-				CACertificate: "placeholder",
+			},
+			Deleted: true,
+			ExpectedState: VaultPKIState{
+				BackendExists:       false,
+				CACertificateExists: false,
+			},
+		},
+
+		// test 3 is the same as 2 but with a different custom object.
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID: "al9qy",
+				},
+			},
+			Deleted: true,
+			ExpectedState: VaultPKIState{
+				BackendExists:       false,
+				CACertificateExists: false,
 			},
 		},
 	}
@@ -62,7 +88,7 @@ func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.GetDesiredState(context.TODO(), tc.Obj)
+		result, err := newResource.GetDesiredState(context.TODO(), tc.Obj, tc.Deleted)
 		if err != nil {
 			t.Fatal("case", i, "expected", nil, "got", err)
 		}

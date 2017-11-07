@@ -59,10 +59,23 @@ func toVaultPKIState(v interface{}) (VaultPKIState, error) {
 		return VaultPKIState{}, nil
 	}
 
-	vaultPKIState, ok := v.(VaultPKIState)
+	s, ok := v.(VaultPKIState)
 	if !ok {
-		return VaultPKIState{}, microerror.Maskf(wrongTypeError, "expected '%T', got '%T'", VaultPKIState{}, v)
+		return VaultPKIState{}, microerror.Maskf(wrongTypeError, "expected '%T', got '%T'", s, v)
 	}
 
-	return vaultPKIState, nil
+	return s, nil
+}
+
+func toChanges(v interface{}) ([]ChangeType, error) {
+	if v == nil {
+		return []ChangeType{}, nil
+	}
+
+	s, ok := v.([]ChangeType)
+	if !ok {
+		return nil, microerror.Maskf(wrongTypeError, "expected '%T', got '%T'", s, v)
+	}
+
+	return s, nil
 }

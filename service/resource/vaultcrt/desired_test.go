@@ -17,9 +17,11 @@ import (
 func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 	testCases := []struct {
 		Obj            interface{}
+		Deleted        bool
 		ExpectedSecret *apiv1.Secret
 	}{
-		// Test 0 ensures the desired state is always the same placeholder state.
+		// Test 0 ensures the desired is a secret for created/updated
+		// custom object.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -27,6 +29,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 					ClusterComponent: "api",
 				},
 			},
+			Deleted: false,
 			ExpectedSecret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "foobar-api",
@@ -34,11 +37,6 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 						"clusterID":        "foobar",
 						"clusterComponent": "api",
 					},
-				},
-				StringData: map[string]string{
-					"ca":  "",
-					"crt": "",
-					"key": "",
 				},
 			},
 		},
@@ -51,6 +49,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 					ClusterComponent: "worker",
 				},
 			},
+			Deleted: false,
 			ExpectedSecret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "al9qy-worker",
@@ -59,12 +58,19 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 						"clusterComponent": "worker",
 					},
 				},
-				StringData: map[string]string{
-					"ca":  "",
-					"crt": "",
-					"key": "",
+			},
+		},
+
+		// Test 2 ensures desired state is nil for deleted custom object.
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID:        "whatever",
+					ClusterComponent: "worker",
 				},
 			},
+			Deleted:        true,
+			ExpectedSecret: nil,
 		},
 	}
 
@@ -85,7 +91,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.GetDesiredState(context.TODO(), tc.Obj)
+		result, err := newResource.GetDesiredState(context.TODO(), tc.Obj, tc.Deleted)
 		if err != nil {
 			t.Fatal("case", i, "expected", nil, "got", err)
 		}

@@ -1,8 +1,13 @@
 package vaultpki
 
-import vaultapi "github.com/hashicorp/vault/api"
-
 type VaultPKIState struct {
-	Backend       *vaultapi.MountOutput
-	CACertificate string
+	BackendExists       bool
+	CACertificateExists bool
 }
+
+type ChangeType string
+
+const (
+	BackendChange       ChangeType = "BackendChange"
+	CACertificateChange ChangeType = "CACertificateChange"
+)
