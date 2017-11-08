@@ -19,4 +19,4 @@ spec:
   - "kubernetes.default.svc.cluster.local"
   ipSans:
   ttl: "720h"
-  allowBareDomains: false
+  allowBareDomains: true
