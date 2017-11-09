@@ -96,9 +96,8 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 			AllowSubdomains:  AllowSubDomains,
 			AltNames:         key.AltNames(customObject),
 			ID:               key.ClusterID(customObject),
-			Organizations: []string{
-				key.ClusterComponent(customObject),
-			},
+			Organizations: append([]string{key.ClusterComponent(customObject)},
+				key.Organizations(customObject)...),
 			TTL: key.RoleTTL(customObject),
 		}
 		err := r.vaultRole.Create(c)
