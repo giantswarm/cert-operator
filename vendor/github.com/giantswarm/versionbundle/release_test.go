@@ -6,6 +6,327 @@ import (
 	"time"
 )
 
+func Test_Release_Changelogs(t *testing.T) {
+	testCases := []struct {
+		Bundles            []Bundle
+		ExpectedChangelogs []Changelog
+		ErrorMatcher       func(err error) bool
+	}{
+		// Test 0 ensures creating a release with a nil slice of bundles throws
+		// an error when creating a new release type.
+		{
+			Bundles:            nil,
+			ExpectedChangelogs: nil,
+			ErrorMatcher:       IsInvalidConfig,
+		},
+
+		// Test 1 is the same as 0 but with an empty list of bundles.
+		{
+			Bundles:            []Bundle{},
+			ExpectedChangelogs: nil,
+			ErrorMatcher:       IsInvalidConfig,
+		},
+
+		// Test 2 ensures computing the release changelogs when having a list
+		// of one bundle given works as expected.
+		{
+			Bundles: []Bundle{
+				{
+					Changelogs: []Changelog{
+						{
+							Component:   "kubernetes",
+							Description: "description",
+							Kind:        "fixed",
+						},
+					},
+					Components: []Component{
+						{
+							Name:    "calico",
+							Version: "1.1.0",
+						},
+						{
+							Name:    "kube-dns",
+							Version: "1.0.0",
+						},
+					},
+					Dependencies: []Dependency{
+						{
+							Name:    "kubernetes",
+							Version: "<= 1.7.x",
+						},
+					},
+					Deprecated: false,
+					Name:       "kubernetes-operator",
+					Time:       time.Unix(10, 5),
+					Version:    "0.0.1",
+					WIP:        false,
+				},
+			},
+			ExpectedChangelogs: []Changelog{
+				{
+					Component:   "kubernetes",
+					Description: "description",
+					Kind:        "fixed",
+				},
+			},
+			ErrorMatcher: nil,
+		},
+
+		// Test 3 is the same as 2 but with a different changelogs.
+		{
+			Bundles: []Bundle{
+				{
+					Changelogs: []Changelog{
+						{
+							Component:   "kubernetes",
+							Description: "description",
+							Kind:        "changed",
+						},
+					},
+					Components: []Component{
+						{
+							Name:    "kube-dns",
+							Version: "1.17.0",
+						},
+						{
+							Name:    "calico",
+							Version: "3.1.0",
+						},
+					},
+					Dependencies: []Dependency{
+						{
+							Name:    "kubernetes",
+							Version: "<= 1.7.x",
+						},
+					},
+					Deprecated: true,
+					Name:       "kubernetes-operator",
+					Time:       time.Unix(20, 15),
+					Version:    "11.4.1",
+					WIP:        false,
+				},
+			},
+			ExpectedChangelogs: []Changelog{
+				{
+					Component:   "kubernetes",
+					Description: "description",
+					Kind:        "changed",
+				},
+			},
+			ErrorMatcher: nil,
+		},
+
+		// Test 4 ensures computing the release changelogs when having a list of
+		// two bundles given works as expected.
+		{
+			Bundles: []Bundle{
+				{
+					Changelogs: []Changelog{
+						{
+							Component:   "calico",
+							Description: "Calico version updated.",
+							Kind:        "changed",
+						},
+						{
+							Component:   "kubernetes",
+							Description: "Kubernetes version requirements changed due to calico update.",
+							Kind:        "changed",
+						},
+					},
+					Components: []Component{
+						{
+							Name:    "calico",
+							Version: "1.1.0",
+						},
+						{
+							Name:    "kube-dns",
+							Version: "1.0.0",
+						},
+					},
+					Dependencies: []Dependency{
+						{
+							Name:    "kubernetes",
+							Version: "<= 1.7.x",
+						},
+					},
+					Deprecated: false,
+					Name:       "kubernetes-operator",
+					Time:       time.Unix(10, 5),
+					Version:    "0.1.0",
+					WIP:        false,
+				},
+				{
+					Changelogs: []Changelog{
+						{
+							Component:   "etcd",
+							Description: "Etcd version updated.",
+							Kind:        "changed",
+						},
+						{
+							Component:   "kubernetes",
+							Description: "Kubernetes version updated.",
+							Kind:        "changed",
+						},
+					},
+					Components: []Component{
+						{
+							Name:    "etcd",
+							Version: "3.2.0",
+						},
+						{
+							Name:    "kubernetes",
+							Version: "1.7.1",
+						},
+					},
+					Dependencies: []Dependency{},
+					Name:         "cloud-config-operator",
+					Deprecated:   false,
+					Time:         time.Unix(20, 15),
+					Version:      "0.2.0",
+					WIP:          false,
+				},
+			},
+			ExpectedChangelogs: []Changelog{
+				{
+					Component:   "calico",
+					Description: "Calico version updated.",
+					Kind:        "changed",
+				},
+				{
+					Component:   "kubernetes",
+					Description: "Kubernetes version requirements changed due to calico update.",
+					Kind:        "changed",
+				},
+				{
+					Component:   "etcd",
+					Description: "Etcd version updated.",
+					Kind:        "changed",
+				},
+				{
+					Component:   "kubernetes",
+					Description: "Kubernetes version updated.",
+					Kind:        "changed",
+				},
+			},
+			ErrorMatcher: nil,
+		},
+
+		// Test 5 is like 4 but with version bundles being flipped.
+		{
+			Bundles: []Bundle{
+				{
+					Changelogs: []Changelog{
+						{
+							Component:   "etcd",
+							Description: "Etcd version updated.",
+							Kind:        "changed",
+						},
+						{
+							Component:   "kubernetes",
+							Description: "Kubernetes version updated.",
+							Kind:        "changed",
+						},
+					},
+					Components: []Component{
+						{
+							Name:    "etcd",
+							Version: "3.2.0",
+						},
+						{
+							Name:    "kubernetes",
+							Version: "1.7.1",
+						},
+					},
+					Dependencies: []Dependency{},
+					Name:         "cloud-config-operator",
+					Deprecated:   false,
+					Time:         time.Unix(20, 15),
+					Version:      "0.2.0",
+					WIP:          false,
+				},
+				{
+					Changelogs: []Changelog{
+						{
+							Component:   "calico",
+							Description: "Calico version updated.",
+							Kind:        "changed",
+						},
+						{
+							Component:   "kubernetes",
+							Description: "Kubernetes version requirements changed due to calico update.",
+							Kind:        "changed",
+						},
+					},
+					Components: []Component{
+						{
+							Name:    "calico",
+							Version: "1.1.0",
+						},
+						{
+							Name:    "kube-dns",
+							Version: "1.0.0",
+						},
+					},
+					Dependencies: []Dependency{
+						{
+							Name:    "kubernetes",
+							Version: "<= 1.7.x",
+						},
+					},
+					Deprecated: false,
+					Name:       "kubernetes-operator",
+					Time:       time.Unix(10, 5),
+					Version:    "0.1.0",
+					WIP:        false,
+				},
+			},
+			ExpectedChangelogs: []Changelog{
+				{
+					Component:   "etcd",
+					Description: "Etcd version updated.",
+					Kind:        "changed",
+				},
+				{
+					Component:   "kubernetes",
+					Description: "Kubernetes version updated.",
+					Kind:        "changed",
+				},
+				{
+					Component:   "calico",
+					Description: "Calico version updated.",
+					Kind:        "changed",
+				},
+				{
+					Component:   "kubernetes",
+					Description: "Kubernetes version requirements changed due to calico update.",
+					Kind:        "changed",
+				},
+			},
+			ErrorMatcher: nil,
+		},
+	}
+
+	for i, tc := range testCases {
+		config := DefaultReleaseConfig()
+
+		config.Bundles = tc.Bundles
+
+		r, err := NewRelease(config)
+		if tc.ErrorMatcher != nil {
+			if !tc.ErrorMatcher(err) {
+				t.Fatalf("test %d expected %#v got %#v", i, true, false)
+			}
+		} else if err != nil {
+			t.Fatalf("test %d expected %#v got %#v", i, nil, err)
+		}
+
+		c := r.Changelogs()
+		if !reflect.DeepEqual(c, tc.ExpectedChangelogs) {
+			t.Fatalf("test %d expected %#v got %#v", i, tc.ExpectedChangelogs, c)
+		}
+	}
+}
+
 func Test_Release_Components(t *testing.T) {
 	testCases := []struct {
 		Bundles            []Bundle

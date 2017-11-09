@@ -1,5 +1,5 @@
-hash: dfe9f87b1ac589c86ae165278c4025d0c61df9a87bcdea55da8b993c4f56298c
-updated: 2017-11-09T11:03:46.465822338+01:00
+hash: 3640bf48f463ad188be2ede95d06201b40df9cd9bef57da0524907a52a17a93e
+updated: 2017-11-09T17:46:23.292411173+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -37,11 +37,11 @@ imports:
 - name: github.com/giantswarm/certctl
   version: 557532393b3d40f3087e60c84de912fc9278e64f
 - name: github.com/giantswarm/certificatetpr
-  version: fee41bfdc17a3b46de1b6ce4129f4c43273c3677
+  version: 7ca1d560db684dd4e2effc49ae0ceeaae2963f5e
 - name: github.com/giantswarm/k8shealthz
   version: 5eaeffb4476a420af88b7f95b478fc9fe2da38ac
 - name: github.com/giantswarm/microendpoint
-  version: b93a1e9b89c26ba3bdcd5d19986d550fd090d213
+  version: 7f20461533f43e767628e6404c2211afa7472a54
   subpackages:
   - endpoint/healthz
   - endpoint/version
@@ -76,7 +76,7 @@ imports:
   subpackages:
   - memory
 - name: github.com/giantswarm/operatorkit
-  version: 7fed726ca23a9ae0f6e26c0b430ce7c2ed249b26
+  version: 96f018c3318b6fd2a71e030f336d7f70f321c43d
   subpackages:
   - client/k8sclient
   - framework
@@ -105,7 +105,7 @@ imports:
   - key
   - vaultroletest
 - name: github.com/giantswarm/versionbundle
-  version: e828555fc7afd4e8a4b1f2883258aa416c56a03d
+  version: 6f255fb054b68827f115fdf6a018b5e66c863250
 - name: github.com/go-kit/kit
   version: a9ca6725cbbea455e61c6bc8a1ed28e81eb3493b
   subpackages:
@@ -176,7 +176,6 @@ imports:
   - api
   - helper/compressutil
   - helper/jsonutil
-  - helper/parseutil
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/errgo

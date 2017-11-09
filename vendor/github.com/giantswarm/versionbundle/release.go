@@ -35,6 +35,12 @@ func NewRelease(config ReleaseConfig) (Release, error) {
 	var err error
 
 	var changelogs []Changelog
+	{
+		changelogs, err = aggregateReleaseChangelogs(config.Bundles)
+		if err != nil {
+			return Release{}, microerror.Maskf(invalidConfigError, err.Error())
+		}
+	}
 
 	var components []Component
 	{
@@ -85,7 +91,7 @@ func (r Release) Bundles() []Bundle {
 }
 
 func (r Release) Changelogs() []Changelog {
-	return r.changelogs
+	return CopyChangelogs(r.changelogs)
 }
 
 func (r Release) Components() []Component {
@@ -102,6 +108,16 @@ func (r Release) Timestamp() string {
 
 func (r Release) Version() string {
 	return r.version
+}
+
+func aggregateReleaseChangelogs(bundles []Bundle) ([]Changelog, error) {
+	var changelogs []Changelog
+
+	for _, b := range bundles {
+		changelogs = append(changelogs, b.Changelogs...)
+	}
+
+	return changelogs, nil
 }
 
 func aggregateReleaseComponents(bundles []Bundle) ([]Component, error) {
