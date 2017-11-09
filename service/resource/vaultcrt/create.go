@@ -111,14 +111,14 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 }
 
 func (r *Resource) issueCertificate(customObject certificatetpr.CustomObject) (string, string, string, error) {
+
 	c := vaultcrt.CreateConfig{
 		AltNames:   key.AltNames(customObject),
 		CommonName: key.CommonName(customObject),
 		ID:         key.ClusterID(customObject),
 		IPSANs:     key.IPSANs(customObject),
-		Organizations: []string{
-			key.ClusterComponent(customObject),
-		},
+		Organizations: append([]string{key.ClusterComponent(customObject)},
+			key.Organizations(customObject)...),
 		TTL: key.CrtTTL(customObject),
 	}
 	result, err := r.vaultCrt.Create(c)
