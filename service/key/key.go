@@ -35,6 +35,10 @@ func IPSANs(customObject certificatetpr.CustomObject) []string {
 	return customObject.Spec.IPSANs
 }
 
+func Organizations(customObject certificatetpr.CustomObject) []string {
+	return append(customObject.Spec.Organizations, customObject.Spec.ClusterComponent)
+}
+
 func SecretName(customObject certificatetpr.CustomObject) string {
 	return fmt.Sprintf("%s-%s", ClusterID(customObject), ClusterComponent(customObject))
 }
