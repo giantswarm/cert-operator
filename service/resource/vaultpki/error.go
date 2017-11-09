@@ -11,6 +11,13 @@ func IsInvalidConfig(err error) bool {
 	return microerror.Cause(err) == invalidConfigError
 }
 
+var unknownChangeTypeError = microerror.New("unknown change type")
+
+// IsUnknownChangeType asserts wrongTypeError.
+func IsUnknownChangeType(err error) bool {
+	return microerror.Cause(err) == unknownChangeTypeError
+}
+
 var wrongTypeError = microerror.New("wrong type")
 
 // IsWrongTypeError asserts wrongTypeError.

@@ -11,7 +11,7 @@ import (
 	"github.com/giantswarm/cert-operator/service/key"
 )
 
-func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interface{}, error) {
+func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}, deleted bool) (interface{}, error) {
 	customObject, err := key.ToCustomObject(obj)
 	if err != nil {
 		return nil, microerror.Mask(err)
@@ -24,7 +24,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		manifest, err := r.k8sClient.Core().Secrets(r.namespace).Get(key.SecretName(customObject), apismetav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			r.logger.Log("cluster", key.ClusterID(customObject), "debug", "did not find the secret in the Kubernetes API")
-			// fall through
+			// Fall trough.
 		} else if err != nil {
 			return nil, microerror.Mask(err)
 		} else {

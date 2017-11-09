@@ -1,5 +1,5 @@
-hash: 3640bf48f463ad188be2ede95d06201b40df9cd9bef57da0524907a52a17a93e
-updated: 2017-11-02T11:50:20.349100847+01:00
+hash: f5449dbc268ddaf01a731d3fcd9fcb12effd6a6d1acfa81877ec4b3b64413945
+updated: 2017-11-03T17:35:02.288292254+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -76,7 +76,7 @@ imports:
   subpackages:
   - memory
 - name: github.com/giantswarm/operatorkit
-  version: b5bfa412f825f7593baea4149d0fc66a97c5e525
+  version: 12f0937a310ab02513709b2c408e37c7cbbd48ef
   subpackages:
   - client/k8sclient
   - framework
@@ -105,7 +105,7 @@ imports:
   - key
   - vaultroletest
 - name: github.com/giantswarm/versionbundle
-  version: 74ece9fd181fc5ef2a8510cbeb408485f9a0b1a3
+  version: efdbdae719c56ab4880f8fe56643d60a76fc19e5
 - name: github.com/go-kit/kit
   version: a9ca6725cbbea455e61c6bc8a1ed28e81eb3493b
   subpackages:
@@ -126,6 +126,8 @@ imports:
   version: 6aced65f8501fe1217321abf0749d354824ba2ff
 - name: github.com/go-openapi/swag
   version: 1d0bd113de87027671077d3c71eb3ac5d7dbba72
+- name: github.com/go-resty/resty
+  version: 9ac9c42358f7c3c69ac9f8610e8790d7c338e85d
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/gogo/protobuf
@@ -174,6 +176,7 @@ imports:
   - api
   - helper/compressutil
   - helper/jsonutil
+  - helper/parseutil
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/errgo
@@ -257,6 +260,11 @@ imports:
   - http2/hpack
   - idna
   - lex/httplex
+  - publicsuffix
+- name: golang.org/x/sync
+  version: fd80eb99c8f653c847d294a001bdf2a3a6f768f5
+  subpackages:
+  - errgroup
 - name: golang.org/x/sys
   version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
   subpackages:
@@ -277,7 +285,7 @@ imports:
 - name: gopkg.in/inf.v0
   version: 3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4
 - name: gopkg.in/yaml.v2
-  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
+  version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 - name: k8s.io/apimachinery
   version: 8ab5f3d8a330c2e9baaf84e39042db8d49034ae2
   subpackages:

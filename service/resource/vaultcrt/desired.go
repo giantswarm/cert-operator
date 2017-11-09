@@ -11,7 +11,7 @@ import (
 	"github.com/giantswarm/cert-operator/service/key"
 )
 
-func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interface{}, error) {
+func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}, deleted bool) (interface{}, error) {
 	customObject, err := key.ToCustomObject(obj)
 	if err != nil {
 		return nil, microerror.Mask(err)
@@ -19,22 +19,17 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computing the desired secret")
 
-	// NOTE that the actual secret content here is left blank because only the
-	// issuer backend, e.g. Vault, can generate certificates. This has to be
-	// considered when computing the create, delete and update state.
-	secret := &apiv1.Secret{
-		ObjectMeta: apismetav1.ObjectMeta{
-			Name: key.SecretName(customObject),
-			Labels: map[string]string{
-				certificatetpr.ClusterIDLabel: key.ClusterID(customObject),
-				certificatetpr.ComponentLabel: key.ClusterComponent(customObject),
+	var secret *apiv1.Secret
+	if !deleted {
+		secret = &apiv1.Secret{
+			ObjectMeta: apismetav1.ObjectMeta{
+				Name: key.SecretName(customObject),
+				Labels: map[string]string{
+					certificatetpr.ClusterIDLabel: key.ClusterID(customObject),
+					certificatetpr.ComponentLabel: key.ClusterComponent(customObject),
+				},
 			},
-		},
-		StringData: map[string]string{
-			certificatetpr.CA.String():  "",
-			certificatetpr.Crt.String(): "",
-			certificatetpr.Key.String(): "",
-		},
+		}
 	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computed the desired secret")
