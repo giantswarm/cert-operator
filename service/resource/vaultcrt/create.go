@@ -96,9 +96,8 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 			AllowSubdomains:  AllowSubDomains,
 			AltNames:         key.AltNames(customObject),
 			ID:               key.ClusterID(customObject),
-			Organizations: append([]string{key.ClusterComponent(customObject)},
-				key.Organizations(customObject)...),
-			TTL: key.RoleTTL(customObject),
+			Organizations:    key.Organizations(customObject),
+			TTL:              key.RoleTTL(customObject),
 		}
 		err := r.vaultRole.Create(c)
 		if err != nil {
@@ -112,13 +111,12 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 func (r *Resource) issueCertificate(customObject certificatetpr.CustomObject) (string, string, string, error) {
 
 	c := vaultcrt.CreateConfig{
-		AltNames:   key.AltNames(customObject),
-		CommonName: key.CommonName(customObject),
-		ID:         key.ClusterID(customObject),
-		IPSANs:     key.IPSANs(customObject),
-		Organizations: append([]string{key.ClusterComponent(customObject)},
-			key.Organizations(customObject)...),
-		TTL: key.CrtTTL(customObject),
+		AltNames:      key.AltNames(customObject),
+		CommonName:    key.CommonName(customObject),
+		ID:            key.ClusterID(customObject),
+		IPSANs:        key.IPSANs(customObject),
+		Organizations: key.Organizations(customObject),
+		TTL:           key.CrtTTL(customObject),
 	}
 	result, err := r.vaultCrt.Create(c)
 	if err != nil {
