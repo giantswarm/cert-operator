@@ -80,10 +80,8 @@ func (r *Resource) newCreateChange(ctx context.Context, obj, currentState, desir
 
 func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) error {
 	c := vaultrole.ExistsConfig{
-		ID: key.ClusterID(customObject),
-		Organizations: []string{
-			key.ClusterComponent(customObject),
-		},
+		ID:            key.ClusterID(customObject),
+		Organizations: key.Organizations(customObject),
 	}
 	exists, err := r.vaultRole.Exists(c)
 	if err != nil {
@@ -109,7 +107,6 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 }
 
 func (r *Resource) issueCertificate(customObject certificatetpr.CustomObject) (string, string, string, error) {
-
 	c := vaultcrt.CreateConfig{
 		AltNames:      key.AltNames(customObject),
 		CommonName:    key.CommonName(customObject),
