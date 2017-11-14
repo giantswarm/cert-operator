@@ -3,12 +3,12 @@ package vaulthealthz
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
+
+	vaultapi "github.com/hashicorp/vault/api"
 
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	vaultapi "github.com/hashicorp/vault/api"
 
 	"github.com/giantswarm/microendpoint/service/healthz"
 )
@@ -99,17 +99,10 @@ func (s *Service) GetHealthz(ctx context.Context) (healthz.Response, error) {
 		go func() {
 			_, err := s.vaultClient.Sys().ListMounts()
 			if err != nil {
-				if strings.Contains(err.Error(), "permission denied") {
-					setVaultPermissionDenied()
-				} else {
-					setVaultUnknownError()
-				}
-
 				ch <- err.Error()
 				return
 			}
 
-			setVaultOK()
 			ch <- ""
 		}()
 

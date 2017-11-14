@@ -247,21 +247,6 @@ func New(config Config) (*Service, error) {
 		frameworkBackOff.MaxElapsedTime = 0 // retry forever
 	}
 
-	var operatorFramework *framework.Framework
-	{
-		frameworkConfig := framework.DefaultConfig()
-
-		frameworkConfig.BackOff = frameworkBackOff
-		frameworkConfig.InitCtxFunc = initCtxFunc
-		frameworkConfig.Logger = config.Logger
-		frameworkConfig.ResourceRouter = framework.NewDefaultResourceRouter(resources)
-
-		operatorFramework, err = framework.New(frameworkConfig)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
-
 	var newTPR *tpr.TPR
 	{
 		c := tpr.DefaultConfig()
@@ -299,6 +284,23 @@ func New(config Config) (*Service, error) {
 		informerConfig.ResyncPeriod = time.Minute * 5
 
 		newInformer, err = informer.New(informerConfig)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	var operatorFramework *framework.Framework
+	{
+		frameworkConfig := framework.DefaultConfig()
+
+		frameworkConfig.BackOffFactory = framework.DefaultBackOffFactory()
+		frameworkConfig.Informer = newInformer
+		frameworkConfig.InitCtxFunc = initCtxFunc
+		frameworkConfig.Logger = config.Logger
+		frameworkConfig.ResourceRouter = framework.DefaultResourceRouter(resources)
+		frameworkConfig.TPR = newTPR
+
+		operatorFramework, err = framework.New(frameworkConfig)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
