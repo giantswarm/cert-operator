@@ -1,5 +1,5 @@
-hash: 05e1ce0ec6c336e18d337fce690a258f1ca09073c6deea11ebed3c10759202e9
-updated: 2017-11-14T14:36:05.534318Z
+hash: 3640bf48f463ad188be2ede95d06201b40df9cd9bef57da0524907a52a17a93e
+updated: 2017-11-15T11:58:57.005031976+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -93,7 +93,7 @@ imports:
   - key
   - vaultcrttest
 - name: github.com/giantswarm/vaulthealthz
-  version: 1fa97a54231520669a90d6f579846bd8f57fac95
+  version: 863dcf47fa7dc36f081ef5f1f15d9273cf967980
 - name: github.com/giantswarm/vaultpki
   version: a1f5764b0ff9fe58fd13c8e5534434d50359fb89
   subpackages:
@@ -176,7 +176,6 @@ imports:
   - api
   - helper/compressutil
   - helper/jsonutil
-  - helper/parseutil
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/errgo
@@ -213,13 +212,13 @@ imports:
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: e3fb1a1acd7605367a2b378bc2e2f893c05174b7
+  version: 49fee292b27bfff7f354ee0f64e1bc4850462edf
   subpackages:
   - expfmt
   - internal/bitbucket.org/ww/goautoneg
   - model
 - name: github.com/prometheus/procfs
-  version: a6e9df898b1336106c743392c48ee0b71f5c4efa
+  version: a1dba9ce8baed984a2495b658c82687f8157b98f
   subpackages:
   - xfs
 - name: github.com/PuerkitoBio/purell
