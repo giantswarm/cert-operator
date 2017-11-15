@@ -30,7 +30,6 @@ import (
 	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
 	"github.com/giantswarm/cert-operator/service/healthz"
-	"github.com/giantswarm/cert-operator/service/operator"
 	vaultcrtresource "github.com/giantswarm/cert-operator/service/resource/vaultcrt"
 	vaultpkiresource "github.com/giantswarm/cert-operator/service/resource/vaultpki"
 )
@@ -74,9 +73,9 @@ func DefaultConfig() Config {
 
 type Service struct {
 	// Dependencies.
-	Healthz  *healthz.Service
-	Operator *operator.Operator
-	Version  *version.Service
+	Framework *framework.Framework
+	Healthz   *healthz.Service
+	Version   *version.Service
 
 	// Internals.
 	bootOnce sync.Once
@@ -241,12 +240,6 @@ func New(config Config) (*Service, error) {
 		return ctx, nil
 	}
 
-	var frameworkBackOff *backoff.ExponentialBackOff
-	{
-		frameworkBackOff = backoff.NewExponentialBackOff()
-		frameworkBackOff.MaxElapsedTime = 0 // retry forever
-	}
-
 	var newTPR *tpr.TPR
 	{
 		c := tpr.DefaultConfig()
@@ -320,28 +313,6 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var operatorBackOff *backoff.ExponentialBackOff
-	{
-		operatorBackOff = backoff.NewExponentialBackOff()
-		operatorBackOff.MaxElapsedTime = 5 * time.Minute
-	}
-
-	var operatorService *operator.Operator
-	{
-		operatorConfig := operator.DefaultConfig()
-
-		operatorConfig.BackOff = operatorBackOff
-		operatorConfig.Framework = operatorFramework
-		operatorConfig.Informer = newInformer
-		operatorConfig.Logger = config.Logger
-		operatorConfig.TPR = newTPR
-
-		operatorService, err = operator.New(operatorConfig)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
-
 	var versionService *version.Service
 	{
 		versionConfig := version.DefaultConfig()
@@ -360,9 +331,9 @@ func New(config Config) (*Service, error) {
 
 	newService := &Service{
 		// Dependencies.
-		Healthz:  healthzService,
-		Operator: operatorService,
-		Version:  versionService,
+		Framework: operatorFramework,
+		Healthz:   healthzService,
+		Version:   versionService,
 
 		// Internals
 		bootOnce: sync.Once{},
@@ -373,6 +344,6 @@ func New(config Config) (*Service, error) {
 
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		s.Operator.Boot()
+		s.Framework.Boot()
 	})
 }
