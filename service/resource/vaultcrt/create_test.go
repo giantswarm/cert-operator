@@ -138,14 +138,14 @@ func Test_Resource_VaultCrt_ensureVaultRole_Organizations_intact(t *testing.T) {
 		// Test 0 ensures a non-nil current state results in the create state to be
 		// empty.
 		{
-			CustomObject: &certificatetpr.CustomObject{
+			CustomObject: certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
 					ClusterID:        "foobar",
 					ClusterComponent: "api",
 					Organizations:    []string{"system:masters"},
 				},
 			},
-			ExpectedSecret: []string{"api", "system:masters"},
+			ExpectedOrganizations: []string{"api", "system:masters"},
 		},
 	}
 
@@ -170,7 +170,7 @@ func Test_Resource_VaultCrt_ensureVaultRole_Organizations_intact(t *testing.T) {
 		if err != nil {
 			t.Fatal("case", i, "expected", nil, "got", err)
 		}
-		if !reflect.DeepEqual(tc.ExpectedSecret, secret) {
+		if !reflect.DeepEqual(tc.ExpectedOrganizations, key.Organizations(tc.CustomObject)) {
 			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedOrganizations, key.Organizations(tc.CustomObject))
 		}
 	}
