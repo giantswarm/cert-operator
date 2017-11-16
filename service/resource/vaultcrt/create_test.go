@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/giantswarm/cert-operator/service/key"
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
@@ -132,4 +133,51 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedSecret, secret)
 		}
 	}
+}
+
+func Test_Resource_VaultCrt_ensureVaultRole_Organizations_intact(t *testing.T) {
+	testCases := []struct {
+		CustomObject          certificatetpr.CustomObject
+		ExpectedOrganizations []string
+	}{
+		// Test 0 ensures a non-nil current state results in the create state to be
+		// empty.
+		{
+			CustomObject: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID:        "foobar",
+					ClusterComponent: "api",
+					Organizations:    []string{"system:masters"},
+				},
+			},
+			ExpectedSecret: []string{"api", "system:masters"},
+		},
+	}
+
+	var err error
+	var newResource *Resource
+	{
+		resourceConfig := DefaultConfig()
+
+		resourceConfig.K8sClient = fake.NewSimpleClientset()
+		resourceConfig.Logger = microloggertest.New()
+		resourceConfig.VaultCrt = vaultcrttest.New()
+		resourceConfig.VaultRole = vaultroletest.New()
+
+		newResource, err = New(resourceConfig)
+		if err != nil {
+			t.Fatal("expected", nil, "got", err)
+		}
+	}
+
+	for i, tc := range testCases {
+		err := newResource.ensureVaultRole(tc.CustomObject)
+		if err != nil {
+			t.Fatal("case", i, "expected", nil, "got", err)
+		}
+		if !reflect.DeepEqual(tc.ExpectedSecret, secret) {
+			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedOrganizations, key.Organizations(tc.CustomObject))
+		}
+	}
+
 }
