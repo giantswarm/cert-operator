@@ -3,6 +3,7 @@ package vaultcrt
 import (
 	"time"
 
+	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/framework"
@@ -10,6 +11,8 @@ import (
 	"github.com/giantswarm/vaultrole"
 	"k8s.io/client-go/kubernetes"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
+
+	"github.com/giantswarm/cert-operator/service/key"
 )
 
 const (
@@ -106,6 +109,51 @@ func (r *Resource) Name() string {
 
 func (r *Resource) Underlying() framework.Resource {
 	return r
+}
+
+func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) error {
+	c := vaultrole.ExistsConfig{
+		ID:            key.ClusterID(customObject),
+		Organizations: key.Organizations(customObject),
+	}
+	exists, err := r.vaultRole.Exists(c)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	if !exists {
+		c := vaultrole.CreateConfig{
+			AllowBareDomains: key.AllowBareDomains(customObject),
+			AllowSubdomains:  AllowSubDomains,
+			AltNames:         key.AltNames(customObject),
+			ID:               key.ClusterID(customObject),
+			Organizations:    key.Organizations(customObject),
+			TTL:              key.RoleTTL(customObject),
+		}
+		err := r.vaultRole.Create(c)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	}
+
+	return nil
+}
+
+func (r *Resource) issueCertificate(customObject certificatetpr.CustomObject) (string, string, string, error) {
+	c := vaultcrt.CreateConfig{
+		AltNames:      key.AltNames(customObject),
+		CommonName:    key.CommonName(customObject),
+		ID:            key.ClusterID(customObject),
+		IPSANs:        key.IPSANs(customObject),
+		Organizations: key.Organizations(customObject),
+		TTL:           key.CrtTTL(customObject),
+	}
+	result, err := r.vaultCrt.Create(c)
+	if err != nil {
+		return "", "", "", microerror.Mask(err)
+	}
+
+	return result.CA, result.Crt, result.Key, nil
 }
 
 func toSecret(v interface{}) (*apiv1.Secret, error) {
