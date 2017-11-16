@@ -5,7 +5,6 @@ import (
 
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
 
 	"github.com/giantswarm/cert-operator/service/key"
@@ -25,9 +24,7 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "creating the secret in the Kubernetes API")
 
 		_, err := r.k8sClient.CoreV1().Secrets(r.namespace).Create(secretToCreate)
-		if apierrors.IsAlreadyExists(err) {
-			// fall through
-		} else if err != nil {
+		if err != nil {
 			return microerror.Mask(err)
 		}
 
