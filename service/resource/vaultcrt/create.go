@@ -2,6 +2,7 @@ package vaultcrt
 
 import (
 	"context"
+	"time"
 
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
@@ -55,22 +56,34 @@ func (r *Resource) newCreateChange(ctx context.Context, obj, currentState, desir
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the secret has to be created")
 
 	var secretToCreate *apiv1.Secret
-	if currentSecret == nil {
-		secretToCreate = desiredSecret
-
-		err := r.ensureVaultRole(customObject)
+	{
+		TTL, err := time.ParseDuration(key.CrtTTL(customObject))
 		if err != nil {
+			return false, microerror.Mask(err)
+		}
+		renew, err := r.shouldCertBeRenewed(currentSecret, TTL, r.expirationThreshold)
+		if IsMissingAnnotation(err) {
+			// fall through
+		} else if err != nil {
 			return nil, microerror.Mask(err)
 		}
+		if currentSecret == nil || renew {
+			secretToCreate = desiredSecret
 
-		ca, crt, key, err := r.issueCertificate(customObject)
-		if err != nil {
-			return nil, microerror.Mask(err)
+			err := r.ensureVaultRole(customObject)
+			if err != nil {
+				return nil, microerror.Mask(err)
+			}
+
+			ca, crt, key, err := r.issueCertificate(customObject)
+			if err != nil {
+				return nil, microerror.Mask(err)
+			}
+
+			secretToCreate.StringData[certificatetpr.CA.String()] = ca
+			secretToCreate.StringData[certificatetpr.Crt.String()] = crt
+			secretToCreate.StringData[certificatetpr.Key.String()] = key
 		}
-
-		secretToCreate.StringData[certificatetpr.CA.String()] = ca
-		secretToCreate.StringData[certificatetpr.Crt.String()] = crt
-		secretToCreate.StringData[certificatetpr.Key.String()] = key
 	}
 
 	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the secret has to be created")
@@ -121,4 +134,28 @@ func (r *Resource) issueCertificate(customObject certificatetpr.CustomObject) (s
 	}
 
 	return result.CA, result.Crt, result.Key, nil
+}
+
+func (r *Resource) shouldCertBeRenewed(secret *apiv1.Secret, TTL, threshold time.Duration) (bool, error) {
+	if secret == nil {
+		return false, microerror.Mask(missingAnnotationError)
+	}
+	if secret.Annotations == nil {
+		return false, microerror.Mask(missingAnnotationError)
+	}
+	a, ok := secret.Annotations[UpdateTimestampAnnotation]
+	if !ok {
+		return false, microerror.Mask(missingAnnotationError)
+	}
+
+	t, err := time.ParseInLocation(UpdateTimestampLayout, a, time.UTC)
+	if err != nil {
+		return false, microerror.Mask(err)
+	}
+
+	if t.Add(TTL).Add(-threshold).Before(r.currentTimeFactory()) {
+		return true, nil
+	}
+
+	return false, nil
 }

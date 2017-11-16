@@ -4,6 +4,13 @@ import (
 	"github.com/giantswarm/microerror"
 )
 
+var missingAnnotationError = microerror.New("missing annotation")
+
+// IsMissingAnnotation asserts missingAnnotationError.
+func IsMissingAnnotation(err error) bool {
+	return microerror.Cause(err) == missingAnnotationError
+}
+
 var invalidConfigError = microerror.New("invalid config")
 
 // IsInvalidConfig asserts invalidConfigError.
