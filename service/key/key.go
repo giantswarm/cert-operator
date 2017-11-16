@@ -36,7 +36,8 @@ func IPSANs(customObject certificatetpr.CustomObject) []string {
 }
 
 func Organizations(customObject certificatetpr.CustomObject) []string {
-	return append(customObject.Spec.Organizations, customObject.Spec.ClusterComponent)
+	a := []string{customObject.Spec.ClusterComponent}
+	return append(a, customObject.Spec.Organizations...)
 }
 
 func SecretName(customObject certificatetpr.CustomObject) string {
