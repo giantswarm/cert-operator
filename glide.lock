@@ -1,5 +1,5 @@
-hash: 3640bf48f463ad188be2ede95d06201b40df9cd9bef57da0524907a52a17a93e
-updated: 2017-11-15T11:58:57.005031976+01:00
+hash: 403a9fa99cbbb2131fc1c6504379b829f6ec7facac4232430e2064660cc997e3
+updated: 2017-11-16T12:40:39.877619647+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -34,14 +34,12 @@ imports:
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
-- name: github.com/giantswarm/certctl
-  version: 557532393b3d40f3087e60c84de912fc9278e64f
 - name: github.com/giantswarm/certificatetpr
   version: 72f3cbaf3beacc88d9ef59efeacaf028f2af59d0
 - name: github.com/giantswarm/k8shealthz
   version: 5eaeffb4476a420af88b7f95b478fc9fe2da38ac
 - name: github.com/giantswarm/microendpoint
-  version: d656a166a5c2a5caa1eea316f884939b7746cea7
+  version: 26dce6e1681c27e7a150bccedb82a45109a0a6be
   subpackages:
   - endpoint/healthz
   - endpoint/version
@@ -284,7 +282,7 @@ imports:
 - name: gopkg.in/inf.v0
   version: 3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4
 - name: gopkg.in/yaml.v2
-  version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
+  version: 287cf08546ab5e7e37d55a84f7ed3fd1db036de5
 - name: k8s.io/apimachinery
   version: 8ab5f3d8a330c2e9baaf84e39042db8d49034ae2
   subpackages:

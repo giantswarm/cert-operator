@@ -1,7 +1,5 @@
 package: github.com/giantswarm/cert-operator
 import:
-- package: github.com/giantswarm/certctl
-  version: master
 - package: github.com/giantswarm/microkit
   version: master
 - package: github.com/giantswarm/certificatetpr
