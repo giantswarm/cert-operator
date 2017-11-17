@@ -1,5 +1,5 @@
 hash: 403a9fa99cbbb2131fc1c6504379b829f6ec7facac4232430e2064660cc997e3
-updated: 2017-11-16T12:40:39.877619647+01:00
+updated: 2017-11-17T11:26:11.704658698+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -74,7 +74,7 @@ imports:
   subpackages:
   - memory
 - name: github.com/giantswarm/operatorkit
-  version: e271341feb02c12eeaf4b527dc39e4eed84c977b
+  version: 4d749661ae6510bb4ceee0be2b5f40e70db7f804
   subpackages:
   - client/k8sclient
   - framework
@@ -206,7 +206,7 @@ imports:
   - prometheus
   - prometheus/promhttp
 - name: github.com/prometheus/client_model
-  version: 6f3806018612930941127f2a7c6c453ba2c527d2
+  version: 99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c
   subpackages:
   - go
 - name: github.com/prometheus/common
@@ -232,7 +232,7 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 2da4a54c5ceefcee7ca5dd0eea1e18a3b6366489
+  version: d6948b782c9f4799ea3cd225f6de4131c29c243a
 - name: github.com/spf13/jwalterweatherman
   version: 12bd96e66386c1960ab0f74ced1362f66f552f7b
 - name: github.com/spf13/pflag
