@@ -2,6 +2,7 @@ package key
 
 import (
 	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/giantswarm/certificatetpr"
@@ -28,6 +29,11 @@ func Test_Organization_sort(t *testing.T) {
 			ClusterComponent:      "api",
 			ExpectedOrganizations: []string{"api", "system:master", "giantswarm"},
 		},
+		{
+			Organizations:         []string{"giantswarm", "system:master"},
+			ClusterComponent:      "api",
+			ExpectedOrganizations: []string{"api", "giantswarm", "system:master"},
+		},
 	}
 
 	for i, tc := range testCases {
@@ -48,7 +54,8 @@ func Test_Organization_sort(t *testing.T) {
 
 		result = Organizations(customObject)
 		validate(result)
-
+		a := Organizations(customObject)
+		sort.Strings(a)
 		result = Organizations(customObject)
 		validate(result)
 	}
