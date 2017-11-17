@@ -1,5 +1,5 @@
 hash: 403a9fa99cbbb2131fc1c6504379b829f6ec7facac4232430e2064660cc997e3
-updated: 2017-11-17T11:26:11.704658698+01:00
+updated: 2017-11-17T12:08:36.001053507+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -74,7 +74,7 @@ imports:
   subpackages:
   - memory
 - name: github.com/giantswarm/operatorkit
-  version: 4d749661ae6510bb4ceee0be2b5f40e70db7f804
+  version: f4f5ada0b7447e1b71f6c622bbf873f6c74c1e1d
   subpackages:
   - client/k8sclient
   - framework
@@ -174,6 +174,7 @@ imports:
   - api
   - helper/compressutil
   - helper/jsonutil
+  - helper/parseutil
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/errgo
@@ -210,13 +211,13 @@ imports:
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: 49fee292b27bfff7f354ee0f64e1bc4850462edf
+  version: e3fb1a1acd7605367a2b378bc2e2f893c05174b7
   subpackages:
   - expfmt
   - internal/bitbucket.org/ww/goautoneg
   - model
 - name: github.com/prometheus/procfs
-  version: a1dba9ce8baed984a2495b658c82687f8157b98f
+  version: a6e9df898b1336106c743392c48ee0b71f5c4efa
   subpackages:
   - xfs
 - name: github.com/PuerkitoBio/purell
