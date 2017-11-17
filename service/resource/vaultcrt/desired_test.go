@@ -10,6 +10,7 @@ import (
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
 	"github.com/giantswarm/vaultrole/vaultroletest"
+	"github.com/giantswarm/versionbundle"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
@@ -26,13 +27,17 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 				Spec: certificatetpr.Spec{
 					ClusterID:        "foobar",
 					ClusterComponent: "api",
+					VersionBundle: versionbundle.Bundle{
+						Version: "0.1.0",
+					},
 				},
 			},
 			ExpectedSecret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "foobar-api",
 					Annotations: map[string]string{
-						UpdateTimestampAnnotation: (time.Time{}).Format(UpdateTimestampLayout),
+						UpdateTimestampAnnotation:      (time.Time{}).Format(UpdateTimestampLayout),
+						VersionBundleVersionAnnotation: "0.1.0",
 					},
 					Labels: map[string]string{
 						"clusterID":        "foobar",
@@ -53,13 +58,17 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 				Spec: certificatetpr.Spec{
 					ClusterID:        "al9qy",
 					ClusterComponent: "worker",
+					VersionBundle: versionbundle.Bundle{
+						Version: "0.2.0",
+					},
 				},
 			},
 			ExpectedSecret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "al9qy-worker",
 					Annotations: map[string]string{
-						UpdateTimestampAnnotation: (time.Time{}).Format(UpdateTimestampLayout),
+						UpdateTimestampAnnotation:      (time.Time{}).Format(UpdateTimestampLayout),
+						VersionBundleVersionAnnotation: "0.2.0",
 					},
 					Labels: map[string]string{
 						"clusterID":        "al9qy",

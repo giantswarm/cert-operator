@@ -2,8 +2,12 @@ package vaultcrt
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
+	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
+	"github.com/prometheus/client_golang/prometheus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
@@ -30,8 +34,29 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		} else {
 			r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found the secret in the Kubernetes API")
 			secret = manifest
+			r.updateVersionBundleVersionGauge(customObject, versionBundleVersionGauge, secret)
 		}
 	}
 
 	return secret, nil
+}
+
+func (r *Resource) updateVersionBundleVersionGauge(customObject certificatetpr.CustomObject, gauge *prometheus.GaugeVec, secret *apiv1.Secret) {
+	version, ok := secret.Annotations[VersionBundleVersionAnnotation]
+	if !ok {
+		r.logger.Log("cluster", key.ClusterID(customObject), "warning", fmt.Sprintf("cannot update current version bundle version metric: annotation '%s' must not be empty", VersionBundleVersionAnnotation))
+		return
+	}
+
+	split := strings.Split(version, ".")
+	if len(split) != 3 {
+		r.logger.Log("cluster", key.ClusterID(customObject), "warning", fmt.Sprintf("cannot update current version bundle version metric: invalid version format, expected '<major>.<minor>.<patch>', got '%s'", version))
+		return
+	}
+
+	major := split[0]
+	minor := split[1]
+	patch := split[2]
+
+	gauge.WithLabelValues(major, minor, patch).Set(1)
 }

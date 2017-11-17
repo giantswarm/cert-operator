@@ -57,3 +57,7 @@ func ToCustomObject(v interface{}) (certificatetpr.CustomObject, error) {
 
 	return customObject, nil
 }
+
+func VersionBundleVersion(customObject certificatetpr.CustomObject) string {
+	return customObject.Spec.VersionBundle.Version
+}
