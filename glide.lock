@@ -1,5 +1,5 @@
 hash: 403a9fa99cbbb2131fc1c6504379b829f6ec7facac4232430e2064660cc997e3
-updated: 2017-11-17T12:08:36.001053507+01:00
+updated: 2017-11-17T15:46:05.174334Z
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -74,7 +74,7 @@ imports:
   subpackages:
   - memory
 - name: github.com/giantswarm/operatorkit
-  version: f4f5ada0b7447e1b71f6c622bbf873f6c74c1e1d
+  version: 0bd1c4365f66a52c233957c38367ca3a3c2a81e9
   subpackages:
   - client/k8sclient
   - framework
@@ -174,7 +174,6 @@ imports:
   - api
   - helper/compressutil
   - helper/jsonutil
-  - helper/parseutil
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/errgo
