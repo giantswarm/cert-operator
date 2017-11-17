@@ -2,6 +2,7 @@ package vaultcrt
 
 import (
 	"context"
+	"time"
 
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
@@ -25,6 +26,9 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 	secret := &apiv1.Secret{
 		ObjectMeta: apismetav1.ObjectMeta{
 			Name: key.SecretName(customObject),
+			Annotations: map[string]string{
+				UpdateTimestampAnnotation: r.currentTimeFactory().In(time.UTC).Format(UpdateTimestampLayout),
+			},
 			Labels: map[string]string{
 				certificatetpr.ClusterIDLabel: key.ClusterID(customObject),
 				certificatetpr.ComponentLabel: key.ClusterComponent(customObject),

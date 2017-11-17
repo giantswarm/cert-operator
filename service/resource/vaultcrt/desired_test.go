@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/micrologger/microloggertest"
@@ -30,6 +31,9 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 			ExpectedSecret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "foobar-api",
+					Annotations: map[string]string{
+						UpdateTimestampAnnotation: (time.Time{}).Format(UpdateTimestampLayout),
+					},
 					Labels: map[string]string{
 						"clusterID":        "foobar",
 						"clusterComponent": "api",
@@ -54,6 +58,9 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 			ExpectedSecret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "al9qy-worker",
+					Annotations: map[string]string{
+						UpdateTimestampAnnotation: (time.Time{}).Format(UpdateTimestampLayout),
+					},
 					Labels: map[string]string{
 						"clusterID":        "al9qy",
 						"clusterComponent": "worker",
@@ -71,14 +78,18 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 	var err error
 	var newResource *Resource
 	{
-		resourceConfig := DefaultConfig()
+		c := DefaultConfig()
 
-		resourceConfig.K8sClient = fake.NewSimpleClientset()
-		resourceConfig.Logger = microloggertest.New()
-		resourceConfig.VaultCrt = vaultcrttest.New()
-		resourceConfig.VaultRole = vaultroletest.New()
+		c.CurrentTimeFactory = func() time.Time { return time.Time{} }
+		c.K8sClient = fake.NewSimpleClientset()
+		c.Logger = microloggertest.New()
+		c.VaultCrt = vaultcrttest.New()
+		c.VaultRole = vaultroletest.New()
 
-		newResource, err = New(resourceConfig)
+		c.ExpirationThreshold = 24 * time.Hour
+		c.Namespace = "default"
+
+		newResource, err = New(c)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}

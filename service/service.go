@@ -171,10 +171,14 @@ func New(config Config) (*Service, error) {
 	{
 		c := vaultcrtresource.DefaultConfig()
 
+		c.CurrentTimeFactory = func() time.Time { return time.Now() }
 		c.K8sClient = k8sClient
 		c.Logger = config.Logger
 		c.VaultCrt = vaultCrt
 		c.VaultRole = vaultRole
+
+		c.ExpirationThreshold = config.Viper.GetDuration(config.Flag.Service.Resource.VaultCrt.ExpirationThreshold)
+		c.Namespace = config.Viper.GetString(config.Flag.Service.Resource.VaultCrt.Namespace)
 
 		vaultCrtResource, err = vaultcrtresource.New(c)
 		if err != nil {
@@ -270,7 +274,6 @@ func New(config Config) (*Service, error) {
 	{
 		informerConfig := informer.DefaultConfig()
 
-		informerConfig.BackOff = backoff.NewExponentialBackOff()
 		informerConfig.WatcherFactory = newWatcherFactory
 
 		informerConfig.RateWait = 1 * time.Second
