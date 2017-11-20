@@ -2,7 +2,6 @@ package key
 
 import (
 	"reflect"
-	"sort"
 	"testing"
 
 	"github.com/giantswarm/certificatetpr"
@@ -13,26 +12,31 @@ func Test_Organization_sort(t *testing.T) {
 		Organizations         []string
 		ClusterComponent      string
 		ExpectedOrganizations []string
+		ExpectedOutput        []string
 	}{
 		{
 			Organizations:         []string{},
 			ClusterComponent:      "api",
-			ExpectedOrganizations: []string{"api"},
+			ExpectedOrganizations: []string{},
+			ExpectedOutput:        []string{"api"},
 		},
 		{
 			Organizations:         []string{"system:master"},
 			ClusterComponent:      "api",
-			ExpectedOrganizations: []string{"api", "system:master"},
+			ExpectedOrganizations: []string{"system:master"},
+			ExpectedOutput:        []string{"api", "system:master"},
 		},
 		{
 			Organizations:         []string{"system:master", "giantswarm"},
 			ClusterComponent:      "api",
-			ExpectedOrganizations: []string{"api", "system:master", "giantswarm"},
+			ExpectedOrganizations: []string{"system:master", "giantswarm"},
+			ExpectedOutput:        []string{"api", "system:master", "giantswarm"},
 		},
 		{
 			Organizations:         []string{"giantswarm", "system:master"},
 			ClusterComponent:      "api",
-			ExpectedOrganizations: []string{"api", "giantswarm", "system:master"},
+			ExpectedOrganizations: []string{"giantswarm", "system:master"},
+			ExpectedOutput:        []string{"api", "giantswarm", "system:master"},
 		},
 	}
 
@@ -44,19 +48,13 @@ func Test_Organization_sort(t *testing.T) {
 			},
 		}
 
-		validate := func(result []string) {
-			if !reflect.DeepEqual(tc.ExpectedOrganizations, result) {
-				t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedOrganizations, result)
-			}
-		}
 		result := Organizations(customObject)
-		validate(result)
+		if !reflect.DeepEqual(tc.ExpectedOutput, result) {
+			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedOutput, result)
+		}
 
-		result = Organizations(customObject)
-		validate(result)
-		a := Organizations(customObject)
-		sort.Strings(a)
-		result = Organizations(customObject)
-		validate(result)
+		if !reflect.DeepEqual(tc.ExpectedOrganizations, customObject.Spec.Organizations) {
+			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedOrganizations, customObject.Spec.Organizations)
+		}
 	}
 }
