@@ -30,4 +30,6 @@ spec:
         - --service.vault.config.pki.ca.ttl=1440h
         - --service.vault.config.pki.commonname.format=%s.{{.Values.commonDomain}}
         - --service.kubernetes.incluster=true
+        - --service.resource.vaultcrt.expirationthreshold=24h
+        - --service.resource.vaultcrt.namespace=default
 {{end}}
