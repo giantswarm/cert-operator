@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: vault
-          image: vault:0.6.4
+          image: vault:0.7.3
           ports:
           - name: http
             containerPort: 8200
