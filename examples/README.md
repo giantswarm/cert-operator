@@ -40,14 +40,27 @@ docker build -t quay.io/giantswarm/cert-operator:local-lab .
 
 ## Deploying the lab charts
 
-The lab consist of two Helm charts, `cert-operator-lab-chart`, which sets up Vault and cert-operator,
-and `cert-resource-lab-chart`, which puts in place the required certificates.
+The lab consist of three Helm charts, `cert-operator-lab-chart`, which sets up cert-operator,
+`cert-resource-lab-chart`, which puts in place the required certificates and `vaultlab-chart`,
+which installs Vault in dev mode. For installing the latter two you need the [Helm registry plugin](https://github.com/app-registry/appr-helm-plugin)
 
-With a working Helm installation they can be created from the `examples/local` dir with:
+With a working Helm installation they can be created from the project's root with:
 
 ```bash
-$ helm install -n cert-operator-lab ./cert-operator-lab-chart/ --wait
-$ helm install -n cert-resource-lab ./cert-resource-lab-chart/ --wait
+$ helm registry install quay.io/giantswarm/vaultlab-chart:stable -- \
+                        -n vault \
+                        --set vaultToken=myToken
+
+$ helm install -n cert-operator-lab \
+               --set imageTag=local-lab \
+               --set vaultToken=myToken \
+               --set commonDomain=mydomain.io
+               ./examples/cert-operator-lab-chart/ --wait
+
+helm registry install quay.io/giantswarm/cert-resource-lab-chart:stable -- \
+                      -n cert-resource-lab \
+                      --set commonDomain=mydomain.io
+                      --set clusterName=test-cluster
 ```
 
 The certificates are issued using Vault and stored as K8s secrets.
@@ -57,14 +70,13 @@ kubectl get secret -l clusterID=test-cluster # or the actual value of `clusterNa
 ```
 
 `cert-operator-lab-chart` accepts the following configuration parameters:
-* `clusterName` - Cluster name to be created by [aws-operator], by default `test-cluster`
 * `commonDomain` - Domain to be used by [aws-operator].
 * `vaultHost` - Defaults to `vault` for the local setup.
 * `vaultToken` - It must match across the Vault service and the operator deployment flags.
 * `imageTag` - Tag of the cert-operator image to be used, by default `local-dev` to use a locally created
 image.
 
-`cert-resource-lab-chart` is also configurable with `clusterName` and `commonDomain` (should match the ones
+`cert-resource-lab-chart` is also configurable with `clusterName` and `commonDomain` (the latter should match the vaule
 used in `cert-operator-lab-chart`).
 
 
