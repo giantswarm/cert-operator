@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/giantswarm/certificatetpr"
+	"github.com/giantswarm/certificatetpr/spec"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
 	"github.com/giantswarm/vaultrole/vaultroletest"
-	"github.com/giantswarm/versionbundle"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
@@ -27,7 +27,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 				Spec: certificatetpr.Spec{
 					ClusterID:        "foobar",
 					ClusterComponent: "api",
-					VersionBundle: versionbundle.Bundle{
+					VersionBundle: spec.VersionBundle{
 						Version: "0.1.0",
 					},
 				},
@@ -58,7 +58,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 				Spec: certificatetpr.Spec{
 					ClusterID:        "al9qy",
 					ClusterComponent: "worker",
-					VersionBundle: versionbundle.Bundle{
+					VersionBundle: spec.VersionBundle{
 						Version: "0.2.0",
 					},
 				},
