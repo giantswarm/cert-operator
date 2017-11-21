@@ -1,5 +1,5 @@
 hash: 403a9fa99cbbb2131fc1c6504379b829f6ec7facac4232430e2064660cc997e3
-updated: 2017-11-17T15:46:05.174334Z
+updated: 2017-11-21T15:14:06.740037365+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -35,7 +35,9 @@ imports:
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/giantswarm/certificatetpr
-  version: 72f3cbaf3beacc88d9ef59efeacaf028f2af59d0
+  version: 9a7c674d13714bc7a5258453570bc8163a47b2cc
+  subpackages:
+  - spec
 - name: github.com/giantswarm/k8shealthz
   version: 5eaeffb4476a420af88b7f95b478fc9fe2da38ac
 - name: github.com/giantswarm/microendpoint
@@ -46,7 +48,7 @@ imports:
   - service/healthz
   - service/version
 - name: github.com/giantswarm/microerror
-  version: 5ade94eb4ee35ef72eb9382228470caeddb29989
+  version: ec5f66bb657662031c0d651504fee6908cdf28d9
 - name: github.com/giantswarm/microkit
   version: e6c3aafd2c6b8298599dc465dc1294fbd025d2f1
   subpackages:
@@ -91,7 +93,7 @@ imports:
   - key
   - vaultcrttest
 - name: github.com/giantswarm/vaulthealthz
-  version: 863dcf47fa7dc36f081ef5f1f15d9273cf967980
+  version: 35d412dbb7bd4859748acfbc01c46503b6afaab1
 - name: github.com/giantswarm/vaultpki
   version: a1f5764b0ff9fe58fd13c8e5534434d50359fb89
   subpackages:
@@ -174,6 +176,7 @@ imports:
   - api
   - helper/compressutil
   - helper/jsonutil
+  - helper/parseutil
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/errgo
@@ -201,7 +204,7 @@ imports:
 - name: github.com/pelletier/go-toml
   version: 4e9e0ee19b60b13eb79915933f44d8ed5f268bdd
 - name: github.com/prometheus/client_golang
-  version: 5cec1d0429b02e4323e042eb04dafdb079ddf568
+  version: 1cdba8fdde81f444626530cce66e138d2f68ae1c
   subpackages:
   - prometheus
   - prometheus/promhttp
@@ -210,7 +213,7 @@ imports:
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: e3fb1a1acd7605367a2b378bc2e2f893c05174b7
+  version: 2e54d0b93cba2fd133edc32211dcc32c06ef72ca
   subpackages:
   - expfmt
   - internal/bitbucket.org/ww/goautoneg
@@ -232,7 +235,7 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: d6948b782c9f4799ea3cd225f6de4131c29c243a
+  version: 19e54c4a2b8a78c9d54b2bed61b1a6c5e1bfcf6f
 - name: github.com/spf13/jwalterweatherman
   version: 12bd96e66386c1960ab0f74ced1362f66f552f7b
 - name: github.com/spf13/pflag

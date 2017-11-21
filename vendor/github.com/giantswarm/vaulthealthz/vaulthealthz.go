@@ -87,9 +87,9 @@ func New(config Config) (*Service, error) {
 	return newService, nil
 }
 
-// GetHealthz implements the health check for Vault. It does this by listing the
-// mounts for the sys backend. This checks that the we can connect to the Vault
-// API and that the Vault token is valid.
+// GetHealthz implements the health check for Vault. It does this by calling
+// the Vault /sys/health endpoint. This checks that the we can connect to the
+// Vault API and that the Vault token is valid.
 func (s *Service) GetHealthz(ctx context.Context) (healthz.Response, error) {
 	failed := false
 	message := SuccessMessage
@@ -97,7 +97,7 @@ func (s *Service) GetHealthz(ctx context.Context) (healthz.Response, error) {
 		ch := make(chan string, 1)
 
 		go func() {
-			_, err := s.vaultClient.Sys().ListMounts()
+			_, err := s.vaultClient.Sys().Health()
 			if err != nil {
 				ch <- err.Error()
 				return
