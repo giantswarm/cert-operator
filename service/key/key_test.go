@@ -2,12 +2,13 @@ package key
 
 import (
 	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/giantswarm/certificatetpr"
 )
 
-func Test_Organization_sort(t *testing.T) {
+func Test_Organization(t *testing.T) {
 	testCases := []struct {
 		Organizations         []string
 		ClusterComponent      string
@@ -30,7 +31,7 @@ func Test_Organization_sort(t *testing.T) {
 			Organizations:         []string{"system:master", "giantswarm"},
 			ClusterComponent:      "api",
 			ExpectedOrganizations: []string{"system:master", "giantswarm"},
-			ExpectedOutput:        []string{"api", "system:master", "giantswarm"},
+			ExpectedOutput:        []string{"api", "giantswarm", "system:master"},
 		},
 		{
 			Organizations:         []string{"giantswarm", "system:master"},
@@ -48,13 +49,19 @@ func Test_Organization_sort(t *testing.T) {
 			},
 		}
 
-		result := Organizations(customObject)
-		if !reflect.DeepEqual(tc.ExpectedOutput, result) {
-			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedOutput, result)
-		}
+		for j := 0; j < 10; j++ {
+			if !reflect.DeepEqual(tc.ExpectedOrganizations, customObject.Spec.Organizations) {
+				t.Fatalf("case %d iteration %d expected %#v got %#v", i, j, tc.ExpectedOrganizations, customObject.Spec.Organizations)
+			}
 
-		if !reflect.DeepEqual(tc.ExpectedOrganizations, customObject.Spec.Organizations) {
-			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedOrganizations, customObject.Spec.Organizations)
+			Organizations(customObject)
+
+			result := Organizations(customObject)
+			sort.Strings(result)
+
+			if !reflect.DeepEqual(tc.ExpectedOutput, result) {
+				t.Fatalf("case %d iteration %d expected %#v got %#v", i, j, tc.ExpectedOutput, result)
+			}
 		}
 	}
 }
