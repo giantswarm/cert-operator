@@ -65,3 +65,29 @@ func Test_Organization(t *testing.T) {
 		}
 	}
 }
+
+func TestOrganizationCapacity(t *testing.T) {
+	// create a slice of capacity greater than the number of elements
+	// that the copy is going to have
+	orgs := make([]string, 1, 4)
+	orgs[0] = "myorg"
+
+	customObject := certificatetpr.CustomObject{
+		Spec: certificatetpr.Spec{
+			ClusterComponent: "api",
+			Organizations:    orgs,
+		},
+	}
+
+	// here create an extended copy of orgs
+	o := Organizations(customObject)
+
+	// call sort on the copy, this will create havok in the original
+	sort.Strings(o)
+
+	expected := "myorg"
+	actual := customObject.Spec.Organizations[0]
+	if expected != actual {
+		t.Errorf("customObject organizations changed by sorting an unrelated slice, expected %s, actual %s", expected, actual)
+	}
+}
