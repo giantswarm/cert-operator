@@ -1,0 +1,9 @@
+version: 1
+
+test:
+  env:
+    - "VAULT_TOKEN=mytoken"
+    - "CIRCLE_SHA1=${CIRCLE_SHA1}"
+    - "COMMON_DOMAIN=${COMMON_DOMAIN}"
+    - "CLUSTER_NAME=ci-${CIRCLE_SHA1}"
+    - "REGISTRY_PULL_SECRET=${REGISTRY_PULL_SECRET}"
