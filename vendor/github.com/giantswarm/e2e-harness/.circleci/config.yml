@@ -1,0 +1,79 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    steps:
+    - checkout
+
+    - run: |
+        wget -q $(curl -sS -H "Authorization: token $RELEASE_TOKEN" https://api.github.com/repos/giantswarm/architect/releases/latest | grep browser_download_url | head -n 1 | cut -d '"' -f 4)
+        chmod +x ./architect
+        ./architect version
+
+    - run: ./architect build
+
+    - persist_to_workspace:
+        root: .
+        paths:
+        - ./e2e-harness
+        - ./architect
+
+    - deploy:
+        command: |
+          if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            ./architect deploy
+          fi
+
+  e2eSetup:
+    machine: true
+    steps:
+    - checkout
+
+    - attach_workspace:
+        at: .
+
+    - run: ./e2e-harness setup --name=ci-e2e-harness-${CIRCLE_SHA1:0:7}
+
+    - run:
+        name: Cleanup on failure
+        command: ./e2e-harness teardown
+        when: on_fail
+
+    - persist_to_workspace:
+        root: .
+        paths:
+        - ./.e2e-harness
+
+  e2eTestExecution:
+    machine: true
+    steps:
+    - checkout
+
+    - attach_workspace:
+        at: .
+
+    - run:
+        name: additional setup required for dogfooding e2e-harness
+        command: |
+          mkdir -p /home/circleci/.go_workspace/src/github.com/giantswarm/e2e-harness
+          cp -ar ./pkg/ /home/circleci/.go_workspace/src/github.com/giantswarm/e2e-harness
+          cp -ar vendor/* /home/circleci/.go_workspace/src/
+
+    - run: ./e2e-harness test
+
+    - run:
+        name: Finish with cleanup, no matter if the test succeeded or not
+        command: ./e2e-harness teardown
+        when: always
+
+workflows:
+  version: 2
+  build_e2e:
+    jobs:
+      - build
+      - e2eSetup:
+          requires:
+          - build
+      - e2eTestExecution:
+          requires:
+          - e2eSetup

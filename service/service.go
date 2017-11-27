@@ -7,14 +7,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenk/backoff"
+	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microendpoint/service/version"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/client/k8sclient"
 	"github.com/giantswarm/operatorkit/framework"
-	"github.com/giantswarm/operatorkit/framework/resource/logresource"
 	"github.com/giantswarm/operatorkit/framework/resource/metricsresource"
 	"github.com/giantswarm/operatorkit/framework/resource/retryresource"
 	"github.com/giantswarm/operatorkit/informer"
@@ -217,13 +216,6 @@ func New(config Config) (*Service, error) {
 			vaultCrtResource,
 		}
 
-		logWrapConfig := logresource.DefaultWrapConfig()
-		logWrapConfig.Logger = config.Logger
-		resources, err = logresource.Wrap(resources, logWrapConfig)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-
 		retryWrapConfig := retryresource.DefaultWrapConfig()
 		retryWrapConfig.BackOffFactory = func() backoff.BackOff { return backoff.WithMaxTries(backoff.NewExponentialBackOff(), ResourceRetries) }
 		retryWrapConfig.Logger = config.Logger
@@ -289,7 +281,6 @@ func New(config Config) (*Service, error) {
 	{
 		frameworkConfig := framework.DefaultConfig()
 
-		frameworkConfig.BackOffFactory = framework.DefaultBackOffFactory()
 		frameworkConfig.Informer = newInformer
 		frameworkConfig.InitCtxFunc = initCtxFunc
 		frameworkConfig.Logger = config.Logger

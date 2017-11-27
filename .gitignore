@@ -4,3 +4,5 @@ TODO
 
 /examples/local/*.yaml
 !/examples/local/*.tmpl.yaml
+.e2e-harness/
+integration/cert-operator-e2e
