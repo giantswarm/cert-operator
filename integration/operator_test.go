@@ -145,10 +145,10 @@ func installVault(cs kubernetes.Interface) error {
 func installCertOperator(cs kubernetes.Interface) error {
 	certOperatorChartValuesEnv := os.ExpandEnv(certOperatorChartValues)
 	if err := ioutil.WriteFile(certOperatorValuesFile, []byte(certOperatorChartValuesEnv), os.ModePerm); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	if err := runCmd("helm registry install quay.io/giantswarm/cert-operator-chart@1.0.0-${CIRCLE_SHA1} -- -n cert-operator --values " + certOperatorValuesFile); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	return waitFor(tprFunc(cs, certificatetpr.Name))
@@ -172,7 +172,7 @@ func waitFor(f func() error) error {
 		select {
 		case <-timeout:
 			ticker.Stop()
-			return waitTimeoutError
+			return microerror.Mask(waitTimeoutError)
 		case <-ticker.C:
 			if err := f(); err == nil {
 				return nil
@@ -190,7 +190,7 @@ func runningPodFunc(cs kubernetes.Interface, namespace, labelSelector string) fu
 			return microerror.Mask(err)
 		}
 		if len(pods.Items) > 1 {
-			return tooManyResultsError
+			return microerror.Mask(tooManyResultsError)
 		}
 		pod := pods.Items[0]
 		phase := pod.Status.Phase
