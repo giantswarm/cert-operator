@@ -21,3 +21,5 @@ spec:
   - "172.31.0.1"
   ttl: "720h"
   allowBareDomains: true
+  organizations:
+  - "system:masters"
