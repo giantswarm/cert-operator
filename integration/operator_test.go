@@ -23,8 +23,8 @@ import (
 const (
 	certOperatorValuesFile = "/tmp/cert-operator-install.yaml"
 	defaultDeadline        = 15
-	// values required by cert-operator-chart, the envirnment variables will
-	// be expanded before writing the contents to a file.
+	// certOperatorChartValues values required by cert-operator-chart, the environment
+	// variables will be expanded before writing the contents to a file.
 	certOperatorChartValues = `commonDomain: ${COMMON_DOMAIN}
 clusterName: ${CLUSTER_NAME}
 Installation:
