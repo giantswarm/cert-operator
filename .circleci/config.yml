@@ -30,7 +30,7 @@ jobs:
         wget -q $(curl -sS https://api.github.com/repos/giantswarm/e2e-harness/releases/latest | grep browser_download_url | head -n 1 | cut -d '"' -f 4)
         chmod +x ./e2e-harness
 
-    - run: ./e2e-harness setup --name=ci-awsop-${CIRCLE_SHA1:0:7}
+    - run: ./e2e-harness setup --name=ci-certop-${CIRCLE_SHA1:0:7}
 
     - run:
         name: Cleanup on failure

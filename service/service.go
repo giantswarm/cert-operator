@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenk/backoff"
+	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microendpoint/service/version"
 	"github.com/giantswarm/microerror"
@@ -281,7 +281,6 @@ func New(config Config) (*Service, error) {
 	{
 		frameworkConfig := framework.DefaultConfig()
 
-		frameworkConfig.BackOffFactory = framework.DefaultBackOffFactory()
 		frameworkConfig.Informer = newInformer
 		frameworkConfig.InitCtxFunc = initCtxFunc
 		frameworkConfig.Logger = config.Logger

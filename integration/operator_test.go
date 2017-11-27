@@ -22,7 +22,7 @@ import (
 
 const (
 	certOperatorValuesFile = "/tmp/cert-operator-install.yaml"
-	defaultDeadline        = 15
+	defaultTimeout         = 15
 	// certOperatorChartValues values required by cert-operator-chart, the environment
 	// variables will be expanded before writing the contents to a file.
 	certOperatorChartValues = `commonDomain: ${COMMON_DOMAIN}
@@ -93,15 +93,15 @@ func TestSecretsAreCreated(t *testing.T) {
 
 func setUp(cs kubernetes.Interface) error {
 	if err := createGSNamespace(cs); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	if err := installVault(cs); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	if err := installCertOperator(cs); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 	return nil
 }
@@ -165,14 +165,14 @@ func runCmd(cmdStr string) error {
 }
 
 func waitFor(f func() error) error {
-	timeout := time.After(defaultDeadline * time.Second)
+	timeout := time.After(defaultTimeout * time.Second)
 	ticker := backoff.NewTicker(backoff.NewExponentialBackOff())
 
 	for {
 		select {
 		case <-timeout:
 			ticker.Stop()
-			return fmt.Errorf("wait timeout")
+			return waitTimeoutError
 		case <-ticker.C:
 			if err := f(); err == nil {
 				return nil
@@ -189,13 +189,13 @@ func runningPodFunc(cs kubernetes.Interface, namespace, labelSelector string) fu
 		if err != nil {
 			return microerror.Mask(err)
 		}
-		if len(pods.Items) != 1 {
-			return fmt.Errorf("unexpected number of pods")
+		if len(pods.Items) > 1 {
+			return tooManyResultsError
 		}
 		pod := pods.Items[0]
 		phase := pod.Status.Phase
 		if phase != v1.PodRunning {
-			return fmt.Errorf("unexpected pod status phase " + string(phase))
+			return microerror.Maskf(unexpectedStatusPhase, "current status: %s", string(phase))
 		}
 		return nil
 	}
@@ -211,7 +211,7 @@ func activeNamespaceFunc(cs kubernetes.Interface, name string) func() error {
 
 		phase := ns.Status.Phase
 		if phase != v1.NamespaceActive {
-			return fmt.Errorf("unexpected ns status phase " + string(phase))
+			return microerror.Maskf(unexpectedStatusPhase, "current status: %s", string(phase))
 		}
 
 		return nil
