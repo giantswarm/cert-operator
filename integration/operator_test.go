@@ -14,6 +14,7 @@ import (
 
 	"github.com/cenk/backoff"
 	"github.com/giantswarm/certificatetpr"
+	"github.com/giantswarm/microerror"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/pkg/api/v1"
@@ -22,6 +23,32 @@ import (
 const (
 	certOperatorValuesFile = "/tmp/cert-operator-install.yaml"
 	defaultDeadline        = 15
+	// values required by cert-operator-chart, the envirnment variables will
+	// be expanded before writing the contents to a file.
+	certOperatorChartValues = `commonDomain: ${COMMON_DOMAIN}
+clusterName: ${CLUSTER_NAME}
+Installation:
+  V1:
+    Auth:
+      Vault:
+        Address: http://vault.default.svc.cluster.local:8200
+        CA:
+          TTL: 1440h
+    Guest:
+      Kubernetes:
+        API:
+          EndpointBase: ${COMMON_DOMAIN}
+    Secret:
+      CertOperator:
+        SecretYaml: |
+          service:
+            vault:
+              config:
+                token: ${VAULT_TOKEN}
+      Registry:
+        PullSecret:
+          DockerConfigJSON: "{\"auths\":{\"quay.io\":{\"auth\":\"$REGISTRY_PULL_SECRET\"}}}"
+`
 )
 
 var cs kubernetes.Interface
@@ -101,7 +128,7 @@ func createGSNamespace(cs kubernetes.Interface) error {
 	}
 	_, err = cs.CoreV1().Namespaces().Create(namespace)
 	if err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	return waitFor(activeNamespaceFunc(cs, "giantswarm"))
@@ -109,39 +136,15 @@ func createGSNamespace(cs kubernetes.Interface) error {
 
 func installVault(cs kubernetes.Interface) error {
 	if err := runCmd("helm registry install quay.io/giantswarm/vaultlab-chart:stable -- --set vaultToken=${VAULT_TOKEN} -n vault"); err != nil {
-		return err
+		return microerror.Mask(err)
 	}
 
 	return waitFor(runningPodFunc(cs, "default", "app=vault"))
 }
 
 func installCertOperator(cs kubernetes.Interface) error {
-	installationValues := `commonDomain: ${COMMON_DOMAIN}
-clusterName: ${CLUSTER_NAME}
-Installation:
-  V1:
-    Auth:
-      Vault:
-        Address: http://vault.default.svc.cluster.local:8200
-        CA:
-          TTL: 1440h
-    Guest:
-      Kubernetes:
-        API:
-          EndpointBase: ${COMMON_DOMAIN}
-    Secret:
-      CertOperator:
-        SecretYaml: |
-          service:
-            vault:
-              config:
-                token: ${VAULT_TOKEN}
-      Registry:
-        PullSecret:
-          DockerConfigJSON: "{\"auths\":{\"quay.io\":{\"auth\":\"$REGISTRY_PULL_SECRET\"}}}"
-`
-	installationValuesEnv := os.ExpandEnv(installationValues)
-	if err := ioutil.WriteFile(certOperatorValuesFile, []byte(installationValuesEnv), os.ModePerm); err != nil {
+	certOperatorChartValuesEnv := os.ExpandEnv(certOperatorChartValues)
+	if err := ioutil.WriteFile(certOperatorValuesFile, []byte(certOperatorChartValuesEnv), os.ModePerm); err != nil {
 		return err
 	}
 	if err := runCmd("helm registry install quay.io/giantswarm/cert-operator-chart@1.0.0-${CIRCLE_SHA1} -- -n cert-operator --values " + certOperatorValuesFile); err != nil {
@@ -184,7 +187,7 @@ func runningPodFunc(cs kubernetes.Interface, namespace, labelSelector string) fu
 			LabelSelector: labelSelector,
 		})
 		if err != nil {
-			return err
+			return microerror.Mask(err)
 		}
 		if len(pods.Items) != 1 {
 			return fmt.Errorf("unexpected number of pods")
@@ -203,7 +206,7 @@ func activeNamespaceFunc(cs kubernetes.Interface, name string) func() error {
 		ns, err := cs.CoreV1().Namespaces().Get(name, metav1.GetOptions{})
 
 		if err != nil {
-			return err
+			return microerror.Mask(err)
 		}
 
 		phase := ns.Status.Phase
@@ -218,7 +221,7 @@ func activeNamespaceFunc(cs kubernetes.Interface, name string) func() error {
 func secretFunc(cs kubernetes.Interface, namespace, secretName string) func() error {
 	return func() error {
 		_, err := cs.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
-		return err
+		return microerror.Mask(err)
 	}
 }
 
