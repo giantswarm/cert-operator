@@ -54,12 +54,12 @@ $ helm registry install quay.io/giantswarm/vaultlab-chart:stable -- \
 $ helm install -n cert-operator-lab \
                --set imageTag=local-lab \
                --set vaultToken=myToken \
-               --set commonDomain=mydomain.io
+               --set commonDomain=mydomain.io \
                ./examples/cert-operator-lab-chart/ --wait
 
 helm registry install quay.io/giantswarm/cert-resource-lab-chart:stable -- \
                       -n cert-resource-lab \
-                      --set commonDomain=mydomain.io
+                      --set commonDomain=mydomain.io \
                       --set clusterName=test-cluster
 ```
 
@@ -76,7 +76,7 @@ kubectl get secret -l clusterID=test-cluster # or the actual value of `clusterNa
 * `imageTag` - Tag of the cert-operator image to be used, by default `local-dev` to use a locally created
 image.
 
-`cert-resource-lab-chart` is also configurable with `clusterName` and `commonDomain` (the latter should match the vaule
+`cert-resource-lab-chart` is also configurable with `clusterName` and `commonDomain` (the latter should match the value
 used in `cert-operator-lab-chart`).
 
 
