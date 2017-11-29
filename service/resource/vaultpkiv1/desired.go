@@ -3,9 +3,10 @@ package vaultpkiv1
 import (
 	"context"
 
-	"github.com/giantswarm/cert-operator/service/keyv1"
 	"github.com/giantswarm/microerror"
 	vaultapi "github.com/hashicorp/vault/api"
+
+	"github.com/giantswarm/cert-operator/service/keyv1"
 )
 
 func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interface{}, error) {
