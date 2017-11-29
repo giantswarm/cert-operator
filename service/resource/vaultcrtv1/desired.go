@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/giantswarm/cert-operator/service/keyv1"
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
+
+	"github.com/giantswarm/cert-operator/service/keyv1"
 )
 
 func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interface{}, error) {

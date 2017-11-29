@@ -3,10 +3,11 @@ package vaultcrtv1
 import (
 	"context"
 
-	"github.com/giantswarm/cert-operator/service/keyv1"
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
+
+	"github.com/giantswarm/cert-operator/service/keyv1"
 )
 
 func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange interface{}) error {
