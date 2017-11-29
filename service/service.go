@@ -29,8 +29,8 @@ import (
 	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
 	"github.com/giantswarm/cert-operator/service/healthz"
-	vaultcrtresource "github.com/giantswarm/cert-operator/service/resource/vaultcrt"
-	vaultpkiresource "github.com/giantswarm/cert-operator/service/resource/vaultpki"
+	vaultcrtv1 "github.com/giantswarm/cert-operator/service/resource/vaultcrtv1"
+	vaultpkiv1 "github.com/giantswarm/cert-operator/service/resource/vaultpkiv1"
 )
 
 const (
@@ -168,7 +168,7 @@ func New(config Config) (*Service, error) {
 
 	var vaultCrtResource framework.Resource
 	{
-		c := vaultcrtresource.DefaultConfig()
+		c := vaultcrtv1.DefaultConfig()
 
 		c.CurrentTimeFactory = func() time.Time { return time.Now() }
 		c.K8sClient = k8sClient
@@ -179,7 +179,7 @@ func New(config Config) (*Service, error) {
 		c.ExpirationThreshold = config.Viper.GetDuration(config.Flag.Service.Resource.VaultCrt.ExpirationThreshold)
 		c.Namespace = config.Viper.GetString(config.Flag.Service.Resource.VaultCrt.Namespace)
 
-		vaultCrtResource, err = vaultcrtresource.New(c)
+		vaultCrtResource, err = vaultcrtv1.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -187,12 +187,12 @@ func New(config Config) (*Service, error) {
 
 	var vaultPKIResource framework.Resource
 	{
-		c := vaultpkiresource.DefaultConfig()
+		c := vaultpkiv1.DefaultConfig()
 
 		c.Logger = config.Logger
 		c.VaultPKI = vaultPKI
 
-		vaultPKIResource, err = vaultpkiresource.New(c)
+		vaultPKIResource, err = vaultpkiv1.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}

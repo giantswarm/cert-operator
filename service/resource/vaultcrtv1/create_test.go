@@ -1,4 +1,4 @@
-package vaultcrt
+package vaultcrtv1
 
 import (
 	"context"
@@ -15,26 +15,15 @@ import (
 	apiv1 "k8s.io/client-go/pkg/api/v1"
 )
 
-func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
+func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 	testCases := []struct {
 		Obj            interface{}
 		CurrentState   interface{}
 		DesiredState   interface{}
 		ExpectedSecret *apiv1.Secret
 	}{
-		// Test 0 ensures that zero value input results in zero value output.
-		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
-				},
-			},
-			CurrentState:   nil,
-			DesiredState:   &apiv1.Secret{},
-			ExpectedSecret: nil,
-		},
-
-		// Test 1 is the same as 0 but with initialized empty pointer values.
+		// Test 0 ensures a non-nil current state results in the create state to be
+		// empty.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -43,11 +32,10 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 			},
 			CurrentState:   &apiv1.Secret{},
 			DesiredState:   &apiv1.Secret{},
-			ExpectedSecret: &apiv1.Secret{},
+			ExpectedSecret: nil,
 		},
 
-		// Test 2 ensures that the delete state is defined by the current state
-		// since we want to remove the current state in case a delete event happens.
+		// Test 1 is the same 1 but with different content for the current state.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
@@ -56,10 +44,10 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 			},
 			CurrentState: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
-					Name: "al9qy-worker",
+					Name: "foobar-api",
 					Labels: map[string]string{
-						"clusterID":        "al9qy",
-						"clusterComponent": "worker",
+						"clusterID":        "foobar",
+						"clusterComponent": "api",
 					},
 				},
 				StringData: map[string]string{
@@ -68,19 +56,47 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 					"key": "",
 				},
 			},
-			DesiredState: &apiv1.Secret{},
-			ExpectedSecret: &apiv1.Secret{
+			DesiredState:   &apiv1.Secret{},
+			ExpectedSecret: nil,
+		},
+
+		// Test 2 ensures an empty current state results in a create state that
+		// equals the desired state. NOTE that the secret data is extended with
+		// actual certificate content, which in this case is some fake content from
+		// the fake VaultCrt service.
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID: "foobar",
+				},
+			},
+			CurrentState: nil,
+			DesiredState: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
-					Name: "al9qy-worker",
+					Name: "foobar-api",
 					Labels: map[string]string{
-						"clusterID":        "al9qy",
-						"clusterComponent": "worker",
+						"clusterID":        "foobar",
+						"clusterComponent": "api",
 					},
 				},
 				StringData: map[string]string{
 					"ca":  "",
 					"crt": "",
 					"key": "",
+				},
+			},
+			ExpectedSecret: &apiv1.Secret{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Name: "foobar-api",
+					Labels: map[string]string{
+						"clusterID":        "foobar",
+						"clusterComponent": "api",
+					},
+				},
+				StringData: map[string]string{
+					"ca":  "test CA",
+					"crt": "test crt",
+					"key": "test key",
 				},
 			},
 		},
@@ -107,7 +123,7 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.newDeleteChange(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
+		result, err := newResource.newCreateChange(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
 		if err != nil {
 			t.Fatal("case", i, "expected", nil, "got", err)
 		}

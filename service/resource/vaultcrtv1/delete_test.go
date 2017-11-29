@@ -1,4 +1,4 @@
-package vaultcrt
+package vaultcrtv1
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/giantswarm/certificatetpr"
-	"github.com/giantswarm/certificatetpr/spec"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
 	"github.com/giantswarm/vaultrole/vaultroletest"
@@ -16,32 +15,51 @@ import (
 	apiv1 "k8s.io/client-go/pkg/api/v1"
 )
 
-func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
+func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 	testCases := []struct {
 		Obj            interface{}
+		CurrentState   interface{}
+		DesiredState   interface{}
 		ExpectedSecret *apiv1.Secret
 	}{
-		// Test 0 ensures the desired state is always the same placeholder state.
+		// Test 0 ensures that zero value input results in zero value output.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
-					ClusterID:        "foobar",
-					ClusterComponent: "api",
-					VersionBundle: spec.VersionBundle{
-						Version: "0.1.0",
-					},
+					ClusterID: "foobar",
 				},
 			},
-			ExpectedSecret: &apiv1.Secret{
+			CurrentState:   nil,
+			DesiredState:   &apiv1.Secret{},
+			ExpectedSecret: nil,
+		},
+
+		// Test 1 is the same as 0 but with initialized empty pointer values.
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID: "foobar",
+				},
+			},
+			CurrentState:   &apiv1.Secret{},
+			DesiredState:   &apiv1.Secret{},
+			ExpectedSecret: &apiv1.Secret{},
+		},
+
+		// Test 2 ensures that the delete state is defined by the current state
+		// since we want to remove the current state in case a delete event happens.
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID: "foobar",
+				},
+			},
+			CurrentState: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
-					Name: "foobar-api",
-					Annotations: map[string]string{
-						UpdateTimestampAnnotation:      (time.Time{}).Format(UpdateTimestampLayout),
-						VersionBundleVersionAnnotation: "0.1.0",
-					},
+					Name: "al9qy-worker",
 					Labels: map[string]string{
-						"clusterID":        "foobar",
-						"clusterComponent": "api",
+						"clusterID":        "al9qy",
+						"clusterComponent": "worker",
 					},
 				},
 				StringData: map[string]string{
@@ -50,26 +68,10 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 					"key": "",
 				},
 			},
-		},
-
-		// Test 1 is the same as 0 but with a different custom object.
-		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID:        "al9qy",
-					ClusterComponent: "worker",
-					VersionBundle: spec.VersionBundle{
-						Version: "0.2.0",
-					},
-				},
-			},
+			DesiredState: &apiv1.Secret{},
 			ExpectedSecret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "al9qy-worker",
-					Annotations: map[string]string{
-						UpdateTimestampAnnotation:      (time.Time{}).Format(UpdateTimestampLayout),
-						VersionBundleVersionAnnotation: "0.2.0",
-					},
 					Labels: map[string]string{
 						"clusterID":        "al9qy",
 						"clusterComponent": "worker",
@@ -105,7 +107,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.GetDesiredState(context.TODO(), tc.Obj)
+		result, err := newResource.newDeleteChange(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
 		if err != nil {
 			t.Fatal("case", i, "expected", nil, "got", err)
 		}

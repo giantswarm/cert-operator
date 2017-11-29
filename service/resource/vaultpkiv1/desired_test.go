@@ -1,4 +1,4 @@
-package vaultpki
+package vaultpkiv1
 
 import (
 	"context"
@@ -11,72 +11,38 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 )
 
-func Test_Resource_VaultPKI_NewDeleteChange(t *testing.T) {
+func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 	testCases := []struct {
 		Obj           interface{}
-		CurrentState  interface{}
-		DesiredState  interface{}
 		ExpectedState VaultPKIState
 	}{
-		// Test 0 ensures that zero value input results in zero value output.
+		// test 0 ensures the desired state is always the same placeholder state.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
 					ClusterID: "foobar",
 				},
-			},
-			CurrentState:  VaultPKIState{},
-			DesiredState:  VaultPKIState{},
-			ExpectedState: VaultPKIState{},
-		},
-
-		// Test 1 ensures that any input results in zero value output because
-		// deletion of PKI backends is not allowed. Thus delete state will always be
-		// empty.
-		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
-				},
-			},
-			CurrentState: VaultPKIState{
-				Backend: &vaultapi.MountOutput{
-					Type: "pki",
-				},
-				CACertificate: "placeholder",
-			},
-			DesiredState: VaultPKIState{
-				Backend: &vaultapi.MountOutput{
-					Type: "pki",
-				},
-				CACertificate: "placeholder",
 			},
 			ExpectedState: VaultPKIState{
-				Backend:       nil,
-				CACertificate: "",
+				Backend: &vaultapi.MountOutput{
+					Type: "pki",
+				},
+				CACertificate: "placeholder",
 			},
 		},
 
-		// Test 2 is the same as 1 but with different input values.
+		// test 1 is the same as 0 but with a different custom object.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+					ClusterID: "al9qy",
 				},
 			},
-			CurrentState: VaultPKIState{
-				Backend:       nil,
-				CACertificate: "",
-			},
-			DesiredState: VaultPKIState{
+			ExpectedState: VaultPKIState{
 				Backend: &vaultapi.MountOutput{
 					Type: "pki",
 				},
 				CACertificate: "placeholder",
-			},
-			ExpectedState: VaultPKIState{
-				Backend:       nil,
-				CACertificate: "",
 			},
 		},
 	}
@@ -96,7 +62,7 @@ func Test_Resource_VaultPKI_NewDeleteChange(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.newDeleteChange(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
+		result, err := newResource.GetDesiredState(context.TODO(), tc.Obj)
 		if err != nil {
 			t.Fatal("case", i, "expected", nil, "got", err)
 		}

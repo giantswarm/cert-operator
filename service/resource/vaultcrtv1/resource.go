@@ -1,4 +1,4 @@
-package vaultcrt
+package vaultcrtv1
 
 import (
 	"time"
@@ -12,7 +12,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
 
-	"github.com/giantswarm/cert-operator/service/key"
+	"github.com/giantswarm/cert-operator/service/keyv1"
 )
 
 const (
@@ -113,8 +113,8 @@ func (r *Resource) Underlying() framework.Resource {
 
 func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) error {
 	c := vaultrole.ExistsConfig{
-		ID:            key.ClusterID(customObject),
-		Organizations: key.Organizations(customObject),
+		ID:            keyv1.ClusterID(customObject),
+		Organizations: keyv1.Organizations(customObject),
 	}
 	exists, err := r.vaultRole.Exists(c)
 	if err != nil {
@@ -123,12 +123,12 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 
 	if !exists {
 		c := vaultrole.CreateConfig{
-			AllowBareDomains: key.AllowBareDomains(customObject),
+			AllowBareDomains: keyv1.AllowBareDomains(customObject),
 			AllowSubdomains:  AllowSubDomains,
-			AltNames:         key.AltNames(customObject),
-			ID:               key.ClusterID(customObject),
-			Organizations:    key.Organizations(customObject),
-			TTL:              key.RoleTTL(customObject),
+			AltNames:         keyv1.AltNames(customObject),
+			ID:               keyv1.ClusterID(customObject),
+			Organizations:    keyv1.Organizations(customObject),
+			TTL:              keyv1.RoleTTL(customObject),
 		}
 		err := r.vaultRole.Create(c)
 		if err != nil {
@@ -141,12 +141,12 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 
 func (r *Resource) issueCertificate(customObject certificatetpr.CustomObject) (string, string, string, error) {
 	c := vaultcrt.CreateConfig{
-		AltNames:      key.AltNames(customObject),
-		CommonName:    key.CommonName(customObject),
-		ID:            key.ClusterID(customObject),
-		IPSANs:        key.IPSANs(customObject),
-		Organizations: key.Organizations(customObject),
-		TTL:           key.CrtTTL(customObject),
+		AltNames:      keyv1.AltNames(customObject),
+		CommonName:    keyv1.CommonName(customObject),
+		ID:            keyv1.ClusterID(customObject),
+		IPSANs:        keyv1.IPSANs(customObject),
+		Organizations: keyv1.Organizations(customObject),
+		TTL:           keyv1.CrtTTL(customObject),
 	}
 	result, err := r.vaultCrt.Create(c)
 	if err != nil {
