@@ -1,4 +1,4 @@
-package vaultcrt
+package vaultcrtv1
 
 import (
 	"github.com/giantswarm/microerror"

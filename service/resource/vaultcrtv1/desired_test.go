@@ -1,4 +1,4 @@
-package vaultcrt
+package vaultcrtv1
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/giantswarm/certificatetpr"
+	"github.com/giantswarm/certificatetpr/spec"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
 	"github.com/giantswarm/vaultrole/vaultroletest"
@@ -15,88 +16,69 @@ import (
 	apiv1 "k8s.io/client-go/pkg/api/v1"
 )
 
-func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
+func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 	testCases := []struct {
 		Obj            interface{}
-		CurrentState   interface{}
-		DesiredState   interface{}
 		ExpectedSecret *apiv1.Secret
 	}{
-		// Test 0 ensures a non-nil current state results in the create state to be
-		// empty.
+		// Test 0 ensures the desired state is always the same placeholder state.
 		{
 			Obj: &certificatetpr.CustomObject{
 				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
-				},
-			},
-			CurrentState:   &apiv1.Secret{},
-			DesiredState:   &apiv1.Secret{},
-			ExpectedSecret: nil,
-		},
-
-		// Test 1 is the same 1 but with different content for the current state.
-		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
-				},
-			},
-			CurrentState: &apiv1.Secret{
-				ObjectMeta: apismetav1.ObjectMeta{
-					Name: "foobar-api",
-					Labels: map[string]string{
-						"clusterID":        "foobar",
-						"clusterComponent": "api",
+					ClusterID:        "foobar",
+					ClusterComponent: "api",
+					VersionBundle: spec.VersionBundle{
+						Version: "0.1.0",
 					},
-				},
-				StringData: map[string]string{
-					"ca":  "",
-					"crt": "",
-					"key": "",
-				},
-			},
-			DesiredState:   &apiv1.Secret{},
-			ExpectedSecret: nil,
-		},
-
-		// Test 2 ensures an empty current state results in a create state that
-		// equals the desired state. NOTE that the secret data is extended with
-		// actual certificate content, which in this case is some fake content from
-		// the fake VaultCrt service.
-		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
-				},
-			},
-			CurrentState: nil,
-			DesiredState: &apiv1.Secret{
-				ObjectMeta: apismetav1.ObjectMeta{
-					Name: "foobar-api",
-					Labels: map[string]string{
-						"clusterID":        "foobar",
-						"clusterComponent": "api",
-					},
-				},
-				StringData: map[string]string{
-					"ca":  "",
-					"crt": "",
-					"key": "",
 				},
 			},
 			ExpectedSecret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "foobar-api",
+					Annotations: map[string]string{
+						UpdateTimestampAnnotation:      (time.Time{}).Format(UpdateTimestampLayout),
+						VersionBundleVersionAnnotation: "0.1.0",
+					},
 					Labels: map[string]string{
 						"clusterID":        "foobar",
 						"clusterComponent": "api",
 					},
 				},
 				StringData: map[string]string{
-					"ca":  "test CA",
-					"crt": "test crt",
-					"key": "test key",
+					"ca":  "",
+					"crt": "",
+					"key": "",
+				},
+			},
+		},
+
+		// Test 1 is the same as 0 but with a different custom object.
+		{
+			Obj: &certificatetpr.CustomObject{
+				Spec: certificatetpr.Spec{
+					ClusterID:        "al9qy",
+					ClusterComponent: "worker",
+					VersionBundle: spec.VersionBundle{
+						Version: "0.2.0",
+					},
+				},
+			},
+			ExpectedSecret: &apiv1.Secret{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Name: "al9qy-worker",
+					Annotations: map[string]string{
+						UpdateTimestampAnnotation:      (time.Time{}).Format(UpdateTimestampLayout),
+						VersionBundleVersionAnnotation: "0.2.0",
+					},
+					Labels: map[string]string{
+						"clusterID":        "al9qy",
+						"clusterComponent": "worker",
+					},
+				},
+				StringData: map[string]string{
+					"ca":  "",
+					"crt": "",
+					"key": "",
 				},
 			},
 		},
@@ -123,7 +105,7 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.newCreateChange(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
+		result, err := newResource.GetDesiredState(context.TODO(), tc.Obj)
 		if err != nil {
 			t.Fatal("case", i, "expected", nil, "got", err)
 		}
