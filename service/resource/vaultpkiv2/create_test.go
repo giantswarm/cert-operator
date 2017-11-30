@@ -1,11 +1,11 @@
-package vaultpkiv1
+package vaultpkiv2
 
 import (
 	"context"
 	"reflect"
 	"testing"
 
-	"github.com/giantswarm/certificatetpr"
+	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultpki/vaultpkitest"
 	vaultapi "github.com/hashicorp/vault/api"
@@ -20,9 +20,11 @@ func Test_Resource_VaultPKI_NewCreateChange(t *testing.T) {
 	}{
 		// Test 0 ensures that zero value input results in zero value output.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState:  VaultPKIState{},
@@ -36,9 +38,11 @@ func Test_Resource_VaultPKI_NewCreateChange(t *testing.T) {
 		// backend state from the desired state and the CA certificate state should
 		// be empty.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState: VaultPKIState{
@@ -65,9 +69,11 @@ func Test_Resource_VaultPKI_NewCreateChange(t *testing.T) {
 		// backend state and the CA certificate state should be defined by the
 		// desired state.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState: VaultPKIState{
@@ -91,9 +97,11 @@ func Test_Resource_VaultPKI_NewCreateChange(t *testing.T) {
 		// Test 3 ensures that a complete current state results in a completely
 		// empty create state.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState: VaultPKIState{

@@ -1,4 +1,4 @@
-package vaultpkiv1
+package vaultpkiv2
 
 import (
 	"github.com/giantswarm/microerror"
@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	Name = "vaultpki"
+	Name = "vaultpkiv2"
 )
 
 type Config struct {
