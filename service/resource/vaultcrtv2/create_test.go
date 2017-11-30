@@ -1,4 +1,4 @@
-package vaultcrtv1
+package vaultcrtv2
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/giantswarm/certificatetpr"
+	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
 	"github.com/giantswarm/vaultrole/vaultroletest"
@@ -25,9 +25,11 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 		// Test 0 ensures a non-nil current state results in the create state to be
 		// empty.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState:   &apiv1.Secret{},
@@ -37,9 +39,11 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 
 		// Test 1 is the same 1 but with different content for the current state.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState: &apiv1.Secret{
@@ -65,9 +69,11 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 		// actual certificate content, which in this case is some fake content from
 		// the fake VaultCrt service.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState: nil,

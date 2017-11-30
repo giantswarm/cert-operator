@@ -1,4 +1,4 @@
-package vaultcrtv1
+package vaultcrtv2
 
 import (
 	"context"
@@ -6,8 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/giantswarm/certificatetpr"
-	"github.com/giantswarm/certificatetpr/spec"
+	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
 	"github.com/giantswarm/vaultrole/vaultroletest"
@@ -23,11 +22,13 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 	}{
 		// Test 0 ensures the desired state is always the same placeholder state.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID:        "foobar",
-					ClusterComponent: "api",
-					VersionBundle: spec.VersionBundle{
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID:        "foobar",
+						ClusterComponent: "api",
+					},
+					VersionBundle: v1alpha1.CertSpecVersionBundle{
 						Version: "0.1.0",
 					},
 				},
@@ -54,11 +55,13 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 
 		// Test 1 is the same as 0 but with a different custom object.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID:        "al9qy",
-					ClusterComponent: "worker",
-					VersionBundle: spec.VersionBundle{
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID:        "al9qy",
+						ClusterComponent: "worker",
+					},
+					VersionBundle: v1alpha1.CertSpecVersionBundle{
 						Version: "0.2.0",
 					},
 				},
