@@ -1,11 +1,11 @@
-package keyv1
+package keyv2
 
 import (
 	"reflect"
 	"sort"
 	"testing"
 
-	"github.com/giantswarm/certificatetpr"
+	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 )
 
 func Test_Organization(t *testing.T) {
@@ -42,16 +42,18 @@ func Test_Organization(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		customObject := certificatetpr.CustomObject{
-			Spec: certificatetpr.Spec{
-				ClusterComponent: tc.ClusterComponent,
-				Organizations:    tc.Organizations,
+		customObject := v1alpha1.Cert{
+			Spec: v1alpha1.CertSpec{
+				Cert: v1alpha1.CertSpecCert{
+					ClusterComponent: tc.ClusterComponent,
+					Organizations:    tc.Organizations,
+				},
 			},
 		}
 
 		for j := 0; j < 10; j++ {
-			if !reflect.DeepEqual(tc.ExpectedOrganizations, customObject.Spec.Organizations) {
-				t.Fatalf("case %d iteration %d expected %#v got %#v", i, j, tc.ExpectedOrganizations, customObject.Spec.Organizations)
+			if !reflect.DeepEqual(tc.ExpectedOrganizations, customObject.Spec.Cert.Organizations) {
+				t.Fatalf("case %d iteration %d expected %#v got %#v", i, j, tc.ExpectedOrganizations, customObject.Spec.Cert.Organizations)
 			}
 
 			Organizations(customObject)
@@ -72,10 +74,12 @@ func TestOrganizationCapacity(t *testing.T) {
 	orgs := make([]string, 1, 4)
 	orgs[0] = "myorg"
 
-	customObject := certificatetpr.CustomObject{
-		Spec: certificatetpr.Spec{
-			ClusterComponent: "api",
-			Organizations:    orgs,
+	customObject := v1alpha1.Cert{
+		Spec: v1alpha1.CertSpec{
+			Cert: v1alpha1.CertSpecCert{
+				ClusterComponent: "api",
+				Organizations:    orgs,
+			},
 		},
 	}
 
@@ -86,7 +90,7 @@ func TestOrganizationCapacity(t *testing.T) {
 	sort.Strings(o)
 
 	expected := "myorg"
-	actual := customObject.Spec.Organizations[0]
+	actual := customObject.Spec.Cert.Organizations[0]
 	if expected != actual {
 		t.Errorf("customObject organizations changed by sorting an unrelated slice, expected %s, actual %s", expected, actual)
 	}

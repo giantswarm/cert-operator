@@ -1,9 +1,9 @@
-package vaultcrtv1
+package vaultcrtv2
 
 import (
 	"time"
 
-	"github.com/giantswarm/certificatetpr"
+	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/framework"
@@ -12,14 +12,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 	apiv1 "k8s.io/client-go/pkg/api/v1"
 
-	"github.com/giantswarm/cert-operator/service/keyv1"
+	"github.com/giantswarm/cert-operator/service/keyv2"
 )
 
 const (
 	// AllowSubDomains defines whether to allow the generated root CA of the PKI
 	// backend to allow sub domains as common names.
 	AllowSubDomains = true
-	Name            = "vaultcrt"
+	Name            = "vaultcrtv2"
 	// UpdateTimestampAnnotation is the annotation key used to track the last
 	// update timestamp of certificates contained in the Kubernetes secrets.
 	UpdateTimestampAnnotation = "giantswarm.io/update-timestamp"
@@ -111,10 +111,10 @@ func (r *Resource) Underlying() framework.Resource {
 	return r
 }
 
-func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) error {
+func (r *Resource) ensureVaultRole(customObject v1alpha1.Cert) error {
 	c := vaultrole.ExistsConfig{
-		ID:            keyv1.ClusterID(customObject),
-		Organizations: keyv1.Organizations(customObject),
+		ID:            keyv2.ClusterID(customObject),
+		Organizations: keyv2.Organizations(customObject),
 	}
 	exists, err := r.vaultRole.Exists(c)
 	if err != nil {
@@ -123,12 +123,12 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 
 	if !exists {
 		c := vaultrole.CreateConfig{
-			AllowBareDomains: keyv1.AllowBareDomains(customObject),
+			AllowBareDomains: keyv2.AllowBareDomains(customObject),
 			AllowSubdomains:  AllowSubDomains,
-			AltNames:         keyv1.AltNames(customObject),
-			ID:               keyv1.ClusterID(customObject),
-			Organizations:    keyv1.Organizations(customObject),
-			TTL:              keyv1.RoleTTL(customObject),
+			AltNames:         keyv2.AltNames(customObject),
+			ID:               keyv2.ClusterID(customObject),
+			Organizations:    keyv2.Organizations(customObject),
+			TTL:              keyv2.RoleTTL(customObject),
 		}
 		err := r.vaultRole.Create(c)
 		if err != nil {
@@ -139,14 +139,14 @@ func (r *Resource) ensureVaultRole(customObject certificatetpr.CustomObject) err
 	return nil
 }
 
-func (r *Resource) issueCertificate(customObject certificatetpr.CustomObject) (string, string, string, error) {
+func (r *Resource) issueCertificate(customObject v1alpha1.Cert) (string, string, string, error) {
 	c := vaultcrt.CreateConfig{
-		AltNames:      keyv1.AltNames(customObject),
-		CommonName:    keyv1.CommonName(customObject),
-		ID:            keyv1.ClusterID(customObject),
-		IPSANs:        keyv1.IPSANs(customObject),
-		Organizations: keyv1.Organizations(customObject),
-		TTL:           keyv1.CrtTTL(customObject),
+		AltNames:      keyv2.AltNames(customObject),
+		CommonName:    keyv2.CommonName(customObject),
+		ID:            keyv2.ClusterID(customObject),
+		IPSANs:        keyv2.IPSANs(customObject),
+		Organizations: keyv2.Organizations(customObject),
+		TTL:           keyv2.CrtTTL(customObject),
 	}
 	result, err := r.vaultCrt.Create(c)
 	if err != nil {

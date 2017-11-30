@@ -1,4 +1,4 @@
-package vaultpkiv1
+package vaultpkiv2
 
 import (
 	"context"
@@ -6,16 +6,16 @@ import (
 	"github.com/giantswarm/microerror"
 	vaultapi "github.com/hashicorp/vault/api"
 
-	"github.com/giantswarm/cert-operator/service/keyv1"
+	"github.com/giantswarm/cert-operator/service/keyv2"
 )
 
 func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interface{}, error) {
-	customObject, err := keyv1.ToCustomObject(obj)
+	customObject, err := keyv2.ToCustomObject(obj)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.Log("cluster", keyv1.ClusterID(customObject), "debug", "computing the desired Vault PKI")
+	r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "computing the desired Vault PKI")
 
 	// NOTE that we only define a sparse desired state. This is good enough
 	// because we only need a non-zero-value desired state to do the proper
@@ -31,7 +31,7 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		vaultPKIState.CACertificate = "placeholder"
 	}
 
-	r.logger.Log("cluster", keyv1.ClusterID(customObject), "debug", "computed the desired Vault PKI")
+	r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "computed the desired Vault PKI")
 
 	return vaultPKIState, nil
 }

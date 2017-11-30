@@ -1,4 +1,4 @@
-package vaultcrtv1
+package vaultcrtv2
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/giantswarm/certificatetpr"
+	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
 	"github.com/giantswarm/vaultrole/vaultroletest"
@@ -24,9 +24,11 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 	}{
 		// Test 0 ensures that zero value input results in zero value output.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState:   nil,
@@ -36,9 +38,11 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 
 		// Test 1 is the same as 0 but with initialized empty pointer values.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState:   &apiv1.Secret{},
@@ -49,9 +53,11 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 		// Test 2 ensures that the delete state is defined by the current state
 		// since we want to remove the current state in case a delete event happens.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState: &apiv1.Secret{

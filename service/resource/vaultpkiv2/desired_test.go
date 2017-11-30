@@ -1,11 +1,11 @@
-package vaultpkiv1
+package vaultpkiv2
 
 import (
 	"context"
 	"reflect"
 	"testing"
 
-	"github.com/giantswarm/certificatetpr"
+	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultpki/vaultpkitest"
 	vaultapi "github.com/hashicorp/vault/api"
@@ -18,9 +18,11 @@ func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 	}{
 		// test 0 ensures the desired state is always the same placeholder state.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			ExpectedState: VaultPKIState{
@@ -33,9 +35,11 @@ func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 
 		// test 1 is the same as 0 but with a different custom object.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "al9qy",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "al9qy",
+					},
 				},
 			},
 			ExpectedState: VaultPKIState{

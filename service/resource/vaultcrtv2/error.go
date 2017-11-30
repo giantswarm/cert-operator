@@ -1,4 +1,4 @@
-package vaultcrtv1
+package vaultcrtv2
 
 import (
 	"github.com/giantswarm/microerror"

@@ -1,11 +1,11 @@
-package vaultpkiv1
+package vaultpkiv2
 
 import (
 	"context"
 	"reflect"
 	"testing"
 
-	"github.com/giantswarm/certificatetpr"
+	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultpki/vaultpkitest"
 	vaultapi "github.com/hashicorp/vault/api"
@@ -20,9 +20,11 @@ func Test_Resource_VaultPKI_NewDeleteChange(t *testing.T) {
 	}{
 		// Test 0 ensures that zero value input results in zero value output.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState:  VaultPKIState{},
@@ -34,9 +36,11 @@ func Test_Resource_VaultPKI_NewDeleteChange(t *testing.T) {
 		// deletion of PKI backends is not allowed. Thus delete state will always be
 		// empty.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState: VaultPKIState{
@@ -59,9 +63,11 @@ func Test_Resource_VaultPKI_NewDeleteChange(t *testing.T) {
 
 		// Test 2 is the same as 1 but with different input values.
 		{
-			Obj: &certificatetpr.CustomObject{
-				Spec: certificatetpr.Spec{
-					ClusterID: "foobar",
+			Obj: &v1alpha1.Cert{
+				Spec: v1alpha1.CertSpec{
+					Cert: v1alpha1.CertSpecCert{
+						ClusterID: "foobar",
+					},
 				},
 			},
 			CurrentState: VaultPKIState{

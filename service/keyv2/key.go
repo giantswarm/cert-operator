@@ -1,63 +1,63 @@
-package keyv1
+package keyv2
 
 import (
 	"fmt"
 
-	"github.com/giantswarm/certificatetpr"
+	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/microerror"
 )
 
-func AllowBareDomains(customObject certificatetpr.CustomObject) bool {
-	return customObject.Spec.AllowBareDomains
+func AllowBareDomains(customObject v1alpha1.Cert) bool {
+	return customObject.Spec.Cert.AllowBareDomains
 }
 
-func AltNames(customObject certificatetpr.CustomObject) []string {
-	return customObject.Spec.AltNames
+func AltNames(customObject v1alpha1.Cert) []string {
+	return customObject.Spec.Cert.AltNames
 }
 
-func ClusterID(customObject certificatetpr.CustomObject) string {
-	return customObject.Spec.ClusterID
+func ClusterID(customObject v1alpha1.Cert) string {
+	return customObject.Spec.Cert.ClusterID
 }
 
-func ClusterComponent(customObject certificatetpr.CustomObject) string {
-	return customObject.Spec.ClusterComponent
+func ClusterComponent(customObject v1alpha1.Cert) string {
+	return customObject.Spec.Cert.ClusterComponent
 }
 
-func CommonName(customObject certificatetpr.CustomObject) string {
-	return customObject.Spec.CommonName
+func CommonName(customObject v1alpha1.Cert) string {
+	return customObject.Spec.Cert.CommonName
 }
 
-func CrtTTL(customObject certificatetpr.CustomObject) string {
-	return customObject.Spec.TTL
+func CrtTTL(customObject v1alpha1.Cert) string {
+	return customObject.Spec.Cert.TTL
 }
 
-func IPSANs(customObject certificatetpr.CustomObject) []string {
-	return customObject.Spec.IPSANs
+func IPSANs(customObject v1alpha1.Cert) []string {
+	return customObject.Spec.Cert.IPSANs
 }
 
-func Organizations(customObject certificatetpr.CustomObject) []string {
-	a := []string{customObject.Spec.ClusterComponent}
-	return append(a, customObject.Spec.Organizations...)
+func Organizations(customObject v1alpha1.Cert) []string {
+	a := []string{customObject.Spec.Cert.ClusterComponent}
+	return append(a, customObject.Spec.Cert.Organizations...)
 }
 
-func SecretName(customObject certificatetpr.CustomObject) string {
+func SecretName(customObject v1alpha1.Cert) string {
 	return fmt.Sprintf("%s-%s", ClusterID(customObject), ClusterComponent(customObject))
 }
 
-func RoleTTL(customObject certificatetpr.CustomObject) string {
-	return customObject.Spec.TTL
+func RoleTTL(customObject v1alpha1.Cert) string {
+	return customObject.Spec.Cert.TTL
 }
 
-func ToCustomObject(v interface{}) (certificatetpr.CustomObject, error) {
-	customObjectPointer, ok := v.(*certificatetpr.CustomObject)
+func ToCustomObject(v interface{}) (v1alpha1.Cert, error) {
+	customObjectPointer, ok := v.(*v1alpha1.Cert)
 	if !ok {
-		return certificatetpr.CustomObject{}, microerror.Maskf(wrongTypeError, "expected '%T', got '%T'", &certificatetpr.CustomObject{}, v)
+		return v1alpha1.Cert{}, microerror.Maskf(wrongTypeError, "expected '%T', got '%T'", &v1alpha1.Cert{}, v)
 	}
 	customObject := *customObjectPointer
 
 	return customObject, nil
 }
 
-func VersionBundleVersion(customObject certificatetpr.CustomObject) string {
+func VersionBundleVersion(customObject v1alpha1.Cert) string {
 	return customObject.Spec.VersionBundle.Version
 }
