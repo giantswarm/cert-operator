@@ -22,13 +22,13 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 	}{
 		// Test 0 ensures the desired state is always the same placeholder state.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID:        "foobar",
 						ClusterComponent: "api",
 					},
-					VersionBundle: v1alpha1.CertSpecVersionBundle{
+					VersionBundle: v1alpha1.CertConfigSpecVersionBundle{
 						Version: "0.1.0",
 					},
 				},
@@ -55,13 +55,13 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 
 		// Test 1 is the same as 0 but with a different custom object.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID:        "al9qy",
 						ClusterComponent: "worker",
 					},
-					VersionBundle: v1alpha1.CertSpecVersionBundle{
+					VersionBundle: v1alpha1.CertConfigSpecVersionBundle{
 						Version: "0.2.0",
 					},
 				},

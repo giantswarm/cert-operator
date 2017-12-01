@@ -111,7 +111,7 @@ func (r *Resource) Underlying() framework.Resource {
 	return r
 }
 
-func (r *Resource) ensureVaultRole(customObject v1alpha1.Cert) error {
+func (r *Resource) ensureVaultRole(customObject v1alpha1.CertConfig) error {
 	c := vaultrole.ExistsConfig{
 		ID:            keyv2.ClusterID(customObject),
 		Organizations: keyv2.Organizations(customObject),
@@ -139,7 +139,7 @@ func (r *Resource) ensureVaultRole(customObject v1alpha1.Cert) error {
 	return nil
 }
 
-func (r *Resource) issueCertificate(customObject v1alpha1.Cert) (string, string, string, error) {
+func (r *Resource) issueCertificate(customObject v1alpha1.CertConfig) (string, string, string, error) {
 	c := vaultcrt.CreateConfig{
 		AltNames:      keyv2.AltNames(customObject),
 		CommonName:    keyv2.CommonName(customObject),

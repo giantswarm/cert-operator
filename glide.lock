@@ -1,8 +1,8 @@
 hash: e8a438527b27ce85f0f378cd2c2c3c8f60aec8f00c48907d473b8d6b3e1ac1ae
-updated: 2017-11-30T11:49:21.872494+01:00
+updated: 2017-12-01T10:23:20.0371+01:00
 imports:
 - name: github.com/beorn7/perks
-  version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
+  version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
   subpackages:
   - quantile
 - name: github.com/cenkalti/backoff
@@ -33,7 +33,9 @@ imports:
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/giantswarm/apiextensions
-  version: a50685242279dfd7a9ea9c223ff09b6b82487eeb
+  version: 1572d63840d34472944a4b25f37357b2fb23527e
+  subpackages:
+  - pkg/apis/core/v1alpha1
 - name: github.com/giantswarm/certificatetpr
   version: 9a7c674d13714bc7a5258453570bc8163a47b2cc
   subpackages:
@@ -54,7 +56,7 @@ imports:
 - name: github.com/giantswarm/microerror
   version: ec5f66bb657662031c0d651504fee6908cdf28d9
 - name: github.com/giantswarm/microkit
-  version: e6c3aafd2c6b8298599dc465dc1294fbd025d2f1
+  version: cd17f87c1287d47572c3428a5b34f6fc23ff2a8d
   subpackages:
   - command
   - command/daemon
@@ -155,7 +157,7 @@ imports:
 - name: github.com/hashicorp/errwrap
   version: 7554cd9344cec97297fa6649b055a8c98c2a1e55
 - name: github.com/hashicorp/go-cleanhttp
-  version: 3573b8b52aa7b37b9358d966a898feb387f62437
+  version: 06c9ea3a335b7443026f8124b22619524420291b
 - name: github.com/hashicorp/go-multierror
   version: 83588e72410abfbe4df460eeb6f30841ae47d4c4
 - name: github.com/hashicorp/go-rootcerts
@@ -181,7 +183,6 @@ imports:
   - api
   - helper/compressutil
   - helper/jsonutil
-  - helper/parseutil
 - name: github.com/howeyc/gopass
   version: bf9dde6d0d2c004a008c27aaee91170c786f6db8
 - name: github.com/imdario/mergo
@@ -269,7 +270,6 @@ imports:
   version: f2499483f923065a842d38eb4c7f1927e6fc6e6d
   subpackages:
   - context
-  - context/ctxhttp
   - http2
   - http2/hpack
   - idna
@@ -299,7 +299,7 @@ imports:
 - name: gopkg.in/inf.v0
   version: 3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4
 - name: gopkg.in/yaml.v2
-  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
+  version: 287cf08546ab5e7e37d55a84f7ed3fd1db036de5
 - name: k8s.io/apiextensions-apiserver
   version: fcd622fe88a4a6efcb5aea9e94ee87324ac1b036
   subpackages:
@@ -309,13 +309,12 @@ imports:
   - pkg/client/clientset/clientset/scheme
   - pkg/client/clientset/clientset/typed/apiextensions/v1beta1
 - name: k8s.io/apimachinery
-  version: 1fd2e63a9a370677308a42f24fd40c86438afddf
+  version: 8ab5f3d8a330c2e9baaf84e39042db8d49034ae2
   subpackages:
   - pkg/api/equality
   - pkg/api/errors
   - pkg/api/meta
   - pkg/api/resource
-  - pkg/api/testing
   - pkg/apimachinery
   - pkg/apimachinery/announced
   - pkg/apimachinery/registered
@@ -343,25 +342,18 @@ imports:
   - pkg/util/diff
   - pkg/util/errors
   - pkg/util/framer
-  - pkg/util/httpstream
-  - pkg/util/httpstream/spdy
   - pkg/util/intstr
   - pkg/util/json
-  - pkg/util/mergepatch
   - pkg/util/net
   - pkg/util/rand
-  - pkg/util/remotecommand
   - pkg/util/runtime
   - pkg/util/sets
-  - pkg/util/strategicpatch
   - pkg/util/validation
   - pkg/util/validation/field
   - pkg/util/wait
   - pkg/util/yaml
   - pkg/version
   - pkg/watch
-  - third_party/forked/golang/json
-  - third_party/forked/golang/netutil
   - third_party/forked/golang/reflect
 - name: k8s.io/client-go
   version: d92e8497f71b7b4e0494e5bd204b48d34bd6f254

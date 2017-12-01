@@ -42,9 +42,9 @@ func Test_Organization(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		customObject := v1alpha1.Cert{
-			Spec: v1alpha1.CertSpec{
-				Cert: v1alpha1.CertSpecCert{
+		customObject := v1alpha1.CertConfig{
+			Spec: v1alpha1.CertConfigSpec{
+				Cert: v1alpha1.CertConfigSpecCert{
 					ClusterComponent: tc.ClusterComponent,
 					Organizations:    tc.Organizations,
 				},
@@ -74,9 +74,9 @@ func TestOrganizationCapacity(t *testing.T) {
 	orgs := make([]string, 1, 4)
 	orgs[0] = "myorg"
 
-	customObject := v1alpha1.Cert{
-		Spec: v1alpha1.CertSpec{
-			Cert: v1alpha1.CertSpecCert{
+	customObject := v1alpha1.CertConfig{
+		Spec: v1alpha1.CertConfigSpec{
+			Cert: v1alpha1.CertConfigSpecCert{
 				ClusterComponent: "api",
 				Organizations:    orgs,
 			},

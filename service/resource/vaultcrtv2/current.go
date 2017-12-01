@@ -41,7 +41,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 	return secret, nil
 }
 
-func (r *Resource) updateVersionBundleVersionGauge(customObject v1alpha1.Cert, gauge *prometheus.GaugeVec, secret *apiv1.Secret) {
+func (r *Resource) updateVersionBundleVersionGauge(customObject v1alpha1.CertConfig, gauge *prometheus.GaugeVec, secret *apiv1.Secret) {
 	version, ok := secret.Annotations[VersionBundleVersionAnnotation]
 	if !ok {
 		r.logger.Log("cluster", keyv2.ClusterID(customObject), "warning", fmt.Sprintf("cannot update current version bundle version metric: annotation '%s' must not be empty", VersionBundleVersionAnnotation))

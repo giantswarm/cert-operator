@@ -25,9 +25,9 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 		// Test 0 ensures a non-nil current state results in the create state to be
 		// empty.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},
@@ -39,9 +39,9 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 
 		// Test 1 is the same 1 but with different content for the current state.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},
@@ -69,9 +69,9 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 		// actual certificate content, which in this case is some fake content from
 		// the fake VaultCrt service.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},

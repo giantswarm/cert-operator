@@ -18,9 +18,9 @@ func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 	}{
 		// test 0 ensures the desired state is always the same placeholder state.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},
@@ -35,9 +35,9 @@ func Test_Resource_VaultPKI_GetDesiredState(t *testing.T) {
 
 		// test 1 is the same as 0 but with a different custom object.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "al9qy",
 					},
 				},
