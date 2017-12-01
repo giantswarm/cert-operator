@@ -20,9 +20,9 @@ func Test_Resource_VaultPKI_NewCreateChange(t *testing.T) {
 	}{
 		// Test 0 ensures that zero value input results in zero value output.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},
@@ -38,9 +38,9 @@ func Test_Resource_VaultPKI_NewCreateChange(t *testing.T) {
 		// backend state from the desired state and the CA certificate state should
 		// be empty.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},
@@ -69,9 +69,9 @@ func Test_Resource_VaultPKI_NewCreateChange(t *testing.T) {
 		// backend state and the CA certificate state should be defined by the
 		// desired state.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},
@@ -97,9 +97,9 @@ func Test_Resource_VaultPKI_NewCreateChange(t *testing.T) {
 		// Test 3 ensures that a complete current state results in a completely
 		// empty create state.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},

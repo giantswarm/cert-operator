@@ -24,9 +24,9 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 	}{
 		// Test 0 ensures that zero value input results in zero value output.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},
@@ -38,9 +38,9 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 
 		// Test 1 is the same as 0 but with initialized empty pointer values.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},
@@ -53,9 +53,9 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 		// Test 2 ensures that the delete state is defined by the current state
 		// since we want to remove the current state in case a delete event happens.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},

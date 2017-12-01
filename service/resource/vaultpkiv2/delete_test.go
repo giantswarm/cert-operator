@@ -20,9 +20,9 @@ func Test_Resource_VaultPKI_NewDeleteChange(t *testing.T) {
 	}{
 		// Test 0 ensures that zero value input results in zero value output.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},
@@ -36,9 +36,9 @@ func Test_Resource_VaultPKI_NewDeleteChange(t *testing.T) {
 		// deletion of PKI backends is not allowed. Thus delete state will always be
 		// empty.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},
@@ -63,9 +63,9 @@ func Test_Resource_VaultPKI_NewDeleteChange(t *testing.T) {
 
 		// Test 2 is the same as 1 but with different input values.
 		{
-			Obj: &v1alpha1.Cert{
-				Spec: v1alpha1.CertSpec{
-					Cert: v1alpha1.CertSpecCert{
+			Obj: &v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID: "foobar",
 					},
 				},
