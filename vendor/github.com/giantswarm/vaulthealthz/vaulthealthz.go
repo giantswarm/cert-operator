@@ -3,6 +3,7 @@ package vaulthealthz
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	vaultapi "github.com/hashicorp/vault/api"
@@ -34,7 +35,7 @@ const (
 	// ExpireTimeLayout is the layout used for time parsing when inspecting the
 	// expiration date of the used Vault token. This layout is specific to Vault
 	// as they define it.
-	ExpireTimeLayout = "2006-01-02T15:04:05.000000000Z"
+	ExpireTimeLayout = "2006-01-02T15:04:05"
 )
 
 // Config represents the configuration used to create a healthz service.
@@ -152,12 +153,17 @@ func (s *Service) updateTokenTTLMetric() error {
 
 	key, ok := secret.Data[ExpireTimeKey]
 	if !ok {
-		return microerror.Maskf(executionFailedError, "'%s' must exist in order to collect metrics for the Vault token expiration", ExpireTimeKey)
+		return microerror.Maskf(executionFailedError, "value of '%s' must exist in order to collect metrics for the Vault token expiration", ExpireTimeKey)
 	}
-	expireTime, ok := key.(string)
+	e, ok := key.(string)
 	if !ok {
-		return microerror.Maskf(executionFailedError, "'%s' must be string in order to collect metrics for the Vault token expiration", ExpireTimeKey)
+		return microerror.Maskf(executionFailedError, "'%#v' must be string in order to collect metrics for the Vault token expiration", e)
 	}
+	split := strings.Split(e, ".")
+	if len(split) == 0 {
+		return microerror.Maskf(executionFailedError, "'%#v' must have at least one item in order to collect metrics for the Vault token expiration", split)
+	}
+	expireTime := split[0]
 
 	t, err := time.Parse(ExpireTimeLayout, expireTime)
 	if err != nil {
