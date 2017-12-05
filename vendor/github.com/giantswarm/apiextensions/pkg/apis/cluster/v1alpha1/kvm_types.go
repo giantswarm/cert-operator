@@ -1,8 +1,6 @@
 package v1alpha1
 
 import (
-	"net"
-
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -56,125 +54,9 @@ type KVMConfig struct {
 }
 
 type KVMConfigSpec struct {
-	Cluster       KVMConfigSpecCluster       `json:"cluster" yaml:"cluster"`
-	KVMConfig     KVMConfigSpecKVM           `json:"kvm" yaml:"kvm"`
+	Cluster       Cluster                    `json:"cluster" yaml:"cluster"`
+	KVM           KVMConfigSpecKVM           `json:"kvm" yaml:"kvm"`
 	VersionBundle KVMConfigSpecVersionBundle `json:"versionBundle" yaml:"versionBundle"`
-}
-
-type KVMConfigSpecCluster struct {
-	Calico     KVMConfigSpecClusterCalico     `json:"calico" yaml:"calico"`
-	Customer   KVMConfigSpecClusterCustomer   `json:"customer" yaml:"customer"`
-	Docker     KVMConfigSpecClusterDocker     `json:"docker" yaml:"docker"`
-	Etcd       KVMConfigSpecClusterEtcd       `json:"etcd" yaml:"etcd"`
-	ID         string                         `json:"id" yaml:"id"`
-	Kubernetes KVMConfigSpecClusterKubernetes `json:"kubernetes" yaml:"kubernetes"`
-	Masters    []KVMConfigSpecClusterNode     `json:"masters" yaml:"masters"`
-	Vault      KVMConfigSpecClusterVault      `json:"vault" yaml:"vault"`
-	Workers    []KVMConfigSpecClusterNode     `json:"workers" yaml:"workers"`
-}
-
-type KVMConfigSpecClusterCalico struct {
-	CIDR   int    `json:"cidr" yaml:"cidr"`
-	Domain string `json:"domain" yaml:"domain"`
-	MTU    int    `json:"mtu" yaml:"mtu"`
-	Subnet string `json:"subnet" yaml:"subnet"`
-}
-
-type KVMConfigSpecClusterCustomer struct {
-	ID string `json:"id" yaml:"id"`
-}
-
-type KVMConfigSpecClusterDocker struct {
-	Daemon KVMConfigSpecClusterDockerDaemon `json:"daemon" yaml:"daemon"`
-}
-
-type KVMConfigSpecClusterDockerDaemon struct {
-	CIDR      string `json:"cidr" yaml:"cidr"`
-	ExtraArgs string `json:"extraArgs" yaml:"extraArgs"`
-}
-
-type KVMConfigSpecClusterEtcd struct {
-	AltNames string `json:"altNames" yaml:"altNames"`
-	Domain   string `json:"domain" yaml:"domain"`
-	Port     int    `json:"port" yaml:"port"`
-	Prefix   string `json:"prefix" yaml:"prefix"`
-}
-
-type KVMConfigSpecClusterKubernetes struct {
-	API               KVMConfigSpecClusterKubernetesAPI               `json:"api" yaml:"api"`
-	DNS               KVMConfigSpecClusterKubernetesDNS               `json:"dns" yaml:"dns"`
-	Domain            string                                          `json:"domain" yaml:"domain"`
-	Hyperkube         KVMConfigSpecClusterKubernetesHyperkube         `json:"hyperkube" yaml:"hyperkube"`
-	IngressController KVMConfigSpecClusterKubernetesIngressController `json:"ingressController" yaml:"ingressController"`
-	Kubelet           KVMConfigSpecClusterKubernetesKubelet           `json:"kubelet" yaml:"kubelet"`
-	NetworkSetup      KVMConfigSpecClusterKubernetesNetworkSetup      `json:"networkSetup" yaml:"networkSetup"`
-	SSH               KVMConfigSpecClusterKubernetesSSH               `json:"ssh" yaml:"ssh"`
-}
-
-type KVMConfigSpecClusterKubernetesAPI struct {
-	AltNames       string `json:"altNames" yaml:"altNames"`
-	ClusterIPRange string `json:"clusterIPRange" yaml:"clusterIPRange"`
-	Domain         string `json:"domain" yaml:"domain"`
-	IP             net.IP `json:"ip" yaml:"ip"`
-	InsecurePort   int    `json:"insecurePort" yaml:"insecurePort"`
-	SecurePort     int    `json:"securePort" yaml:"securePort"`
-}
-
-type KVMConfigSpecClusterKubernetesDNS struct {
-	IP net.IP `json:"ip" yaml:"ip"`
-}
-
-type KVMConfigSpecClusterKubernetesHyperkube struct {
-	Docker KVMConfigSpecClusterKubernetesHyperkubeDocker `json:"docker" yaml:"docker"`
-}
-
-type KVMConfigSpecClusterKubernetesHyperkubeDocker struct {
-	Image string `json:"image" yaml:"image"`
-}
-
-type KVMConfigSpecClusterKubernetesIngressController struct {
-	Docker         KVMConfigSpecClusterKubernetesIngressControllerDocker `json:"docker" yaml:"docker"`
-	Domain         string                                                `json:"domain" yaml:"domain"`
-	WildcardDomain string                                                `json:"wildcardDomain" yaml:"wildcardDomain"`
-	InsecurePort   int                                                   `json:"insecurePort" yaml:"insecurePort"`
-	SecurePort     int                                                   `json:"securePort" yaml:"securePort"`
-}
-
-type KVMConfigSpecClusterKubernetesIngressControllerDocker struct {
-	Image string `json:"image" yaml:"image"`
-}
-
-type KVMConfigSpecClusterKubernetesKubelet struct {
-	AltNames string `json:"altNames" yaml:"altNames"`
-	Domain   string `json:"domain" yaml:"domain"`
-	Labels   string `json:"labels" yaml:"labels"`
-	Port     int    `json:"port" yaml:"port"`
-}
-
-type KVMConfigSpecClusterKubernetesNetworkSetup struct {
-	Docker KVMConfigSpecClusterKubernetesNetworkSetupDocker `json:"docker" yaml:"docker"`
-}
-
-type KVMConfigSpecClusterKubernetesNetworkSetupDocker struct {
-	Image string `json:"image" yaml:"image"`
-}
-
-type KVMConfigSpecClusterKubernetesSSH struct {
-	UserList []KVMConfigSpecClusterKubernetesSSHUser `json:"userList" yaml:"userList"`
-}
-
-type KVMConfigSpecClusterKubernetesSSHUser struct {
-	Name      string `json:"name" yaml:"name"`
-	PublicKey string `json:"publicKey" yaml:"publicKey"`
-}
-
-type KVMConfigSpecClusterNode struct {
-	ID string `json:"id" yaml:"id"`
-}
-
-type KVMConfigSpecClusterVault struct {
-	Address string `json:"address" yaml:"address"`
-	Token   string `json:"token" yaml:"token"`
 }
 
 type KVMConfigSpecKVM struct {

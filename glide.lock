@@ -1,8 +1,8 @@
 hash: e8a438527b27ce85f0f378cd2c2c3c8f60aec8f00c48907d473b8d6b3e1ac1ae
-updated: 2017-12-01T10:23:20.0371+01:00
+updated: 2017-12-05T13:22:46.748369+01:00
 imports:
 - name: github.com/beorn7/perks
-  version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
+  version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
   subpackages:
   - quantile
 - name: github.com/cenkalti/backoff
@@ -33,9 +33,14 @@ imports:
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/giantswarm/apiextensions
-  version: 1572d63840d34472944a4b25f37357b2fb23527e
+  version: ff77d3fd222f34b512255ee7c2c67c55569bcae6
   subpackages:
+  - pkg/apis/cluster/v1alpha1
   - pkg/apis/core/v1alpha1
+  - pkg/clientset/versioned
+  - pkg/clientset/versioned/scheme
+  - pkg/clientset/versioned/typed/cluster/v1alpha1
+  - pkg/clientset/versioned/typed/core/v1alpha1
 - name: github.com/giantswarm/certificatetpr
   version: 9a7c674d13714bc7a5258453570bc8163a47b2cc
   subpackages:
@@ -87,6 +92,7 @@ imports:
   subpackages:
   - client/k8sclient
   - client/k8scrdclient
+  - client/k8sextclient
   - framework
   - framework/context/canceledcontext
   - framework/context/deletionallowedcontext
@@ -100,7 +106,7 @@ imports:
   - key
   - vaultcrttest
 - name: github.com/giantswarm/vaulthealthz
-  version: 35d412dbb7bd4859748acfbc01c46503b6afaab1
+  version: e7eefa530dc7af37eeffe4f49495112643973797
 - name: github.com/giantswarm/vaultpki
   version: a1f5764b0ff9fe58fd13c8e5534434d50359fb89
   subpackages:
@@ -159,7 +165,7 @@ imports:
 - name: github.com/hashicorp/go-cleanhttp
   version: 06c9ea3a335b7443026f8124b22619524420291b
 - name: github.com/hashicorp/go-multierror
-  version: 83588e72410abfbe4df460eeb6f30841ae47d4c4
+  version: b7773ae218740a7be65057fc60b366a49b538a44
 - name: github.com/hashicorp/go-rootcerts
   version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
 - name: github.com/hashicorp/golang-lru
@@ -214,7 +220,7 @@ imports:
 - name: github.com/pelletier/go-toml
   version: 4e9e0ee19b60b13eb79915933f44d8ed5f268bdd
 - name: github.com/prometheus/client_golang
-  version: 1cdba8fdde81f444626530cce66e138d2f68ae1c
+  version: 661e31bf844dfca9aeba15f27ea8aa0d485ad212
   subpackages:
   - prometheus
   - prometheus/promhttp
@@ -245,7 +251,7 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 1be1d2841c773c01bee8289f55f7463b6e2c2539
+  version: de2d9c4eca8f3c1de17d48b096b6504e0296f003
 - name: github.com/spf13/jwalterweatherman
   version: 12bd96e66386c1960ab0f74ced1362f66f552f7b
 - name: github.com/spf13/pflag

@@ -54,6 +54,7 @@ type AzureConfig struct {
 }
 
 type AzureConfigSpec struct {
+	Cluster        Cluster                   `json:"cluster" yaml:"cluster"`
 	KeyVault       AzureConfigKeyVault       `json:"keyVault"`
 	ResourceGroup  AzureConfigResourceGroup  `json:"resourceGroup"`
 	Storage        AzureConfigStorage        `json:"storage"`
