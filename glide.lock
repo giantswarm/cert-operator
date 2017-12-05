@@ -1,5 +1,5 @@
 hash: e8a438527b27ce85f0f378cd2c2c3c8f60aec8f00c48907d473b8d6b3e1ac1ae
-updated: 2017-12-05T13:22:46.748369+01:00
+updated: 2017-12-05T14:29:04.711667+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
@@ -42,7 +42,7 @@ imports:
   - pkg/clientset/versioned/typed/cluster/v1alpha1
   - pkg/clientset/versioned/typed/core/v1alpha1
 - name: github.com/giantswarm/certificatetpr
-  version: 9a7c674d13714bc7a5258453570bc8163a47b2cc
+  version: 04eb2f7e6433cb9d706eb5fbd2de4f0f986e57f5
   subpackages:
   - spec
 - name: github.com/giantswarm/e2e-harness
@@ -106,7 +106,7 @@ imports:
   - key
   - vaultcrttest
 - name: github.com/giantswarm/vaulthealthz
-  version: e7eefa530dc7af37eeffe4f49495112643973797
+  version: 6282b42509511657649d50d000b785dad67ad91b
 - name: github.com/giantswarm/vaultpki
   version: a1f5764b0ff9fe58fd13c8e5534434d50359fb89
   subpackages:
@@ -315,12 +315,13 @@ imports:
   - pkg/client/clientset/clientset/scheme
   - pkg/client/clientset/clientset/typed/apiextensions/v1beta1
 - name: k8s.io/apimachinery
-  version: 8ab5f3d8a330c2e9baaf84e39042db8d49034ae2
+  version: 1fd2e63a9a370677308a42f24fd40c86438afddf
   subpackages:
   - pkg/api/equality
   - pkg/api/errors
   - pkg/api/meta
   - pkg/api/resource
+  - pkg/api/testing
   - pkg/apimachinery
   - pkg/apimachinery/announced
   - pkg/apimachinery/registered
@@ -348,18 +349,25 @@ imports:
   - pkg/util/diff
   - pkg/util/errors
   - pkg/util/framer
+  - pkg/util/httpstream
+  - pkg/util/httpstream/spdy
   - pkg/util/intstr
   - pkg/util/json
+  - pkg/util/mergepatch
   - pkg/util/net
   - pkg/util/rand
+  - pkg/util/remotecommand
   - pkg/util/runtime
   - pkg/util/sets
+  - pkg/util/strategicpatch
   - pkg/util/validation
   - pkg/util/validation/field
   - pkg/util/wait
   - pkg/util/yaml
   - pkg/version
   - pkg/watch
+  - third_party/forked/golang/json
+  - third_party/forked/golang/netutil
   - third_party/forked/golang/reflect
 - name: k8s.io/client-go
   version: d92e8497f71b7b4e0494e5bd204b48d34bd6f254
