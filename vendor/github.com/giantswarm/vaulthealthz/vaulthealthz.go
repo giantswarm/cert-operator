@@ -27,6 +27,16 @@ const (
 	Timeout = 5 * time.Second
 )
 
+const (
+	// ExpireTimeKey is the data key provided by the secret when looking up the
+	// used Vault token. This key is specific to Vault as they define it.
+	ExpireTimeKey = "expire_time"
+	// ExpireTimeLayout is the layout used for time parsing when inspecting the
+	// expiration date of the used Vault token. This layout is specific to Vault
+	// as they define it.
+	ExpireTimeLayout = "2006-01-02T15:04:05.000000000Z"
+)
+
 // Config represents the configuration used to create a healthz service.
 type Config struct {
 	// Dependencies.
@@ -103,6 +113,12 @@ func (s *Service) GetHealthz(ctx context.Context) (healthz.Response, error) {
 				return
 			}
 
+			err = s.updateTokenTTLMetric()
+			if err != nil {
+				ch <- err.Error()
+				return
+			}
+
 			ch <- ""
 		}()
 
@@ -126,4 +142,29 @@ func (s *Service) GetHealthz(ctx context.Context) (healthz.Response, error) {
 	}
 
 	return response, nil
+}
+
+func (s *Service) updateTokenTTLMetric() error {
+	secret, err := s.vaultClient.Auth().Token().LookupSelf()
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	key, ok := secret.Data[ExpireTimeKey]
+	if !ok {
+		return microerror.Maskf(executionFailedError, "'%s' must exist in order to collect metrics for the Vault token expiration", ExpireTimeKey)
+	}
+	expireTime, ok := key.(string)
+	if !ok {
+		return microerror.Maskf(executionFailedError, "'%s' must be string in order to collect metrics for the Vault token expiration", ExpireTimeKey)
+	}
+
+	t, err := time.Parse(ExpireTimeLayout, expireTime)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	tokenExpireTimeGauge.Set(float64(t.Unix()))
+
+	return nil
 }
