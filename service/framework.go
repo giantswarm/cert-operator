@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/cenkalti/backoff"
@@ -9,6 +11,7 @@ import (
 	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
+	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/operatorkit/client/k8sclient"
 	"github.com/giantswarm/operatorkit/client/k8scrdclient"
@@ -38,6 +41,10 @@ import (
 
 const (
 	ResourceRetries uint64 = 3
+)
+
+const (
+	CertConfigCleanupFinalizer = "cert-operator.giantswarm.io/custom-object-cleanup"
 )
 
 func newCRDFramework(config Config) (*framework.Framework, error) {
@@ -251,6 +258,9 @@ func newCRDFramework(config Config) (*framework.Framework, error) {
 			return nil, microerror.Mask(err)
 		}
 	}
+
+	// TODO remove after migration.
+	migrateTPRsToCRDs(config.Logger, clientSet)
 
 	var newWatcherFactory informer.WatcherFactory
 	{
@@ -508,4 +518,92 @@ func newCustomObjectFramework(config Config) (*framework.Framework, error) {
 	}
 
 	return customObjectFramework, nil
+}
+
+func migrateTPRsToCRDs(logger micrologger.Logger, clientSet *versioned.Clientset) {
+	logger.Log("debug", "start TPR migration")
+
+	var err error
+
+	// List all TPOs.
+	var b []byte
+	{
+		e := "apis/giantswarm.io/v1/namespaces/default/certificates"
+		b, err = clientSet.Discovery().RESTClient().Get().AbsPath(e).DoRaw()
+		if err != nil {
+			logger.Log("error", fmt.Sprintf("%#v", err))
+			return
+		}
+
+		fmt.Printf("\n")
+		fmt.Printf("b start\n")
+		fmt.Printf("%s\n", b)
+		fmt.Printf("b end\n")
+		fmt.Printf("\n")
+	}
+
+	// Convert bytes into structure.
+	var v *certificatetpr.List
+	{
+		v = &certificatetpr.List{}
+		if err := json.Unmarshal(b, v); err != nil {
+			logger.Log("error", fmt.Sprintf("%#v", err))
+			return
+		}
+
+		fmt.Printf("\n")
+		fmt.Printf("v start\n")
+		fmt.Printf("%#v\n", v)
+		fmt.Printf("v end\n")
+		fmt.Printf("\n")
+	}
+
+	// Iterate over all TPOs.
+	for _, tpo := range v.Items {
+		// Compute CRO using TPO.
+		var cro *v1alpha1.CertConfig
+		{
+			cro = &v1alpha1.CertConfig{}
+
+			cro.TypeMeta.APIVersion = "core.giantswarm.io"
+			cro.TypeMeta.Kind = "CertConfig"
+			cro.ObjectMeta.Name = tpo.Name
+			cro.ObjectMeta.Finalizers = []string{
+				CertConfigCleanupFinalizer,
+			}
+			cro.Spec.Cert.AllowBareDomains = tpo.Spec.AllowBareDomains
+			cro.Spec.Cert.AltNames = tpo.Spec.AltNames
+			cro.Spec.Cert.ClusterComponent = tpo.Spec.ClusterComponent
+			cro.Spec.Cert.ClusterID = tpo.Spec.ClusterID
+			cro.Spec.Cert.CommonName = tpo.Spec.CommonName
+			cro.Spec.Cert.IPSANs = tpo.Spec.IPSANs
+			cro.Spec.Cert.Organizations = tpo.Spec.Organizations
+			cro.Spec.Cert.TTL = tpo.Spec.TTL
+			cro.Spec.VersionBundle.Version = tpo.Spec.VersionBundle.Version
+
+			fmt.Printf("\n")
+			fmt.Printf("cro start\n")
+			fmt.Printf("%#v\n", cro)
+			fmt.Printf("cro end\n")
+			fmt.Printf("\n")
+		}
+
+		// Create CRO in Kubernetes API.
+		{
+			// TODO enable.
+			// _, err := clientSet.ProviderV1alpha1().CertConfigs(tpo.Namespace).Get(cro.Name, apismetav1.GetOptions{})
+			// if apierrors.IsNotFound(err) {
+			// 	_, err := clientSet.ProviderV1alpha1().CertConfigs(tpo.Namespace).Create(cro)
+			// 	if err != nil {
+			// 		logger.Log("error", fmt.Sprintf("%#v", err))
+			// 		return
+			// 	}
+			// } else if err != nil {
+			// 	logger.Log("error", fmt.Sprintf("%#v", err))
+			// 	return
+			// }
+		}
+	}
+
+	logger.Log("debug", "end TPR migration")
 }
