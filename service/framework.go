@@ -568,9 +568,9 @@ func migrateTPRsToCRDs(logger micrologger.Logger, clientSet *versioned.Clientset
 			cro.TypeMeta.APIVersion = "core.giantswarm.io"
 			cro.TypeMeta.Kind = "CertConfig"
 			cro.ObjectMeta.Name = tpo.Name
-			cro.ObjectMeta.Finalizers = []string{
-				CertConfigCleanupFinalizer,
-			}
+			//cro.ObjectMeta.Finalizers = []string{
+			//	CertConfigCleanupFinalizer,
+			//}
 			cro.Spec.Cert.AllowBareDomains = tpo.Spec.AllowBareDomains
 			cro.Spec.Cert.AltNames = tpo.Spec.AltNames
 			cro.Spec.Cert.ClusterComponent = tpo.Spec.ClusterComponent
