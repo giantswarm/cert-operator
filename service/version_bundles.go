@@ -27,7 +27,7 @@ func NewVersionBundles() []versionbundle.Bundle {
 			Name:         "cert-operator",
 			Time:         time.Date(2017, time.October, 26, 16, 53, 0, 0, time.UTC),
 			Version:      "0.1.0",
-			WIP:          true,
+			WIP:          false,
 		},
 	}
 }
