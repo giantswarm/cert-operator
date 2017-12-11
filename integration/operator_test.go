@@ -151,7 +151,7 @@ func installCertOperator(cs kubernetes.Interface) error {
 		return microerror.Mask(err)
 	}
 
-	return waitFor(tprFunc(cs, certificatetpr.Name))
+	return waitFor(customObjectFunc(cs, "certconfig"))
 }
 
 func runCmd(cmdStr string) error {
@@ -225,11 +225,11 @@ func secretFunc(cs kubernetes.Interface, namespace, secretName string) func() er
 	}
 }
 
-func tprFunc(cs kubernetes.Interface, tprName string) func() error {
+func customObjectFunc(cs kubernetes.Interface, customObjectName string) func() error {
 	return func() error {
 		// FIXME: use proper clientset call when apiextensions are in place,
 		// `cs.ExtensionsV1beta1().ThirdPartyResources().Get(tprName, metav1.GetOptions{})` finding
 		// the tpr is not enough for being able to create a tpo.
-		return runCmd("kubectl get certificate")
+		return runCmd("kubectl get " + customObjectName)
 	}
 }
