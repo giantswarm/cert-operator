@@ -602,6 +602,8 @@ func migrateTPRsToCRDs(logger micrologger.Logger, clientSet *versioned.Clientset
 				logger.Log("error", fmt.Sprintf("%#v", err))
 				return
 			}
+
+			time.Sleep(1 * time.Second)
 		}
 	}
 
