@@ -16,7 +16,6 @@ import (
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/pkg/api/v1"
 )
 
@@ -51,7 +50,7 @@ Installation:
 `
 )
 
-var cs kubernetes.Interface
+var cs k8sClient
 
 // TestMain allows us to have common setup and teardown steps that are run
 // once for all the tests https://golang.org/pkg/testing/#hdr-Main.
@@ -91,7 +90,7 @@ func TestSecretsAreCreated(t *testing.T) {
 	}
 }
 
-func setUp(cs kubernetes.Interface) error {
+func setUp(cs k8sClient) error {
 	if err := createGSNamespace(cs); err != nil {
 		return microerror.Mask(err)
 	}
@@ -106,7 +105,7 @@ func setUp(cs kubernetes.Interface) error {
 	return nil
 }
 
-func tearDown(cs kubernetes.Interface) {
+func tearDown(cs k8sClient) {
 	runCmd("helm delete vault --purge")
 	runCmd("helm delete cert-operator --purge")
 	runCmd("helm delete cert-resource-lab --purge")
@@ -114,7 +113,7 @@ func tearDown(cs kubernetes.Interface) {
 	cs.ExtensionsV1beta1().ThirdPartyResources().Delete(certificatetpr.Name, &metav1.DeleteOptions{})
 }
 
-func createGSNamespace(cs kubernetes.Interface) error {
+func createGSNamespace(cs k8sClient) error {
 	// check if the namespace already exists
 	_, err := cs.CoreV1().Namespaces().Get("giantswarm", metav1.GetOptions{})
 	if err == nil {
@@ -134,7 +133,7 @@ func createGSNamespace(cs kubernetes.Interface) error {
 	return waitFor(activeNamespaceFunc(cs, "giantswarm"))
 }
 
-func installVault(cs kubernetes.Interface) error {
+func installVault(cs k8sClient) error {
 	if err := runCmd("helm registry install quay.io/giantswarm/vaultlab-chart:stable -- --set vaultToken=${VAULT_TOKEN} -n vault"); err != nil {
 		return microerror.Mask(err)
 	}
@@ -142,7 +141,7 @@ func installVault(cs kubernetes.Interface) error {
 	return waitFor(runningPodFunc(cs, "default", "app=vault"))
 }
 
-func installCertOperator(cs kubernetes.Interface) error {
+func installCertOperator(cs k8sClient) error {
 	certOperatorChartValuesEnv := os.ExpandEnv(certOperatorChartValues)
 	if err := ioutil.WriteFile(certOperatorValuesFile, []byte(certOperatorChartValuesEnv), os.ModePerm); err != nil {
 		return microerror.Mask(err)
@@ -151,7 +150,7 @@ func installCertOperator(cs kubernetes.Interface) error {
 		return microerror.Mask(err)
 	}
 
-	return waitFor(customObjectFunc(cs, "certconfig"))
+	return waitFor(certConfigFunc(cs))
 }
 
 func runCmd(cmdStr string) error {
@@ -181,7 +180,7 @@ func waitFor(f func() error) error {
 	}
 }
 
-func runningPodFunc(cs kubernetes.Interface, namespace, labelSelector string) func() error {
+func runningPodFunc(cs k8sClient, namespace, labelSelector string) func() error {
 	return func() error {
 		pods, err := cs.CoreV1().Pods(namespace).List(metav1.ListOptions{
 			LabelSelector: labelSelector,
@@ -201,7 +200,7 @@ func runningPodFunc(cs kubernetes.Interface, namespace, labelSelector string) fu
 	}
 }
 
-func activeNamespaceFunc(cs kubernetes.Interface, name string) func() error {
+func activeNamespaceFunc(cs k8sClient, name string) func() error {
 	return func() error {
 		ns, err := cs.CoreV1().Namespaces().Get(name, metav1.GetOptions{})
 
@@ -218,18 +217,19 @@ func activeNamespaceFunc(cs kubernetes.Interface, name string) func() error {
 	}
 }
 
-func secretFunc(cs kubernetes.Interface, namespace, secretName string) func() error {
+func secretFunc(cs k8sClient, namespace, secretName string) func() error {
 	return func() error {
 		_, err := cs.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
 		return microerror.Mask(err)
 	}
 }
 
-func customObjectFunc(cs kubernetes.Interface, customObjectName string) func() error {
+func certConfigFunc(cs k8sClient) func() error {
 	return func() error {
-		// FIXME: use proper clientset call when apiextensions are in place,
-		// `cs.ExtensionsV1beta1().ThirdPartyResources().Get(tprName, metav1.GetOptions{})` finding
-		// the tpr is not enough for being able to create a tpo.
-		return runCmd("kubectl get " + customObjectName)
+		_, err := cs.CoreV1alpha1().
+			CertConfigs("default").
+			List(metav1.ListOptions{})
+
+		return microerror.Mask(err)
 	}
 }
