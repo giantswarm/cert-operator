@@ -261,7 +261,7 @@ func newCRDFramework(config Config) (*framework.Framework, error) {
 	}
 
 	// TODO remove after migration.
-	migrateTPRsToCRDs(config.Logger, clientSet)
+	go migrateTPRsToCRDs(config.Logger, clientSet)
 
 	var newWatcherFactory informer.WatcherFactory
 	{
