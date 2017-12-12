@@ -63,7 +63,7 @@ func TestMain(m *testing.M) {
 		log.Printf("unexpected error: %v\n", err)
 	}
 
-	if err := setUp(cs); err != nil {
+	if err := cs.setUp(); err != nil {
 		v = 1
 		log.Printf("unexpected error: %v\n", err)
 	}
@@ -72,7 +72,7 @@ func TestMain(m *testing.M) {
 		v = m.Run()
 	}
 
-	tearDown(cs)
+	cs.tearDown()
 
 	os.Exit(v)
 }
@@ -84,28 +84,28 @@ func TestSecretsAreCreated(t *testing.T) {
 	}
 
 	secretName := fmt.Sprintf("%s-api", os.Getenv("CLUSTER_NAME"))
-	err = waitFor(secretFunc(cs, "default", secretName))
+	err = waitFor(cs.secretFunc("default", secretName))
 	if err != nil {
 		t.Errorf("could not find expected secret: %v", err)
 	}
 }
 
-func setUp(cs *clients) error {
-	if err := createGSNamespace(cs); err != nil {
+func (cs *clients) setUp() error {
+	if err := cs.createGSNamespace(); err != nil {
 		return microerror.Mask(err)
 	}
 
-	if err := installVault(cs); err != nil {
+	if err := cs.installVault(); err != nil {
 		return microerror.Mask(err)
 	}
 
-	if err := installCertOperator(cs); err != nil {
+	if err := cs.installCertOperator(); err != nil {
 		return microerror.Mask(err)
 	}
 	return nil
 }
 
-func tearDown(cs *clients) {
+func (cs *clients) tearDown() {
 	runCmd("helm delete vault --purge")
 	runCmd("helm delete cert-operator --purge")
 	runCmd("helm delete cert-resource-lab --purge")
@@ -113,7 +113,7 @@ func tearDown(cs *clients) {
 	cs.K8sCs.ExtensionsV1beta1().ThirdPartyResources().Delete(certificatetpr.Name, &metav1.DeleteOptions{})
 }
 
-func createGSNamespace(cs *clients) error {
+func (cs *clients) createGSNamespace() error {
 	// check if the namespace already exists
 	_, err := cs.K8sCs.CoreV1().Namespaces().Get("giantswarm", metav1.GetOptions{})
 	if err == nil {
@@ -130,18 +130,18 @@ func createGSNamespace(cs *clients) error {
 		return microerror.Mask(err)
 	}
 
-	return waitFor(activeNamespaceFunc(cs, "giantswarm"))
+	return waitFor(cs.activeNamespaceFunc("giantswarm"))
 }
 
-func installVault(cs *clients) error {
+func (cs *clients) installVault() error {
 	if err := runCmd("helm registry install quay.io/giantswarm/vaultlab-chart:stable -- --set vaultToken=${VAULT_TOKEN} -n vault"); err != nil {
 		return microerror.Mask(err)
 	}
 
-	return waitFor(runningPodFunc(cs, "default", "app=vault"))
+	return waitFor(cs.runningPodFunc("default", "app=vault"))
 }
 
-func installCertOperator(cs *clients) error {
+func (cs *clients) installCertOperator() error {
 	certOperatorChartValuesEnv := os.ExpandEnv(certOperatorChartValues)
 	if err := ioutil.WriteFile(certOperatorValuesFile, []byte(certOperatorChartValuesEnv), os.ModePerm); err != nil {
 		return microerror.Mask(err)
@@ -150,7 +150,7 @@ func installCertOperator(cs *clients) error {
 		return microerror.Mask(err)
 	}
 
-	return waitFor(certConfigFunc(cs))
+	return waitFor(cs.certConfigFunc())
 }
 
 func runCmd(cmdStr string) error {
@@ -180,7 +180,7 @@ func waitFor(f func() error) error {
 	}
 }
 
-func runningPodFunc(cs *clients, namespace, labelSelector string) func() error {
+func (cs *clients) runningPodFunc(namespace, labelSelector string) func() error {
 	return func() error {
 		pods, err := cs.K8sCs.CoreV1().Pods(namespace).List(metav1.ListOptions{
 			LabelSelector: labelSelector,
@@ -200,7 +200,7 @@ func runningPodFunc(cs *clients, namespace, labelSelector string) func() error {
 	}
 }
 
-func activeNamespaceFunc(cs *clients, name string) func() error {
+func (cs *clients) activeNamespaceFunc(name string) func() error {
 	return func() error {
 		ns, err := cs.K8sCs.CoreV1().Namespaces().Get(name, metav1.GetOptions{})
 
@@ -217,14 +217,14 @@ func activeNamespaceFunc(cs *clients, name string) func() error {
 	}
 }
 
-func secretFunc(cs *clients, namespace, secretName string) func() error {
+func (cs *clients) secretFunc(namespace, secretName string) func() error {
 	return func() error {
 		_, err := cs.K8sCs.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
 		return microerror.Mask(err)
 	}
 }
 
-func certConfigFunc(cs *clients) func() error {
+func (cs *clients) certConfigFunc() func() error {
 	return func() error {
 		_, err := cs.GsCs.CoreV1alpha1().
 			CertConfigs("default").
