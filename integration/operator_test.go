@@ -50,14 +50,14 @@ Installation:
 `
 )
 
-var cs k8sClient
+var cs *clients
 
 // TestMain allows us to have common setup and teardown steps that are run
 // once for all the tests https://golang.org/pkg/testing/#hdr-Main.
 func TestMain(m *testing.M) {
 	var v int
 	var err error
-	cs, err = getK8sClient()
+	cs, err = newClients()
 	if err != nil {
 		v = 1
 		log.Printf("unexpected error: %v\n", err)
@@ -90,7 +90,7 @@ func TestSecretsAreCreated(t *testing.T) {
 	}
 }
 
-func setUp(cs k8sClient) error {
+func setUp(cs *clients) error {
 	if err := createGSNamespace(cs); err != nil {
 		return microerror.Mask(err)
 	}
@@ -105,17 +105,17 @@ func setUp(cs k8sClient) error {
 	return nil
 }
 
-func tearDown(cs k8sClient) {
+func tearDown(cs *clients) {
 	runCmd("helm delete vault --purge")
 	runCmd("helm delete cert-operator --purge")
 	runCmd("helm delete cert-resource-lab --purge")
-	cs.CoreV1().Namespaces().Delete("giantswarm", &metav1.DeleteOptions{})
-	cs.ExtensionsV1beta1().ThirdPartyResources().Delete(certificatetpr.Name, &metav1.DeleteOptions{})
+	cs.K8sCs.CoreV1().Namespaces().Delete("giantswarm", &metav1.DeleteOptions{})
+	cs.K8sCs.ExtensionsV1beta1().ThirdPartyResources().Delete(certificatetpr.Name, &metav1.DeleteOptions{})
 }
 
-func createGSNamespace(cs k8sClient) error {
+func createGSNamespace(cs *clients) error {
 	// check if the namespace already exists
-	_, err := cs.CoreV1().Namespaces().Get("giantswarm", metav1.GetOptions{})
+	_, err := cs.K8sCs.CoreV1().Namespaces().Get("giantswarm", metav1.GetOptions{})
 	if err == nil {
 		return nil
 	}
@@ -125,7 +125,7 @@ func createGSNamespace(cs k8sClient) error {
 			Name: "giantswarm",
 		},
 	}
-	_, err = cs.CoreV1().Namespaces().Create(namespace)
+	_, err = cs.K8sCs.CoreV1().Namespaces().Create(namespace)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -133,7 +133,7 @@ func createGSNamespace(cs k8sClient) error {
 	return waitFor(activeNamespaceFunc(cs, "giantswarm"))
 }
 
-func installVault(cs k8sClient) error {
+func installVault(cs *clients) error {
 	if err := runCmd("helm registry install quay.io/giantswarm/vaultlab-chart:stable -- --set vaultToken=${VAULT_TOKEN} -n vault"); err != nil {
 		return microerror.Mask(err)
 	}
@@ -141,7 +141,7 @@ func installVault(cs k8sClient) error {
 	return waitFor(runningPodFunc(cs, "default", "app=vault"))
 }
 
-func installCertOperator(cs k8sClient) error {
+func installCertOperator(cs *clients) error {
 	certOperatorChartValuesEnv := os.ExpandEnv(certOperatorChartValues)
 	if err := ioutil.WriteFile(certOperatorValuesFile, []byte(certOperatorChartValuesEnv), os.ModePerm); err != nil {
 		return microerror.Mask(err)
@@ -180,9 +180,9 @@ func waitFor(f func() error) error {
 	}
 }
 
-func runningPodFunc(cs k8sClient, namespace, labelSelector string) func() error {
+func runningPodFunc(cs *clients, namespace, labelSelector string) func() error {
 	return func() error {
-		pods, err := cs.CoreV1().Pods(namespace).List(metav1.ListOptions{
+		pods, err := cs.K8sCs.CoreV1().Pods(namespace).List(metav1.ListOptions{
 			LabelSelector: labelSelector,
 		})
 		if err != nil {
@@ -200,9 +200,9 @@ func runningPodFunc(cs k8sClient, namespace, labelSelector string) func() error 
 	}
 }
 
-func activeNamespaceFunc(cs k8sClient, name string) func() error {
+func activeNamespaceFunc(cs *clients, name string) func() error {
 	return func() error {
-		ns, err := cs.CoreV1().Namespaces().Get(name, metav1.GetOptions{})
+		ns, err := cs.K8sCs.CoreV1().Namespaces().Get(name, metav1.GetOptions{})
 
 		if err != nil {
 			return microerror.Mask(err)
@@ -217,16 +217,16 @@ func activeNamespaceFunc(cs k8sClient, name string) func() error {
 	}
 }
 
-func secretFunc(cs k8sClient, namespace, secretName string) func() error {
+func secretFunc(cs *clients, namespace, secretName string) func() error {
 	return func() error {
-		_, err := cs.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+		_, err := cs.K8sCs.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
 		return microerror.Mask(err)
 	}
 }
 
-func certConfigFunc(cs k8sClient) func() error {
+func certConfigFunc(cs *clients) func() error {
 	return func() error {
-		_, err := cs.CoreV1alpha1().
+		_, err := cs.GsCs.CoreV1alpha1().
 			CertConfigs("default").
 			List(metav1.ListOptions{})
 
