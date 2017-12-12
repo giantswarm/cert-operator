@@ -45,17 +45,12 @@ jobs:
 
   e2eTestExecution:
     machine: true
+    working_directory: /home/circleci/.go_workspace/src/github.com/giantswarm/cert-operator
     steps:
     - checkout
 
     - attach_workspace:
         at: .
-
-    - run:
-        name: additional setup required for compiling go on circleCI
-        command: |
-          mkdir -p /home/circleci/.go_workspace/src
-          cp -ar vendor/* /home/circleci/.go_workspace/src/
 
     - run: ./e2e-harness test
 

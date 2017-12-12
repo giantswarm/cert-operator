@@ -16,7 +16,6 @@ import (
 	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/pkg/api/v1"
 )
 
@@ -51,20 +50,20 @@ Installation:
 `
 )
 
-var cs kubernetes.Interface
+var cs *clients
 
 // TestMain allows us to have common setup and teardown steps that are run
 // once for all the tests https://golang.org/pkg/testing/#hdr-Main.
 func TestMain(m *testing.M) {
 	var v int
 	var err error
-	cs, err = getK8sClient()
+	cs, err = newClients()
 	if err != nil {
 		v = 1
 		log.Printf("unexpected error: %v\n", err)
 	}
 
-	if err := setUp(cs); err != nil {
+	if err := cs.setUp(); err != nil {
 		v = 1
 		log.Printf("unexpected error: %v\n", err)
 	}
@@ -73,7 +72,7 @@ func TestMain(m *testing.M) {
 		v = m.Run()
 	}
 
-	tearDown(cs)
+	cs.tearDown()
 
 	os.Exit(v)
 }
@@ -85,38 +84,38 @@ func TestSecretsAreCreated(t *testing.T) {
 	}
 
 	secretName := fmt.Sprintf("%s-api", os.Getenv("CLUSTER_NAME"))
-	err = waitFor(secretFunc(cs, "default", secretName))
+	err = waitFor(cs.secretFunc("default", secretName))
 	if err != nil {
 		t.Errorf("could not find expected secret: %v", err)
 	}
 }
 
-func setUp(cs kubernetes.Interface) error {
-	if err := createGSNamespace(cs); err != nil {
+func (cs *clients) setUp() error {
+	if err := cs.createGSNamespace(); err != nil {
 		return microerror.Mask(err)
 	}
 
-	if err := installVault(cs); err != nil {
+	if err := cs.installVault(); err != nil {
 		return microerror.Mask(err)
 	}
 
-	if err := installCertOperator(cs); err != nil {
+	if err := cs.installCertOperator(); err != nil {
 		return microerror.Mask(err)
 	}
 	return nil
 }
 
-func tearDown(cs kubernetes.Interface) {
+func (cs *clients) tearDown() {
 	runCmd("helm delete vault --purge")
 	runCmd("helm delete cert-operator --purge")
 	runCmd("helm delete cert-resource-lab --purge")
-	cs.CoreV1().Namespaces().Delete("giantswarm", &metav1.DeleteOptions{})
-	cs.ExtensionsV1beta1().ThirdPartyResources().Delete(certificatetpr.Name, &metav1.DeleteOptions{})
+	cs.K8sCs.CoreV1().Namespaces().Delete("giantswarm", &metav1.DeleteOptions{})
+	cs.K8sCs.ExtensionsV1beta1().ThirdPartyResources().Delete(certificatetpr.Name, &metav1.DeleteOptions{})
 }
 
-func createGSNamespace(cs kubernetes.Interface) error {
+func (cs *clients) createGSNamespace() error {
 	// check if the namespace already exists
-	_, err := cs.CoreV1().Namespaces().Get("giantswarm", metav1.GetOptions{})
+	_, err := cs.K8sCs.CoreV1().Namespaces().Get("giantswarm", metav1.GetOptions{})
 	if err == nil {
 		return nil
 	}
@@ -126,23 +125,23 @@ func createGSNamespace(cs kubernetes.Interface) error {
 			Name: "giantswarm",
 		},
 	}
-	_, err = cs.CoreV1().Namespaces().Create(namespace)
+	_, err = cs.K8sCs.CoreV1().Namespaces().Create(namespace)
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	return waitFor(activeNamespaceFunc(cs, "giantswarm"))
+	return waitFor(cs.activeNamespaceFunc("giantswarm"))
 }
 
-func installVault(cs kubernetes.Interface) error {
+func (cs *clients) installVault() error {
 	if err := runCmd("helm registry install quay.io/giantswarm/vaultlab-chart:stable -- --set vaultToken=${VAULT_TOKEN} -n vault"); err != nil {
 		return microerror.Mask(err)
 	}
 
-	return waitFor(runningPodFunc(cs, "default", "app=vault"))
+	return waitFor(cs.runningPodFunc("default", "app=vault"))
 }
 
-func installCertOperator(cs kubernetes.Interface) error {
+func (cs *clients) installCertOperator() error {
 	certOperatorChartValuesEnv := os.ExpandEnv(certOperatorChartValues)
 	if err := ioutil.WriteFile(certOperatorValuesFile, []byte(certOperatorChartValuesEnv), os.ModePerm); err != nil {
 		return microerror.Mask(err)
@@ -151,7 +150,7 @@ func installCertOperator(cs kubernetes.Interface) error {
 		return microerror.Mask(err)
 	}
 
-	return waitFor(customObjectFunc(cs, "certconfig"))
+	return waitFor(cs.certConfigFunc())
 }
 
 func runCmd(cmdStr string) error {
@@ -181,9 +180,9 @@ func waitFor(f func() error) error {
 	}
 }
 
-func runningPodFunc(cs kubernetes.Interface, namespace, labelSelector string) func() error {
+func (cs *clients) runningPodFunc(namespace, labelSelector string) func() error {
 	return func() error {
-		pods, err := cs.CoreV1().Pods(namespace).List(metav1.ListOptions{
+		pods, err := cs.K8sCs.CoreV1().Pods(namespace).List(metav1.ListOptions{
 			LabelSelector: labelSelector,
 		})
 		if err != nil {
@@ -201,9 +200,9 @@ func runningPodFunc(cs kubernetes.Interface, namespace, labelSelector string) fu
 	}
 }
 
-func activeNamespaceFunc(cs kubernetes.Interface, name string) func() error {
+func (cs *clients) activeNamespaceFunc(name string) func() error {
 	return func() error {
-		ns, err := cs.CoreV1().Namespaces().Get(name, metav1.GetOptions{})
+		ns, err := cs.K8sCs.CoreV1().Namespaces().Get(name, metav1.GetOptions{})
 
 		if err != nil {
 			return microerror.Mask(err)
@@ -218,18 +217,19 @@ func activeNamespaceFunc(cs kubernetes.Interface, name string) func() error {
 	}
 }
 
-func secretFunc(cs kubernetes.Interface, namespace, secretName string) func() error {
+func (cs *clients) secretFunc(namespace, secretName string) func() error {
 	return func() error {
-		_, err := cs.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+		_, err := cs.K8sCs.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
 		return microerror.Mask(err)
 	}
 }
 
-func customObjectFunc(cs kubernetes.Interface, customObjectName string) func() error {
+func (cs *clients) certConfigFunc() func() error {
 	return func() error {
-		// FIXME: use proper clientset call when apiextensions are in place,
-		// `cs.ExtensionsV1beta1().ThirdPartyResources().Get(tprName, metav1.GetOptions{})` finding
-		// the tpr is not enough for being able to create a tpo.
-		return runCmd("kubectl get " + customObjectName)
+		_, err := cs.GsCs.CoreV1alpha1().
+			CertConfigs("default").
+			List(metav1.ListOptions{})
+
+		return microerror.Mask(err)
 	}
 }
