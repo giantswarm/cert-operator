@@ -1,0 +1,45 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: cert-operator
+  namespace: giantswarm
+rules:
+  - apiGroups:
+      - "core.giantswarm.io"
+    resources:
+      - certconfigs
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - create
+      - update
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: userd
+subjects:
+  - kind: ServiceAccount
+    name: cert-operator
+roleRef:
+  kind: ClusterRole
+  name: cert-operator
+  apiGroup: rbac.authorization.k8s.io
