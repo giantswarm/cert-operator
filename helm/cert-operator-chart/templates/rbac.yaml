@@ -35,7 +35,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: userd
+  name: cert-operator
 subjects:
   - kind: ServiceAccount
     name: cert-operator
