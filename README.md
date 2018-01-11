@@ -26,7 +26,6 @@ https://quay.io/repository/giantswarm/cert-operator
 #### Dependencies
 
 - [github.com/giantswarm/microkit](https://github.com/giantswarm/microkit)
-- [github.com/giantswarm/certificatetpr](https://github.com/giantswarm/certificatetpr)
 
 
 #### Building the standard way

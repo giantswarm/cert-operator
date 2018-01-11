@@ -4,10 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
+	apiv1 "k8s.io/api/core/v1"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	apiv1 "k8s.io/client-go/pkg/api/v1"
 
 	"github.com/giantswarm/cert-operator/service/keyv2"
 )
@@ -31,14 +30,14 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 				VersionBundleVersionAnnotation: keyv2.VersionBundleVersion(customObject),
 			},
 			Labels: map[string]string{
-				certificatetpr.ClusterIDLabel: keyv2.ClusterID(customObject),
-				certificatetpr.ComponentLabel: keyv2.ClusterComponent(customObject),
+				keyv2.ClusterIDLabel: keyv2.ClusterID(customObject),
+				keyv2.ComponentLabel: keyv2.ClusterComponent(customObject),
 			},
 		},
 		StringData: map[string]string{
-			certificatetpr.CA.String():  "",
-			certificatetpr.Crt.String(): "",
-			certificatetpr.Key.String(): "",
+			keyv2.CAID:  "",
+			keyv2.CrtID: "",
+			keyv2.KeyID: "",
 		},
 	}
 
