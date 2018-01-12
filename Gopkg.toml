@@ -29,8 +29,8 @@
   name = "github.com/giantswarm/apiextensions"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/giantswarm/e2e-harness"
-  version = "0.1.0"
 
 [[constraint]]
   branch = "master"
