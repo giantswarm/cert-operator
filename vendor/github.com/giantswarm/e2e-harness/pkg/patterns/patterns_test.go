@@ -4,9 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/giantswarm/micrologger/microloggertest"
-
 	"github.com/giantswarm/e2e-harness/pkg/patterns"
+	"github.com/giantswarm/micrologger/microloggertest"
 )
 
 func TestFindMatch(t *testing.T) {

@@ -5,11 +5,9 @@ import (
 	"io"
 	"time"
 
-	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/micrologger"
-
 	"github.com/giantswarm/e2e-harness/pkg/patterns"
 	"github.com/giantswarm/e2e-harness/pkg/runner"
+	"github.com/giantswarm/micrologger"
 )
 
 const (
@@ -51,7 +49,6 @@ func (w *Wait) For(md *MatchDef) error {
 	timeout := time.After(md.Deadline * time.Millisecond)
 	tick := time.Tick(md.Step * time.Millisecond)
 
-	w.logger.Log("debug", fmt.Sprintf("waiting for pattern %q in %q output", md.Match, md.Run))
 	for {
 		select {
 		case <-timeout:
@@ -66,12 +63,15 @@ func (w *Wait) For(md *MatchDef) error {
 				defer wr.Close()
 				w.runner.RunPortForward(wr, md.Run)
 			}()
+			w.logger.Log("debug", "checking pattern "+md.Match)
 			ok, err := w.matcher.Find(re, md.Match)
 			if err != nil {
-				return microerror.Mask(err)
+				return err
 			} else if ok {
+				w.logger.Log("debug", "match found")
 				return nil
 			}
+			w.logger.Log("debug", "match not found, retrying")
 		}
 	}
 }

@@ -5,8 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/giantswarm/operatorkit/framework/context/reconciliationcanceledcontext"
-	"github.com/giantswarm/operatorkit/framework/context/resourcecanceledcontext"
+	"github.com/giantswarm/operatorkit/framework/context/canceledcontext"
 )
 
 // Test_Framework_ResourceCallOrder ensures the resource's methods are
@@ -81,13 +80,13 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 		},
 
 		// Test 4 ensures ProcessCreate executes the steps of a single resource in
-		// the expected order until the reconciliation gets canceled.
+		// the expected order until it gets canceled.
 		{
 			ProcessMethod: ProcessCreate,
-			Ctx:           reconciliationcanceledcontext.NewContext(context.Background(), make(chan struct{})),
+			Ctx:           canceledcontext.NewContext(context.Background(), make(chan struct{})),
 			Resources: []Resource{
 				&testResource{
-					ReconciliationCanceledStep: "GetCurrentState",
+					CancelingStep: "GetCurrentState",
 				},
 			},
 			ExpectedOrders: [][]string{
@@ -99,48 +98,6 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 		},
 
 		// Test 5 ensures ProcessCreate executes the steps of a single resource in
-		// the expected order until the resource gets canceled.
-		{
-			ProcessMethod: ProcessCreate,
-			Ctx:           resourcecanceledcontext.NewContext(context.Background(), make(chan struct{})),
-			Resources: []Resource{
-				&testResource{
-					ResourceCanceledStep: "GetCurrentState",
-				},
-			},
-			ExpectedOrders: [][]string{
-				{
-					"GetCurrentState",
-				},
-			},
-			ErrorMatcher: nil,
-		},
-
-		// Test 6 ensures ProcessCreate executes the steps of a single resource in
-		// the expected order even if the reconciliation is canceled while the given
-		// context does not contain a canceler.
-		{
-			ProcessMethod: ProcessCreate,
-			Ctx:           context.TODO(),
-			Resources: []Resource{
-				&testResource{
-					ReconciliationCanceledStep: "GetCurrentState",
-				},
-			},
-			ExpectedOrders: [][]string{
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewUpdatePatch",
-					"ApplyCreatePatch",
-					"ApplyDeletePatch",
-					"ApplyUpdatePatch",
-				},
-			},
-			ErrorMatcher: nil,
-		},
-
-		// Test 7 ensures ProcessCreate executes the steps of a single resource in
 		// the expected order even if the resource is canceled while the given
 		// context does not contain a canceler.
 		{
@@ -148,7 +105,7 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			Ctx:           context.TODO(),
 			Resources: []Resource{
 				&testResource{
-					ResourceCanceledStep: "GetCurrentState",
+					CancelingStep: "GetCurrentState",
 				},
 			},
 			ExpectedOrders: [][]string{
@@ -164,15 +121,15 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 8 ensures ProcessCreate executes the steps of the first resource in
-		// the expected order in case multile resources are given, until the
-		// reconciliation of the first resource gets canceled.
+		// Test 6 ensures ProcessCreate executes the steps of the first resource in
+		// the expected order in case multile resources are given, until the first
+		// resource gets canceled.
 		{
 			ProcessMethod: ProcessCreate,
-			Ctx:           reconciliationcanceledcontext.NewContext(context.Background(), make(chan struct{})),
+			Ctx:           canceledcontext.NewContext(context.Background(), make(chan struct{})),
 			Resources: []Resource{
 				&testResource{
-					ReconciliationCanceledStep: "NewUpdatePatch",
+					CancelingStep: "NewUpdatePatch",
 				},
 				&testResource{},
 			},
@@ -187,46 +144,16 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 9 ensures ProcessCreate executes the steps of the first resource in
-		// the expected order in case multile resources are given, until the first
+		// Test 7 ensures ProcessCreate executes the steps of the first and second resource in
+		// the expected order in case multile resources are given, until the second
 		// resource gets canceled.
 		{
 			ProcessMethod: ProcessCreate,
-			Ctx:           resourcecanceledcontext.NewContext(context.Background(), make(chan struct{})),
-			Resources: []Resource{
-				&testResource{
-					ResourceCanceledStep: "NewUpdatePatch",
-				},
-				&testResource{},
-			},
-			ExpectedOrders: [][]string{
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewUpdatePatch",
-				},
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewUpdatePatch",
-					"ApplyCreatePatch",
-					"ApplyDeletePatch",
-					"ApplyUpdatePatch",
-				},
-			},
-			ErrorMatcher: nil,
-		},
-
-		// Test 10 ensures ProcessCreate executes the steps of the first and second
-		// resource in the expected order in case multile resources are given, until
-		// the reconciliation of the second resource gets canceled.
-		{
-			ProcessMethod: ProcessCreate,
-			Ctx:           reconciliationcanceledcontext.NewContext(context.Background(), make(chan struct{})),
+			Ctx:           canceledcontext.NewContext(context.Background(), make(chan struct{})),
 			Resources: []Resource{
 				&testResource{},
 				&testResource{
-					ReconciliationCanceledStep: "NewUpdatePatch",
+					CancelingStep: "NewUpdatePatch",
 				},
 			},
 			ExpectedOrders: [][]string{
@@ -247,37 +174,7 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 11 ensures ProcessCreate executes the steps of the first and second
-		// resource in the expected order in case multile resources are given, until
-		// the second resource gets canceled.
-		{
-			ProcessMethod: ProcessCreate,
-			Ctx:           resourcecanceledcontext.NewContext(context.Background(), make(chan struct{})),
-			Resources: []Resource{
-				&testResource{},
-				&testResource{
-					ResourceCanceledStep: "NewUpdatePatch",
-				},
-			},
-			ExpectedOrders: [][]string{
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewUpdatePatch",
-					"ApplyCreatePatch",
-					"ApplyDeletePatch",
-					"ApplyUpdatePatch",
-				},
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewUpdatePatch",
-				},
-			},
-			ErrorMatcher: nil,
-		},
-
-		// Test 12 ensures ProcessDelete returns an error in case no resources are
+		// Test 8 ensures ProcessDelete returns an error in case no resources are
 		// provided.
 		{
 			ProcessMethod:  ProcessDelete,
@@ -287,7 +184,7 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher:   IsExecutionFailed,
 		},
 
-		// Test 13 ensures ProcessDelete executes the steps of a single resource in
+		// Test 9 ensures ProcessDelete executes the steps of a single resource in
 		// the expected order.
 		{
 			ProcessMethod: ProcessDelete,
@@ -308,7 +205,7 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 14 ensures ProcessDelete executes the steps of multile resources in
+		// Test 10 ensures ProcessDelete executes the steps of multile resources in
 		// the expected order.
 		{
 			ProcessMethod: ProcessDelete,
@@ -338,14 +235,14 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 15 ensures ProcessDelete executes the steps of a single resource in
-		// the expected order until the reconciliation gets canceled.
+		// Test 11 ensures ProcessDelete executes the steps of a single resource in
+		// the expected order until it gets canceled.
 		{
 			ProcessMethod: ProcessDelete,
-			Ctx:           reconciliationcanceledcontext.NewContext(context.Background(), make(chan struct{})),
+			Ctx:           canceledcontext.NewContext(context.Background(), make(chan struct{})),
 			Resources: []Resource{
 				&testResource{
-					ReconciliationCanceledStep: "GetCurrentState",
+					CancelingStep: "GetCurrentState",
 				},
 			},
 			ExpectedOrders: [][]string{
@@ -356,49 +253,7 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 16 ensures ProcessDelete executes the steps of a single resource in
-		// the expected order until the resource gets canceled.
-		{
-			ProcessMethod: ProcessDelete,
-			Ctx:           resourcecanceledcontext.NewContext(context.Background(), make(chan struct{})),
-			Resources: []Resource{
-				&testResource{
-					ResourceCanceledStep: "GetCurrentState",
-				},
-			},
-			ExpectedOrders: [][]string{
-				{
-					"GetCurrentState",
-				},
-			},
-			ErrorMatcher: nil,
-		},
-
-		// Test 17 ensures ProcessDelete executes the steps of a single resource in
-		// the expected order even if the reconciliation is canceled while the given
-		// context does not contain a canceler.
-		{
-			ProcessMethod: ProcessDelete,
-			Ctx:           context.TODO(),
-			Resources: []Resource{
-				&testResource{
-					ReconciliationCanceledStep: "GetCurrentState",
-				},
-			},
-			ExpectedOrders: [][]string{
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewDeletePatch",
-					"ApplyCreatePatch",
-					"ApplyDeletePatch",
-					"ApplyUpdatePatch",
-				},
-			},
-			ErrorMatcher: nil,
-		},
-
-		// Test 18 ensures ProcessDelete executes the steps of a single resource in
+		// Test 12 ensures ProcessDelete executes the steps of a single resource in
 		// the expected order even if the resource is canceled while the given
 		// context does not contain a canceler.
 		{
@@ -406,7 +261,7 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			Ctx:           context.TODO(),
 			Resources: []Resource{
 				&testResource{
-					ResourceCanceledStep: "GetCurrentState",
+					CancelingStep: "GetCurrentState",
 				},
 			},
 			ExpectedOrders: [][]string{
@@ -422,15 +277,15 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 19 ensures ProcessDelete executes the steps of the first resource in
-		// the expected order in case multile resources are given, until the
-		// reconciliation of the first resource gets canceled.
+		// Test 13 ensures ProcessDelete executes the steps of the first resource in
+		// the expected order in case multile resources are given, until the first
+		// resource gets canceled.
 		{
 			ProcessMethod: ProcessDelete,
-			Ctx:           reconciliationcanceledcontext.NewContext(context.Background(), make(chan struct{})),
+			Ctx:           canceledcontext.NewContext(context.Background(), make(chan struct{})),
 			Resources: []Resource{
 				&testResource{
-					ReconciliationCanceledStep: "NewDeletePatch",
+					CancelingStep: "NewDeletePatch",
 				},
 				&testResource{},
 			},
@@ -445,46 +300,16 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 20 ensures ProcessDelete executes the steps of the first resource in
-		// the expected order in case multile resources are given, until the
+		// Test 14 ensures ProcessDelete executes the steps of the first and second resource in
+		// the expected order in case multile resources are given, until the second
 		// resource gets canceled.
 		{
 			ProcessMethod: ProcessDelete,
-			Ctx:           resourcecanceledcontext.NewContext(context.Background(), make(chan struct{})),
-			Resources: []Resource{
-				&testResource{
-					ResourceCanceledStep: "NewDeletePatch",
-				},
-				&testResource{},
-			},
-			ExpectedOrders: [][]string{
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewDeletePatch",
-				},
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewDeletePatch",
-					"ApplyCreatePatch",
-					"ApplyDeletePatch",
-					"ApplyUpdatePatch",
-				},
-			},
-			ErrorMatcher: nil,
-		},
-
-		// Test 21 ensures ProcessDelete executes the steps of the first and second
-		// resource in the expected order in case multile resources are given, until
-		// the reconciliation of the second resource gets canceled.
-		{
-			ProcessMethod: ProcessDelete,
-			Ctx:           reconciliationcanceledcontext.NewContext(context.Background(), make(chan struct{})),
+			Ctx:           canceledcontext.NewContext(context.Background(), make(chan struct{})),
 			Resources: []Resource{
 				&testResource{},
 				&testResource{
-					ReconciliationCanceledStep: "NewDeletePatch",
+					CancelingStep: "NewDeletePatch",
 				},
 			},
 			ExpectedOrders: [][]string{
@@ -505,37 +330,7 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 22 ensures ProcessDelete executes the steps of the first and second
-		// resource in the expected order in case multile resources are given, until
-		// the second resource gets canceled.
-		{
-			ProcessMethod: ProcessDelete,
-			Ctx:           resourcecanceledcontext.NewContext(context.Background(), make(chan struct{})),
-			Resources: []Resource{
-				&testResource{},
-				&testResource{
-					ResourceCanceledStep: "NewDeletePatch",
-				},
-			},
-			ExpectedOrders: [][]string{
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewDeletePatch",
-					"ApplyCreatePatch",
-					"ApplyDeletePatch",
-					"ApplyUpdatePatch",
-				},
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewDeletePatch",
-				},
-			},
-			ErrorMatcher: nil,
-		},
-
-		// Test 23 ensures ProcessUpdate returns an error in case no resources are
+		// Test 15 ensures ProcessUpdate returns an error in case no resources are
 		// provided.
 		{
 			ProcessMethod:  ProcessUpdate,
@@ -545,7 +340,7 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher:   IsExecutionFailed,
 		},
 
-		// Test 24 ensures ProcessUpdate executes the steps of a single resource in
+		// Test 16 ensures ProcessUpdate executes the steps of a single resource in
 		// the expected order.
 		{
 			ProcessMethod: ProcessUpdate,
@@ -566,7 +361,7 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 25 ensures ProcessUpdate executes the steps of multile resources in
+		// Test 17 ensures ProcessUpdate executes the steps of multile resources in
 		// the expected order.
 		{
 			ProcessMethod: ProcessUpdate,
@@ -596,14 +391,14 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 26 ensures ProcessUpdate executes the steps of a single resource in
-		// the expected order until the reconciliation gets canceled.
+		// Test 18 ensures ProcessUpdate executes the steps of a single resource in
+		// the expected order until it gets canceled.
 		{
 			ProcessMethod: ProcessUpdate,
-			Ctx:           reconciliationcanceledcontext.NewContext(context.Background(), make(chan struct{})),
+			Ctx:           canceledcontext.NewContext(context.Background(), make(chan struct{})),
 			Resources: []Resource{
 				&testResource{
-					ReconciliationCanceledStep: "GetCurrentState",
+					CancelingStep: "GetCurrentState",
 				},
 			},
 			ExpectedOrders: [][]string{
@@ -614,49 +409,7 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 27 ensures ProcessUpdate executes the steps of a single resource in
-		// the expected order until the resource gets canceled.
-		{
-			ProcessMethod: ProcessUpdate,
-			Ctx:           resourcecanceledcontext.NewContext(context.Background(), make(chan struct{})),
-			Resources: []Resource{
-				&testResource{
-					ResourceCanceledStep: "GetCurrentState",
-				},
-			},
-			ExpectedOrders: [][]string{
-				{
-					"GetCurrentState",
-				},
-			},
-			ErrorMatcher: nil,
-		},
-
-		// Test 28 ensures ProcessUpdate executes the steps of a single resource in
-		// the expected order even if the reconciliation is canceled while the given
-		// context does not contain a canceler.
-		{
-			ProcessMethod: ProcessUpdate,
-			Ctx:           context.TODO(),
-			Resources: []Resource{
-				&testResource{
-					ReconciliationCanceledStep: "GetCurrentState",
-				},
-			},
-			ExpectedOrders: [][]string{
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewUpdatePatch",
-					"ApplyCreatePatch",
-					"ApplyDeletePatch",
-					"ApplyUpdatePatch",
-				},
-			},
-			ErrorMatcher: nil,
-		},
-
-		// Test 29 ensures ProcessUpdate executes the steps of a single resource in
+		// Test 19 ensures ProcessUpdate executes the steps of a single resource in
 		// the expected order even if the resource is canceled while the given
 		// context does not contain a canceler.
 		{
@@ -664,7 +417,7 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			Ctx:           context.TODO(),
 			Resources: []Resource{
 				&testResource{
-					ResourceCanceledStep: "GetCurrentState",
+					CancelingStep: "GetCurrentState",
 				},
 			},
 			ExpectedOrders: [][]string{
@@ -680,15 +433,15 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 30 ensures ProcessUpdate executes the steps of the first resource in
-		// the expected order in case multile resources are given, until the
-		// reconciliation of the first resource gets canceled.
+		// Test 20 ensures ProcessUpdate executes the steps of the first resource in
+		// the expected order in case multile resources are given, until the first
+		// resource gets canceled.
 		{
 			ProcessMethod: ProcessUpdate,
-			Ctx:           reconciliationcanceledcontext.NewContext(context.Background(), make(chan struct{})),
+			Ctx:           canceledcontext.NewContext(context.Background(), make(chan struct{})),
 			Resources: []Resource{
 				&testResource{
-					ReconciliationCanceledStep: "NewUpdatePatch",
+					CancelingStep: "NewUpdatePatch",
 				},
 				&testResource{},
 			},
@@ -703,46 +456,16 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 31 ensures ProcessUpdate executes the steps of the first resource in
-		// the expected order in case multile resources are given, until the first
+		// Test 21 ensures ProcessUpdate executes the steps of the first and second resource in
+		// the expected order in case multile resources are given, until the second
 		// resource gets canceled.
 		{
 			ProcessMethod: ProcessUpdate,
-			Ctx:           resourcecanceledcontext.NewContext(context.Background(), make(chan struct{})),
-			Resources: []Resource{
-				&testResource{
-					ResourceCanceledStep: "NewUpdatePatch",
-				},
-				&testResource{},
-			},
-			ExpectedOrders: [][]string{
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewUpdatePatch",
-				},
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewUpdatePatch",
-					"ApplyCreatePatch",
-					"ApplyDeletePatch",
-					"ApplyUpdatePatch",
-				},
-			},
-			ErrorMatcher: nil,
-		},
-
-		// Test 32 ensures ProcessUpdate executes the steps of the first and second
-		// resource in the expected order in case multile resources are given, until
-		// the reconciliation of the second resource gets canceled.
-		{
-			ProcessMethod: ProcessUpdate,
-			Ctx:           reconciliationcanceledcontext.NewContext(context.Background(), make(chan struct{})),
+			Ctx:           canceledcontext.NewContext(context.Background(), make(chan struct{})),
 			Resources: []Resource{
 				&testResource{},
 				&testResource{
-					ReconciliationCanceledStep: "NewUpdatePatch",
+					CancelingStep: "NewUpdatePatch",
 				},
 			},
 			ExpectedOrders: [][]string{
@@ -763,41 +486,11 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 33 ensures ProcessUpdate executes the steps of the first and second
-		// resource in the expected order in case multile resources are given, until
-		// the second resource gets canceled.
-		{
-			ProcessMethod: ProcessUpdate,
-			Ctx:           resourcecanceledcontext.NewContext(context.Background(), make(chan struct{})),
-			Resources: []Resource{
-				&testResource{},
-				&testResource{
-					ResourceCanceledStep: "NewUpdatePatch",
-				},
-			},
-			ExpectedOrders: [][]string{
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewUpdatePatch",
-					"ApplyCreatePatch",
-					"ApplyDeletePatch",
-					"ApplyUpdatePatch",
-				},
-				{
-					"GetCurrentState",
-					"GetDesiredState",
-					"NewUpdatePatch",
-				},
-			},
-			ErrorMatcher: nil,
-		},
-
-		// Test 34 ensures ProcessCreate calls Resource.Apply*Patch
+		// Test 22 ensures ProcessCreate calls Resource.Apply*Patch
 		// only when Patch has corresponding part set.
 		{
 			ProcessMethod: ProcessCreate,
-			Ctx:           context.TODO(),
+			Ctx:           canceledcontext.NewContext(context.Background(), make(chan struct{})),
 			Resources: []Resource{
 				&testResource{
 					SetupPatchFunc: func(p *Patch) {
@@ -860,11 +553,11 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 35 ensures ProcessDelete calls Resource.Apply*Patch
+		// Test 23 ensures ProcessDelete calls Resource.Apply*Patch
 		// only when Patch has corresponding part set.
 		{
 			ProcessMethod: ProcessDelete,
-			Ctx:           context.TODO(),
+			Ctx:           canceledcontext.NewContext(context.Background(), make(chan struct{})),
 			Resources: []Resource{
 				&testResource{
 					SetupPatchFunc: func(p *Patch) {
@@ -927,11 +620,11 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 			ErrorMatcher: nil,
 		},
 
-		// Test 36 ensures ProcessUpdate calls Resource.Apply*Patch
+		// Test 24 ensures ProcessUpdate calls Resource.Apply*Patch
 		// only when Patch has corresponding part set.
 		{
 			ProcessMethod: ProcessUpdate,
-			Ctx:           context.TODO(),
+			Ctx:           canceledcontext.NewContext(context.Background(), make(chan struct{})),
 			Resources: []Resource{
 				&testResource{
 					SetupPatchFunc: func(p *Patch) {
@@ -999,7 +692,7 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 		err := tc.ProcessMethod(tc.Ctx, nil, tc.Resources)
 		if err != nil {
 			if tc.ErrorMatcher == nil {
-				t.Fatal("test", i+1, "expected", nil, "got", err)
+				t.Fatal("test", i+1, "expected", nil, "got", "error matcher")
 			} else if !tc.ErrorMatcher(err) {
 				t.Fatal("test", i+1, "expected", true, "got", false)
 			}
@@ -1018,13 +711,12 @@ func Test_Framework_ResourceCallOrder(t *testing.T) {
 }
 
 type testResource struct {
-	ReconciliationCanceledStep string
-	ResourceCanceledStep       string
-	Error                      error
-	ErrorCount                 int
-	ErrorMethod                string
-	Order                      []string
-	SetupPatchFunc             func(p *Patch)
+	CancelingStep  string
+	Error          error
+	ErrorCount     int
+	ErrorMethod    string
+	Order          []string
+	SetupPatchFunc func(p *Patch)
 
 	errorCount int
 }
@@ -1033,15 +725,9 @@ func (r *testResource) GetCurrentState(ctx context.Context, obj interface{}) (in
 	m := "GetCurrentState"
 	r.Order = append(r.Order, m)
 
-	if r.ReconciliationCanceledStep == m {
-		reconciliationcanceledcontext.SetCanceled(ctx)
-		if reconciliationcanceledcontext.IsCanceled(ctx) {
-			return nil, nil
-		}
-	}
-	if r.ResourceCanceledStep == m {
-		resourcecanceledcontext.SetCanceled(ctx)
-		if resourcecanceledcontext.IsCanceled(ctx) {
+	if r.CancelingStep == m {
+		canceledcontext.SetCanceled(ctx)
+		if canceledcontext.IsCanceled(ctx) {
 			return nil, nil
 		}
 	}
@@ -1057,15 +743,9 @@ func (r *testResource) GetDesiredState(ctx context.Context, obj interface{}) (in
 	m := "GetDesiredState"
 	r.Order = append(r.Order, m)
 
-	if r.ReconciliationCanceledStep == m {
-		reconciliationcanceledcontext.SetCanceled(ctx)
-		if reconciliationcanceledcontext.IsCanceled(ctx) {
-			return nil, nil
-		}
-	}
-	if r.ResourceCanceledStep == m {
-		resourcecanceledcontext.SetCanceled(ctx)
-		if resourcecanceledcontext.IsCanceled(ctx) {
+	if r.CancelingStep == m {
+		canceledcontext.SetCanceled(ctx)
+		if canceledcontext.IsCanceled(ctx) {
 			return nil, nil
 		}
 	}
@@ -1081,15 +761,9 @@ func (r *testResource) NewUpdatePatch(ctx context.Context, obj, currentState, de
 	m := "NewUpdatePatch"
 	r.Order = append(r.Order, m)
 
-	if r.ReconciliationCanceledStep == m {
-		reconciliationcanceledcontext.SetCanceled(ctx)
-		if reconciliationcanceledcontext.IsCanceled(ctx) {
-			return NewPatch(), nil
-		}
-	}
-	if r.ResourceCanceledStep == m {
-		resourcecanceledcontext.SetCanceled(ctx)
-		if resourcecanceledcontext.IsCanceled(ctx) {
+	if r.CancelingStep == m {
+		canceledcontext.SetCanceled(ctx)
+		if canceledcontext.IsCanceled(ctx) {
 			return NewPatch(), nil
 		}
 	}
@@ -1113,15 +787,9 @@ func (r *testResource) NewDeletePatch(ctx context.Context, obj, currentState, de
 	m := "NewDeletePatch"
 	r.Order = append(r.Order, m)
 
-	if r.ReconciliationCanceledStep == m {
-		reconciliationcanceledcontext.SetCanceled(ctx)
-		if reconciliationcanceledcontext.IsCanceled(ctx) {
-			return NewPatch(), nil
-		}
-	}
-	if r.ResourceCanceledStep == m {
-		resourcecanceledcontext.SetCanceled(ctx)
-		if resourcecanceledcontext.IsCanceled(ctx) {
+	if r.CancelingStep == m {
+		canceledcontext.SetCanceled(ctx)
+		if canceledcontext.IsCanceled(ctx) {
 			return NewPatch(), nil
 		}
 	}
@@ -1149,15 +817,9 @@ func (r *testResource) ApplyCreateChange(ctx context.Context, obj, createState i
 	m := "ApplyCreatePatch"
 	r.Order = append(r.Order, m)
 
-	if r.ReconciliationCanceledStep == m {
-		reconciliationcanceledcontext.SetCanceled(ctx)
-		if reconciliationcanceledcontext.IsCanceled(ctx) {
-			return nil
-		}
-	}
-	if r.ResourceCanceledStep == m {
-		resourcecanceledcontext.SetCanceled(ctx)
-		if resourcecanceledcontext.IsCanceled(ctx) {
+	if r.CancelingStep == m {
+		canceledcontext.SetCanceled(ctx)
+		if canceledcontext.IsCanceled(ctx) {
 			return nil
 		}
 	}
@@ -1173,15 +835,9 @@ func (r *testResource) ApplyDeleteChange(ctx context.Context, obj, deleteState i
 	m := "ApplyDeletePatch"
 	r.Order = append(r.Order, m)
 
-	if r.ReconciliationCanceledStep == m {
-		reconciliationcanceledcontext.SetCanceled(ctx)
-		if reconciliationcanceledcontext.IsCanceled(ctx) {
-			return nil
-		}
-	}
-	if r.ResourceCanceledStep == m {
-		resourcecanceledcontext.SetCanceled(ctx)
-		if resourcecanceledcontext.IsCanceled(ctx) {
+	if r.CancelingStep == m {
+		canceledcontext.SetCanceled(ctx)
+		if canceledcontext.IsCanceled(ctx) {
 			return nil
 		}
 	}
@@ -1197,15 +853,9 @@ func (r *testResource) ApplyUpdateChange(ctx context.Context, obj, updateState i
 	m := "ApplyUpdatePatch"
 	r.Order = append(r.Order, m)
 
-	if r.ReconciliationCanceledStep == m {
-		reconciliationcanceledcontext.SetCanceled(ctx)
-		if reconciliationcanceledcontext.IsCanceled(ctx) {
-			return nil
-		}
-	}
-	if r.ResourceCanceledStep == m {
-		resourcecanceledcontext.SetCanceled(ctx)
-		if resourcecanceledcontext.IsCanceled(ctx) {
+	if r.CancelingStep == m {
+		canceledcontext.SetCanceled(ctx)
+		if canceledcontext.IsCanceled(ctx) {
 			return nil
 		}
 	}

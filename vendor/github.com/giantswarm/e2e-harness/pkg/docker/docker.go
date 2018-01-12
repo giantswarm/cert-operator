@@ -6,103 +6,70 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-
-	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/micrologger"
+	"strings"
 
 	"github.com/giantswarm/e2e-harness/pkg/harness"
-	"github.com/giantswarm/e2e-harness/pkg/project"
+	"github.com/giantswarm/micrologger"
 )
 
 type Docker struct {
-	logger        micrologger.Logger
-	imageTag      string
-	remoteCluster bool
+	logger   micrologger.Logger
+	imageTag string
 }
 
-func New(logger micrologger.Logger, imageTag string, remoteCluster bool) *Docker {
+func New(logger micrologger.Logger, imageTag string) *Docker {
 	return &Docker{
-		logger:        logger,
-		imageTag:      imageTag,
-		remoteCluster: remoteCluster,
+		logger:   logger,
+		imageTag: imageTag,
 	}
 }
 
 // RunPortForward executes a command in the e2e-harness container after
 // setting up the port forwarding to the remote cluster, this command
 // is meant to be used after that cluster has been initialized
-func (d *Docker) RunPortForward(out io.Writer, command string, env ...string) error {
-	if !d.remoteCluster {
-		// no need to port forward in local clusters
-		return d.Run(out, command, env...)
-	}
+func (d *Docker) RunPortForward(out io.Writer, command string) error {
+	d.logger.Log("info", fmt.Sprintf("about to run %q in the e2e-harness container with port forwarding", command))
 
-	args := append([]string{
-		"quay.io/giantswarm/e2e-harness:" + d.imageTag},
-		"-c", fmt.Sprintf("shipyard -action=forward-port && %s", command))
+	args := append([]string{"quay.io/giantswarm/e2e-harness:" + d.imageTag}, "-c",
+		fmt.Sprintf("shipyard -action=forward-port && %s", command))
 
-	return d.baseRun(out, "/bin/bash", args, env...)
+	return d.baseRun(out, "/bin/bash", args)
 }
 
 // Run executes a command in the e2e-harness container.
-func (d *Docker) Run(out io.Writer, command string, env ...string) error {
-	args := append([]string{
-		"quay.io/giantswarm/e2e-harness:" + d.imageTag},
-		"-c", command)
+func (d *Docker) Run(out io.Writer, command string) error {
+	d.logger.Log("info", fmt.Sprintf("about to run %q in the e2e-harness container without port forwarding", command))
 
-	return d.baseRun(out, "/bin/bash", args, env...)
+	var args []string
+	fields := strings.Fields(command)
+	if len(fields) > 1 {
+		args = fields[1:]
+	}
+
+	args = append([]string{"quay.io/giantswarm/e2e-harness:" + d.imageTag}, args...)
+
+	return d.baseRun(out, fields[0], args)
 }
 
-func (d *Docker) baseRun(out io.Writer, entrypoint string, args []string, env ...string) error {
-	baseDir, err := harness.BaseDir()
+func (d *Docker) baseRun(out io.Writer, entrypoint string, args []string) error {
+	dir, err := harness.BaseDir()
 	if err != nil {
-		return microerror.Mask(err)
+		return err
 	}
 
-	e2eDir := filepath.Join(filepath.Dir(baseDir), project.DefaultDirectory)
 	baseArgs := []string{
 		"run",
-		"-v", fmt.Sprintf("%s:%s", filepath.Join(baseDir, "workdir"), "/workdir"),
-		"-v", fmt.Sprintf("%s:/e2e", e2eDir),
+		"-v", fmt.Sprintf("%s:%s", filepath.Join(dir, "workdir"), "/workdir"),
 		"-e", fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", os.Getenv("AWS_ACCESS_KEY_ID")),
 		"-e", fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", os.Getenv("AWS_SECRET_ACCESS_KEY")),
-		"-e", "KUBECONFIG=" + harness.DefaultKubeConfig,
-		"--dns", "8.8.8.8",
+		"-e", "KUBECONFIG=/workdir/.shipyard/config",
 		"--entrypoint", entrypoint,
 	}
-
-	// add environment variables
-	for _, e := range env {
-		sEnv := os.ExpandEnv(e)
-		baseArgs = append(baseArgs, "-e", sEnv)
-	}
-
-	if !d.remoteCluster {
-		// accessing to local cluster requires using the host network
-		baseArgs = append(baseArgs, "--network", "host")
-	}
-
 	baseArgs = append(baseArgs, args...)
 
 	cmd := exec.Command("docker", baseArgs...)
 	cmd.Stdout = out
 	cmd.Stderr = out
-
-	return cmd.Run()
-}
-
-func (d *Docker) Build(out io.Writer, image, path, tag string, env []string) error {
-	baseArgs := []string{
-		"build",
-		"--no-cache",
-		"-t", fmt.Sprintf("%s:%s", image, tag),
-		".",
-	}
-	cmd := exec.Command("docker", baseArgs...)
-	cmd.Stdout = out
-	cmd.Stderr = out
-	cmd.Dir = path
-	cmd.Env = env
 
 	return cmd.Run()
 }
