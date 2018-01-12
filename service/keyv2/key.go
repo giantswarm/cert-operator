@@ -7,6 +7,20 @@ import (
 	"github.com/giantswarm/microerror"
 )
 
+const (
+	CAID  = "ca"
+	CrtID = "crt"
+	KeyID = "key"
+)
+
+const (
+	// ComponentLabel is the label used in the secret to identify a cluster
+	// component.
+	ComponentLabel string = "clusterComponent"
+	// ClusterIDLabel is the label used in the secret to identify a cluster.
+	ClusterIDLabel string = "clusterID"
+)
+
 func AllowBareDomains(customObject v1alpha1.CertConfig) bool {
 	return customObject.Spec.Cert.AllowBareDomains
 }

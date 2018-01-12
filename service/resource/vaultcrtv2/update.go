@@ -4,10 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/operatorkit/framework"
-	apiv1 "k8s.io/client-go/pkg/api/v1"
+	apiv1 "k8s.io/api/core/v1"
 
 	"github.com/giantswarm/cert-operator/service/keyv2"
 )
@@ -99,9 +98,9 @@ func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desir
 				return nil, microerror.Mask(err)
 			}
 
-			secretToUpdate.StringData[certificatetpr.CA.String()] = ca
-			secretToUpdate.StringData[certificatetpr.Crt.String()] = crt
-			secretToUpdate.StringData[certificatetpr.Key.String()] = key
+			secretToUpdate.StringData[keyv2.CAID] = ca
+			secretToUpdate.StringData[keyv2.CrtID] = crt
+			secretToUpdate.StringData[keyv2.KeyID] = key
 		}
 	}
 
