@@ -3,9 +3,8 @@ package vaultcrtv2
 import (
 	"context"
 
-	"github.com/giantswarm/certificatetpr"
 	"github.com/giantswarm/microerror"
-	apiv1 "k8s.io/client-go/pkg/api/v1"
+	apiv1 "k8s.io/api/core/v1"
 
 	"github.com/giantswarm/cert-operator/service/keyv2"
 )
@@ -66,9 +65,9 @@ func (r *Resource) newCreateChange(ctx context.Context, obj, currentState, desir
 			return nil, microerror.Mask(err)
 		}
 
-		secretToCreate.StringData[certificatetpr.CA.String()] = ca
-		secretToCreate.StringData[certificatetpr.Crt.String()] = crt
-		secretToCreate.StringData[certificatetpr.Key.String()] = key
+		secretToCreate.StringData[keyv2.CAID] = ca
+		secretToCreate.StringData[keyv2.CrtID] = crt
+		secretToCreate.StringData[keyv2.KeyID] = key
 	}
 
 	r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "found out if the secret has to be created")

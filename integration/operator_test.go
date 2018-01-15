@@ -12,11 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cenk/backoff"
-	"github.com/giantswarm/certificatetpr"
+	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/microerror"
+	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/client-go/pkg/api/v1"
 )
 
 const (
@@ -110,7 +109,7 @@ func (cs *clients) tearDown() {
 	runCmd("helm delete cert-operator --purge")
 	runCmd("helm delete cert-resource-lab --purge")
 	cs.K8sCs.CoreV1().Namespaces().Delete("giantswarm", &metav1.DeleteOptions{})
-	cs.K8sCs.ExtensionsV1beta1().ThirdPartyResources().Delete(certificatetpr.Name, &metav1.DeleteOptions{})
+	cs.K8sCs.ExtensionsV1beta1().ThirdPartyResources().Delete("certificate.giantswarm.io", &metav1.DeleteOptions{})
 }
 
 func (cs *clients) createGSNamespace() error {
@@ -120,7 +119,7 @@ func (cs *clients) createGSNamespace() error {
 		return nil
 	}
 
-	namespace := &v1.Namespace{
+	namespace := &apiv1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "giantswarm",
 		},
@@ -193,7 +192,7 @@ func (cs *clients) runningPodFunc(namespace, labelSelector string) func() error 
 		}
 		pod := pods.Items[0]
 		phase := pod.Status.Phase
-		if phase != v1.PodRunning {
+		if phase != apiv1.PodRunning {
 			return microerror.Maskf(unexpectedStatusPhase, "current status: %s", string(phase))
 		}
 		return nil
@@ -209,7 +208,7 @@ func (cs *clients) activeNamespaceFunc(name string) func() error {
 		}
 
 		phase := ns.Status.Phase
-		if phase != v1.NamespaceActive {
+		if phase != apiv1.NamespaceActive {
 			return microerror.Maskf(unexpectedStatusPhase, "current status: %s", string(phase))
 		}
 

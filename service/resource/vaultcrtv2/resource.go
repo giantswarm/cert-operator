@@ -9,8 +9,8 @@ import (
 	"github.com/giantswarm/operatorkit/framework"
 	"github.com/giantswarm/vaultcrt"
 	"github.com/giantswarm/vaultrole"
+	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
-	apiv1 "k8s.io/client-go/pkg/api/v1"
 
 	"github.com/giantswarm/cert-operator/service/keyv2"
 )
