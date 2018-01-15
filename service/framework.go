@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cenkalti/backoff"
@@ -26,6 +27,7 @@ import (
 	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/service/resource/vaultcrtv2"
 	"github.com/giantswarm/cert-operator/service/resource/vaultpkiv2"
+	"github.com/giantswarm/cert-operator/service/resource/vaultrolev1"
 )
 
 const (
@@ -184,6 +186,21 @@ func newCRDFramework(config Config) (*framework.Framework, error) {
 		}
 	}
 
+	var vaultRoleResource framework.Resource
+	{
+		c := vaultrolev1.DefaultConfig()
+
+		c.Logger = config.Logger
+		c.VaultRole = vaultRole
+
+		vaultRoleResource, err = vaultrolev1.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+	// TODO remove when enabled.
+	fmt.Printf("%#v\n", vaultRoleResource)
+
 	// We create the list of resources and wrap each resource around some common
 	// resources like metrics and retry resources.
 	//
@@ -199,6 +216,8 @@ func newCRDFramework(config Config) (*framework.Framework, error) {
 	{
 		resources = []framework.Resource{
 			vaultPKIResource,
+			// TODO enable when implemented.
+			//vaultRoleResource,
 			vaultCrtResource,
 		}
 
