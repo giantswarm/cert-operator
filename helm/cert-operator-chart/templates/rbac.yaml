@@ -1,0 +1,91 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: cert-operator
+rules:
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - "*"
+  - apiGroups:
+      - extensions
+    resources:
+      - thirdpartyresources
+    verbs:
+      - "*"
+  - apiGroups:
+      - core.giantswarm.io
+    resources:
+      - certconfigs
+    verbs:
+      - "*"
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+      - create
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - create
+      - update
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    resourceNames:
+      - cert-operator-configmap
+    verbs:
+      - get
+  - nonResourceURLs:
+      - "/"
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-operator
+subjects:
+  - kind: ServiceAccount
+    name: cert-operator
+    namespace: giantswarm
+roleRef:
+  kind: ClusterRole
+  name: cert-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: cert-operator-psp
+rules:
+  - apiGroups:
+      - extensions
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      - cert-operator-psp
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-operator-psp
+subjects:
+  - kind: ServiceAccount
+    name: cert-operator
+    namespace: giantswarm
+roleRef:
+  kind: ClusterRole
+  name: cert-operator-psp
+  apiGroup: rbac.authorization.k8s.io
