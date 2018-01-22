@@ -1,6 +1,7 @@
 package key
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -98,6 +99,76 @@ func Test_RoleName(t *testing.T) {
 
 		if result != tc.ExpectedResult {
 			t.Fatalf("case %d expected %#v got %#v", i+1, tc.ExpectedResult, result)
+		}
+	}
+}
+
+func Test_ToAltNames(t *testing.T) {
+	testCases := []struct {
+		AllowedDomains   string
+		ExpectedAltNames []string
+	}{
+		{
+			AllowedDomains:   "",
+			ExpectedAltNames: nil,
+		},
+
+		{
+			AllowedDomains: "al9qy.g8s.gigantic.io,kubernetes,kubernetes.default.svc.cluster.local",
+			ExpectedAltNames: []string{
+				"kubernetes",
+				"kubernetes.default.svc.cluster.local",
+			},
+		},
+
+		{
+			AllowedDomains: "kubernetes,kubernetes.default.svc.cluster.local",
+			ExpectedAltNames: []string{
+				"kubernetes.default.svc.cluster.local",
+			},
+		},
+	}
+
+	for i, tc := range testCases {
+		result := ToAltNames(tc.AllowedDomains)
+
+		if !reflect.DeepEqual(result, tc.ExpectedAltNames) {
+			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedAltNames, result)
+		}
+	}
+}
+
+func Test_ToOrganizations(t *testing.T) {
+	testCases := []struct {
+		Organizations         string
+		ExpectedOrganizations []string
+	}{
+		{
+			Organizations:         "",
+			ExpectedOrganizations: nil,
+		},
+
+		{
+			Organizations: "api,system:masters",
+			ExpectedOrganizations: []string{
+				"api",
+				"system:masters",
+			},
+		},
+
+		{
+			Organizations: "api",
+			ExpectedOrganizations: []string{
+				"api",
+			},
+		},
+	}
+
+	for i, tc := range testCases {
+		result := ToOrganizations(tc.Organizations)
+
+		if !reflect.DeepEqual(result, tc.ExpectedOrganizations) {
+			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedOrganizations, result)
 		}
 	}
 }

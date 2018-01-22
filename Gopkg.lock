@@ -203,7 +203,7 @@
     "key",
     "vaultroletest"
   ]
-  revision = "a6df43377fd59684a70d93865b471afeff385d1f"
+  revision = "46e26c7f4380594c4c2d4b7c6831cf63da1dce3a"
 
 [[projects]]
   branch = "master"
@@ -387,7 +387,8 @@
   packages = [
     "api",
     "helper/compressutil",
-    "helper/jsonutil"
+    "helper/jsonutil",
+    "helper/parseutil"
   ]
   revision = "0b20ae0b9b7a748d607082b1add3663a28e31b68"
   version = "v0.7.3"
