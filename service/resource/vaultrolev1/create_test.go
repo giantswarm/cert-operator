@@ -33,7 +33,7 @@ func Test_Resource_VaultRole_newCreateChange(t *testing.T) {
 			ExpectedRole: nil,
 		},
 
-		// Case 1 ensures a goven current state results in a nil output when there
+		// Case 1 ensures a given current state results in a nil output when there
 		// is a nil desired state.
 		{
 			Obj: &v1alpha1.CertConfig{
