@@ -56,3 +56,16 @@ func (r *Resource) Name() string {
 func (r *Resource) Underlying() framework.Resource {
 	return r
 }
+
+func toRole(v interface{}) (*vaultrole.Role, error) {
+	if v == nil {
+		return nil, nil
+	}
+
+	role, ok := v.(*vaultrole.Role)
+	if !ok {
+		return nil, microerror.Maskf(wrongTypeError, "expected '%T', got '%T'", &vaultrole.Role{}, v)
+	}
+
+	return role, nil
+}
