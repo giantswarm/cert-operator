@@ -8,7 +8,10 @@ import (
 )
 
 const (
-	Name = "vaultrolev1"
+	// AllowSubdomains defines whether to allow the generated root CA of the PKI
+	// backend to allow sub domains as common names.
+	AllowSubdomains = true
+	Name            = "vaultrolev1"
 )
 
 type Config struct {
