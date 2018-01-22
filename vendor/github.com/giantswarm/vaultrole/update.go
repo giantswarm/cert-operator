@@ -4,7 +4,7 @@ import (
 	"github.com/giantswarm/microerror"
 )
 
-func (r *VaultRole) Create(config CreateConfig) error {
+func (r *VaultRole) Update(config UpdateConfig) error {
 	// Check if the requested role exists.
 	{
 		c := ExistsConfig{
@@ -15,12 +15,12 @@ func (r *VaultRole) Create(config CreateConfig) error {
 		if err != nil {
 			return microerror.Mask(err)
 		}
-		if exists {
-			return microerror.Maskf(alreadyExistsError, "cannot create Vault role '%s'", config.ID)
+		if !exists {
+			return microerror.Maskf(notFoundError, "cannot update Vault role '%s'", config.ID)
 		}
 	}
 
-	// Create the requested role if it does not exist.
+	// Update the requested role if it exists.
 	{
 		c := writeConfig{
 			AllowBareDomains: config.AllowBareDomains,

@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+// AllowedDomains computes a comma separated list of alternative names where the
+// first item is the common name. This has to be considered in ToAltNames when
+// reverse computing the list of allowed domains.
 func AllowedDomains(ID, commonNameFormat string, altNames []string) string {
 	commonName := fmt.Sprintf(commonNameFormat, ID)
 	domains := append([]string{commonName}, altNames...)
@@ -15,6 +18,10 @@ func AllowedDomains(ID, commonNameFormat string, altNames []string) string {
 
 func ListRolesPath(ID string) string {
 	return fmt.Sprintf("pki-%s/roles/", ID)
+}
+
+func ReadRolePath(ID string, organizations []string) string {
+	return fmt.Sprintf("pki-%s/roles/%s", ID, RoleName(ID, organizations))
 }
 
 func RoleName(ID string, organizations []string) string {
@@ -27,6 +34,30 @@ func RoleName(ID string, organizations []string) string {
 	// Compute a url-safe hash of the organizations that stays the same regardless
 	// of the order of the organizations supplied.
 	return fmt.Sprintf("role-org-%s", computeRoleHash(organizations))
+}
+
+// ToAltNames takes a string as provided by AllowedDomains and returns the list
+// of alternative names as taken by AllowedDomains. Note this implies dropping
+// the first item of the parsed list.
+func ToAltNames(a string) []string {
+	if a == "" {
+		return nil
+	}
+
+	altNames := strings.Split(a, ",")
+	altNames = altNames[1:]
+
+	return altNames
+}
+
+func ToOrganizations(o string) []string {
+	if o == "" {
+		return nil
+	}
+
+	organizations := strings.Split(o, ",")
+
+	return organizations
 }
 
 func WriteRolePath(ID string, organizations []string) string {
