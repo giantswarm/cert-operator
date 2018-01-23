@@ -1,6 +1,8 @@
 package keyv2
 
 import (
+	"crypto/sha1"
+	"encoding/json"
 	"fmt"
 
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
@@ -43,6 +45,19 @@ func CommonName(customObject v1alpha1.CertConfig) string {
 
 func CrtTTL(customObject v1alpha1.CertConfig) string {
 	return customObject.Spec.Cert.TTL
+}
+
+func CustomObjectHash(customObject v1alpha1.CertConfig) (string, error) {
+	b, err := json.Marshal(customObject.Spec.Cert)
+	if err != nil {
+		return "", microerror.Mask(err)
+	}
+
+	h := sha1.New()
+	h.Write(b)
+	bs := h.Sum(nil)
+
+	return fmt.Sprintf("%x", bs), nil
 }
 
 func IPSANs(customObject v1alpha1.CertConfig) []string {
