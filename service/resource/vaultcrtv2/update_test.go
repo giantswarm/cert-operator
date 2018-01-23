@@ -359,14 +359,13 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_hash(t *testing.T) {
 			ExpectedResult: false,
 		},
 
-		// Test 3 ensures having no config hash value for the current state and
+		// Test 3 ensures having no config hash annotation for the current state and
 		// having a config hash value for the desired state results in updating the
 		// secret.
 		{
 			CurrentSecret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
-						ConfigHashAnnotation:      "",
 						UpdateTimestampAnnotation: time.Unix(10, 0).In(time.UTC).Format(UpdateTimestampLayout),
 					},
 				},
