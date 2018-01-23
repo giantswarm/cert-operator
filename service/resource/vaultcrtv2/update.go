@@ -86,18 +86,12 @@ func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desir
 		}
 
 		if renew {
-			secretToUpdate = desiredSecret
-
-			err := r.ensureVaultRole(customObject)
-			if err != nil {
-				return nil, microerror.Mask(err)
-			}
-
 			ca, crt, key, err := r.issueCertificate(customObject)
 			if err != nil {
 				return nil, microerror.Mask(err)
 			}
 
+			secretToUpdate = desiredSecret
 			secretToUpdate.StringData[keyv2.CAID] = ca
 			secretToUpdate.StringData[keyv2.CrtID] = crt
 			secretToUpdate.StringData[keyv2.KeyID] = key
