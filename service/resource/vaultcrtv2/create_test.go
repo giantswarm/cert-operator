@@ -9,7 +9,6 @@ import (
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
-	"github.com/giantswarm/vaultrole/vaultroletest"
 	apiv1 "k8s.io/api/core/v1"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -117,7 +116,6 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 		c.K8sClient = fake.NewSimpleClientset()
 		c.Logger = microloggertest.New()
 		c.VaultCrt = vaultcrttest.New()
-		c.VaultRole = vaultroletest.New()
 
 		c.ExpirationThreshold = 24 * time.Hour
 		c.Namespace = "default"

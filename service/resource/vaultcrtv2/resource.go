@@ -8,7 +8,6 @@ import (
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/framework"
 	"github.com/giantswarm/vaultcrt"
-	"github.com/giantswarm/vaultrole"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -33,7 +32,6 @@ type Config struct {
 	K8sClient          kubernetes.Interface
 	Logger             micrologger.Logger
 	VaultCrt           vaultcrt.Interface
-	VaultRole          vaultrole.Interface
 
 	ExpirationThreshold time.Duration
 	Namespace           string
@@ -45,7 +43,6 @@ func DefaultConfig() Config {
 		K8sClient:          nil,
 		Logger:             nil,
 		VaultCrt:           nil,
-		VaultRole:          nil,
 
 		ExpirationThreshold: 0,
 		Namespace:           "",
@@ -57,7 +54,6 @@ type Resource struct {
 	k8sClient          kubernetes.Interface
 	logger             micrologger.Logger
 	vaultCrt           vaultcrt.Interface
-	vaultRole          vaultrole.Interface
 
 	expirationThreshold time.Duration
 	namespace           string
@@ -76,9 +72,6 @@ func New(config Config) (*Resource, error) {
 	if config.VaultCrt == nil {
 		return nil, microerror.Maskf(invalidConfigError, "config.VaultCrt must not be empty")
 	}
-	if config.VaultRole == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.VaultRole must not be empty")
-	}
 
 	if config.ExpirationThreshold == 0 {
 		return nil, microerror.Maskf(invalidConfigError, "config.ExpirationThreshold must not be empty")
@@ -93,8 +86,7 @@ func New(config Config) (*Resource, error) {
 		logger: config.Logger.With(
 			"resource", Name,
 		),
-		vaultCrt:  config.VaultCrt,
-		vaultRole: config.VaultRole,
+		vaultCrt: config.VaultCrt,
 
 		expirationThreshold: config.ExpirationThreshold,
 		namespace:           config.Namespace,
@@ -109,34 +101,6 @@ func (r *Resource) Name() string {
 
 func (r *Resource) Underlying() framework.Resource {
 	return r
-}
-
-func (r *Resource) ensureVaultRole(customObject v1alpha1.CertConfig) error {
-	c := vaultrole.ExistsConfig{
-		ID:            keyv2.ClusterID(customObject),
-		Organizations: keyv2.Organizations(customObject),
-	}
-	exists, err := r.vaultRole.Exists(c)
-	if err != nil {
-		return microerror.Mask(err)
-	}
-
-	if !exists {
-		c := vaultrole.CreateConfig{
-			AllowBareDomains: keyv2.AllowBareDomains(customObject),
-			AllowSubdomains:  AllowSubDomains,
-			AltNames:         keyv2.AltNames(customObject),
-			ID:               keyv2.ClusterID(customObject),
-			Organizations:    keyv2.Organizations(customObject),
-			TTL:              keyv2.RoleTTL(customObject),
-		}
-		err := r.vaultRole.Create(c)
-		if err != nil {
-			return microerror.Mask(err)
-		}
-	}
-
-	return nil
 }
 
 func (r *Resource) issueCertificate(customObject v1alpha1.CertConfig) (string, string, string, error) {

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/cenkalti/backoff"
@@ -162,7 +161,6 @@ func newCRDFramework(config Config) (*framework.Framework, error) {
 		c.K8sClient = k8sClient
 		c.Logger = config.Logger
 		c.VaultCrt = vaultCrt
-		c.VaultRole = vaultRole
 
 		c.ExpirationThreshold = config.Viper.GetDuration(config.Flag.Service.Resource.VaultCrt.ExpirationThreshold)
 		c.Namespace = config.Viper.GetString(config.Flag.Service.Resource.VaultCrt.Namespace)
@@ -198,8 +196,6 @@ func newCRDFramework(config Config) (*framework.Framework, error) {
 			return nil, microerror.Mask(err)
 		}
 	}
-	// TODO remove when enabled.
-	fmt.Printf("%#v\n", vaultRoleResource)
 
 	// We create the list of resources and wrap each resource around some common
 	// resources like metrics and retry resources.
@@ -216,8 +212,7 @@ func newCRDFramework(config Config) (*framework.Framework, error) {
 	{
 		resources = []framework.Resource{
 			vaultPKIResource,
-			// TODO enable when implemented.
-			//vaultRoleResource,
+			vaultRoleResource,
 			vaultCrtResource,
 		}
 

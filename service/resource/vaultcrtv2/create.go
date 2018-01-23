@@ -53,18 +53,12 @@ func (r *Resource) newCreateChange(ctx context.Context, obj, currentState, desir
 
 	var secretToCreate *apiv1.Secret
 	if currentSecret == nil {
-		secretToCreate = desiredSecret
-
-		err := r.ensureVaultRole(customObject)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-
 		ca, crt, key, err := r.issueCertificate(customObject)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
 
+		secretToCreate = desiredSecret
 		secretToCreate.StringData[keyv2.CAID] = ca
 		secretToCreate.StringData[keyv2.CrtID] = crt
 		secretToCreate.StringData[keyv2.KeyID] = key
