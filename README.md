@@ -8,7 +8,6 @@ running on Giantnetes.
 
 ## Prerequisites
 
-
 ## Getting Project
 
 Download the latest release:
