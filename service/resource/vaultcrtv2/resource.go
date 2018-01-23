@@ -19,6 +19,10 @@ const (
 	// backend to allow sub domains as common names.
 	AllowSubDomains = true
 	Name            = "vaultcrtv2"
+	// ConfigHashAnnotation is the annotation key used to track the hash
+	// representation of the cert config. This is used to identify changes of the
+	// config to trigger renewals.
+	ConfigHashAnnotation = "cert.giantswarm.io/config-hash"
 	// UpdateTimestampAnnotation is the annotation key used to track the last
 	// update timestamp of certificates contained in the Kubernetes secrets.
 	UpdateTimestampAnnotation = "giantswarm.io/update-timestamp"

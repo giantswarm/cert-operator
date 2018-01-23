@@ -78,7 +78,7 @@ func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desir
 			return false, microerror.Mask(err)
 		}
 
-		renew, err := r.shouldCertBeRenewed(currentSecret, TTL, r.expirationThreshold)
+		renew, err := r.shouldCertBeRenewed(currentSecret, desiredSecret, TTL, r.expirationThreshold)
 		if IsMissingAnnotation(err) {
 			// fall through
 		} else if err != nil {
@@ -103,25 +103,52 @@ func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desir
 	return secretToUpdate, nil
 }
 
-func (r *Resource) shouldCertBeRenewed(secret *apiv1.Secret, TTL, threshold time.Duration) (bool, error) {
-	if secret == nil {
-		return false, microerror.Mask(missingAnnotationError)
+func (r *Resource) shouldCertBeRenewed(currentSecret, desiredSecret *apiv1.Secret, TTL, threshold time.Duration) (bool, error) {
+	// Check if there are annotations at all.
+	if currentSecret == nil {
+		return false, microerror.Maskf(missingAnnotationError, "current secret")
 	}
-	if secret.Annotations == nil {
-		return false, microerror.Mask(missingAnnotationError)
+	if currentSecret.Annotations == nil {
+		return false, microerror.Maskf(missingAnnotationError, "current secret")
 	}
-	a, ok := secret.Annotations[UpdateTimestampAnnotation]
-	if !ok {
-		return false, microerror.Mask(missingAnnotationError)
+	if desiredSecret == nil {
+		return false, microerror.Maskf(missingAnnotationError, "desired secret")
 	}
-
-	t, err := time.ParseInLocation(UpdateTimestampLayout, a, time.UTC)
-	if err != nil {
-		return false, microerror.Mask(err)
+	if desiredSecret.Annotations == nil {
+		return false, microerror.Maskf(missingAnnotationError, "desired secret")
 	}
 
-	if t.Add(TTL).Add(-threshold).Before(r.currentTimeFactory()) {
-		return true, nil
+	// Check the update timestamp annotation.
+	{
+		a, ok := currentSecret.Annotations[UpdateTimestampAnnotation]
+		if !ok {
+			return false, microerror.Maskf(missingAnnotationError, "current secret")
+		}
+
+		t, err := time.ParseInLocation(UpdateTimestampLayout, a, time.UTC)
+		if err != nil {
+			return false, microerror.Mask(err)
+		}
+
+		if t.Add(TTL).Add(-threshold).Before(r.currentTimeFactory()) {
+			return true, nil
+		}
+	}
+
+	// Check the config hash annotation.
+	{
+		c, ok := currentSecret.Annotations[ConfigHashAnnotation]
+		if !ok {
+			return false, microerror.Maskf(missingAnnotationError, "current secret")
+		}
+		d, ok := desiredSecret.Annotations[ConfigHashAnnotation]
+		if !ok {
+			return false, microerror.Maskf(missingAnnotationError, "desired secret")
+		}
+
+		if c != d {
+			return true, nil
+		}
 	}
 
 	return false, nil

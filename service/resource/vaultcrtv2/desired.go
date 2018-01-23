@@ -19,6 +19,11 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 
 	r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "computing the desired secret")
 
+	hash, err := keyv2.CustomObjectHash(customObject)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
 	// NOTE that the actual secret content here is left blank because only the
 	// issuer backend, e.g. Vault, can generate certificates. This has to be
 	// considered when computing the create, delete and update state.
@@ -26,6 +31,7 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		ObjectMeta: apismetav1.ObjectMeta{
 			Name: keyv2.SecretName(customObject),
 			Annotations: map[string]string{
+				ConfigHashAnnotation:           hash,
 				UpdateTimestampAnnotation:      r.currentTimeFactory().In(time.UTC).Format(UpdateTimestampLayout),
 				VersionBundleVersionAnnotation: keyv2.VersionBundleVersion(customObject),
 			},
