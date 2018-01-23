@@ -105,17 +105,19 @@ func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desir
 
 func (r *Resource) shouldCertBeRenewed(currentSecret, desiredSecret *apiv1.Secret, TTL, threshold time.Duration) (bool, error) {
 	// Check if there are annotations at all.
-	if currentSecret == nil {
-		return false, microerror.Maskf(missingAnnotationError, "current secret")
-	}
-	if currentSecret.Annotations == nil {
-		return false, microerror.Maskf(missingAnnotationError, "current secret")
-	}
-	if desiredSecret == nil {
-		return false, microerror.Maskf(missingAnnotationError, "desired secret")
-	}
-	if desiredSecret.Annotations == nil {
-		return false, microerror.Maskf(missingAnnotationError, "desired secret")
+	{
+		if currentSecret == nil {
+			return false, microerror.Maskf(missingAnnotationError, "current secret")
+		}
+		if currentSecret.Annotations == nil {
+			return false, microerror.Maskf(missingAnnotationError, "current secret")
+		}
+		if desiredSecret == nil {
+			return false, microerror.Maskf(missingAnnotationError, "desired secret")
+		}
+		if desiredSecret.Annotations == nil {
+			return false, microerror.Maskf(missingAnnotationError, "desired secret")
+		}
 	}
 
 	// Check the update timestamp annotation.
@@ -139,7 +141,7 @@ func (r *Resource) shouldCertBeRenewed(currentSecret, desiredSecret *apiv1.Secre
 	{
 		c, ok := currentSecret.Annotations[ConfigHashAnnotation]
 		if !ok {
-			return false, microerror.Maskf(missingAnnotationError, "current secret")
+			return true, nil
 		}
 		d, ok := desiredSecret.Annotations[ConfigHashAnnotation]
 		if !ok {
