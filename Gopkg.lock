@@ -81,7 +81,13 @@
     "pkg/clientset/versioned/typed/core/v1alpha1",
     "pkg/clientset/versioned/typed/provider/v1alpha1"
   ]
-  revision = "0d4a90a1e4205dfcffb8c7f8fac3969c7f53ed64"
+  revision = "fbc28b57ca14c5f8445af59c4659cda16f50bcaa"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/giantswarm/certs"
+  packages = ["."]
+  revision = "cb5abd709cb670baae7fbbf0699c5545771ef393"
 
 [[projects]]
   branch = "master"
@@ -833,6 +839,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cc887bb4b7e73cdfd0ce273af80232517b36ec38a48216d86fcd980336a0fba5"
+  inputs-digest = "a13da22baba0839a5a763dda93affd2e3af5ba6346164c17eef62ed3f4c027c0"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
+	"github.com/giantswarm/certs"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/operatorkit/framework"
 	apiv1 "k8s.io/api/core/v1"
@@ -78,7 +80,7 @@ func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desir
 			return false, microerror.Mask(err)
 		}
 
-		renew, err := r.shouldCertBeRenewed(currentSecret, desiredSecret, TTL, r.expirationThreshold)
+		renew, err := r.shouldCertBeRenewed(customObject, currentSecret, desiredSecret, TTL, r.expirationThreshold)
 		if IsMissingAnnotation(err) {
 			// fall through
 		} else if err != nil {
@@ -103,7 +105,7 @@ func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desir
 	return secretToUpdate, nil
 }
 
-func (r *Resource) shouldCertBeRenewed(currentSecret, desiredSecret *apiv1.Secret, TTL, threshold time.Duration) (bool, error) {
+func (r *Resource) shouldCertBeRenewed(customObject v1alpha1.CertConfig, currentSecret, desiredSecret *apiv1.Secret, TTL, threshold time.Duration) (bool, error) {
 	// Check if there are annotations at all.
 	{
 		if currentSecret == nil {
@@ -117,6 +119,18 @@ func (r *Resource) shouldCertBeRenewed(currentSecret, desiredSecret *apiv1.Secre
 		}
 		if desiredSecret.Annotations == nil {
 			return false, microerror.Maskf(missingAnnotationError, "desired secret")
+		}
+	}
+
+	// Check if the cert configs ask to disable regeneration.
+	{
+		// TODO remove this hack once all cert configs are updated with the correct
+		// value for DisableRegeneration.
+		if customObject.Spec.Cert.ClusterComponent == string(certs.ServiceAccountCert) {
+			return false, nil
+		}
+		if customObject.Spec.Cert.DisableRegeneration {
+			return false, nil
 		}
 	}
 

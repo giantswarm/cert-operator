@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
+	"github.com/giantswarm/certs"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
 	apiv1 "k8s.io/api/core/v1"
@@ -14,6 +16,7 @@ import (
 func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 	testCases := []struct {
 		CurrentTime    time.Time
+		CustomObject   v1alpha1.CertConfig
 		Secret         *apiv1.Secret
 		TTL            time.Duration
 		Threshold      time.Duration
@@ -23,6 +26,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 		// Test 0 ensures that a zero value input results in an error.
 		{
 			CurrentTime:    time.Time{},
+			CustomObject:   v1alpha1.CertConfig{},
 			Secret:         &apiv1.Secret{},
 			TTL:            0,
 			Threshold:      0,
@@ -33,7 +37,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 		// Test 1 ensures using an update timestamp which is after the current time
 		// does not cause certificates to be renewed.
 		{
-			CurrentTime: time.Unix(9, 0).In(time.UTC),
+			CurrentTime:  time.Unix(9, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -51,7 +56,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 		// Test 2 ensures using an update timestamp which is equal to the current
 		// time does not cause certificates to be renewed.
 		{
-			CurrentTime: time.Unix(10, 0).In(time.UTC),
+			CurrentTime:  time.Unix(10, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -69,7 +75,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 		// Test 3 ensures using an update timestamp which is before the current time
 		// does not cause certificates to be renewed.
 		{
-			CurrentTime: time.Unix(11, 0).In(time.UTC),
+			CurrentTime:  time.Unix(11, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -86,7 +93,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 
 		// Test 4 is the same as 3 but with a different current time.
 		{
-			CurrentTime: time.Unix(14, 0).In(time.UTC),
+			CurrentTime:  time.Unix(14, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -103,7 +111,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 
 		// Test 5 is the same as 3 but with a different current time.
 		{
-			CurrentTime: time.Unix(15, 0).In(time.UTC),
+			CurrentTime:  time.Unix(15, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -128,7 +137,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 		//     (10               + 10  - 5         < 16          ) == true
 		//
 		{
-			CurrentTime: time.Unix(16, 0).In(time.UTC),
+			CurrentTime:  time.Unix(16, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -145,7 +155,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 
 		// Test 7 is the same as 6 but with a different current time.
 		{
-			CurrentTime: time.Unix(17, 0).In(time.UTC),
+			CurrentTime:  time.Unix(17, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -162,7 +173,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 
 		// Test 8 is the same as 6 but with a different current time.
 		{
-			CurrentTime: time.Unix(20, 0).In(time.UTC),
+			CurrentTime:  time.Unix(20, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -179,7 +191,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 
 		// Test 9 is the same as 6 but with a different current time.
 		{
-			CurrentTime: time.Unix(21, 0).In(time.UTC),
+			CurrentTime:  time.Unix(21, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -196,7 +209,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 
 		// Test 10 is the same as 6 but with a different current time.
 		{
-			CurrentTime: time.Unix(24, 0).In(time.UTC),
+			CurrentTime:  time.Unix(24, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -213,7 +227,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 
 		// Test 11 is the same as 6 but with a different current time.
 		{
-			CurrentTime: time.Unix(25, 0).In(time.UTC),
+			CurrentTime:  time.Unix(25, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -230,7 +245,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 
 		// Test 12 is the same as 6 but with a different current time.
 		{
-			CurrentTime: time.Unix(26, 0).In(time.UTC),
+			CurrentTime:  time.Unix(26, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -247,7 +263,8 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 
 		// Test 13 is the same as 6 but with a different current time.
 		{
-			CurrentTime: time.Unix(345322, 0).In(time.UTC),
+			CurrentTime:  time.Unix(345322, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{},
 			Secret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -260,6 +277,56 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 			Threshold:      5 * time.Second,
 			ErrorMatcher:   nil,
 			ExpectedResult: true,
+		},
+
+		// Test 14 is the same as 13 but with a service account cert config which
+		// should result into not being regenerated at all.
+		{
+			CurrentTime: time.Unix(345322, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
+						ClusterComponent: string(certs.ServiceAccountCert),
+					},
+				},
+			},
+			Secret: &apiv1.Secret{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Annotations: map[string]string{
+						ConfigHashAnnotation:      "hash",
+						UpdateTimestampAnnotation: time.Unix(10, 0).In(time.UTC).Format(UpdateTimestampLayout),
+					},
+				},
+			},
+			TTL:            10 * time.Second,
+			Threshold:      5 * time.Second,
+			ErrorMatcher:   nil,
+			ExpectedResult: false,
+		},
+
+		// Test 15 is the same as 14 but with a the general flag being used to
+		// disable regeneration.
+		{
+			CurrentTime: time.Unix(345322, 0).In(time.UTC),
+			CustomObject: v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
+						DisableRegeneration: true,
+					},
+				},
+			},
+			Secret: &apiv1.Secret{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Annotations: map[string]string{
+						ConfigHashAnnotation:      "hash",
+						UpdateTimestampAnnotation: time.Unix(10, 0).In(time.UTC).Format(UpdateTimestampLayout),
+					},
+				},
+			},
+			TTL:            10 * time.Second,
+			Threshold:      5 * time.Second,
+			ErrorMatcher:   nil,
+			ExpectedResult: false,
 		},
 	}
 
@@ -283,7 +350,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 			}
 		}
 
-		result, err := newResource.shouldCertBeRenewed(tc.Secret, tc.Secret, tc.TTL, tc.Threshold)
+		result, err := newResource.shouldCertBeRenewed(tc.CustomObject, tc.Secret, tc.Secret, tc.TTL, tc.Threshold)
 		if tc.ErrorMatcher != nil {
 			if !tc.ErrorMatcher(err) {
 				t.Fatalf("test %d expected %#v got %#v", i, true, false)
@@ -300,6 +367,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 
 func Test_Resource_VaultCrt_shouldCertBeRenewed_hash(t *testing.T) {
 	testCases := []struct {
+		CustomObject   v1alpha1.CertConfig
 		CurrentSecret  *apiv1.Secret
 		DesiredSecret  *apiv1.Secret
 		ErrorMatcher   func(err error) bool
@@ -307,6 +375,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_hash(t *testing.T) {
 	}{
 		// Test 0 ensures that a zero value input results in an error.
 		{
+			CustomObject:   v1alpha1.CertConfig{},
 			CurrentSecret:  &apiv1.Secret{},
 			DesiredSecret:  &apiv1.Secret{},
 			ErrorMatcher:   IsMissingAnnotation,
@@ -316,6 +385,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_hash(t *testing.T) {
 		// Test 1 ensures using different config hashes the secret should be
 		// updated.
 		{
+			CustomObject: v1alpha1.CertConfig{},
 			CurrentSecret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -339,6 +409,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_hash(t *testing.T) {
 		// Test 2 ensures using equal config hashes the secret should not be
 		// updated.
 		{
+			CustomObject: v1alpha1.CertConfig{},
 			CurrentSecret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -363,6 +434,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_hash(t *testing.T) {
 		// having a config hash value for the desired state results in updating the
 		// secret.
 		{
+			CustomObject: v1alpha1.CertConfig{},
 			CurrentSecret: &apiv1.Secret{
 				ObjectMeta: apismetav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -380,6 +452,64 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_hash(t *testing.T) {
 			},
 			ErrorMatcher:   nil,
 			ExpectedResult: true,
+		},
+
+		// Test 4 is the same as 3 but with a service account cert config which
+		// should result into not being regenerated at all.
+		{
+			CustomObject: v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
+						ClusterComponent: string(certs.ServiceAccountCert),
+					},
+				},
+			},
+			CurrentSecret: &apiv1.Secret{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Annotations: map[string]string{
+						UpdateTimestampAnnotation: time.Unix(10, 0).In(time.UTC).Format(UpdateTimestampLayout),
+					},
+				},
+			},
+			DesiredSecret: &apiv1.Secret{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Annotations: map[string]string{
+						ConfigHashAnnotation:      "new",
+						UpdateTimestampAnnotation: time.Unix(10, 0).In(time.UTC).Format(UpdateTimestampLayout),
+					},
+				},
+			},
+			ErrorMatcher:   nil,
+			ExpectedResult: false,
+		},
+
+		// Test 5 is the same as 4 but with a the general flag being used to disable
+		// regeneration.
+		{
+			CustomObject: v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
+						DisableRegeneration: true,
+					},
+				},
+			},
+			CurrentSecret: &apiv1.Secret{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Annotations: map[string]string{
+						UpdateTimestampAnnotation: time.Unix(10, 0).In(time.UTC).Format(UpdateTimestampLayout),
+					},
+				},
+			},
+			DesiredSecret: &apiv1.Secret{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Annotations: map[string]string{
+						ConfigHashAnnotation:      "new",
+						UpdateTimestampAnnotation: time.Unix(10, 0).In(time.UTC).Format(UpdateTimestampLayout),
+					},
+				},
+			},
+			ErrorMatcher:   nil,
+			ExpectedResult: false,
 		},
 	}
 
@@ -403,7 +533,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_hash(t *testing.T) {
 			}
 		}
 
-		result, err := newResource.shouldCertBeRenewed(tc.CurrentSecret, tc.DesiredSecret, 10*time.Second, 5*time.Second)
+		result, err := newResource.shouldCertBeRenewed(tc.CustomObject, tc.CurrentSecret, tc.DesiredSecret, 10*time.Second, 5*time.Second)
 		if tc.ErrorMatcher != nil {
 			if !tc.ErrorMatcher(err) {
 				t.Fatalf("test %d expected %#v got %#v", i, true, false)
