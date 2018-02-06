@@ -57,7 +57,7 @@
   name = "github.com/giantswarm/microstorage"
 
 [[constraint]]
-  branch = "informer"
+  branch = "master"
   name = "github.com/giantswarm/operatorkit"
 
 [[constraint]]
