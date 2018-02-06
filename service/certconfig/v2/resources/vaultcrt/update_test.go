@@ -4,12 +4,72 @@ import (
 	"testing"
 	"time"
 
+	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
 	apiv1 "k8s.io/api/core/v1"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 )
+
+func Test_Resource_VaultCrt_shouldCertBeRenewed_DisableRegeneration(t *testing.T) {
+	testCases := []struct {
+		CustomObject   v1alpha1.CertConfig
+		ErrorMatcher   func(err error) bool
+		ExpectedResult bool
+	}{
+		// Test 0 ensures that a zero value input results in an error.
+		{
+			CustomObject:   v1alpha1.CertConfig{},
+			ErrorMatcher:   IsMissingAnnotation,
+			ExpectedResult: false,
+		},
+	}
+
+	for i, tc := range testCases {
+		var err error
+		var newResource *Resource
+		{
+			c := DefaultConfig()
+
+			c.CurrentTimeFactory = func() time.Time { return time.Time{} }
+			c.K8sClient = fake.NewSimpleClientset()
+			c.Logger = microloggertest.New()
+			c.VaultCrt = vaultcrttest.New()
+
+			c.ExpirationThreshold = 24 * time.Hour
+			c.Namespace = "default"
+
+			newResource, err = New(c)
+			if err != nil {
+				t.Fatal("expected", nil, "got", err)
+			}
+		}
+
+		// Just some fake secret because shouldCertBeRenewed expects this argument.
+		s := &apiv1.Secret{
+			ObjectMeta: apismetav1.ObjectMeta{
+				Annotations: map[string]string{
+					ConfigHashAnnotation:      "hash",
+					UpdateTimestampAnnotation: time.Unix(10, 0).In(time.UTC).Format(UpdateTimestampLayout),
+				},
+			},
+		}
+
+		result, err := newResource.shouldCertBeRenewed(tc.CustomObject, s, s, 10*time.Second, 5*time.Second)
+		if tc.ErrorMatcher != nil {
+			if !tc.ErrorMatcher(err) {
+				t.Fatalf("test %d expected %#v got %#v", i, true, false)
+			}
+		} else if err != nil {
+			t.Fatalf("test %d expected %#v got %#v", i, nil, err)
+		} else {
+			if tc.ExpectedResult != result {
+				t.Fatalf("case %d expected %t got %t", i, tc.ExpectedResult, result)
+			}
+		}
+	}
+}
 
 func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 	testCases := []struct {
@@ -283,7 +343,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 			}
 		}
 
-		result, err := newResource.shouldCertBeRenewed(tc.Secret, tc.Secret, tc.TTL, tc.Threshold)
+		result, err := newResource.shouldCertBeRenewed(v1alpha1.CertConfig{}, tc.Secret, tc.Secret, tc.TTL, tc.Threshold)
 		if tc.ErrorMatcher != nil {
 			if !tc.ErrorMatcher(err) {
 				t.Fatalf("test %d expected %#v got %#v", i, true, false)
@@ -403,7 +463,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_hash(t *testing.T) {
 			}
 		}
 
-		result, err := newResource.shouldCertBeRenewed(tc.CurrentSecret, tc.DesiredSecret, 10*time.Second, 5*time.Second)
+		result, err := newResource.shouldCertBeRenewed(v1alpha1.CertConfig{}, tc.CurrentSecret, tc.DesiredSecret, 10*time.Second, 5*time.Second)
 		if tc.ErrorMatcher != nil {
 			if !tc.ErrorMatcher(err) {
 				t.Fatalf("test %d expected %#v got %#v", i, true, false)
