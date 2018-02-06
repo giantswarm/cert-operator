@@ -5,17 +5,20 @@ package service
 import (
 	"sync"
 
+	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/microendpoint/service/version"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	"github.com/giantswarm/operatorkit/client/k8sclient"
+	"github.com/giantswarm/operatorkit/client/k8srestconfig"
 	"github.com/giantswarm/operatorkit/framework"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
+	"github.com/giantswarm/cert-operator/service/certconfig"
 	"github.com/giantswarm/cert-operator/service/healthz"
 )
 
@@ -54,9 +57,9 @@ func DefaultConfig() Config {
 
 type Service struct {
 	// Dependencies.
-	CRDFramework *framework.Framework
-	Healthz      *healthz.Service
-	Version      *version.Service
+	CertConfigFramework *framework.Framework
+	Healthz             *healthz.Service
+	Version             *version.Service
 
 	// Internals.
 	bootOnce sync.Once
@@ -74,22 +77,37 @@ func New(config Config) (*Service, error) {
 
 	var err error
 
-	var k8sClient kubernetes.Interface
+	var restConfig *rest.Config
 	{
-		k8sConfig := k8sclient.DefaultConfig()
+		c := k8srestconfig.DefaultConfig()
 
-		k8sConfig.Logger = config.Logger
+		c.Logger = config.Logger
 
-		k8sConfig.Address = config.Viper.GetString(config.Flag.Service.Kubernetes.Address)
-		k8sConfig.InCluster = config.Viper.GetBool(config.Flag.Service.Kubernetes.InCluster)
-		k8sConfig.TLS.CAFile = config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CAFile)
-		k8sConfig.TLS.CrtFile = config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CrtFile)
-		k8sConfig.TLS.KeyFile = config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.KeyFile)
+		c.Address = config.Viper.GetString(config.Flag.Service.Kubernetes.Address)
+		c.InCluster = config.Viper.GetBool(config.Flag.Service.Kubernetes.InCluster)
+		c.TLS.CAFile = config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CAFile)
+		c.TLS.CrtFile = config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.CrtFile)
+		c.TLS.KeyFile = config.Viper.GetString(config.Flag.Service.Kubernetes.TLS.KeyFile)
 
-		k8sClient, err = k8sclient.New(k8sConfig)
+		restConfig, err = k8srestconfig.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
+	}
+
+	g8sClient, err := versioned.NewForConfig(restConfig)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
+	k8sClient, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
+	k8sExtClient, err := apiextensionsclient.NewForConfig(restConfig)
+	if err != nil {
+		return nil, microerror.Mask(err)
 	}
 
 	var vaultClient *vaultapi.Client
@@ -105,9 +123,22 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var crdFramework *framework.Framework
+	var certConfigFramework *framework.Framework
 	{
-		crdFramework, err = newCRDFramework(config)
+		c := certconfig.FrameworkConfig{
+			G8sClient:    g8sClient,
+			K8sClient:    k8sClient,
+			K8sExtClient: k8sExtClient,
+			Logger:       config.Logger,
+
+			CATTL:               config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CA.TTL),
+			CommonNameFormat:    config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format),
+			ExpirationThreshold: config.Viper.GetDuration(config.Flag.Service.Resource.VaultCrt.ExpirationThreshold),
+			Name:                config.Name,
+			Namespace:           config.Viper.GetString(config.Flag.Service.Resource.VaultCrt.Namespace),
+		}
+
+		certConfigFramework, err = certconfig.NewFramework(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -145,9 +176,9 @@ func New(config Config) (*Service, error) {
 
 	newService := &Service{
 		// Dependencies.
-		CRDFramework: crdFramework,
-		Healthz:      healthzService,
-		Version:      versionService,
+		CertConfigFramework: certConfigFramework,
+		Healthz:             healthzService,
+		Version:             versionService,
 
 		// Internals
 		bootOnce: sync.Once{},
@@ -158,6 +189,6 @@ func New(config Config) (*Service, error) {
 
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		go s.CRDFramework.Boot()
+		go s.CertConfigFramework.Boot()
 	})
 }
