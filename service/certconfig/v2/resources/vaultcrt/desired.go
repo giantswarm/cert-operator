@@ -12,14 +12,14 @@ import (
 )
 
 func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interface{}, error) {
-	customObject, err := keyv2.ToCustomObject(obj)
+	customObject, err := key.ToCustomObject(obj)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "computing the desired secret")
+	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computing the desired secret")
 
-	hash, err := keyv2.CustomObjectHash(customObject)
+	hash, err := key.CustomObjectHash(customObject)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
@@ -29,25 +29,25 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 	// considered when computing the create, delete and update state.
 	secret := &apiv1.Secret{
 		ObjectMeta: apismetav1.ObjectMeta{
-			Name: keyv2.SecretName(customObject),
+			Name: key.SecretName(customObject),
 			Annotations: map[string]string{
 				ConfigHashAnnotation:           hash,
 				UpdateTimestampAnnotation:      r.currentTimeFactory().In(time.UTC).Format(UpdateTimestampLayout),
-				VersionBundleVersionAnnotation: keyv2.VersionBundleVersion(customObject),
+				VersionBundleVersionAnnotation: key.VersionBundleVersion(customObject),
 			},
 			Labels: map[string]string{
-				keyv2.ClusterIDLabel: keyv2.ClusterID(customObject),
-				keyv2.ComponentLabel: keyv2.ClusterComponent(customObject),
+				key.ClusterIDLabel: key.ClusterID(customObject),
+				key.ComponentLabel: key.ClusterComponent(customObject),
 			},
 		},
 		StringData: map[string]string{
-			keyv2.CAID:  "",
-			keyv2.CrtID: "",
-			keyv2.KeyID: "",
+			key.CAID:  "",
+			key.CrtID: "",
+			key.KeyID: "",
 		},
 	}
 
-	r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "computed the desired secret")
+	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computed the desired secret")
 
 	return secret, nil
 }

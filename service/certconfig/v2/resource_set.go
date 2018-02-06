@@ -14,7 +14,10 @@ import (
 	"github.com/giantswarm/vaultrole"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/giantswarm/kvm-operator/service/kvmconfig/v2/key"
+	"github.com/giantswarm/cert-operator/service/certconfig/v2/key"
+	vaultcrtresource "github.com/giantswarm/cert-operator/service/certconfig/v2/resources/vaultcrt"
+	vaultpkiresource "github.com/giantswarm/cert-operator/service/certconfig/v2/resources/vaultpki"
+	vaultroleresource "github.com/giantswarm/cert-operator/service/certconfig/v2/resources/vaultrole"
 )
 
 const (
@@ -24,7 +27,9 @@ const (
 type ResourceSetConfig struct {
 	K8sClient kubernetes.Interface
 	Logger    micrologger.Logger
+	VaultCrt  vaultcrt.Interface
 	VaultPKI  vaultpki.Interface
+	VaultRole vaultrole.Interface
 
 	ExpirationThreshold   time.Duration
 	HandledVersionBundles []string
@@ -40,14 +45,20 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 	if config.Logger == nil {
 		return nil, microerror.Maskf(invalidConfigError, "config.Logger must not be empty")
 	}
+	if config.VaultCrt == nil {
+		return nil, microerror.Maskf(invalidConfigError, "config.VaultCrt must not be empty")
+	}
 	if config.VaultPKI == nil {
 		return nil, microerror.Maskf(invalidConfigError, "config.VaultPKI must not be empty")
+	}
+	if config.VaultRole == nil {
+		return nil, microerror.Maskf(invalidConfigError, "config.VaultRole must not be empty")
 	}
 
 	if config.ExpirationThreshold == 0 {
 		return nil, microerror.Maskf(invalidConfigError, "config.ExpirationThreshold must not be empty")
 	}
-	if len(config.HandledVersionBundles) == nil {
+	if len(config.HandledVersionBundles) == 0 {
 		return nil, microerror.Maskf(invalidConfigError, "config.HandledVersionBundles must not be empty")
 	}
 	if config.Name == "" {
@@ -61,17 +72,17 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 
 	var vaultCrtResource framework.Resource
 	{
-		c := vaultcrt.DefaultConfig()
+		c := vaultcrtresource.DefaultConfig()
 
 		c.CurrentTimeFactory = func() time.Time { return time.Now() }
 		c.K8sClient = config.K8sClient
 		c.Logger = config.Logger
-		c.VaultCrt = vaultCrt
+		c.VaultCrt = config.VaultCrt
 
 		c.ExpirationThreshold = config.ExpirationThreshold
 		c.Namespace = config.Namespace
 
-		vaultCrtResource, err = vaultcrt.New(c)
+		vaultCrtResource, err = vaultcrtresource.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -79,12 +90,12 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 
 	var vaultPKIResource framework.Resource
 	{
-		c := vaultpki.DefaultConfig()
+		c := vaultpkiresource.DefaultConfig()
 
 		c.Logger = config.Logger
 		c.VaultPKI = config.VaultPKI
 
-		vaultPKIResource, err = vaultpki.New(c)
+		vaultPKIResource, err = vaultpkiresource.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -92,12 +103,12 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 
 	var vaultRoleResource framework.Resource
 	{
-		c := vaultrole.DefaultConfig()
+		c := vaultroleresource.DefaultConfig()
 
 		c.Logger = config.Logger
-		c.VaultRole = vaultRole
+		c.VaultRole = config.VaultRole
 
-		vaultRoleResource, err = vaultrole.New(c)
+		vaultRoleResource, err = vaultroleresource.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -122,7 +133,7 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 			vaultCrtResource,
 		}
 
-		retryWrapConfig := retryresource.DefaultWrapConfig()
+		retryWrapConfig := retryresource.WrapConfig{}
 		retryWrapConfig.BackOffFactory = func() backoff.BackOff { return backoff.WithMaxTries(backoff.NewExponentialBackOff(), ResourceRetries) }
 		retryWrapConfig.Logger = config.Logger
 		resources, err = retryresource.Wrap(resources, retryWrapConfig)
@@ -130,7 +141,7 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 			return nil, microerror.Mask(err)
 		}
 
-		metricsWrapConfig := metricsresource.DefaultWrapConfig()
+		metricsWrapConfig := metricsresource.WrapConfig{}
 		metricsWrapConfig.Name = config.Name
 		resources, err = metricsresource.Wrap(resources, metricsWrapConfig)
 		if err != nil {

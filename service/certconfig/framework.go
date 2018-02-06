@@ -7,7 +7,6 @@ import (
 	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/operatorkit/client/k8scrdclient"
 	"github.com/giantswarm/operatorkit/framework"
 	"github.com/giantswarm/operatorkit/informer"
@@ -18,7 +17,6 @@ import (
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
 
-	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/service/certconfig/v2"
 )
 
@@ -27,6 +25,7 @@ type FrameworkConfig struct {
 	K8sClient    kubernetes.Interface
 	K8sExtClient apiextensionsclient.Interface
 	Logger       micrologger.Logger
+	VaultClient  *vaultapi.Client
 
 	CATTL               string
 	CommonNameFormat    string
@@ -47,6 +46,9 @@ func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
 	}
 	if config.Logger == nil {
 		return nil, microerror.Maskf(invalidConfigError, "config.Logger must not be empty")
+	}
+	if config.VaultClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "config.VaultClient must not be empty")
 	}
 
 	if config.CATTL == "" {
@@ -80,38 +82,12 @@ func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
 		}
 	}
 
-	var crdClient *k8scrdclient.CRDClient
-	{
-		c := k8scrdclient.DefaultConfig()
-
-		c.K8sExtClient = config.K8sExtClient
-		c.Logger = microloggertest.New()
-
-		crdClient, err = k8scrdclient.New(c)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
-
-	var vaultClient *vaultapi.Client
-	{
-		vaultConfig := vaultutil.Config{
-			Flag:  config.Flag,
-			Viper: config.Viper,
-		}
-
-		vaultClient, err = vaultutil.NewClient(vaultConfig)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
-
 	var vaultCrt vaultcrt.Interface
 	{
 		c := vaultcrt.DefaultConfig()
 
 		c.Logger = config.Logger
-		c.VaultClient = vaultClient
+		c.VaultClient = config.VaultClient
 
 		vaultCrt, err = vaultcrt.New(c)
 		if err != nil {
@@ -124,10 +100,10 @@ func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
 		c := vaultpki.DefaultConfig()
 
 		c.Logger = config.Logger
-		c.VaultClient = vaultClient
+		c.VaultClient = config.VaultClient
 
 		c.CATTL = config.CATTL
-		c.CommonNameFormat = CommonNameFormat
+		c.CommonNameFormat = config.CommonNameFormat
 
 		vaultPKI, err = vaultpki.New(c)
 		if err != nil {
@@ -140,7 +116,7 @@ func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
 		c := vaultrole.DefaultConfig()
 
 		c.Logger = config.Logger
-		c.VaultClient = vaultClient
+		c.VaultClient = config.VaultClient
 
 		c.CommonNameFormat = config.CommonNameFormat
 
@@ -167,7 +143,9 @@ func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
 		c := v2.ResourceSetConfig{
 			K8sClient: config.K8sClient,
 			Logger:    config.Logger,
+			VaultCrt:  vaultCrt,
 			VaultPKI:  vaultPKI,
+			VaultRole: vaultRole,
 
 			ExpirationThreshold: config.ExpirationThreshold,
 			HandledVersionBundles: []string{
@@ -201,7 +179,7 @@ func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
 	{
 		c := framework.Config{}
 
-		c.CRD = v1alpha1.NewKVMConfigCRD()
+		c.CRD = v1alpha1.NewNodeConfigCRD()
 		c.CRDClient = crdClient
 		c.Informer = newInformer
 		c.Logger = config.Logger

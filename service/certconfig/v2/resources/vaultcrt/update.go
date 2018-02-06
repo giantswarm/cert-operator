@@ -12,7 +12,7 @@ import (
 )
 
 func (r *Resource) ApplyUpdateChange(ctx context.Context, obj, updateChange interface{}) error {
-	customObject, err := keyv2.ToCustomObject(obj)
+	customObject, err := key.ToCustomObject(obj)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -22,16 +22,16 @@ func (r *Resource) ApplyUpdateChange(ctx context.Context, obj, updateChange inte
 	}
 
 	if secretToUpdate != nil {
-		r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "updating the secret in the Kubernetes API")
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "updating the secret in the Kubernetes API")
 
 		_, err := r.k8sClient.CoreV1().Secrets(r.namespace).Update(secretToUpdate)
 		if err != nil {
 			return microerror.Mask(err)
 		}
 
-		r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "updated the secret in the Kubernetes API")
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "updated the secret in the Kubernetes API")
 	} else {
-		r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "the secret does not need to be updated in the Kubernetes API")
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "the secret does not need to be updated in the Kubernetes API")
 	}
 
 	return nil
@@ -56,7 +56,7 @@ func (r *Resource) NewUpdatePatch(ctx context.Context, obj, currentState, desire
 }
 
 func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
-	customObject, err := keyv2.ToCustomObject(obj)
+	customObject, err := key.ToCustomObject(obj)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
@@ -69,11 +69,11 @@ func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desir
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "finding out if the secret has to be updated")
+	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "finding out if the secret has to be updated")
 
 	var secretToUpdate *apiv1.Secret
 	{
-		TTL, err := time.ParseDuration(keyv2.CrtTTL(customObject))
+		TTL, err := time.ParseDuration(key.CrtTTL(customObject))
 		if err != nil {
 			return false, microerror.Mask(err)
 		}
@@ -86,19 +86,19 @@ func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desir
 		}
 
 		if renew {
-			ca, crt, key, err := r.issueCertificate(customObject)
+			ca, crt, k, err := r.issueCertificate(customObject)
 			if err != nil {
 				return nil, microerror.Mask(err)
 			}
 
 			secretToUpdate = desiredSecret
-			secretToUpdate.StringData[keyv2.CAID] = ca
-			secretToUpdate.StringData[keyv2.CrtID] = crt
-			secretToUpdate.StringData[keyv2.KeyID] = key
+			secretToUpdate.StringData[key.CAID] = ca
+			secretToUpdate.StringData[key.CrtID] = crt
+			secretToUpdate.StringData[key.KeyID] = k
 		}
 	}
 
-	r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "found out if the secret has to be updated")
+	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found out if the secret has to be updated")
 
 	return secretToUpdate, nil
 }

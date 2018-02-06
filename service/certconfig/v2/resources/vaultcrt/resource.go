@@ -109,12 +109,12 @@ func (r *Resource) Underlying() framework.Resource {
 
 func (r *Resource) issueCertificate(customObject v1alpha1.CertConfig) (string, string, string, error) {
 	c := vaultcrt.CreateConfig{
-		AltNames:      keyv2.AltNames(customObject),
-		CommonName:    keyv2.CommonName(customObject),
-		ID:            keyv2.ClusterID(customObject),
-		IPSANs:        keyv2.IPSANs(customObject),
-		Organizations: keyv2.Organizations(customObject),
-		TTL:           keyv2.CrtTTL(customObject),
+		AltNames:      key.AltNames(customObject),
+		CommonName:    key.CommonName(customObject),
+		ID:            key.ClusterID(customObject),
+		IPSANs:        key.IPSANs(customObject),
+		Organizations: key.Organizations(customObject),
+		TTL:           key.CrtTTL(customObject),
 	}
 	result, err := r.vaultCrt.Create(c)
 	if err != nil {

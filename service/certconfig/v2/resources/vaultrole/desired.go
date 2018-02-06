@@ -11,24 +11,24 @@ import (
 )
 
 func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interface{}, error) {
-	customObject, err := keyv2.ToCustomObject(obj)
+	customObject, err := key.ToCustomObject(obj)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
 	r.logger.LogCtx(ctx, "debug", "computing the desired role")
 
-	TTL, err := time.ParseDuration(keyv2.RoleTTL(customObject))
+	TTL, err := time.ParseDuration(key.RoleTTL(customObject))
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
 	role := &vaultrole.Role{
-		AllowBareDomains: keyv2.AllowBareDomains(customObject),
+		AllowBareDomains: key.AllowBareDomains(customObject),
 		AllowSubdomains:  AllowSubdomains,
-		AltNames:         keyv2.AltNames(customObject),
-		ID:               keyv2.ClusterID(customObject),
-		Organizations:    keyv2.Organizations(customObject),
+		AltNames:         key.AltNames(customObject),
+		ID:               key.ClusterID(customObject),
+		Organizations:    key.Organizations(customObject),
 		TTL:              TTL,
 	}
 

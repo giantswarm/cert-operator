@@ -10,7 +10,7 @@ import (
 )
 
 func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interface{}, error) {
-	customObject, err := keyv2.ToCustomObject(obj)
+	customObject, err := key.ToCustomObject(obj)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
@@ -20,8 +20,8 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 	var role *vaultrole.Role
 	{
 		c := vaultrole.SearchConfig{
-			ID:            keyv2.ClusterID(customObject),
-			Organizations: keyv2.Organizations(customObject),
+			ID:            key.ClusterID(customObject),
+			Organizations: key.Organizations(customObject),
 		}
 		result, err := r.vaultRole.Search(c)
 		if vaultrole.IsNotFound(err) {

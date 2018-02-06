@@ -10,7 +10,7 @@ import (
 )
 
 func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interface{}, error) {
-	customObject, err := keyv2.ToCustomObject(obj)
+	customObject, err := key.ToCustomObject(obj)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
@@ -18,30 +18,30 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 	var vaultPKIState VaultPKIState
 
 	{
-		r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "looking for the Vault PKI in the Vault API")
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "looking for the Vault PKI in the Vault API")
 
-		backend, err := r.vaultPKI.GetBackend(keyv2.ClusterID(customObject))
+		backend, err := r.vaultPKI.GetBackend(key.ClusterID(customObject))
 		if vaultpki.IsNotFound(err) {
-			r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "did not find the Vault PKI in the Vault API")
+			r.logger.Log("cluster", key.ClusterID(customObject), "debug", "did not find the Vault PKI in the Vault API")
 		} else if err != nil {
 			return false, microerror.Mask(err)
 		} else {
-			r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "found the Vault PKI in the Vault API")
+			r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found the Vault PKI in the Vault API")
 
 			vaultPKIState.Backend = backend
 		}
 	}
 
 	{
-		r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "looking for the root CA in the Vault PKI")
+		r.logger.Log("cluster", key.ClusterID(customObject), "debug", "looking for the root CA in the Vault PKI")
 
-		caCertificate, err := r.vaultPKI.GetCACertificate(keyv2.ClusterID(customObject))
+		caCertificate, err := r.vaultPKI.GetCACertificate(key.ClusterID(customObject))
 		if vaultpki.IsNotFound(err) {
-			r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "did not find the root CA in the Vault PKI")
+			r.logger.Log("cluster", key.ClusterID(customObject), "debug", "did not find the root CA in the Vault PKI")
 		} else if err != nil {
 			return false, microerror.Mask(err)
 		} else {
-			r.logger.Log("cluster", keyv2.ClusterID(customObject), "debug", "found the root CA in the Vault PKI")
+			r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found the root CA in the Vault PKI")
 
 			vaultPKIState.CACertificate = caCertificate
 		}
