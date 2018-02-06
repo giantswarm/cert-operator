@@ -179,7 +179,7 @@ func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
 	{
 		c := framework.Config{}
 
-		c.CRD = v1alpha1.NewNodeConfigCRD()
+		c.CRD = v1alpha1.NewCertConfigCRD()
 		c.CRDClient = crdClient
 		c.Informer = newInformer
 		c.Logger = config.Logger
