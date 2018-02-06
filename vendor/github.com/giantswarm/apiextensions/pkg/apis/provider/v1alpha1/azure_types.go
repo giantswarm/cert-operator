@@ -100,10 +100,15 @@ type AzureConfigSpecAzureHostCluster struct {
 type AzureConfigSpecAzureVirtualNetwork struct {
 	// CIDR is the CIDR for the Virtual Network.
 	CIDR string `json:"cidr" yaml:"cidr"`
-	// MasterSubnetCIDR is the CIDR for the master subnet,
+
+	// MasterSubnetCIDR is the CIDR for the master subnet.
 	MasterSubnetCIDR string `json:"masterSubnetCIDR" yaml:"masterSubnetCIDR"`
-	// WorkerSubnetCIDR is the CIDR for the worker subnet,
+	// WorkerSubnetCIDR is the CIDR for the worker subnet.
 	WorkerSubnetCIDR string `json:"workerSubnetCIDR" yaml:"workerSubnetCIDR"`
+
+	// CalicoSubnetCIDR is the CIDR for the calico subnet. It has to be
+	// also a worker subnet (Azure limitation).
+	CalicoSubnetCIDR string `json:"calicoSubnetCIDR" yaml:"calicoSubnetCIDR"`
 }
 
 type AzureConfigSpecAzureNode struct {

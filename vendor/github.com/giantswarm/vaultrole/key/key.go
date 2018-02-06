@@ -33,7 +33,7 @@ func RoleName(ID string, organizations []string) string {
 
 	// Compute a url-safe hash of the organizations that stays the same regardless
 	// of the order of the organizations supplied.
-	return fmt.Sprintf("role-org-%s", computeRoleHash(organizations))
+	return fmt.Sprintf("role-org-%s", computeOrgHash(organizations))
 }
 
 // ToAltNames takes a string as provided by AllowedDomains and returns the list
@@ -64,13 +64,13 @@ func WriteRolePath(ID string, organizations []string) string {
 	return fmt.Sprintf("pki-%s/roles/%s", ID, RoleName(ID, organizations))
 }
 
-// computeRoleHash computes a hash for the role that can issue these
+// computeOrgHash computes a hash for the role that can issue these
 // organizations. Since we want to reuse roles when possible, we should try to
 // make sure that the same list of organizations returns the same hash
 // (regardless of the order). The reason we don't use just the organizations
 // that the user provided is because that could potentially be a very long list,
 // or otherwise contain characters that are not allowed in URLs.
-func computeRoleHash(organizations []string) string {
+func computeOrgHash(organizations []string) string {
 	sort.Strings(organizations)
 	s := strings.Join(organizations, ",")
 
