@@ -85,6 +85,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/giantswarm/certs"
+  packages = ["."]
+  revision = "cb5abd709cb670baae7fbbf0699c5545771ef393"
+
+[[projects]]
+  branch = "master"
   name = "github.com/giantswarm/e2e-harness"
   packages = ["pkg/harness"]
   revision = "1d5960fb1d9590e5169e58802bb1f63d1e23a161"
@@ -833,6 +839,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cc887bb4b7e73cdfd0ce273af80232517b36ec38a48216d86fcd980336a0fba5"
+  inputs-digest = "a13da22baba0839a5a763dda93affd2e3af5ba6346164c17eef62ed3f4c027c0"
   solver-name = "gps-cdcl"
   solver-version = 1
