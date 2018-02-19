@@ -149,6 +149,7 @@ func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
 
 			ExpirationThreshold: config.ExpirationThreshold,
 			HandledVersionBundles: []string{
+				"",
 				"0.1.0",
 			},
 			Name:      config.Name,
