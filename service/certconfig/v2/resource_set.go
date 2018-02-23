@@ -31,11 +31,9 @@ type ResourceSetConfig struct {
 	VaultPKI  vaultpki.Interface
 	VaultRole vaultrole.Interface
 
-	ExpirationThreshold   time.Duration
-	HandledVersionBundles []string
-	// Name is the project name.
-	Name      string
-	Namespace string
+	ExpirationThreshold time.Duration
+	Namespace           string
+	ProjectName         string
 }
 
 func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
@@ -58,14 +56,11 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 	if config.ExpirationThreshold == 0 {
 		return nil, microerror.Maskf(invalidConfigError, "config.ExpirationThreshold must not be empty")
 	}
-	if len(config.HandledVersionBundles) == 0 {
-		return nil, microerror.Maskf(invalidConfigError, "config.HandledVersionBundles must not be empty")
-	}
-	if config.Name == "" {
-		return nil, microerror.Maskf(invalidConfigError, "config.Name must not be empty")
-	}
 	if config.Namespace == "" {
 		return nil, microerror.Maskf(invalidConfigError, "config.Namespace must not be empty")
+	}
+	if config.ProjectName == "" {
+		return nil, microerror.Maskf(invalidConfigError, "config.ProjectName must not be empty")
 	}
 
 	var err error
@@ -114,36 +109,30 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 		}
 	}
 
-	// We create the list of resources and wrap each resource around some common
-	// resources like metrics and retry resources.
-	//
-	// NOTE that the retry resources wrap the underlying resources first. The
-	// wrapped resources are then wrapped around the metrics resource. That way
-	// the metrics also consider execution times and execution attempts including
-	// retries.
-	//
-	// NOTE that the order of the namespace resource is important. We have to
-	// start the namespace resource at first because all other resources are
-	// created within this namespace.
-	var resources []framework.Resource
+	resources := []framework.Resource{
+		vaultPKIResource,
+		vaultRoleResource,
+		vaultCrtResource,
+	}
+
 	{
-		resources = []framework.Resource{
-			vaultPKIResource,
-			vaultRoleResource,
-			vaultCrtResource,
+		c := retryresource.WrapConfig{
+			BackOffFactory: func() backoff.BackOff { return backoff.WithMaxTries(backoff.NewExponentialBackOff(), ResourceRetries) },
+			Logger:         config.Logger,
 		}
 
-		retryWrapConfig := retryresource.WrapConfig{}
-		retryWrapConfig.BackOffFactory = func() backoff.BackOff { return backoff.WithMaxTries(backoff.NewExponentialBackOff(), ResourceRetries) }
-		retryWrapConfig.Logger = config.Logger
-		resources, err = retryresource.Wrap(resources, retryWrapConfig)
+		resources, err = retryresource.Wrap(resources, c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
+	}
 
-		metricsWrapConfig := metricsresource.WrapConfig{}
-		metricsWrapConfig.Name = config.Name
-		resources, err = metricsresource.Wrap(resources, metricsWrapConfig)
+	{
+		c := metricsresource.WrapConfig{
+			Name: config.ProjectName,
+		}
+
+		resources, err = metricsresource.Wrap(resources, c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -154,12 +143,14 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 		if err != nil {
 			return false
 		}
-		versionBundleVersion := key.VersionBundleVersion(kvmConfig)
 
-		for _, v := range config.HandledVersionBundles {
-			if versionBundleVersion == v {
-				return true
-			}
+		if key.VersionBundleVersion(kvmConfig) == VersionBundle().Version {
+			return true
+		}
+		// TODO remove this hack with the next version bundle version or as soon as
+		// all certconfigs obtain a real version bundle version.
+		if key.VersionBundleVersion(kvmConfig) == "" {
+			return true
 		}
 
 		return false

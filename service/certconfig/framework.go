@@ -30,8 +30,8 @@ type FrameworkConfig struct {
 	CATTL               string
 	CommonNameFormat    string
 	ExpirationThreshold time.Duration
-	Name                string
 	Namespace           string
+	ProjectName         string
 }
 
 func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
@@ -60,11 +60,11 @@ func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
 	if config.ExpirationThreshold == 0 {
 		return nil, microerror.Maskf(invalidConfigError, "config.ExpirationThreshold must not be empty")
 	}
-	if config.Name == "" {
-		return nil, microerror.Maskf(invalidConfigError, "config.Name must not be empty")
-	}
 	if config.Namespace == "" {
 		return nil, microerror.Maskf(invalidConfigError, "config.Namespace must not be empty")
+	}
+	if config.ProjectName == "" {
+		return nil, microerror.Maskf(invalidConfigError, "config.ProjectName must not be empty")
 	}
 
 	var err error
@@ -148,12 +148,8 @@ func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
 			VaultRole: vaultRole,
 
 			ExpirationThreshold: config.ExpirationThreshold,
-			HandledVersionBundles: []string{
-				"",
-				"0.1.0",
-			},
-			Name:      config.Name,
-			Namespace: config.Namespace,
+			Namespace:           config.Namespace,
+			ProjectName:         config.ProjectName,
 		}
 
 		v2ResourceSet, err = v2.NewResourceSet(c)
