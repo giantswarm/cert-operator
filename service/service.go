@@ -166,7 +166,7 @@ func New(config Config) (*Service, error) {
 
 		versionConfig.Description = config.Description
 		versionConfig.GitCommit = config.GitCommit
-		versionConfig.Name = config.ProjectName
+		versionConfig.Name = config.Name
 		versionConfig.Source = config.Source
 		versionConfig.VersionBundles = NewVersionBundles()
 
