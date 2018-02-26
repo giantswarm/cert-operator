@@ -136,8 +136,8 @@ func New(config Config) (*Service, error) {
 			CATTL:               config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CA.TTL),
 			CommonNameFormat:    config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format),
 			ExpirationThreshold: config.Viper.GetDuration(config.Flag.Service.Resource.VaultCrt.ExpirationThreshold),
-			Name:                config.Name,
 			Namespace:           config.Viper.GetString(config.Flag.Service.Resource.VaultCrt.Namespace),
+			ProjectName:         config.Name,
 		}
 
 		certConfigFramework, err = certconfig.NewFramework(c)
