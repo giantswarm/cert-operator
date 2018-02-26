@@ -85,7 +85,7 @@ func TestSecretsAreCreated(t *testing.T) {
 	secretName := fmt.Sprintf("%s-api", os.Getenv("CLUSTER_NAME"))
 	err = waitFor(cs.secretFunc("default", secretName))
 	if err != nil {
-		t.Errorf("could not find expected secret: %v", err)
+		t.Errorf("could not find expected secret '%s': %v", secretName, err)
 	}
 }
 
@@ -202,7 +202,6 @@ func (cs *clients) runningPodFunc(namespace, labelSelector string) func() error 
 func (cs *clients) activeNamespaceFunc(name string) func() error {
 	return func() error {
 		ns, err := cs.K8sCs.CoreV1().Namespaces().Get(name, metav1.GetOptions{})
-
 		if err != nil {
 			return microerror.Mask(err)
 		}
@@ -219,7 +218,11 @@ func (cs *clients) activeNamespaceFunc(name string) func() error {
 func (cs *clients) secretFunc(namespace, secretName string) func() error {
 	return func() error {
 		_, err := cs.K8sCs.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
-		return microerror.Mask(err)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		return nil
 	}
 }
 

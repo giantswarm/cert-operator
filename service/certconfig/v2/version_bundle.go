@@ -12,7 +12,7 @@ func VersionBundle() versionbundle.Bundle {
 			{
 				Component:   "vault",
 				Description: "Vault version updated.",
-				Kind:        "changed",
+				Kind:        versionbundle.KindChanged,
 			},
 		},
 		Components: []versionbundle.Component{
