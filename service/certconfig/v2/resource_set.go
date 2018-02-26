@@ -139,17 +139,17 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 	}
 
 	handlesFunc := func(obj interface{}) bool {
-		kvmConfig, err := key.ToCustomObject(obj)
+		customObject, err := key.ToCustomObject(obj)
 		if err != nil {
 			return false
 		}
 
-		if key.VersionBundleVersion(kvmConfig) == VersionBundle().Version {
+		if key.VersionBundleVersion(customObject) == VersionBundle().Version {
 			return true
 		}
 		// TODO remove this hack with the next version bundle version or as soon as
 		// all certconfigs obtain a real version bundle version.
-		if key.VersionBundleVersion(kvmConfig) == "" {
+		if key.VersionBundleVersion(customObject) == "" {
 			return true
 		}
 
