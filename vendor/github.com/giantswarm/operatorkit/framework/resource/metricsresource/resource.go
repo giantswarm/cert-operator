@@ -7,11 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/giantswarm/operatorkit/framework"
-)
-
-const (
-	// Name is the identifier of the resource.
-	Name = "metrics"
+	"github.com/giantswarm/operatorkit/framework/resource/internal"
 )
 
 type Config struct {
@@ -26,6 +22,8 @@ type Config struct {
 type Resource struct {
 	resource framework.Resource
 
+	serviceName string
+
 	name string
 }
 
@@ -38,18 +36,30 @@ func New(config Config) (*Resource, error) {
 		return nil, microerror.Maskf(invalidConfigError, "config.Name must not be empty")
 	}
 
+	var name string
+	{
+		u, err := internal.Underlying(config.Resource)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+
+		name = u.Name()
+	}
+
 	newResource := &Resource{
 		resource: config.Resource,
 
-		name: toCamelCase(config.Name),
+		serviceName: toCamelCase(config.Name),
+
+		name: name,
 	}
 
 	return newResource, nil
 }
 
 func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interface{}, error) {
-	sl := r.name
-	rl := r.resource.Underlying().Name()
+	sl := r.serviceName
+	rl := r.resource.Name()
 	ol := "GetCurrentState"
 
 	operationCounter.WithLabelValues(sl, rl, ol).Inc()
@@ -67,8 +77,8 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 }
 
 func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interface{}, error) {
-	sl := r.name
-	rl := r.resource.Underlying().Name()
+	sl := r.serviceName
+	rl := r.resource.Name()
 	ol := "GetDesiredState"
 
 	operationCounter.WithLabelValues(sl, rl, ol).Inc()
@@ -86,8 +96,8 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 }
 
 func (r *Resource) NewUpdatePatch(ctx context.Context, obj, currentState, desiredState interface{}) (*framework.Patch, error) {
-	sl := r.name
-	rl := r.resource.Underlying().Name()
+	sl := r.serviceName
+	rl := r.resource.Name()
 	ol := "NewUpdatePatch"
 
 	operationCounter.WithLabelValues(sl, rl, ol).Inc()
@@ -105,8 +115,8 @@ func (r *Resource) NewUpdatePatch(ctx context.Context, obj, currentState, desire
 }
 
 func (r *Resource) NewDeletePatch(ctx context.Context, obj, currentState, desiredState interface{}) (*framework.Patch, error) {
-	sl := r.name
-	rl := r.resource.Underlying().Name()
+	sl := r.serviceName
+	rl := r.resource.Name()
 	ol := "NewDeletePatch"
 
 	operationCounter.WithLabelValues(sl, rl, ol).Inc()
@@ -124,12 +134,12 @@ func (r *Resource) NewDeletePatch(ctx context.Context, obj, currentState, desire
 }
 
 func (r *Resource) Name() string {
-	return Name
+	return r.serviceName
 }
 
 func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createState interface{}) error {
-	sl := r.name
-	rl := r.resource.Underlying().Name()
+	sl := r.serviceName
+	rl := r.resource.Name()
 	ol := "ApplyCreatePatch"
 
 	operationCounter.WithLabelValues(sl, rl, ol).Inc()
@@ -147,8 +157,8 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createState inter
 }
 
 func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteState interface{}) error {
-	sl := r.name
-	rl := r.resource.Underlying().Name()
+	sl := r.serviceName
+	rl := r.resource.Name()
 	ol := "ApplyDeletePatch"
 
 	operationCounter.WithLabelValues(sl, rl, ol).Inc()
@@ -166,8 +176,8 @@ func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteState inter
 }
 
 func (r *Resource) ApplyUpdateChange(ctx context.Context, obj, updateState interface{}) error {
-	sl := r.name
-	rl := r.resource.Underlying().Name()
+	sl := r.serviceName
+	rl := r.resource.Name()
 	ol := "ApplyUpdatePatch"
 
 	operationCounter.WithLabelValues(sl, rl, ol).Inc()
@@ -184,6 +194,6 @@ func (r *Resource) ApplyUpdateChange(ctx context.Context, obj, updateState inter
 	return nil
 }
 
-func (r *Resource) Underlying() framework.Resource {
-	return r.resource.Underlying()
+func (r *Resource) Wrapped() framework.Resource {
+	return r.resource
 }
