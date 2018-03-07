@@ -77,7 +77,12 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 		c.ExpirationThreshold = config.ExpirationThreshold
 		c.Namespace = config.Namespace
 
-		vaultCrtResource, err = vaultcrtresource.New(c)
+		ops, err := vaultcrtresource.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+
+		vaultCrtResource, err = toCRUDResource(config.Logger, ops)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -90,7 +95,12 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 		c.Logger = config.Logger
 		c.VaultPKI = config.VaultPKI
 
-		vaultPKIResource, err = vaultpkiresource.New(c)
+		ops, err := vaultpkiresource.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+
+		vaultPKIResource, err = toCRUDResource(config.Logger, ops)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -103,7 +113,12 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 		c.Logger = config.Logger
 		c.VaultRole = config.VaultRole
 
-		vaultRoleResource, err = vaultroleresource.New(c)
+		ops, err := vaultroleresource.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+
+		vaultRoleResource, err = toCRUDResource(config.Logger, ops)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -171,4 +186,18 @@ func NewResourceSet(config ResourceSetConfig) (*framework.ResourceSet, error) {
 	}
 
 	return resourceSet, nil
+}
+
+func toCRUDResource(logger micrologger.Logger, ops framework.CRUDResourceOps) (*framework.CRUDResource, error) {
+	c := framework.CRUDResourceConfig{
+		Logger: logger,
+		Ops:    ops,
+	}
+
+	r, err := framework.NewCRUDResource(c)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
+	return r, nil
 }
