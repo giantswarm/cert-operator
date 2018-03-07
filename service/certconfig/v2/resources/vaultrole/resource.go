@@ -3,7 +3,6 @@ package vaultrole
 import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	"github.com/giantswarm/operatorkit/framework"
 	"github.com/giantswarm/vaultrole"
 )
 
@@ -51,10 +50,6 @@ func New(config Config) (*Resource, error) {
 
 func (r *Resource) Name() string {
 	return Name
-}
-
-func (r *Resource) Underlying() framework.Resource {
-	return r
 }
 
 func toRole(v interface{}) (*vaultrole.Role, error) {
