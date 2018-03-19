@@ -17,7 +17,7 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computing the desired secret")
+	r.logger.LogCtx(ctx, "level", "debug", "message", "computing the desired secret")
 
 	hash, err := key.CustomObjectHash(customObject)
 	if err != nil {
@@ -47,7 +47,7 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		},
 	}
 
-	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "computed the desired secret")
+	r.logger.LogCtx(ctx, "level", "debug", "message", "computed the desired secret")
 
 	return secret, nil
 }
