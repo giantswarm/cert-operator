@@ -21,36 +21,36 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.Log("cluster", key.ClusterID(customObject), "debug", "looking for the secret in the Kubernetes API")
+	r.logger.LogCtx(ctx, "level", "debug", "message", "looking for the secret in the Kubernetes API")
 
 	var secret *apiv1.Secret
 	{
 		manifest, err := r.k8sClient.Core().Secrets(r.namespace).Get(key.SecretName(customObject), apismetav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
-			r.logger.Log("cluster", key.ClusterID(customObject), "debug", "did not find the secret in the Kubernetes API")
+			r.logger.LogCtx(ctx, "level", "debug", "message", "did not find the secret in the Kubernetes API")
 			// fall through
 		} else if err != nil {
 			return nil, microerror.Mask(err)
 		} else {
-			r.logger.Log("cluster", key.ClusterID(customObject), "debug", "found the secret in the Kubernetes API")
+			r.logger.LogCtx(ctx, "level", "debug", "message", "found the secret in the Kubernetes API")
 			secret = manifest
-			r.updateVersionBundleVersionGauge(customObject, versionBundleVersionGauge, secret)
+			r.updateVersionBundleVersionGauge(ctx, customObject, versionBundleVersionGauge, secret)
 		}
 	}
 
 	return secret, nil
 }
 
-func (r *Resource) updateVersionBundleVersionGauge(customObject v1alpha1.CertConfig, gauge *prometheus.GaugeVec, secret *apiv1.Secret) {
+func (r *Resource) updateVersionBundleVersionGauge(ctx context.Context, customObject v1alpha1.CertConfig, gauge *prometheus.GaugeVec, secret *apiv1.Secret) {
 	version, ok := secret.Annotations[VersionBundleVersionAnnotation]
 	if !ok {
-		r.logger.Log("cluster", key.ClusterID(customObject), "warning", fmt.Sprintf("cannot update current version bundle version metric: annotation '%s' must not be empty", VersionBundleVersionAnnotation))
+		r.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf("cannot update current version bundle version metric: annotation '%s' must not be empty", VersionBundleVersionAnnotation))
 		return
 	}
 
 	split := strings.Split(version, ".")
 	if len(split) != 3 {
-		r.logger.Log("cluster", key.ClusterID(customObject), "warning", fmt.Sprintf("cannot update current version bundle version metric: invalid version format, expected '<major>.<minor>.<patch>', got '%s'", version))
+		r.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf("cannot update current version bundle version metric: invalid version format, expected '<major>.<minor>.<patch>', got '%s'", version))
 		return
 	}
 
