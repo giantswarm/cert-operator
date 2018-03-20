@@ -2,14 +2,10 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/giantswarm/microkit/command"
 	microserver "github.com/giantswarm/microkit/server"
-	"github.com/giantswarm/microkit/transaction"
 	"github.com/giantswarm/micrologger"
-	"github.com/giantswarm/microstorage"
-	"github.com/giantswarm/microstorage/memory"
 	"github.com/spf13/viper"
 
 	"github.com/giantswarm/cert-operator/flag"
@@ -31,9 +27,7 @@ func main() {
 	// Create a new logger which is used by all packages.
 	var newLogger micrologger.Logger
 	{
-		loggerConfig := micrologger.DefaultConfig()
-		loggerConfig.IOWriter = os.Stdout
-		newLogger, err = micrologger.New(loggerConfig)
+		newLogger, err = micrologger.New(micrologger.Config{})
 		if err != nil {
 			panic(fmt.Sprintf("%#v\n", err))
 		}
@@ -63,38 +57,18 @@ func main() {
 			go newService.Boot()
 		}
 
-		var storage microstorage.Storage
-		{
-			storage, err = memory.New(memory.DefaultConfig())
-			if err != nil {
-				panic(fmt.Sprintf("%#v\n", err))
-			}
-		}
-
-		var transactionResponder transaction.Responder
-		{
-			c := transaction.DefaultResponderConfig()
-			c.Logger = newLogger
-			c.Storage = storage
-
-			transactionResponder, err = transaction.NewResponder(c)
-			if err != nil {
-				panic(fmt.Sprintf("%#v\n", err))
-			}
-		}
-
 		// Create a new custom server which bundles our endpoints.
 		var newServer microserver.Server
 		{
-			serverConfig := server.DefaultConfig()
+			c := server.Config{
+				Logger:  newLogger,
+				Service: newService,
+				Viper:   v,
 
-			serverConfig.MicroServerConfig.Logger = newLogger
-			serverConfig.MicroServerConfig.TransactionResponder = transactionResponder
-			serverConfig.MicroServerConfig.ServiceName = name
-			serverConfig.MicroServerConfig.Viper = v
-			serverConfig.Service = newService
+				ProjectName: name,
+			}
 
-			newServer, err = server.New(serverConfig)
+			newServer, err = server.New(c)
 			if err != nil {
 				panic(fmt.Sprintf("%#v\n", err))
 			}
@@ -106,18 +80,18 @@ func main() {
 	// Create a new microkit command which manages our custom microservice.
 	var newCommand command.Command
 	{
-		commandConfig := command.DefaultConfig()
+		c := command.Config{
+			Logger:        newLogger,
+			ServerFactory: newServerFactory,
 
-		commandConfig.Logger = newLogger
-		commandConfig.ServerFactory = newServerFactory
+			Description:    description,
+			GitCommit:      gitCommit,
+			Name:           name,
+			Source:         source,
+			VersionBundles: service.NewVersionBundles(),
+		}
 
-		commandConfig.Description = description
-		commandConfig.GitCommit = gitCommit
-		commandConfig.Name = name
-		commandConfig.Source = source
-		commandConfig.VersionBundles = service.NewVersionBundles()
-
-		newCommand, err = command.New(commandConfig)
+		newCommand, err = command.New(c)
 		if err != nil {
 			panic(fmt.Sprintf("%#v\n", err))
 		}
