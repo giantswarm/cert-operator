@@ -25,11 +25,11 @@
   version = "1.1.0"
 
 [[constraint]]
-  branch = "master"
+  branch = "bump-k8s-libs"
   name = "github.com/giantswarm/apiextensions"
 
 [[constraint]]
-  branch = "master"
+  branch = "bump-k8s-libs"
   name = "github.com/giantswarm/certs"
 
 [[constraint]]
@@ -57,7 +57,7 @@
   name = "github.com/giantswarm/micrologger"
 
 [[constraint]]
-  branch = "master"
+  branch = "bump-k8s-libs"
   name = "github.com/giantswarm/operatorkit"
 
 [[constraint]]
@@ -95,22 +95,6 @@
 [[constraint]]
   name = "github.com/stretchr/testify"
   version = "1.2.0"
-
-[[constraint]]
-  name = "k8s.io/api"
-  version = "kubernetes-1.8.5"
-
-[[constraint]]
-  name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.8.5"
-
-[[constraint]]
-  name = "k8s.io/apimachinery"
-  version = "kubernetes-1.8.5"
-
-[[constraint]]
-  name = "k8s.io/client-go"
-  version = "kubernetes-1.8.5"
 
 [prune]
   go-tests = true
