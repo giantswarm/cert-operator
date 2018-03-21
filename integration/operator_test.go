@@ -109,7 +109,6 @@ func (cs *clients) tearDown() {
 	runCmd("helm delete cert-operator --purge")
 	runCmd("helm delete cert-resource-lab --purge")
 	cs.K8sCs.CoreV1().Namespaces().Delete("giantswarm", &metav1.DeleteOptions{})
-	cs.K8sCs.ExtensionsV1beta1().ThirdPartyResources().Delete("certificate.giantswarm.io", &metav1.DeleteOptions{})
 }
 
 func (cs *clients) createGSNamespace() error {
