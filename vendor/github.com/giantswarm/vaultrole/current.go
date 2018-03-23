@@ -94,15 +94,15 @@ func vaultSecretToRole(secret *api.Secret) (Role, error) {
 		role.AllowSubdomains = allowSubdomains
 	}
 
+	// List types in Vault were earlier joined with comma to single
+	// concatenated string. Now they are slice of interfaces which are strings
+	// underneath.
 	{
 		allowedDomains, exists := secret.Data["allowed_domains"]
 		if !exists {
 			return Role{}, microerror.Maskf(invalidVaultResponseError, "allowed_domains missing from Vault api.Secret.Data")
 		}
 
-		// Types in secret.Data["allowed_domains"] differ between versions of
-		// Vault / configuration of g8s. Try couple different formats before
-		// returning error.
 		switch v := allowedDomains.(type) {
 		case string:
 			role.AltNames = key.ToAltNames(v)
@@ -126,17 +126,30 @@ func vaultSecretToRole(secret *api.Secret) (Role, error) {
 	}
 
 	{
-		v, exists := secret.Data["organization"]
+		organizations, exists := secret.Data["organization"]
 		if !exists {
 			return Role{}, microerror.Maskf(invalidVaultResponseError, "organization missing from Vault api.Secret.Data")
 		}
 
-		organization, ok := v.(string)
-		if !ok {
-			return Role{}, microerror.Maskf(invalidVaultResponseError, "Vault secret.Data[\"organization\"] type is %T, expected %T", secret.Data["organization"], organization)
-		}
+		switch v := organizations.(type) {
+		case string:
+			role.Organizations = key.ToOrganizations(v)
+		case []string:
+			role.Organizations = v
+		case []interface{}:
+			organizations := make([]string, 0, len(v))
+			for i, val := range v {
+				if s, ok := val.(string); ok {
+					organizations = append(organizations, s)
+				} else {
+					return Role{}, microerror.Maskf(invalidVaultResponseError, "Vault secret.Data[\"organization\"][%d] has unexpected type '%T'. It's not string nor []string.", i, val)
+				}
+			}
 
-		role.Organizations = key.ToOrganizations(organization)
+			role.Organizations = organizations
+		default:
+			return Role{}, microerror.Maskf(invalidVaultResponseError, "Vault secret.Data[\"organization\"] type is '%T'. It's not string, []string nor []interface{} (masking strings).", secret.Data["organization"])
+		}
 	}
 
 	{
