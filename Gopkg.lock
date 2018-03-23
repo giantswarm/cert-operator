@@ -194,7 +194,7 @@
     "key",
     "vaultroletest"
   ]
-  revision = "277001d5f551cfad1dfa15b19ddaea97e24e5cda"
+  revision = "735d5b6ddd72cf8d8d67d9c8c94b6fd7e7c350a7"
 
 [[projects]]
   branch = "master"
