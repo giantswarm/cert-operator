@@ -14,10 +14,10 @@ import (
 	"github.com/giantswarm/vaultrole"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/giantswarm/cert-operator/service/certconfig/v2/key"
-	vaultcrtresource "github.com/giantswarm/cert-operator/service/certconfig/v2/resources/vaultcrt"
-	vaultpkiresource "github.com/giantswarm/cert-operator/service/certconfig/v2/resources/vaultpki"
-	vaultroleresource "github.com/giantswarm/cert-operator/service/certconfig/v2/resources/vaultrole"
+	"github.com/giantswarm/cert-operator/service/controller/v2/key"
+	vaultcrtresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultcrt"
+	vaultpkiresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultpki"
+	vaultroleresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultrole"
 )
 
 const (

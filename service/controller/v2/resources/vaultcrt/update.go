@@ -10,7 +10,7 @@ import (
 	"github.com/giantswarm/operatorkit/framework"
 	apiv1 "k8s.io/api/core/v1"
 
-	"github.com/giantswarm/cert-operator/service/certconfig/v2/key"
+	"github.com/giantswarm/cert-operator/service/controller/v2/key"
 )
 
 func (r *Resource) ApplyUpdateChange(ctx context.Context, obj, updateChange interface{}) error {

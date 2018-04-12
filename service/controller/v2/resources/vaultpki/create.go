@@ -5,7 +5,7 @@ import (
 
 	"github.com/giantswarm/microerror"
 
-	"github.com/giantswarm/cert-operator/service/certconfig/v2/key"
+	"github.com/giantswarm/cert-operator/service/controller/v2/key"
 )
 
 func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange interface{}) error {

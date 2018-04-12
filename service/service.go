@@ -19,7 +19,7 @@ import (
 
 	vaultutil "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
-	"github.com/giantswarm/cert-operator/service/certconfig"
+	"github.com/giantswarm/cert-operator/service/controller"
 	"github.com/giantswarm/cert-operator/service/healthz"
 )
 
@@ -128,7 +128,7 @@ func New(config Config) (*Service, error) {
 
 	var certConfigFramework *framework.Framework
 	{
-		c := certconfig.FrameworkConfig{
+		c := controller.FrameworkConfig{
 			G8sClient:    g8sClient,
 			K8sClient:    k8sClient,
 			K8sExtClient: k8sExtClient,
@@ -142,7 +142,7 @@ func New(config Config) (*Service, error) {
 			ProjectName:         config.Name,
 		}
 
-		certConfigFramework, err = certconfig.NewFramework(c)
+		certConfigFramework, err = controller.NewFramework(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}

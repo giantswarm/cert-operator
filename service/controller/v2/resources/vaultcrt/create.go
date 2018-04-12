@@ -6,7 +6,7 @@ import (
 	"github.com/giantswarm/microerror"
 	apiv1 "k8s.io/api/core/v1"
 
-	"github.com/giantswarm/cert-operator/service/certconfig/v2/key"
+	"github.com/giantswarm/cert-operator/service/controller/v2/key"
 )
 
 func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange interface{}) error {

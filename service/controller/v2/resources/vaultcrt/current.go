@@ -12,7 +12,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/giantswarm/cert-operator/service/certconfig/v2/key"
+	"github.com/giantswarm/cert-operator/service/controller/v2/key"
 )
 
 func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interface{}, error) {
