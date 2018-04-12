@@ -1,4 +1,4 @@
-package certconfig
+package controller
 
 import (
 	"time"
@@ -17,7 +17,7 @@ import (
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/giantswarm/cert-operator/service/certconfig/v2"
+	"github.com/giantswarm/cert-operator/service/controller/v2"
 )
 
 type FrameworkConfig struct {

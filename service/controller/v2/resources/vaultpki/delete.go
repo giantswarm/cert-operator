@@ -7,7 +7,7 @@ import (
 	"github.com/giantswarm/operatorkit/framework"
 	"github.com/giantswarm/operatorkit/framework/context/deletionallowedcontext"
 
-	"github.com/giantswarm/cert-operator/service/certconfig/v2/key"
+	"github.com/giantswarm/cert-operator/service/controller/v2/key"
 )
 
 func (r *Resource) NewDeletePatch(ctx context.Context, obj, currentState, desiredState interface{}) (*framework.Patch, error) {
