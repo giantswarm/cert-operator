@@ -174,7 +174,7 @@
   branch = "master"
   name = "github.com/giantswarm/vaulthealthz"
   packages = ["."]
-  revision = "6282b42509511657649d50d000b785dad67ad91b"
+  revision = "1a6053078e82506a7d34ff4bf9b94fe7f2be81cc"
 
 [[projects]]
   branch = "master"
@@ -655,8 +655,8 @@
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
-  version = "v2.1.1"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
 
 [[projects]]
   name = "k8s.io/api"

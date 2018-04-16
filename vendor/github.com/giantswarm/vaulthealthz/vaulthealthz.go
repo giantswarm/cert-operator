@@ -155,13 +155,19 @@ func (s *Service) updateTokenTTLMetric() error {
 	if !ok {
 		return microerror.Maskf(executionFailedError, "value of '%s' must exist in order to collect metrics for the Vault token expiration", ExpireTimeKey)
 	}
+
+	if key == nil {
+		s.logger.Log("level", "info", "message", "Vault token does not expire, skipping metric update")
+		return nil
+	}
+
 	e, ok := key.(string)
 	if !ok {
-		return microerror.Maskf(executionFailedError, "'%#v' must be string in order to collect metrics for the Vault token expiration", e)
+		return microerror.Maskf(executionFailedError, "'%#v' must be string in order to collect metrics for the Vault token expiration", key)
 	}
 	split := strings.Split(e, ".")
 	if len(split) == 0 {
-		return microerror.Maskf(executionFailedError, "'%#v' must have at least one item in order to collect metrics for the Vault token expiration", split)
+		return microerror.Maskf(executionFailedError, "'%#v' must have at least one item in order to collect metrics for the Vault token expiration", e)
 	}
 	expireTime := split[0]
 
