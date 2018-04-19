@@ -8,7 +8,7 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/client/k8scrdclient"
-	"github.com/giantswarm/operatorkit/framework"
+	"github.com/giantswarm/operatorkit/controller"
 	"github.com/giantswarm/operatorkit/informer"
 	"github.com/giantswarm/vaultcrt"
 	"github.com/giantswarm/vaultpki"
@@ -20,7 +20,7 @@ import (
 	"github.com/giantswarm/cert-operator/service/controller/v2"
 )
 
-type FrameworkConfig struct {
+type ControllerConfig struct {
 	G8sClient    versioned.Interface
 	K8sClient    kubernetes.Interface
 	K8sExtClient apiextensionsclient.Interface
@@ -34,7 +34,7 @@ type FrameworkConfig struct {
 	ProjectName         string
 }
 
-func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
+func NewController(config ControllerConfig) (*controller.Controller, error) {
 	if config.G8sClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "config.G8sClient must not be empty")
 	}
@@ -141,7 +141,7 @@ func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
 		}
 	}
 
-	var v2ResourceSet *framework.ResourceSet
+	var v2ResourceSet *controller.ResourceSet
 	{
 		c := v2.ResourceSetConfig{
 			K8sClient: config.K8sClient,
@@ -161,37 +161,39 @@ func NewFramework(config FrameworkConfig) (*framework.Framework, error) {
 		}
 	}
 
-	var resourceRouter *framework.ResourceRouter
+	var resourceRouter *controller.ResourceRouter
 	{
-		c := framework.ResourceRouterConfig{
+		c := controller.ResourceRouterConfig{
 			Logger: config.Logger,
 
-			ResourceSets: []*framework.ResourceSet{
+			ResourceSets: []*controller.ResourceSet{
 				v2ResourceSet,
 			},
 		}
 
-		resourceRouter, err = framework.NewResourceRouter(c)
+		resourceRouter, err = controller.NewResourceRouter(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
 	}
 
-	var crdFramework *framework.Framework
+	var crdController *controller.Controller
 	{
-		c := framework.Config{}
+		c := controller.Config{}
 
 		c.CRD = v1alpha1.NewCertConfigCRD()
 		c.CRDClient = crdClient
 		c.Informer = newInformer
 		c.Logger = config.Logger
+		c.Name = config.ProjectName
 		c.ResourceRouter = resourceRouter
+		c.RESTClient = config.G8sClient.CoreV1alpha1().RESTClient()
 
-		crdFramework, err = framework.New(c)
+		crdController, err = controller.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
 	}
 
-	return crdFramework, nil
+	return crdController, nil
 }

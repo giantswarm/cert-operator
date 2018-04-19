@@ -10,7 +10,7 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/client/k8srestconfig"
-	"github.com/giantswarm/operatorkit/framework"
+	operatorkitcontroller "github.com/giantswarm/operatorkit/controller"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -58,9 +58,9 @@ func DefaultConfig() Config {
 
 type Service struct {
 	// Dependencies.
-	CertConfigFramework *framework.Framework
-	Healthz             *healthz.Service
-	Version             *version.Service
+	CertConfigController *operatorkitcontroller.Controller
+	Healthz              *healthz.Service
+	Version              *version.Service
 
 	// Internals.
 	bootOnce sync.Once
@@ -126,9 +126,9 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var certConfigFramework *framework.Framework
+	var certConfigController *operatorkitcontroller.Controller
 	{
-		c := controller.FrameworkConfig{
+		c := controller.ControllerConfig{
 			G8sClient:    g8sClient,
 			K8sClient:    k8sClient,
 			K8sExtClient: k8sExtClient,
@@ -142,7 +142,7 @@ func New(config Config) (*Service, error) {
 			ProjectName:         config.Name,
 		}
 
-		certConfigFramework, err = controller.NewFramework(c)
+		certConfigController, err = controller.NewController(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -180,9 +180,9 @@ func New(config Config) (*Service, error) {
 
 	newService := &Service{
 		// Dependencies.
-		CertConfigFramework: certConfigFramework,
-		Healthz:             healthzService,
-		Version:             versionService,
+		CertConfigController: certConfigController,
+		Healthz:              healthzService,
+		Version:              versionService,
 
 		// Internals
 		bootOnce: sync.Once{},
@@ -193,6 +193,6 @@ func New(config Config) (*Service, error) {
 
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		go s.CertConfigFramework.Boot()
+		go s.CertConfigController.Boot()
 	})
 }
