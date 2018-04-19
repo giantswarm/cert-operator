@@ -39,6 +39,14 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		}
 	}
 
+	// In case a cluster deletion happens, we want to delete all secrets holding
+	// certificates. We still need the certificates for draining nodes on KVM
+	// though. So as long as pods are there we delay the deletion of the secrets
+	// here in order to still use them in the kvm-operator. The impact of this for
+	// AWS and Azure is zero, because when listing on namespaces that do not exist
+	// we get an empty list and thus do nothing here. For KVM, as soon as the
+	// draining was done and the pods got removed we get an empty list here after
+	// the delete event got replayed. Then we just remove the secrets as usual.
 	if key.IsInDeletionState(customObject) {
 		n := key.ClusterNamespace(customObject)
 		list, err := r.k8sClient.CoreV1().Pods(n).List(metav1.ListOptions{})
