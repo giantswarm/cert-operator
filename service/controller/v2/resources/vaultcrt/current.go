@@ -7,11 +7,11 @@ import (
 
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/operatorkit/framework/context/resourcecanceledcontext"
+	"github.com/giantswarm/operatorkit/controller/context/resourcecanceledcontext"
 	"github.com/prometheus/client_golang/prometheus"
-	apiv1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/giantswarm/cert-operator/service/controller/v2/key"
 )
@@ -24,9 +24,9 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 
 	r.logger.LogCtx(ctx, "level", "debug", "message", "looking for the secret in the Kubernetes API")
 
-	var secret *apiv1.Secret
+	var secret *corev1.Secret
 	{
-		manifest, err := r.k8sClient.Core().Secrets(r.namespace).Get(key.SecretName(customObject), apismetav1.GetOptions{})
+		manifest, err := r.k8sClient.Core().Secrets(r.namespace).Get(key.SecretName(customObject), metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			r.logger.LogCtx(ctx, "level", "debug", "message", "did not find the secret in the Kubernetes API")
 			// fall through
@@ -57,7 +57,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 	return secret, nil
 }
 
-func (r *Resource) updateVersionBundleVersionGauge(ctx context.Context, customObject v1alpha1.CertConfig, gauge *prometheus.GaugeVec, secret *apiv1.Secret) {
+func (r *Resource) updateVersionBundleVersionGauge(ctx context.Context, customObject v1alpha1.CertConfig, gauge *prometheus.GaugeVec, secret *corev1.Secret) {
 	version, ok := secret.Annotations[VersionBundleVersionAnnotation]
 	if !ok {
 		r.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf("cannot update current version bundle version metric: annotation '%s' must not be empty", VersionBundleVersionAnnotation))
