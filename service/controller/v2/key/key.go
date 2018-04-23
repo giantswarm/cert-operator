@@ -43,6 +43,10 @@ func CommonName(customObject v1alpha1.CertConfig) string {
 	return customObject.Spec.Cert.CommonName
 }
 
+func ClusterNamespace(customObject v1alpha1.CertConfig) string {
+	return ClusterID(customObject)
+}
+
 func CrtTTL(customObject v1alpha1.CertConfig) string {
 	return customObject.Spec.Cert.TTL
 }
@@ -62,6 +66,10 @@ func CustomObjectHash(customObject v1alpha1.CertConfig) (string, error) {
 
 func IPSANs(customObject v1alpha1.CertConfig) []string {
 	return customObject.Spec.Cert.IPSANs
+}
+
+func IsDeleted(customObject v1alpha1.CertConfig) bool {
+	return customObject.GetDeletionTimestamp() != nil
 }
 
 func Organizations(customObject v1alpha1.CertConfig) []string {
