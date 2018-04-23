@@ -68,7 +68,7 @@ func IPSANs(customObject v1alpha1.CertConfig) []string {
 	return customObject.Spec.Cert.IPSANs
 }
 
-func IsInDeletionState(customObject v1alpha1.CertConfig) bool {
+func IsDeleted(customObject v1alpha1.CertConfig) bool {
 	return customObject.GetDeletionTimestamp() != nil
 }
 
