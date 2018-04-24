@@ -20,7 +20,7 @@ import (
 	"github.com/giantswarm/cert-operator/service/controller/v2"
 )
 
-type ControllerConfig struct {
+type CertConfig struct {
 	G8sClient    versioned.Interface
 	K8sClient    kubernetes.Interface
 	K8sExtClient apiextensionsclient.Interface
@@ -34,7 +34,11 @@ type ControllerConfig struct {
 	ProjectName         string
 }
 
-func NewController(config ControllerConfig) (*controller.Controller, error) {
+type Cert struct {
+	*controller.Controller
+}
+
+func NewCert(config CertConfig) (*Cert, error) {
 	if config.G8sClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "config.G8sClient must not be empty")
 	}
@@ -177,7 +181,7 @@ func NewController(config ControllerConfig) (*controller.Controller, error) {
 		}
 	}
 
-	var crdController *controller.Controller
+	var operatorkitController *controller.Controller
 	{
 		c := controller.Config{}
 
@@ -189,11 +193,15 @@ func NewController(config ControllerConfig) (*controller.Controller, error) {
 		c.ResourceRouter = resourceRouter
 		c.RESTClient = config.G8sClient.CoreV1alpha1().RESTClient()
 
-		crdController, err = controller.New(c)
+		operatorkitController, err = controller.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
 	}
 
-	return crdController, nil
+	c := &Cert{
+		Controller: operatorkitController,
+	}
+
+	return c, nil
 }
