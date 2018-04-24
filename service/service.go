@@ -10,7 +10,6 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/client/k8srestconfig"
-	operatorkitcontroller "github.com/giantswarm/operatorkit/controller"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -23,7 +22,6 @@ import (
 	"github.com/giantswarm/cert-operator/service/healthz"
 )
 
-// Config represents the configuration used to create a new service.
 type Config struct {
 	// Dependencies.
 	Logger micrologger.Logger
@@ -38,8 +36,6 @@ type Config struct {
 	Source      string
 }
 
-// DefaultConfig provides a default configuration to create a new service by
-// best effort.
 func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
@@ -57,18 +53,14 @@ func DefaultConfig() Config {
 }
 
 type Service struct {
-	// Dependencies.
-	CertConfigController *operatorkitcontroller.Controller
-	Healthz              *healthz.Service
-	Version              *version.Service
+	Healthz *healthz.Service
+	Version *version.Service
 
-	// Internals.
-	bootOnce sync.Once
+	bootOnce       sync.Once
+	certController *controller.Cert
 }
 
-// New creates a new configured service object.
 func New(config Config) (*Service, error) {
-	// Settings.
 	if config.Flag == nil {
 		return nil, microerror.Maskf(invalidConfigError, "config.Flag must not be empty")
 	}
@@ -126,9 +118,9 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var certConfigController *operatorkitcontroller.Controller
+	var certController *controller.Cert
 	{
-		c := controller.ControllerConfig{
+		c := controller.CertConfig{
 			G8sClient:    g8sClient,
 			K8sClient:    k8sClient,
 			K8sExtClient: k8sExtClient,
@@ -142,7 +134,7 @@ func New(config Config) (*Service, error) {
 			ProjectName:         config.Name,
 		}
 
-		certConfigController, err = controller.NewController(c)
+		certController, err = controller.NewCert(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -179,13 +171,11 @@ func New(config Config) (*Service, error) {
 	}
 
 	newService := &Service{
-		// Dependencies.
-		CertConfigController: certConfigController,
-		Healthz:              healthzService,
-		Version:              versionService,
+		Healthz: healthzService,
+		Version: versionService,
 
-		// Internals
-		bootOnce: sync.Once{},
+		bootOnce:       sync.Once{},
+		certController: certController,
 	}
 
 	return newService, nil
@@ -193,6 +183,6 @@ func New(config Config) (*Service, error) {
 
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		go s.CertConfigController.Boot()
+		go s.certController.Boot()
 	})
 }
