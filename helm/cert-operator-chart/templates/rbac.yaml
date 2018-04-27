@@ -24,6 +24,12 @@ rules:
   - apiGroups:
       - ""
     resources:
+      - pods
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
       - namespaces
     verbs:
       - get
