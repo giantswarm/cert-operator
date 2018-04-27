@@ -2,6 +2,7 @@ package vaultcrt
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
@@ -32,7 +33,7 @@ func (r *Resource) ApplyUpdateChange(ctx context.Context, obj, updateChange inte
 		r.logger.LogCtx(ctx, "level", "debug", "message", "the secret does not need to be updated in the Kubernetes API")
 	}
 
-	return nil
+	return fmt.Errorf("test error to trigger metrics")
 }
 
 func (r *Resource) NewUpdatePatch(ctx context.Context, obj, currentState, desiredState interface{}) (*controller.Patch, error) {
