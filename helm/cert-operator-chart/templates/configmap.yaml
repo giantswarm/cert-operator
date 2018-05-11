@@ -18,7 +18,7 @@ data:
           keyFile: ''
       resource:
         vaultCrt:
-          expirationThreshold: '24h'
+          expirationThreshold: '14d'
           namespace: 'default'
       vault:
         config:
