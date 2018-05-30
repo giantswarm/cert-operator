@@ -3,7 +3,6 @@ package v2
 import (
 	"time"
 
-	"github.com/cenkalti/backoff"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/controller"
@@ -18,10 +17,6 @@ import (
 	vaultcrtresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultcrt"
 	vaultpkiresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultpki"
 	vaultroleresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultrole"
-)
-
-const (
-	ResourceRetries uint64 = 3
 )
 
 type ResourceSetConfig struct {
@@ -132,8 +127,7 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 
 	{
 		c := retryresource.WrapConfig{
-			BackOffFactory: func() backoff.BackOff { return backoff.WithMaxTries(backoff.NewExponentialBackOff(), ResourceRetries) },
-			Logger:         config.Logger,
+			Logger: config.Logger,
 		}
 
 		resources, err = retryresource.Wrap(resources, c)
