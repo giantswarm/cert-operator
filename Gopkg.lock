@@ -131,7 +131,7 @@
     "server",
     "tls"
   ]
-  revision = "e512bc900e56853249173da6028a45939ebe8e85"
+  revision = "77c2b7f4339670c6095d67d02d89fab885516575"
 
 [[projects]]
   branch = "master"
@@ -141,7 +141,7 @@
     "loggermeta",
     "microloggertest"
   ]
-  revision = "ad4de16de22043f947fdf6c587cbc2736456d33d"
+  revision = "39f8cfb7c2583edb28552d9e4b12193e5bddaf60"
 
 [[projects]]
   branch = "master"
@@ -161,7 +161,7 @@
     "controller/resource/retryresource",
     "informer"
   ]
-  revision = "e3fe290c80a7261362a6f30c3d9e65027db3e2e2"
+  revision = "178f1023df2fc4b7652ed03d77832c2370f45721"
 
 [[projects]]
   branch = "master"
@@ -203,7 +203,7 @@
   branch = "master"
   name = "github.com/giantswarm/versionbundle"
   packages = ["."]
-  revision = "36ba466124d6494c1772e6380756594ba996d081"
+  revision = "da2469c864842ff01892ad70b1f99b247b0a2aef"
 
 [[projects]]
   name = "github.com/go-kit/kit"
@@ -248,8 +248,8 @@
 [[projects]]
   name = "github.com/go-resty/resty"
   packages = ["."]
-  revision = "f0976a825c7520308909ce5a9e8b4f8675fdd6de"
-  version = "v1.5"
+  revision = "fc3ad735b5565cada42d34bc298573fd3fe5adc6"
+  version = "v1.6"
 
 [[projects]]
   name = "github.com/go-stack/stack"
@@ -449,14 +449,14 @@
 [[projects]]
   name = "github.com/matttproud/golang_protobuf_extensions"
   packages = ["pbutil"]
-  revision = "3247c84500bff8d9fb6d579d800f20b3e091582c"
-  version = "v1.0.0"
+  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+  version = "v1.0.1"
 
 [[projects]]
   branch = "master"
   name = "github.com/mitchellh/go-homedir"
   packages = ["."]
-  revision = "b8bc1bf767474819792c23f32d8286a45736f1c6"
+  revision = "3864e76763d94a6df2f9960b16a20a33da9f9a66"
 
 [[projects]]
   branch = "master"
@@ -507,7 +507,7 @@
     "prometheus",
     "prometheus/promhttp"
   ]
-  revision = "c51dc758d4bb30acacbef9eaa2b774969a135086"
+  revision = "42bc0a18c2207d46ac4039bbb6b4cf1507872837"
 
 [[projects]]
   branch = "master"
@@ -534,7 +534,7 @@
     "nfs",
     "xfs"
   ]
-  revision = "8b1c2da0d56deffdbb9e48d4414b4e674bd8083e"
+  revision = "fe93d378a6b03758a2c1b65e86cf630bf78681c0"
 
 [[projects]]
   name = "github.com/sethgrid/pester"
@@ -588,16 +588,10 @@
   version = "v1.2.1"
 
 [[projects]]
-  name = "github.com/tylerb/graceful"
-  packages = ["."]
-  revision = "4654dfbb6ad53cb5e27f37d99b02e16c1872fbbb"
-  version = "v1.2.15"
-
-[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "1a580b3eff7814fc9b40602fd35256c63b50f491"
+  revision = "ab813273cd59e1333f7ae7bff5d027d4aadf528c"
 
 [[projects]]
   branch = "master"
@@ -610,7 +604,7 @@
     "idna",
     "publicsuffix"
   ]
-  revision = "8e0cdda24ed423affc8f35c241e5e9b16180338e"
+  revision = "89e543239a64caf31d3a6865872ea120b41446df"
 
 [[projects]]
   branch = "master"
@@ -625,7 +619,7 @@
     "unix",
     "windows"
   ]
-  revision = "7c87d13f8e835d2fb3a70a2912c811ed0c1d241b"
+  revision = "c11f84a56e43e20a78cee75a7c034031ecf57d1f"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -844,7 +838,7 @@
   branch = "master"
   name = "k8s.io/kube-openapi"
   packages = ["pkg/common"]
-  revision = "67793630244cabba12e91ce1ec8d0d0b40802b56"
+  revision = "98b5c3f6a62e3f879d7017752989c925732b6c7d"
 
 [solve-meta]
   analyzer-name = "dep"
