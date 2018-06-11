@@ -26,15 +26,15 @@
   version = "1.1.0"
 
 [[constraint]]
-  branch = "k8s-1.10.4"
+  branch = "master"
   name = "github.com/giantswarm/apiextensions"
 
 [[constraint]]
-  branch = "k8s-1.10.4"
+  branch = "master"
   name = "github.com/giantswarm/certs"
 
 [[constraint]]
-  branch = "k8s-1.10.4"
+  branch = "master"
   name = "github.com/giantswarm/e2e-harness"
 
 [[constraint]]
@@ -58,7 +58,7 @@
   name = "github.com/giantswarm/micrologger"
 
 [[constraint]]
-  branch = "k8s-1.10.4"
+  branch = "master"
   name = "github.com/giantswarm/operatorkit"
 
 [[constraint]]
