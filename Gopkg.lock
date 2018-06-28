@@ -143,14 +143,14 @@
   revision = "d80fdea79511051e5f7fbd585a98b5919671ea45"
 
 [[projects]]
-  branch = "json-number"
+  branch = "master"
   name = "github.com/giantswarm/vaultcrt"
   packages = [
     ".",
     "key",
     "vaultcrttest"
   ]
-  revision = "2cee624b67086d0a8f3752e32f3dbc235fc1166e"
+  revision = "12b600d565d65aeffe3224358c6bb6765c7a6042"
 
 [[projects]]
   branch = "master"
@@ -169,14 +169,14 @@
   revision = "ce0d83b1762a2cb0b41333963cd3c69cefde5d75"
 
 [[projects]]
-  branch = "json-number"
+  branch = "master"
   name = "github.com/giantswarm/vaultrole"
   packages = [
     ".",
     "key",
     "vaultroletest"
   ]
-  revision = "d0a666e7174121ad3e20a08c174286f0d2be2f00"
+  revision = "0ed480b92efb4a819acff15316b12db0d3cf415e"
 
 [[projects]]
   branch = "master"
@@ -758,6 +758,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6700b91dfb158320893da9c749fe89028a50d8e1b04ec56c0dc484b07f17730a"
+  inputs-digest = "b243882dc3f3edaaa97cb7e747eca0253c7a29cb272c12aab853511976a22c8a"
   solver-name = "gps-cdcl"
   solver-version = 1

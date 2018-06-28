@@ -62,7 +62,7 @@
   name = "github.com/giantswarm/operatorkit"
 
 [[constraint]]
-  branch = "json-number"
+  branch = "master"
   name = "github.com/giantswarm/vaultcrt"
 
 [[constraint]]
@@ -74,7 +74,7 @@
   name = "github.com/giantswarm/vaultpki"
 
 [[constraint]]
-  branch = "json-number"
+  branch = "master"
   name = "github.com/giantswarm/vaultrole"
 
 [[constraint]]
