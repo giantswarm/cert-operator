@@ -30,7 +30,7 @@
   name = "github.com/giantswarm/micrologger"
 
 [[constraint]]
-  branch = "master"
+  branch = "json-number"
   name = "github.com/giantswarm/vaultrole"
 
 [[constraint]]

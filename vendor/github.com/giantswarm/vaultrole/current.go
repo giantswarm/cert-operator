@@ -1,6 +1,8 @@
 package vaultrole
 
 import (
+	"encoding/json"
+
 	"github.com/giantswarm/microerror"
 	"github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/helper/parseutil"
@@ -158,12 +160,12 @@ func vaultSecretToRole(secret *api.Secret) (Role, error) {
 			return Role{}, microerror.Maskf(invalidVaultResponseError, "ttl missing from Vault api.Secret.Data")
 		}
 
-		ttlStr, ok := v.(string)
+		ttlStr, ok := v.(json.Number)
 		if !ok {
 			return Role{}, microerror.Maskf(invalidVaultResponseError, "Vault secret.Data[\"ttl\"] type is %T, expected %T", secret.Data["ttl"], ttlStr)
 		}
 
-		ttl, err := parseutil.ParseDurationSecond(ttlStr)
+		ttl, err := parseutil.ParseDurationSecond(ttlStr.String())
 		if err != nil {
 			return Role{}, microerror.Mask(err)
 		}
