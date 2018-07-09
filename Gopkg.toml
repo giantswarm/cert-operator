@@ -62,19 +62,19 @@
   name = "github.com/giantswarm/operatorkit"
 
 [[constraint]]
-  branch = "master"
+  branch = "update-vault"
   name = "github.com/giantswarm/vaultcrt"
 
 [[constraint]]
-  branch = "master"
+  branch = "update-vault"
   name = "github.com/giantswarm/vaulthealthz"
 
 [[constraint]]
-  branch = "master"
+  branch = "update-vault"
   name = "github.com/giantswarm/vaultpki"
 
 [[constraint]]
-  branch = "master"
+  branch = "vault-update"
   name = "github.com/giantswarm/vaultrole"
 
 [[constraint]]
@@ -83,7 +83,7 @@
 
 [[constraint]]
   name = "github.com/hashicorp/vault"
-  version = "0.7.3"
+  version = "0.10.3"
 
 [[constraint]]
   branch = "master"

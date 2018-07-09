@@ -26,12 +26,6 @@
   version = "v1.1.0"
 
 [[projects]]
-  name = "github.com/fatih/structs"
-  packages = ["."]
-  revision = "a720dfa8df582c51dee1b36feabb906bde1588bd"
-  version = "v1.0"
-
-[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
@@ -143,40 +137,40 @@
   revision = "d80fdea79511051e5f7fbd585a98b5919671ea45"
 
 [[projects]]
-  branch = "master"
+  branch = "update-vault"
   name = "github.com/giantswarm/vaultcrt"
   packages = [
     ".",
     "key",
     "vaultcrttest"
   ]
-  revision = "12b600d565d65aeffe3224358c6bb6765c7a6042"
+  revision = "39ff1036cee3eadcddab65594edf36eba751e467"
 
 [[projects]]
-  branch = "master"
+  branch = "update-vault"
   name = "github.com/giantswarm/vaulthealthz"
   packages = ["."]
-  revision = "1a6053078e82506a7d34ff4bf9b94fe7f2be81cc"
+  revision = "5bcfcffab0d189f23cff2766c4b23e056f7fe395"
 
 [[projects]]
-  branch = "master"
+  branch = "update-vault"
   name = "github.com/giantswarm/vaultpki"
   packages = [
     ".",
     "key",
     "vaultpkitest"
   ]
-  revision = "ce0d83b1762a2cb0b41333963cd3c69cefde5d75"
+  revision = "2621c101ea8b78d9e0b00bb4ec11db7507187f39"
 
 [[projects]]
-  branch = "master"
+  branch = "vault-update"
   name = "github.com/giantswarm/vaultrole"
   packages = [
     ".",
     "key",
     "vaultroletest"
   ]
-  revision = "0ed480b92efb4a819acff15316b12db0d3cf415e"
+  revision = "576ff8099af8732c45b594b5f62ca653fdd41242"
 
 [[projects]]
   branch = "master"
@@ -241,6 +235,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/golang/snappy"
+  packages = ["."]
+  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
+
+[[projects]]
+  branch = "master"
   name = "github.com/google/gofuzz"
   packages = ["."]
   revision = "24818f796faf91cd76ec7bddd72458fbced7a6c1"
@@ -287,9 +287,21 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/hashicorp/go-retryablehttp"
+  packages = ["."]
+  revision = "3b087ef2d313afe6c55b2f511d20db04ca767075"
+
+[[projects]]
+  branch = "master"
   name = "github.com/hashicorp/go-rootcerts"
   packages = ["."]
   revision = "6bb64b370b90e7ef1fa532be9e591a81c3493e00"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/go-sockaddr"
+  packages = ["."]
+  revision = "6d291a969b86c4b633730bfc6b8b9d64c3aafed9"
 
 [[projects]]
   branch = "master"
@@ -322,11 +334,13 @@
   packages = [
     "api",
     "helper/compressutil",
+    "helper/hclutil",
     "helper/jsonutil",
-    "helper/parseutil"
+    "helper/parseutil",
+    "helper/strutil"
   ]
-  revision = "0b20ae0b9b7a748d607082b1add3663a28e31b68"
-  version = "v0.7.3"
+  revision = "533003e27840d9646cb4e7d23b3a113895da1dd0"
+  version = "v0.10.3"
 
 [[projects]]
   branch = "master"
@@ -449,10 +463,10 @@
   revision = "7d6f385de8bea29190f15ba9931442a0eaef9af7"
 
 [[projects]]
-  name = "github.com/sethgrid/pester"
+  name = "github.com/ryanuber/go-glob"
   packages = ["."]
-  revision = "03e26c9abbbf5accb8349790bf9f41bde09d72c3"
-  version = "1.0.0"
+  revision = "572520ed46dbddaed19ea3d9541bdd0494163693"
+  version = "v0.1"
 
 [[projects]]
   name = "github.com/spf13/afero"
@@ -758,6 +772,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b243882dc3f3edaaa97cb7e747eca0253c7a29cb272c12aab853511976a22c8a"
+  inputs-digest = "295969d7e3dccca3baf82138371c8501c2c9aab65fdbaa95c9742305bc577879"
   solver-name = "gps-cdcl"
   solver-version = 1
