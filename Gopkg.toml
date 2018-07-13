@@ -62,19 +62,19 @@
   name = "github.com/giantswarm/operatorkit"
 
 [[constraint]]
-  branch = "update-vault"
+  branch = "master"
   name = "github.com/giantswarm/vaultcrt"
 
 [[constraint]]
-  branch = "update-vault"
+  branch = "master"
   name = "github.com/giantswarm/vaulthealthz"
 
 [[constraint]]
-  branch = "update-vault"
+  branch = "master"
   name = "github.com/giantswarm/vaultpki"
 
 [[constraint]]
-  branch = "vault-update"
+  branch = "master"
   name = "github.com/giantswarm/vaultrole"
 
 [[constraint]]
