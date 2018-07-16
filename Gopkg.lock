@@ -50,19 +50,19 @@
     "pkg/clientset/versioned/typed/example/v1alpha1",
     "pkg/clientset/versioned/typed/provider/v1alpha1"
   ]
-  revision = "b36353d32264a2b985933df2baf84123e2eebcdd"
+  revision = "5c73f54d12aa215b903e87975a3166c8a2eb9c51"
 
 [[projects]]
   branch = "master"
   name = "github.com/giantswarm/certs"
   packages = ["."]
-  revision = "04529861e1d707d6edb01808e1d9870e1b48c711"
+  revision = "fa0af96de35e5a2d7c51f5ba9e49a4f346496c00"
 
 [[projects]]
   branch = "master"
   name = "github.com/giantswarm/e2e-harness"
   packages = ["pkg/harness"]
-  revision = "fd0ebd0ec770f6ffb095dc5daa2fa23ca505e762"
+  revision = "4e46ca575b4e7fded983e72facad8da587a21f1c"
 
 [[projects]]
   branch = "master"
@@ -117,7 +117,7 @@
   revision = "39f8cfb7c2583edb28552d9e4b12193e5bddaf60"
 
 [[projects]]
-  branch = "master"
+  branch = "merge-router"
   name = "github.com/giantswarm/operatorkit"
   packages = [
     "client/k8scrdclient",
@@ -134,49 +134,49 @@
     "controller/resource/retryresource",
     "informer"
   ]
-  revision = "d80fdea79511051e5f7fbd585a98b5919671ea45"
+  revision = "eca84cd810cfa584bdc507b55dbbdf356c77e176"
 
 [[projects]]
-  branch = "update-vault"
+  branch = "master"
   name = "github.com/giantswarm/vaultcrt"
   packages = [
     ".",
     "key",
     "vaultcrttest"
   ]
-  revision = "39ff1036cee3eadcddab65594edf36eba751e467"
+  revision = "7d3ce4856bc253eed31fcb1c43ae64f0e3191fee"
 
 [[projects]]
-  branch = "update-vault"
+  branch = "master"
   name = "github.com/giantswarm/vaulthealthz"
   packages = ["."]
-  revision = "5bcfcffab0d189f23cff2766c4b23e056f7fe395"
+  revision = "10c5e1647fa7b54f41b80c3ef12e6eefe8297f32"
 
 [[projects]]
-  branch = "update-vault"
+  branch = "master"
   name = "github.com/giantswarm/vaultpki"
   packages = [
     ".",
     "key",
     "vaultpkitest"
   ]
-  revision = "2621c101ea8b78d9e0b00bb4ec11db7507187f39"
+  revision = "68828ab80601a965cb365a15fc6be8f129500dea"
 
 [[projects]]
-  branch = "vault-update"
+  branch = "master"
   name = "github.com/giantswarm/vaultrole"
   packages = [
     ".",
     "key",
     "vaultroletest"
   ]
-  revision = "576ff8099af8732c45b594b5f62ca653fdd41242"
+  revision = "7ad001e5cf54c8a8e7cece086960ef18cd59cf8a"
 
 [[projects]]
   branch = "master"
   name = "github.com/giantswarm/versionbundle"
   packages = ["."]
-  revision = "5a861dc7cd1cc6c24816af3aadadb85ea1b372ff"
+  revision = "57f08180f2122ea89e07d16e841f83020ef07577"
 
 [[projects]]
   name = "github.com/go-kit/kit"
@@ -197,8 +197,8 @@
 [[projects]]
   name = "github.com/go-resty/resty"
   packages = ["."]
-  revision = "fc3ad735b5565cada42d34bc298573fd3fe5adc6"
-  version = "v1.6"
+  revision = "fccc498aed22c31ff3768bcac00795f94149a21d"
+  version = "v1.7.0"
 
 [[projects]]
   name = "github.com/go-stack/stack"
@@ -212,8 +212,8 @@
     "proto",
     "sortkeys"
   ]
-  revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
-  version = "v1.0.0"
+  revision = "7d68e886eac4f7e34d0d82241a6273d6c304c5cf"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -271,7 +271,7 @@
   branch = "master"
   name = "github.com/hashicorp/errwrap"
   packages = ["."]
-  revision = "7554cd9344cec97297fa6649b055a8c98c2a1e55"
+  revision = "d6c0cd88035724dd42e0f335ae30161c20575ecc"
 
 [[projects]]
   branch = "master"
@@ -283,7 +283,7 @@
   branch = "master"
   name = "github.com/hashicorp/go-multierror"
   packages = ["."]
-  revision = "b7773ae218740a7be65057fc60b366a49b538a44"
+  revision = "12f8a7e29b823bba3e5ca3d9526b96ddfca48906"
 
 [[projects]]
   branch = "master"
@@ -363,8 +363,8 @@
 [[projects]]
   name = "github.com/json-iterator/go"
   packages = ["."]
-  revision = "ca39e5af3ece67bbcda3d0f4f56a8e24d9f2dad4"
-  version = "1.1.3"
+  revision = "ab8a2e0c74be9d3be70b3184d9acc634935ded82"
+  version = "1.1.4"
 
 [[projects]]
   branch = "master"
@@ -400,7 +400,7 @@
   branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
-  revision = "bb74f1db0675b241733089d5a1faa5dd8b0ef57b"
+  revision = "f15292f7a699fcc1a38a80977f80a046874ba8ac"
 
 [[projects]]
   name = "github.com/modern-go/concurrent"
@@ -411,8 +411,8 @@
 [[projects]]
   name = "github.com/modern-go/reflect2"
   packages = ["."]
-  revision = "1df9eeb2bb81f327b96228865c5687bc2194af3f"
-  version = "1.0.0"
+  revision = "4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd"
+  version = "1.0.1"
 
 [[projects]]
   name = "github.com/pelletier/go-toml"
@@ -433,13 +433,13 @@
     "prometheus",
     "prometheus/promhttp"
   ]
-  revision = "77e8f2ddcfed59ece3a8151879efb2304b5cbbcf"
+  revision = "bcbbc08eb2ddff3af83bbf11e7ec13b4fd730b6e"
 
 [[projects]]
   branch = "master"
   name = "github.com/prometheus/client_model"
   packages = ["go"]
-  revision = "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c"
+  revision = "5c3871d89910bfb32f5fcab2aa4b9ec68e65a99f"
 
 [[projects]]
   branch = "master"
@@ -460,7 +460,7 @@
     "nfs",
     "xfs"
   ]
-  revision = "7d6f385de8bea29190f15ba9931442a0eaef9af7"
+  revision = "ae68e2d4c00fed4943b5f6698d504a5fe083da8a"
 
 [[projects]]
   name = "github.com/ryanuber/go-glob"
@@ -530,7 +530,7 @@
     "idna",
     "publicsuffix"
   ]
-  revision = "d1d521f6884855bc0e59c3d011574bd0678f18bc"
+  revision = "d0887baf81f4598189d4e12a37c6da86f0bba4d0"
 
 [[projects]]
   branch = "master"
@@ -545,7 +545,7 @@
     "unix",
     "windows"
   ]
-  revision = "7138fd3d9dc8335c567ca206f4333fb75eb05d56"
+  revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -587,7 +587,6 @@
   version = "v2.2.1"
 
 [[projects]]
-  branch = "release-1.10"
   name = "k8s.io/api"
   packages = [
     "admissionregistration/v1alpha1",
@@ -620,6 +619,7 @@
     "storage/v1beta1"
   ]
   revision = "8b7507fac302640dd5f1efbf9643199952cc58db"
+  version = "kubernetes-1.10.4"
 
 [[projects]]
   name = "k8s.io/apiextensions-apiserver"
@@ -772,6 +772,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "295969d7e3dccca3baf82138371c8501c2c9aab65fdbaa95c9742305bc577879"
+  inputs-digest = "63b27c02d8ed81fb51aba86d3175b66f4778fc116c68d0a6ab9feb367a705526"
   solver-name = "gps-cdcl"
   solver-version = 1
