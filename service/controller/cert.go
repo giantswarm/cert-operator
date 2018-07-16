@@ -166,33 +166,19 @@ func NewCert(config CertConfig) (*Cert, error) {
 		}
 	}
 
-	var resourceRouter *controller.ResourceRouter
+	var operatorkitController *controller.Controller
 	{
-		c := controller.ResourceRouterConfig{
-			Logger: config.Logger,
-
+		c := controller.Config{
+			CRD:       v1alpha1.NewCertConfigCRD(),
+			CRDClient: crdClient,
+			Informer:  newInformer,
+			Logger:    config.Logger,
+			Name:      config.ProjectName,
 			ResourceSets: []*controller.ResourceSet{
 				v2ResourceSet,
 			},
+			RESTClient: config.G8sClient.CoreV1alpha1().RESTClient(),
 		}
-
-		resourceRouter, err = controller.NewResourceRouter(c)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
-
-	var operatorkitController *controller.Controller
-	{
-		c := controller.Config{}
-
-		c.CRD = v1alpha1.NewCertConfigCRD()
-		c.CRDClient = crdClient
-		c.Informer = newInformer
-		c.Logger = config.Logger
-		c.Name = config.ProjectName
-		c.ResourceRouter = resourceRouter
-		c.RESTClient = config.G8sClient.CoreV1alpha1().RESTClient()
 
 		operatorkitController, err = controller.New(c)
 		if err != nil {
