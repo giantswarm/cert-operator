@@ -50,7 +50,7 @@
     "pkg/clientset/versioned/typed/example/v1alpha1",
     "pkg/clientset/versioned/typed/provider/v1alpha1"
   ]
-  revision = "5c73f54d12aa215b903e87975a3166c8a2eb9c51"
+  revision = "6cb2b75722069008d2a01e29be897236224c9f9f"
 
 [[projects]]
   branch = "master"
@@ -117,7 +117,7 @@
   revision = "39f8cfb7c2583edb28552d9e4b12193e5bddaf60"
 
 [[projects]]
-  branch = "merge-router"
+  branch = "master"
   name = "github.com/giantswarm/operatorkit"
   packages = [
     "client/k8scrdclient",
@@ -134,7 +134,7 @@
     "controller/resource/retryresource",
     "informer"
   ]
-  revision = "eca84cd810cfa584bdc507b55dbbdf356c77e176"
+  revision = "e299b3f2585f09f50ce40debe7aab42345deb7e0"
 
 [[projects]]
   branch = "master"
@@ -772,6 +772,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "63b27c02d8ed81fb51aba86d3175b66f4778fc116c68d0a6ab9feb367a705526"
+  inputs-digest = "24277ea36fe0b844fe3587756195e56aa99fd80df9472ef3ad0273674551e76d"
   solver-name = "gps-cdcl"
   solver-version = 1
