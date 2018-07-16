@@ -16,7 +16,7 @@ func VersionBundle() versionbundle.Bundle {
 		Components: []versionbundle.Component{
 			{
 				Name:    "vault",
-				Version: "0.7.3",
+				Version: "0.10.3",
 			},
 		},
 		Name:    "cert-operator",

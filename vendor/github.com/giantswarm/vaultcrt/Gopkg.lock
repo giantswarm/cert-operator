@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/fatih/structs"
-  packages = ["."]
-  revision = "a720dfa8df582c51dee1b36feabb906bde1588bd"
-  version = "v1.0"
-
-[[projects]]
   branch = "master"
   name = "github.com/giantswarm/microerror"
   packages = ["."]
@@ -23,10 +17,10 @@
   revision = "39f8cfb7c2583edb28552d9e4b12193e5bddaf60"
 
 [[projects]]
-  branch = "master"
+  branch = "vault-update"
   name = "github.com/giantswarm/vaultrole"
   packages = ["key"]
-  revision = "0ed480b92efb4a819acff15316b12db0d3cf415e"
+  revision = "576ff8099af8732c45b594b5f62ca653fdd41242"
 
 [[projects]]
   name = "github.com/go-kit/kit"
@@ -48,6 +42,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/golang/snappy"
+  packages = ["."]
+  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
+
+[[projects]]
+  branch = "master"
   name = "github.com/hashicorp/errwrap"
   packages = ["."]
   revision = "7554cd9344cec97297fa6649b055a8c98c2a1e55"
@@ -66,9 +66,21 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/hashicorp/go-retryablehttp"
+  packages = ["."]
+  revision = "3b087ef2d313afe6c55b2f511d20db04ca767075"
+
+[[projects]]
+  branch = "master"
   name = "github.com/hashicorp/go-rootcerts"
   packages = ["."]
   revision = "6bb64b370b90e7ef1fa532be9e591a81c3493e00"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/go-sockaddr"
+  packages = ["."]
+  revision = "6d291a969b86c4b633730bfc6b8b9d64c3aafed9"
 
 [[projects]]
   branch = "master"
@@ -91,10 +103,13 @@
   packages = [
     "api",
     "helper/compressutil",
-    "helper/jsonutil"
+    "helper/hclutil",
+    "helper/jsonutil",
+    "helper/parseutil",
+    "helper/strutil"
   ]
-  revision = "0b20ae0b9b7a748d607082b1add3663a28e31b68"
-  version = "v0.7.3"
+  revision = "533003e27840d9646cb4e7d23b3a113895da1dd0"
+  version = "v0.10.3"
 
 [[projects]]
   branch = "master"
@@ -121,21 +136,22 @@
   revision = "bb74f1db0675b241733089d5a1faa5dd8b0ef57b"
 
 [[projects]]
-  name = "github.com/sethgrid/pester"
+  name = "github.com/ryanuber/go-glob"
   packages = ["."]
-  revision = "03e26c9abbbf5accb8349790bf9f41bde09d72c3"
-  version = "1.0.0"
+  revision = "572520ed46dbddaed19ea3d9541bdd0494163693"
+  version = "v0.1"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = [
+    "context",
     "http/httpguts",
     "http2",
     "http2/hpack",
     "idna"
   ]
-  revision = "d1d521f6884855bc0e59c3d011574bd0678f18bc"
+  revision = "6f138e0f60713a248abf7046f1014a3ba90f5341"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -158,9 +174,15 @@
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/time"
+  packages = ["rate"]
+  revision = "fbb02b2291d28baffd63558aa44b4b56f178d650"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e16fff8c7236cc8fac644602f060f1f61f30d95d9542569cc693289c0504fc10"
+  inputs-digest = "0849dfaccc9db2a55c72e13c9f3ae22e8625a4685b0e93b20312c43a058376d3"
   solver-name = "gps-cdcl"
   solver-version = 1

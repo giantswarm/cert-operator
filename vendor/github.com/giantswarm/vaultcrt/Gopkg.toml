@@ -30,9 +30,14 @@
   name = "github.com/giantswarm/micrologger"
 
 [[constraint]]
-  branch = "master"
+  # TODO: Change to master when everything tested
+  branch = "vault-update"
   name = "github.com/giantswarm/vaultrole"
 
 [[constraint]]
   name = "github.com/hashicorp/vault"
-  version = "0.7.3"
+  version = "0.10.3"
+
+[prune]
+  go-tests = true
+  unused-packages = true
