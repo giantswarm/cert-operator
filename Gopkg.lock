@@ -50,7 +50,7 @@
     "pkg/clientset/versioned/typed/example/v1alpha1",
     "pkg/clientset/versioned/typed/provider/v1alpha1"
   ]
-  revision = "6cb2b75722069008d2a01e29be897236224c9f9f"
+  revision = "dbe7aa4771048f64040c9e6148a708c21226a1b2"
 
 [[projects]]
   branch = "master"
@@ -62,7 +62,7 @@
   branch = "master"
   name = "github.com/giantswarm/e2e-harness"
   packages = ["pkg/harness"]
-  revision = "4e46ca575b4e7fded983e72facad8da587a21f1c"
+  revision = "280a83f10efb0ccd3a7546d7300641719448870b"
 
 [[projects]]
   branch = "master"
@@ -134,7 +134,7 @@
     "controller/resource/retryresource",
     "informer"
   ]
-  revision = "e299b3f2585f09f50ce40debe7aab42345deb7e0"
+  revision = "b549537227f0b5de6525ed65361a4bc660ba90c4"
 
 [[projects]]
   branch = "master"
@@ -212,8 +212,8 @@
     "proto",
     "sortkeys"
   ]
-  revision = "7d68e886eac4f7e34d0d82241a6273d6c304c5cf"
-  version = "v1.1.0"
+  revision = "636bf0302bc95575d69441b25a2603156ffdddf1"
+  version = "v1.1.1"
 
 [[projects]]
   branch = "master"
@@ -283,13 +283,13 @@
   branch = "master"
   name = "github.com/hashicorp/go-multierror"
   packages = ["."]
-  revision = "12f8a7e29b823bba3e5ca3d9526b96ddfca48906"
+  revision = "3d5d8f294aa03d8e98859feac328afbdf1ae0703"
 
 [[projects]]
   branch = "master"
   name = "github.com/hashicorp/go-retryablehttp"
   packages = ["."]
-  revision = "3b087ef2d313afe6c55b2f511d20db04ca767075"
+  revision = "e651d75abec6fbd4f2c09508f72ae7af8a8b7171"
 
 [[projects]]
   branch = "master"
@@ -517,7 +517,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
+  revision = "c126467f60eb25f8f27e5a981f32a87e3965053f"
 
 [[projects]]
   branch = "master"
@@ -530,7 +530,7 @@
     "idna",
     "publicsuffix"
   ]
-  revision = "d0887baf81f4598189d4e12a37c6da86f0bba4d0"
+  revision = "a680a1efc54dd51c040b3b5ce4939ea3cf2ea0d1"
 
 [[projects]]
   branch = "master"
