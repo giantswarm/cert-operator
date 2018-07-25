@@ -41,8 +41,10 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 						VersionBundleVersionAnnotation: "0.1.0",
 					},
 					Labels: map[string]string{
-						"clusterID":        "foobar",
-						"clusterComponent": "api",
+						"clusterID":                 "foobar",
+						"clusterComponent":          "api",
+						"giantswarm.io/cluster":     "foobar",
+						"giantswarm.io/certificate": "api",
 					},
 				},
 				StringData: map[string]string{
@@ -75,8 +77,10 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 						VersionBundleVersionAnnotation: "0.2.0",
 					},
 					Labels: map[string]string{
-						"clusterID":        "al9qy",
-						"clusterComponent": "worker",
+						"clusterID":                 "al9qy",
+						"clusterComponent":          "worker",
+						"giantswarm.io/cluster":     "al9qy",
+						"giantswarm.io/certificate": "worker",
 					},
 				},
 				StringData: map[string]string{

@@ -35,10 +35,7 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 				UpdateTimestampAnnotation:      r.currentTimeFactory().In(time.UTC).Format(UpdateTimestampLayout),
 				VersionBundleVersionAnnotation: key.VersionBundleVersion(customObject),
 			},
-			Labels: map[string]string{
-				key.ClusterIDLabel: key.ClusterID(customObject),
-				key.ComponentLabel: key.ClusterComponent(customObject),
-			},
+			Labels: key.SecretLabels(customObject),
 		},
 		StringData: map[string]string{
 			key.CAID:  "",

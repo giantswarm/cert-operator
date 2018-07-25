@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
+	"github.com/giantswarm/certs"
 	"github.com/giantswarm/microerror"
 )
 
@@ -13,14 +14,6 @@ const (
 	CAID  = "ca"
 	CrtID = "crt"
 	KeyID = "key"
-)
-
-const (
-	// ComponentLabel is the label used in the secret to identify a cluster
-	// component.
-	ComponentLabel string = "clusterComponent"
-	// ClusterIDLabel is the label used in the secret to identify a cluster.
-	ClusterIDLabel string = "clusterID"
 )
 
 func AllowBareDomains(customObject v1alpha1.CertConfig) bool {
@@ -33,10 +26,6 @@ func AltNames(customObject v1alpha1.CertConfig) []string {
 
 func ClusterID(customObject v1alpha1.CertConfig) string {
 	return customObject.Spec.Cert.ClusterID
-}
-
-func ClusterComponent(customObject v1alpha1.CertConfig) string {
-	return customObject.Spec.Cert.ClusterComponent
 }
 
 func CommonName(customObject v1alpha1.CertConfig) string {
@@ -77,12 +66,18 @@ func Organizations(customObject v1alpha1.CertConfig) []string {
 	return append(a, customObject.Spec.Cert.Organizations...)
 }
 
-func SecretName(customObject v1alpha1.CertConfig) string {
-	return fmt.Sprintf("%s-%s", ClusterID(customObject), ClusterComponent(customObject))
-}
-
 func RoleTTL(customObject v1alpha1.CertConfig) string {
 	return customObject.Spec.Cert.TTL
+}
+
+func SecretName(customObject v1alpha1.CertConfig) string {
+	cert := certs.Cert(customObject.Spec.Cert.ClusterComponent)
+	return certs.K8sName(ClusterID(customObject), cert)
+}
+
+func SecretLabels(customObject v1alpha1.CertConfig) map[string]string {
+	cert := certs.Cert(customObject.Spec.Cert.ClusterComponent)
+	return certs.K8sLabels(ClusterID(customObject), cert)
 }
 
 func ToCustomObject(v interface{}) (v1alpha1.CertConfig, error) {
