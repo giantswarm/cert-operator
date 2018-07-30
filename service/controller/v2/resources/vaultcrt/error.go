@@ -5,6 +5,7 @@ import (
 )
 
 var missingAnnotationError = &microerror.Error{
+	Docs: "https://github.com/giantswarm/ops-recipes",
 	Kind: "missingAnnotationError",
 }
 
