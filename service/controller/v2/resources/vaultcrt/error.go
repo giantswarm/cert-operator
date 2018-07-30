@@ -4,21 +4,27 @@ import (
 	"github.com/giantswarm/microerror"
 )
 
-var missingAnnotationError = microerror.New("missing annotation")
+var missingAnnotationError = &microerror.Error{
+	Kind: "missingAnnotationError",
+}
 
 // IsMissingAnnotation asserts missingAnnotationError.
 func IsMissingAnnotation(err error) bool {
 	return microerror.Cause(err) == missingAnnotationError
 }
 
-var invalidConfigError = microerror.New("invalid config")
+var invalidConfigError = &microerror.Error{
+	Kind: "invalidConfigError",
+}
 
 // IsInvalidConfig asserts invalidConfigError.
 func IsInvalidConfig(err error) bool {
 	return microerror.Cause(err) == invalidConfigError
 }
 
-var wrongTypeError = microerror.New("wrong type")
+var wrongTypeError = &microerror.Error{
+	Kind: "wrongTypeError",
+}
 
 // IsWrongTypeError asserts wrongTypeError.
 func IsWrongTypeError(err error) bool {
