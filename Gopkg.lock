@@ -85,7 +85,7 @@
   branch = "master"
   name = "github.com/giantswarm/microerror"
   packages = ["."]
-  revision = "12e90ad09cb2440d9510ed82cabb7a1ea839b263"
+  revision = "a8d5d4f526c526b4b773062958847fe7e0b7f449"
 
 [[projects]]
   branch = "master"
