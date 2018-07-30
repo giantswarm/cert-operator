@@ -2,8 +2,14 @@ package integration
 
 import "github.com/giantswarm/microerror"
 
-var waitTimeoutError = microerror.New("waitTimeout")
+var waitTimeoutError = &microerror.Error{
+	Kind: "waitTimeoutError",
+}
 
-var tooManyResultsError = microerror.New("too many results")
+var tooManyResultsError = &microerror.Error{
+	Kind: "tooManyResultsError",
+}
 
-var unexpectedStatusPhase = microerror.New("unexpected status phase")
+var unexpectedStatusPhase = &microerror.Error{
+	Kind: "unexpectedStatusPhase",
+}
