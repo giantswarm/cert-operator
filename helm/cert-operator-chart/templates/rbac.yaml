@@ -64,7 +64,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: cert-operator
-    namespace: giantswarm
+    namespace: {{ .Values.namespace }}
 roleRef:
   kind: ClusterRole
   name: cert-operator
@@ -91,7 +91,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: cert-operator
-    namespace: giantswarm
+    namespace: {{ .Values.namespace }}
 roleRef:
   kind: ClusterRole
   name: cert-operator-psp
