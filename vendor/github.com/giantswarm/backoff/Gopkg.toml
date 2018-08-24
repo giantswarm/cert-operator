@@ -1,6 +1,6 @@
 # Gopkg.toml example
 #
-# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# Refer to https://golang.github.io/dep/docs/Gopkg.toml.html
 # for detailed Gopkg.toml documentation.
 #
 # required = ["github.com/user/thing/cmd/thing"]
@@ -26,20 +26,8 @@
 
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/giantswarm/microendpoint"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/giantswarm/microerror"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/giantswarm/micrologger"
-
-[[constraint]]
-  name = "github.com/hashicorp/vault"
-  version = "0.10.3"
+  name = "github.com/cenkalti/backoff"
+  version = "2.0.0"
 
 [prune]
   go-tests = true
