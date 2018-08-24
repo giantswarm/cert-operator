@@ -13,21 +13,15 @@ import (
 
 // Config represents the configuration used to create a endpoint.
 type Config struct {
-	// Dependencies.
 	Logger     micrologger.Logger
 	Middleware *middleware.Middleware
 	Service    *service.Service
 }
 
-// DefaultConfig provides a default configuration to create a new endpoint by
-// best effort.
-func DefaultConfig() Config {
-	return Config{
-		// Dependencies.
-		Logger:     nil,
-		Middleware: nil,
-		Service:    nil,
-	}
+// Endpoint is the endpoint collection.
+type Endpoint struct {
+	Healthz *healthz.Endpoint
+	Version *version.Endpoint
 }
 
 // New creates a new configured endpoint.
@@ -36,13 +30,14 @@ func New(config Config) (*Endpoint, error) {
 
 	var healthzEndpoint *healthz.Endpoint
 	{
-		healthzConfig := healthz.DefaultConfig()
-		healthzConfig.Logger = config.Logger
-		healthzConfig.Services = []healthzservice.Service{
-			config.Service.Healthz.K8s,
-			config.Service.Healthz.Vault,
+		c := healthz.Config{
+			Logger: config.Logger,
+			Services: []healthzservice.Service{
+				config.Service.Healthz.K8s,
+			},
 		}
-		healthzEndpoint, err = healthz.New(healthzConfig)
+
+		healthzEndpoint, err = healthz.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -50,10 +45,12 @@ func New(config Config) (*Endpoint, error) {
 
 	var versionEndpoint *version.Endpoint
 	{
-		versionConfig := version.DefaultConfig()
-		versionConfig.Logger = config.Logger
-		versionConfig.Service = config.Service.Version
-		versionEndpoint, err = version.New(versionConfig)
+		c := version.Config{
+			Logger:  config.Logger,
+			Service: config.Service.Version,
+		}
+
+		versionEndpoint, err = version.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -65,10 +62,4 @@ func New(config Config) (*Endpoint, error) {
 	}
 
 	return newEndpoint, nil
-}
-
-// Endpoint is the endpoint collection.
-type Endpoint struct {
-	Healthz *healthz.Endpoint
-	Version *version.Endpoint
 }

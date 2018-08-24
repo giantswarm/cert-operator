@@ -12,15 +12,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cenkalti/backoff"
+	"github.com/giantswarm/backoff"
 	"github.com/giantswarm/microerror"
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	certOperatorValuesFile = "/tmp/cert-operator-install.yaml"
-	defaultTimeout         = 25
 	// certOperatorChartValues values required by cert-operator-chart, the environment
 	// variables will be expanded before writing the contents to a file.
 	certOperatorChartValues = `commonDomain: ${COMMON_DOMAIN}
@@ -79,13 +79,17 @@ func TestMain(m *testing.M) {
 func TestSecretsAreCreated(t *testing.T) {
 	err := runCmd("helm registry install quay.io/giantswarm/cert-resource-lab-chart:stable -- -n cert-resource-lab --set commonDomain=${COMMON_DOMAIN} --set clusterName=${CLUSTER_NAME}")
 	if err != nil {
-		t.Errorf("could not install cert-resource-lab, %v", err)
+		t.Fatalf("expected %#v got %#v", nil, err)
 	}
 
-	secretName := fmt.Sprintf("%s-api", os.Getenv("CLUSTER_NAME"))
-	err = waitFor(cs.secretFunc("default", secretName))
-	if err != nil {
-		t.Errorf("could not find expected secret '%s': %v", secretName, err)
+	{
+		o := cs.secretFunc("default", fmt.Sprintf("%s-api", os.Getenv("CLUSTER_NAME")))
+		b := backoff.NewExponential(30*time.Second, 5*time.Second)
+
+		err := backoff.Retry(o, b)
+		if err != nil {
+			t.Fatalf("expected %#v got %#v", nil, err)
+		}
 	}
 }
 
@@ -112,43 +116,76 @@ func (cs *clients) tearDown() {
 }
 
 func (cs *clients) createGSNamespace() error {
-	// check if the namespace already exists
-	_, err := cs.K8sCs.CoreV1().Namespaces().Get("giantswarm", metav1.GetOptions{})
-	if err == nil {
-		return nil
+	{
+		n := &apiv1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "giantswarm",
+			},
+		}
+		_, err := cs.K8sCs.CoreV1().Namespaces().Create(n)
+		if errors.IsAlreadyExists(err) {
+			return nil
+		} else if err != nil {
+			return microerror.Mask(err)
+		}
 	}
 
-	namespace := &apiv1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "giantswarm",
-		},
+	{
+		o := cs.activeNamespaceFunc("giantswarm")
+		b := backoff.NewExponential(30*time.Second, 5*time.Second)
+
+		err := backoff.Retry(o, b)
+		if err != nil {
+			return microerror.Mask(err)
+		}
 	}
-	_, err = cs.K8sCs.CoreV1().Namespaces().Create(namespace)
+
+	return nil
+}
+
+func (cs *clients) installVault() error {
+	err := runCmd("helm registry install quay.io/giantswarm/vaultlab-chart:stable -- --set vaultToken=${VAULT_TOKEN} -n vault")
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	return waitFor(cs.activeNamespaceFunc("giantswarm"))
-}
+	{
+		o := cs.runningPodFunc("default", "app=vault")
+		b := backoff.NewExponential(30*time.Second, 5*time.Second)
 
-func (cs *clients) installVault() error {
-	if err := runCmd("helm registry install quay.io/giantswarm/vaultlab-chart:stable -- --set vaultToken=${VAULT_TOKEN} -n vault"); err != nil {
-		return microerror.Mask(err)
+		err := backoff.Retry(o, b)
+		if err != nil {
+			return microerror.Mask(err)
+		}
 	}
 
-	return waitFor(cs.runningPodFunc("default", "app=vault"))
+	return nil
 }
 
 func (cs *clients) installCertOperator() error {
-	certOperatorChartValuesEnv := os.ExpandEnv(certOperatorChartValues)
-	if err := ioutil.WriteFile(certOperatorValuesFile, []byte(certOperatorChartValuesEnv), os.ModePerm); err != nil {
-		return microerror.Mask(err)
-	}
-	if err := runCmd("helm registry install quay.io/giantswarm/cert-operator-chart@1.0.0-${CIRCLE_SHA1} -- -n cert-operator --values " + certOperatorValuesFile); err != nil {
-		return microerror.Mask(err)
+	{
+		certOperatorChartValuesEnv := os.ExpandEnv(certOperatorChartValues)
+		err := ioutil.WriteFile(certOperatorValuesFile, []byte(certOperatorChartValuesEnv), os.ModePerm)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+		err = runCmd("helm registry install quay.io/giantswarm/cert-operator-chart@1.0.0-${CIRCLE_SHA1} -- -n cert-operator --values " + certOperatorValuesFile)
+		if err != nil {
+			return microerror.Mask(err)
+		}
 	}
 
-	return waitFor(cs.certConfigFunc())
+	{
+		o := cs.certConfigFunc()
+		b := backoff.NewExponential(30*time.Second, 5*time.Second)
+
+		err := backoff.Retry(o, b)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	}
+
+	return nil
 }
 
 func runCmd(cmdStr string) error {
@@ -159,23 +196,6 @@ func runCmd(cmdStr string) error {
 	cmd.Stderr = os.Stdout
 
 	return cmd.Run()
-}
-
-func waitFor(f func() error) error {
-	timeout := time.After(defaultTimeout * time.Second)
-	ticker := backoff.NewTicker(backoff.NewExponentialBackOff())
-
-	for {
-		select {
-		case <-timeout:
-			ticker.Stop()
-			return microerror.Mask(waitTimeoutError)
-		case <-ticker.C:
-			if err := f(); err == nil {
-				return nil
-			}
-		}
-	}
 }
 
 func (cs *clients) runningPodFunc(namespace, labelSelector string) func() error {

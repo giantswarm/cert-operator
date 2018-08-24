@@ -5,17 +5,14 @@ import (
 	"github.com/giantswarm/microendpoint/service/healthz"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	"github.com/giantswarm/vaulthealthz"
-	vaultapi "github.com/hashicorp/vault/api"
 	"k8s.io/client-go/kubernetes"
 )
 
 // Config represents the configuration used to create a healthz service.
 type Config struct {
 	// Dependencies.
-	K8sClient   kubernetes.Interface
-	Logger      micrologger.Logger
-	VaultClient *vaultapi.Client
+	K8sClient kubernetes.Interface
+	Logger    micrologger.Logger
 }
 
 // DefaultConfig provides a default configuration to create a new healthz
@@ -23,9 +20,8 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		// Dependencies.
-		K8sClient:   nil,
-		Logger:      nil,
-		VaultClient: nil,
+		K8sClient: nil,
+		Logger:    nil,
 	}
 }
 
@@ -46,22 +42,8 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var vaultService healthz.Service
-	{
-		vaultConfig := vaulthealthz.DefaultConfig()
-
-		vaultConfig.Logger = config.Logger
-		vaultConfig.VaultClient = config.VaultClient
-
-		vaultService, err = vaulthealthz.New(vaultConfig)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
-
 	newService := &Service{
-		K8s:   k8sService,
-		Vault: vaultService,
+		K8s: k8sService,
 	}
 
 	return newService, nil
@@ -69,6 +51,5 @@ func New(config Config) (*Service, error) {
 
 // Service is the healthz service collection.
 type Service struct {
-	K8s   healthz.Service
-	Vault healthz.Service
+	K8s healthz.Service
 }

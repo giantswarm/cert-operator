@@ -47,7 +47,7 @@ func main() {
 
 			serviceConfig.Description = description
 			serviceConfig.GitCommit = gitCommit
-			serviceConfig.Name = name
+			serviceConfig.ProjectName = name
 			serviceConfig.Source = source
 
 			newService, err = service.New(serviceConfig)
