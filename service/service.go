@@ -16,7 +16,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	vaultutil "github.com/giantswarm/cert-operator/client/vault"
+	clientvault "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
 	"github.com/giantswarm/cert-operator/service/controller"
 	"github.com/giantswarm/cert-operator/service/healthz"
@@ -32,7 +32,7 @@ type Config struct {
 
 	Description string
 	GitCommit   string
-	Name        string
+	ProjectName string
 	Source      string
 }
 
@@ -47,7 +47,7 @@ func DefaultConfig() Config {
 
 		Description: "",
 		GitCommit:   "",
-		Name:        "",
+		ProjectName: "",
 		Source:      "",
 	}
 }
@@ -107,12 +107,12 @@ func New(config Config) (*Service, error) {
 
 	var vaultClient *vaultapi.Client
 	{
-		vaultConfig := vaultutil.Config{
+		vaultConfig := clientvault.Config{
 			Flag:  config.Flag,
 			Viper: config.Viper,
 		}
 
-		vaultClient, err = vaultutil.NewClient(vaultConfig)
+		vaultClient, err = clientvault.NewClient(vaultConfig)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -131,7 +131,7 @@ func New(config Config) (*Service, error) {
 			CommonNameFormat:    config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format),
 			ExpirationThreshold: config.Viper.GetDuration(config.Flag.Service.Resource.VaultCrt.ExpirationThreshold),
 			Namespace:           config.Viper.GetString(config.Flag.Service.Resource.VaultCrt.Namespace),
-			ProjectName:         config.Name,
+			ProjectName:         config.ProjectName,
 		}
 
 		certController, err = controller.NewCert(c)
@@ -142,13 +142,12 @@ func New(config Config) (*Service, error) {
 
 	var healthzService *healthz.Service
 	{
-		healthzConfig := healthz.DefaultConfig()
+		c := healthz.Config{
+			K8sClient: k8sClient,
+			Logger:    config.Logger,
+		}
 
-		healthzConfig.K8sClient = k8sClient
-		healthzConfig.Logger = config.Logger
-		healthzConfig.VaultClient = vaultClient
-
-		healthzService, err = healthz.New(healthzConfig)
+		healthzService, err = healthz.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -156,15 +155,15 @@ func New(config Config) (*Service, error) {
 
 	var versionService *version.Service
 	{
-		versionConfig := version.DefaultConfig()
+		c := version.Config{
+			Description:    config.Description,
+			GitCommit:      config.GitCommit,
+			Name:           config.ProjectName,
+			Source:         config.Source,
+			VersionBundles: NewVersionBundles(),
+		}
 
-		versionConfig.Description = config.Description
-		versionConfig.GitCommit = config.GitCommit
-		versionConfig.Name = config.Name
-		versionConfig.Source = config.Source
-		versionConfig.VersionBundles = NewVersionBundles()
-
-		versionService, err = version.New(versionConfig)
+		versionService, err = version.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}

@@ -66,11 +66,13 @@ func New(config Config) (*Server, error) {
 
 	var endpointCollection *endpoint.Endpoint
 	{
-		endpointConfig := endpoint.DefaultConfig()
-		endpointConfig.Logger = config.Logger
-		endpointConfig.Middleware = middlewareCollection
-		endpointConfig.Service = config.Service
-		endpointCollection, err = endpoint.New(endpointConfig)
+		c := endpoint.Config{
+			Logger:     config.Logger,
+			Middleware: middlewareCollection,
+			Service:    config.Service,
+		}
+
+		endpointCollection, err = endpoint.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
