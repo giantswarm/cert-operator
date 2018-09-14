@@ -121,7 +121,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:310f40b39fafa31cfb2120c87ef28292ae24f8ce746a7b851845e6832bd3884e"
+  digest = "1:5c1520d3b53997d03f3848c91bca0e982701f1589a69917ba4a9e553910a2b64"
   name = "github.com/giantswarm/microkit"
   packages = [
     "command",
@@ -129,6 +129,8 @@
     "command/daemon/flag",
     "command/daemon/flag/config",
     "command/daemon/flag/server",
+    "command/daemon/flag/server/enable",
+    "command/daemon/flag/server/enable/debug",
     "command/daemon/flag/server/listen",
     "command/daemon/flag/server/log",
     "command/daemon/flag/server/tls",
@@ -138,7 +140,7 @@
     "tls",
   ]
   pruneopts = "UT"
-  revision = "ce14380d3198ff00c82888ee3ed7e9d0efaa383a"
+  revision = "21181e2cc3c8f5ce7aa32dfdd38aa11643a0a5bf"
 
 [[projects]]
   branch = "master"
