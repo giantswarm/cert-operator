@@ -12,6 +12,8 @@ data:
       listen:
         address: 'http://0.0.0.0:8000'
     service:
+      crd:
+        labelSelector: '{{ .Values.labelSelector }}'
       kubernetes:
         address: ''
         inCluster: true
