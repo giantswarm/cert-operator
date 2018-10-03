@@ -1,1 +1,4 @@
 namespace: giantswarm
+service:
+  crd:
+    labelSelector: ''
