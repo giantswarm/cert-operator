@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/mitchellh/mapstructure"
@@ -17,9 +16,7 @@ func (c *Sys) AuditHash(path string, input string) (string, error) {
 		return "", err
 	}
 
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	defer cancelFunc()
-	resp, err := c.c.RawRequestWithContext(ctx, r)
+	resp, err := c.c.RawRequest(r)
 	if err != nil {
 		return "", err
 	}
@@ -40,11 +37,7 @@ func (c *Sys) AuditHash(path string, input string) (string, error) {
 
 func (c *Sys) ListAudit() (map[string]*Audit, error) {
 	r := c.c.NewRequest("GET", "/v1/sys/audit")
-
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	defer cancelFunc()
-	resp, err := c.c.RawRequestWithContext(ctx, r)
-
+	resp, err := c.c.RawRequest(r)
 	if err != nil {
 		return nil, err
 	}
@@ -94,10 +87,7 @@ func (c *Sys) EnableAuditWithOptions(path string, options *EnableAuditOptions) e
 		return err
 	}
 
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	defer cancelFunc()
-	resp, err := c.c.RawRequestWithContext(ctx, r)
-
+	resp, err := c.c.RawRequest(r)
 	if err != nil {
 		return err
 	}
@@ -108,11 +98,7 @@ func (c *Sys) EnableAuditWithOptions(path string, options *EnableAuditOptions) e
 
 func (c *Sys) DisableAudit(path string) error {
 	r := c.c.NewRequest("DELETE", fmt.Sprintf("/v1/sys/audit/%s", path))
-
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	defer cancelFunc()
-	resp, err := c.c.RawRequestWithContext(ctx, r)
-
+	resp, err := c.c.RawRequest(r)
 	if err == nil {
 		defer resp.Body.Close()
 	}

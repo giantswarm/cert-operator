@@ -608,13 +608,6 @@ func (c *Client) NewRequest(method, requestPath string) *Request {
 // a Vault server not configured with this client. This is an advanced operation
 // that generally won't need to be called externally.
 func (c *Client) RawRequest(r *Request) (*Response, error) {
-	return c.RawRequestWithContext(context.Background(), r)
-}
-
-// RawRequestWithContext performs the raw request given. This request may be against
-// a Vault server not configured with this client. This is an advanced operation
-// that generally won't need to be called externally.
-func (c *Client) RawRequestWithContext(ctx context.Context, r *Request) (*Response, error) {
 	c.modifyLock.RLock()
 	token := c.token
 
@@ -629,7 +622,7 @@ func (c *Client) RawRequestWithContext(ctx context.Context, r *Request) (*Respon
 	c.modifyLock.RUnlock()
 
 	if limiter != nil {
-		limiter.Wait(ctx)
+		limiter.Wait(context.Background())
 	}
 
 	// Sanity check the token before potentially erroring from the API
@@ -650,10 +643,13 @@ START:
 		return nil, fmt.Errorf("nil request created")
 	}
 
+	// Set the timeout, if any
+	var cancelFunc context.CancelFunc
 	if timeout != 0 {
-		ctx, _ = context.WithTimeout(ctx, timeout)
+		var ctx context.Context
+		ctx, cancelFunc = context.WithTimeout(context.Background(), timeout)
+		req.Request = req.Request.WithContext(ctx)
 	}
-	req.Request = req.Request.WithContext(ctx)
 
 	if backoff == nil {
 		backoff = retryablehttp.LinearJitterBackoff
@@ -671,6 +667,9 @@ START:
 
 	var result *Response
 	resp, err := client.Do(req)
+	if cancelFunc != nil {
+		cancelFunc()
+	}
 	if resp != nil {
 		result = &Response{Response: resp}
 	}

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -208,9 +207,7 @@ func (c *SSHHelper) Verify(otp string) (*SSHVerifyResponse, error) {
 		return nil, err
 	}
 
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	defer cancelFunc()
-	resp, err := c.c.RawRequestWithContext(ctx, r)
+	resp, err := c.c.RawRequest(r)
 	if err != nil {
 		return nil, err
 	}
