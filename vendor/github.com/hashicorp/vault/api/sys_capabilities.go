@@ -1,9 +1,6 @@
 package api
 
-import (
-	"context"
-	"fmt"
-)
+import "fmt"
 
 func (c *Sys) CapabilitiesSelf(path string) ([]string, error) {
 	return c.Capabilities(c.c.Token(), path)
@@ -25,9 +22,7 @@ func (c *Sys) Capabilities(token, path string) ([]string, error) {
 		return nil, err
 	}
 
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	defer cancelFunc()
-	resp, err := c.c.RawRequestWithContext(ctx, r)
+	resp, err := c.c.RawRequest(r)
 	if err != nil {
 		return nil, err
 	}
