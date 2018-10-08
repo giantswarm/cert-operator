@@ -15,6 +15,7 @@ import (
 	"github.com/giantswarm/vaultrole"
 	vaultapi "github.com/hashicorp/vault/api"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/giantswarm/cert-operator/service/controller/v2"
@@ -28,10 +29,19 @@ type CertConfig struct {
 	VaultClient  *vaultapi.Client
 
 	CATTL               string
+	CRDLabelSelector    string
 	CommonNameFormat    string
 	ExpirationThreshold time.Duration
 	Namespace           string
 	ProjectName         string
+}
+
+func (c CertConfig) newInformerListOptions() metav1.ListOptions {
+	listOptions := metav1.ListOptions{
+		LabelSelector: c.CRDLabelSelector,
+	}
+
+	return listOptions
 }
 
 type Cert struct {
@@ -136,6 +146,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 			Logger:  config.Logger,
 			Watcher: config.G8sClient.CoreV1alpha1().CertConfigs(""),
 
+			ListOptions:  config.newInformerListOptions(),
 			RateWait:     informer.DefaultRateWait,
 			ResyncPeriod: informer.DefaultResyncPeriod,
 		}

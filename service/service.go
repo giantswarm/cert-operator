@@ -128,6 +128,7 @@ func New(config Config) (*Service, error) {
 			VaultClient:  vaultClient,
 
 			CATTL:               config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CA.TTL),
+			CRDLabelSelector:    config.Viper.GetString(config.Flag.Service.CRD.LabelSelector),
 			CommonNameFormat:    config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format),
 			ExpirationThreshold: config.Viper.GetDuration(config.Flag.Service.Resource.VaultCrt.ExpirationThreshold),
 			Namespace:           config.Viper.GetString(config.Flag.Service.Resource.VaultCrt.Namespace),
