@@ -3,6 +3,7 @@
 package service
 
 import (
+	"context"
 	"sync"
 
 	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
@@ -18,6 +19,7 @@ import (
 
 	clientvault "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
+	"github.com/giantswarm/cert-operator/service/collector"
 	"github.com/giantswarm/cert-operator/service/controller"
 	"github.com/giantswarm/cert-operator/service/healthz"
 )
@@ -56,8 +58,9 @@ type Service struct {
 	Healthz *healthz.Service
 	Version *version.Service
 
-	bootOnce       sync.Once
-	certController *controller.Cert
+	bootOnce          sync.Once
+	certController    *controller.Cert
+	operatorCollector *collector.Collector
 }
 
 func New(config Config) (*Service, error) {
@@ -141,6 +144,19 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
+	var operatorCollector *collector.Collector
+	{
+		c := collector.Config{
+			Logger:      config.Logger,
+			VaultClient: vaultClient,
+		}
+
+		operatorCollector, err = collector.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
 	var healthzService *healthz.Service
 	{
 		c := healthz.Config{
@@ -170,19 +186,21 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	newService := &Service{
+	s := &Service{
 		Healthz: healthzService,
 		Version: versionService,
 
-		bootOnce:       sync.Once{},
-		certController: certController,
+		bootOnce:          sync.Once{},
+		certController:    certController,
+		operatorCollector: operatorCollector,
 	}
 
-	return newService, nil
+	return s, nil
 }
 
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
 		go s.certController.Boot()
+		go s.operatorCollector.Boot(context.Background())
 	})
 }
