@@ -51,7 +51,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b2f69a396bae5c2c630967f7cec73ee471338b1ea162c0b35d9c8231219e16e4"
+  digest = "1:910fa8591d50ee561e953624cb1d777ba0f89f6c72d0db58dc85010130fa31ac"
   name = "github.com/giantswarm/apiextensions"
   packages = [
     "pkg/apis/core/v1alpha1",
@@ -64,7 +64,7 @@
     "pkg/clientset/versioned/typed/provider/v1alpha1",
   ]
   pruneopts = "UT"
-  revision = "d945bb5acf74afb5fd92d36e5370380d22dc92ea"
+  revision = "de2e518b9b9ce196838462ab602febb94e6dafdf"
 
 [[projects]]
   branch = "master"
@@ -88,15 +88,7 @@
   name = "github.com/giantswarm/e2e-harness"
   packages = ["pkg/harness"]
   pruneopts = "UT"
-  revision = "3f7f2bb45fd94485b71c7dbad03dc1d1b6cc3178"
-
-[[projects]]
-  branch = "master"
-  digest = "1:b08bd7378e47e7fc971a77b99c5e9fbfbc898fb648bcbd6e5ce1d6bfd7e265bb"
-  name = "github.com/giantswarm/k8shealthz"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "9abe467ab9085610b261319dfe875c6d13537b06"
+  revision = "022462abab6f106d3b535b39122f74e5ba76bf1e"
 
 [[projects]]
   branch = "master"
@@ -156,7 +148,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cd0cdea6b72e7d56053ef0cf8aaa32757f87b94f42b0600b299df72da94ea578"
+  digest = "1:2ebae8c2580956c0ff26a81b6c2df880063157d98485b571a14cf413af2b945d"
   name = "github.com/giantswarm/operatorkit"
   packages = [
     "client/k8scrdclient",
@@ -174,7 +166,7 @@
     "informer",
   ]
   pruneopts = "UT"
-  revision = "5c624728d9f58d3aebe2993e5c6c2091fd8d662c"
+  revision = "590c70603978ef27bc4574718b1374baea774133"
 
 [[projects]]
   branch = "master"
@@ -547,7 +539,7 @@
     "prometheus/promhttp",
   ]
   pruneopts = "UT"
-  revision = "0a8115f42e037a6e327f9a269a26ff6603fb8472"
+  revision = "7866eead363ec334628dbc56e32df590a05f4696"
 
 [[projects]]
   branch = "master"
@@ -655,7 +647,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "e3636079e1a4c1f337f212cc5cd2aca108f6c900"
+  revision = "7c1a557ab941a71c619514f229f0b27ccb0c27cf"
 
 [[projects]]
   branch = "master"
@@ -938,10 +930,8 @@
     "github.com/giantswarm/backoff",
     "github.com/giantswarm/certs",
     "github.com/giantswarm/e2e-harness/pkg/harness",
-    "github.com/giantswarm/k8shealthz",
     "github.com/giantswarm/microendpoint/endpoint/healthz",
     "github.com/giantswarm/microendpoint/endpoint/version",
-    "github.com/giantswarm/microendpoint/service/healthz",
     "github.com/giantswarm/microendpoint/service/version",
     "github.com/giantswarm/microerror",
     "github.com/giantswarm/microkit/command",
