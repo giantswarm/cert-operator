@@ -3,19 +3,16 @@ package endpoint
 import (
 	"github.com/giantswarm/microendpoint/endpoint/healthz"
 	"github.com/giantswarm/microendpoint/endpoint/version"
-	healthzservice "github.com/giantswarm/microendpoint/service/healthz"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 
-	"github.com/giantswarm/cert-operator/server/middleware"
 	"github.com/giantswarm/cert-operator/service"
 )
 
 // Config represents the configuration used to create a endpoint.
 type Config struct {
-	Logger     micrologger.Logger
-	Middleware *middleware.Middleware
-	Service    *service.Service
+	Logger  micrologger.Logger
+	Service *service.Service
 }
 
 // Endpoint is the endpoint collection.
@@ -32,9 +29,6 @@ func New(config Config) (*Endpoint, error) {
 	{
 		c := healthz.Config{
 			Logger: config.Logger,
-			Services: []healthzservice.Service{
-				config.Service.Healthz.K8s,
-			},
 		}
 
 		healthzEndpoint, err = healthz.New(c)
