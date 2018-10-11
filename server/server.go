@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/giantswarm/cert-operator/server/endpoint"
-	"github.com/giantswarm/cert-operator/server/middleware"
 	"github.com/giantswarm/cert-operator/service"
 )
 
@@ -53,23 +52,11 @@ func New(config Config) (*Server, error) {
 
 	var err error
 
-	var middlewareCollection *middleware.Middleware
-	{
-		middlewareConfig := middleware.DefaultConfig()
-		middlewareConfig.Logger = config.Logger
-		middlewareConfig.Service = config.Service
-		middlewareCollection, err = middleware.New(middlewareConfig)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
-
 	var endpointCollection *endpoint.Endpoint
 	{
 		c := endpoint.Config{
-			Logger:     config.Logger,
-			Middleware: middlewareCollection,
-			Service:    config.Service,
+			Logger:  config.Logger,
+			Service: config.Service,
 		}
 
 		endpointCollection, err = endpoint.New(c)
