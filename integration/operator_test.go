@@ -32,7 +32,7 @@ Installation:
         Address: http://vault.default.svc.cluster.local:8200
         CA:
           TTL: 1440h
-		GiantSwarm:
+    GiantSwarm:
       FlannelOperator:
         CRD:
           LabelSelector: 'giantswarm.io/cluster={{ .ClusterName }}'
