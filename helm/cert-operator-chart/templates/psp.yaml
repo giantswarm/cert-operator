@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: cert-operator-psp
+  name: {{ .pspName }}
 spec:
   privileged: false
   fsGroup:

@@ -3,3 +3,4 @@ clusterRoleBindingNamePSP: cert-operator-psp
 clusterRoleName: cert-operator
 clusterRoleNamePSP: cert-operator-psp
 namespace: giantswarm
+pspName: cert-operator-psp
