@@ -33,7 +33,7 @@ Installation:
         CA:
           TTL: 1440h
     GiantSwarm:
-      FlannelOperator:
+      CertOperator:
         CRD:
           LabelSelector: 'giantswarm.io/cluster={{ .ClusterName }}'
     Guest:
