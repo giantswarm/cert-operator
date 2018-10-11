@@ -1,4 +1,5 @@
+clusterRoleBindingName: cert-operator
+clusterRoleBindingNamePSP: cert-operator-psp
+clusterRoleName: cert-operator
+clusterRoleNamePSP: cert-operator-psp
 namespace: giantswarm
-service:
-  crd:
-    labelSelector: ''

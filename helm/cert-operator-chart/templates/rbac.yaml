@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: cert-operator
+  name: {{ .Values.clusterRoleName }}
 rules:
   - apiGroups:
       - apiextensions.k8s.io
@@ -60,20 +60,20 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: cert-operator
+  name: {{ .Values.clusterRoleBindingName }}
 subjects:
   - kind: ServiceAccount
     name: cert-operator
     namespace: {{ .Values.namespace }}
 roleRef:
   kind: ClusterRole
-  name: cert-operator
+  name: {{ .Values.clusterRoleName }}
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: cert-operator-psp
+  name: {{ .Values.clusterRoleNamePSP }}
 rules:
   - apiGroups:
       - extensions
@@ -87,12 +87,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: cert-operator-psp
+  name: {{ .Values.clusterRoleBindingNamePSP }}
 subjects:
   - kind: ServiceAccount
     name: cert-operator
     namespace: {{ .Values.namespace }}
 roleRef:
   kind: ClusterRole
-  name: cert-operator-psp
+  name: {{ .Values.clusterRoleNamePSP }}
   apiGroup: rbac.authorization.k8s.io
