@@ -87,7 +87,7 @@ func TestSecretsAreCreated(t *testing.T) {
 	}
 
 	{
-		o := cs.secretFunc("giantswarm", fmt.Sprintf("%s-api", os.Getenv("CLUSTER_NAME")))
+		o := cs.secretFunc("cert-resource-lab", fmt.Sprintf("%s-api", os.Getenv("CLUSTER_NAME")))
 		b := backoff.NewExponential(30*time.Second, 5*time.Second)
 
 		err := backoff.Retry(o, b)
