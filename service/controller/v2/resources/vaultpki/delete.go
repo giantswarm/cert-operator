@@ -5,7 +5,6 @@ import (
 
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/operatorkit/controller"
-	"github.com/giantswarm/operatorkit/controller/context/deletionallowedcontext"
 
 	"github.com/giantswarm/cert-operator/service/controller/v2/key"
 )
@@ -49,30 +48,17 @@ func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteChange inte
 }
 
 func (r *Resource) newDeleteChange(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
-	currentVaultPKIState, err := toVaultPKIState(currentState)
+	_, err := toVaultPKIState(currentState)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
-	desiredVaultPKIState, err := toVaultPKIState(desiredState)
+	_, err = toVaultPKIState(desiredState)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
+	// We do not delete tenant cluster PKI when a CertConfig is deleted.
 	var vaultPKIStateToDelete VaultPKIState
-	if deletionallowedcontext.IsDeletionAllowed(ctx) {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "finding out if the Vault PKI has to be deleted")
-
-		if currentVaultPKIState.Backend == nil {
-			vaultPKIStateToDelete.Backend = desiredVaultPKIState.Backend
-		}
-		if currentVaultPKIState.CACertificate == "" {
-			vaultPKIStateToDelete.CACertificate = desiredVaultPKIState.CACertificate
-		}
-
-		r.logger.LogCtx(ctx, "level", "debug", "message", "found out if the Vault PKI has to be deleted")
-	} else {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "not computing delete state because Vault PKIs are not allowed to be deleted")
-	}
 
 	return vaultPKIStateToDelete, nil
 }
