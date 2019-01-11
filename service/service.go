@@ -184,7 +184,7 @@ func New(config Config) (*Service, error) {
 
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
-		go s.certController.Boot()
+		go s.certController.Boot(context.Background())
 		go s.operatorCollector.Boot(context.Background())
 	})
 }
