@@ -1,11 +1,11 @@
 package collector
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
 	"github.com/giantswarm/microerror"
+	"github.com/giantswarm/micrologger"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -29,19 +29,41 @@ var (
 	)
 )
 
-func (c *Collector) collectVaultMetrics(ch chan<- prometheus.Metric) {
-	c.logger.Log("level", "debug", "message", "start collecting metrics")
+type VaultConfig struct {
+	Logger      micrologger.Logger
+	VaultClient *vault.Client
+}
 
-	secret, err := c.vaultClient.Auth().Token().LookupSelf()
+type Vault struct {
+	logger      micrologger.Logger
+	vaultClient *vault.Client
+}
+
+func NewVault(config VaultConfig) (*Vault, error) {
+	if config.Logger == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", config)
+	}
+	if config.VaultClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.VaultClient must not be empty", config)
+	}
+
+	v := &Vault{
+		logger:      config.Logger,
+		vaultClient: config.VaultClient,
+	}
+
+	return v, nil
+}
+
+func (v *Vault) Collect(ch chan<- prometheus.Metric) error {
+	secret, err := v.vaultClient.Auth().Token().LookupSelf()
 	if err != nil {
-		c.logger.Log("level", "error", "message", "Vault token lookup failed", "stack", fmt.Sprintf("%#v", err))
-		return
+		return microerror.Mask(err)
 	}
 
 	expiration, err := expirationFromSecret(secret)
 	if err != nil {
-		c.logger.Log("level", "error", "message", "parsing token expiration failed", "stack", fmt.Sprintf("%#v", err))
-		return
+		return microerror.Mask(err)
 	}
 
 	ch <- prometheus.MustNewConstMetric(
@@ -50,7 +72,12 @@ func (c *Collector) collectVaultMetrics(ch chan<- prometheus.Metric) {
 		float64(expiration.Unix()),
 	)
 
-	c.logger.Log("level", "debug", "message", "finished collecting metrics")
+	return nil
+}
+
+func (v *Vault) Describe(ch chan<- *prometheus.Desc) error {
+	ch <- tokenExpireTimeDesc
+	return nil
 }
 
 func expirationFromSecret(secret *vault.Secret) (time.Time, error) {

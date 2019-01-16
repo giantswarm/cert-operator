@@ -39,16 +39,16 @@ func main() {
 		// Create a new custom service which implements business logic.
 		var newService *service.Service
 		{
-			serviceConfig := service.DefaultConfig()
+			serviceConfig := service.Config{
+				Flag:   f,
+				Logger: newLogger,
+				Viper:  v,
 
-			serviceConfig.Flag = f
-			serviceConfig.Logger = newLogger
-			serviceConfig.Viper = v
-
-			serviceConfig.Description = description
-			serviceConfig.GitCommit = gitCommit
-			serviceConfig.ProjectName = name
-			serviceConfig.Source = source
+				Description: description,
+				GitCommit:   gitCommit,
+				ProjectName: name,
+				Source:      source,
+			}
 
 			newService, err = service.New(serviceConfig)
 			if err != nil {
