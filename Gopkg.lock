@@ -150,7 +150,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:76c120ff1c5bd9e606217cfba62f755f34619ad228b69541849a29a97fa97315"
+  digest = "1:e37ff315354e8edd2d7255d2715b832c8f7595e406e602b9b75e8069b57f5b67"
   name = "github.com/giantswarm/operatorkit"
   packages = [
     "client/k8scrdclient",
@@ -167,7 +167,7 @@
     "informer/collector",
   ]
   pruneopts = "UT"
-  revision = "585a9b06d129239a26bc87bdf483f3abad18e8a6"
+  revision = "6c7c1e6db598454ab2936d29ee357adf902cf0c5"
 
 [[projects]]
   branch = "master"
@@ -351,12 +351,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:4112546e6964796e1c92a9ffdea8fd7ae81ffbf81eda4f946f50937e178f53da"
+  digest = "1:ff41a98e14bb578ecb9be42c98bcb0465e158988a1f6637a1fcd8c52522068e7"
   name = "github.com/hashicorp/go-retryablehttp"
   packages = ["."]
   pruneopts = "UT"
-  revision = "4502c0ecdaf0b50d857611af23831260f99be6bf"
-  version = "v0.5.0"
+  revision = "d3a63d3c72068412f9ecd7c36faafd874d2e2888"
+  version = "v0.5.1"
 
 [[projects]]
   branch = "master"
@@ -532,7 +532,7 @@
     "prometheus/promhttp",
   ]
   pruneopts = "UT"
-  revision = "d2ead25884778582e740573999f7b07f47e171b4"
+  revision = "18d13eacc9cce330610a70daf4ed0fef2e846589"
 
 [[projects]]
   branch = "master"
@@ -540,7 +540,7 @@
   name = "github.com/prometheus/client_model"
   packages = ["go"]
   pruneopts = "UT"
-  revision = "f287a105a20ec685d797f65cd0ce8fbeaef42da1"
+  revision = "56726106282f1985ea77d5305743db7231b0c0a8"
 
 [[projects]]
   branch = "master"
@@ -667,14 +667,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5ee4df7ab18e945607ac822de8d10b180baea263b5e8676a1041727543b9c1e4"
+  digest = "1:43cde116ff48f299eddb7e6515677e6d0a2c915854bb05a333877f07c3bb3033"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "48ac38b7c8cbedd50b1613c0fccacfc7d88dfcdf"
+  revision = "11f53e03133963fb11ae0588e08b5e0b85be8be5"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -916,6 +916,7 @@
     "github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1",
     "github.com/giantswarm/apiextensions/pkg/clientset/versioned",
     "github.com/giantswarm/certs",
+    "github.com/giantswarm/exporterkit/collector",
     "github.com/giantswarm/microendpoint/endpoint/healthz",
     "github.com/giantswarm/microendpoint/endpoint/version",
     "github.com/giantswarm/microendpoint/service/version",
