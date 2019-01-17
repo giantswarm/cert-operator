@@ -37,36 +37,20 @@ type Config struct {
 	Source      string
 }
 
-func DefaultConfig() Config {
-	return Config{
-		// Dependencies.
-		Logger: nil,
-
-		// Settings.
-		Flag:  nil,
-		Viper: nil,
-
-		Description: "",
-		GitCommit:   "",
-		ProjectName: "",
-		Source:      "",
-	}
-}
-
 type Service struct {
 	Version *version.Service
 
 	bootOnce          sync.Once
 	certController    *controller.Cert
-	operatorCollector *collector.Collector
+	operatorCollector *collector.Set
 }
 
 func New(config Config) (*Service, error) {
 	if config.Flag == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.Flag must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "%T.Flag must not be empty", config)
 	}
 	if config.Viper == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.Viper must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "%T.Viper must not be empty", config)
 	}
 
 	var err error
@@ -142,14 +126,14 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var operatorCollector *collector.Collector
+	var operatorCollector *collector.Set
 	{
-		c := collector.Config{
+		c := collector.SetConfig{
 			Logger:      config.Logger,
 			VaultClient: vaultClient,
 		}
 
-		operatorCollector, err = collector.New(c)
+		operatorCollector, err = collector.NewSet(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
