@@ -90,12 +90,12 @@ func Test_Resource_VaultPKI_NewDeleteChange(t *testing.T) {
 	var err error
 	var newResource *Resource
 	{
-		resourceConfig := DefaultConfig()
+		c := Config{
+			Logger:   microloggertest.New(),
+			VaultPKI: vaultpkitest.New(),
+		}
 
-		resourceConfig.Logger = microloggertest.New()
-		resourceConfig.VaultPKI = vaultpkitest.New()
-
-		newResource, err = New(resourceConfig)
+		newResource, err = New(c)
 		if err != nil {
 			t.Fatal("expected", nil, "got", err)
 		}
