@@ -15,13 +15,6 @@ type Config struct {
 	VaultPKI vaultpki.Interface
 }
 
-func DefaultConfig() Config {
-	return Config{
-		Logger:   nil,
-		VaultPKI: nil,
-	}
-}
-
 type Resource struct {
 	logger   micrologger.Logger
 	vaultPKI vaultpki.Interface
@@ -29,16 +22,14 @@ type Resource struct {
 
 func New(config Config) (*Resource, error) {
 	if config.Logger == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.Logger must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", config)
 	}
 	if config.VaultPKI == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.VaultPKI must not be empty")
+		return nil, microerror.Maskf(invalidConfigError, "%T.VaultPKI must not be empty", config)
 	}
 
 	r := &Resource{
-		logger: config.Logger.With(
-			"resource", Name,
-		),
+		logger:   config.Logger,
 		vaultPKI: config.VaultPKI,
 	}
 

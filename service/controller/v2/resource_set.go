@@ -85,10 +85,10 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 
 	var vaultPKIResource controller.Resource
 	{
-		c := vaultpkiresource.DefaultConfig()
-
-		c.Logger = config.Logger
-		c.VaultPKI = config.VaultPKI
+		c := vaultpkiresource.Config{
+			Logger:   config.Logger,
+			VaultPKI: config.VaultPKI,
+		}
 
 		ops, err := vaultpkiresource.New(c)
 		if err != nil {
