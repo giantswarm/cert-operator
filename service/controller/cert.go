@@ -111,13 +111,13 @@ func NewCert(config CertConfig) (*Cert, error) {
 
 	var vaultPKI vaultpki.Interface
 	{
-		c := vaultpki.DefaultConfig()
+		c := vaultpki.Config{
+			Logger:      config.Logger,
+			VaultClient: config.VaultClient,
 
-		c.Logger = config.Logger
-		c.VaultClient = config.VaultClient
-
-		c.CATTL = config.CATTL
-		c.CommonNameFormat = config.CommonNameFormat
+			CATTL:            config.CATTL,
+			CommonNameFormat: config.CommonNameFormat,
+		}
 
 		vaultPKI, err = vaultpki.New(c)
 		if err != nil {
