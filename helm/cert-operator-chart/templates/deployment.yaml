@@ -37,6 +37,9 @@ spec:
         hostPath:
           path: /etc/ssl/certs/
       serviceAccountName: cert-operator
+      securityContext:
+        runAsUser: {{ .Values.userID }}
+        runAsGroup: {{ .Values.groupID }}
       containers:
       - name: cert-operator
         image: quay.io/giantswarm/cert-operator:[[ .SHA ]]
