@@ -4,3 +4,6 @@ clusterRoleName: cert-operator
 clusterRoleNamePSP: cert-operator-psp
 namespace: giantswarm
 pspName: cert-operator-psp
+
+userID: 1000
+groupID: 1000
