@@ -60,6 +60,46 @@ func NewAppTypeMeta() metav1.TypeMeta {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// App CRs might look something like the following.
+//
+//    apiVersion: application.giantswarm.io/v1alpha1
+//    kind: App
+//    metadata:
+//      name: "prometheus"
+//      labels:
+//        app-operator.giantswarm.io/version: "1.0.0"
+//
+//    spec:
+//      catalog: "giantswarm"
+//      name: "prometheus"
+//      namespace: "monitoring"
+//      version: "1.0.0"
+//      config:
+//        configMap:
+//          name: "prometheus-values"
+//          namespace: "monitoring"
+//        secret:
+//          name: "prometheus-secrets"
+//          namespace: "monitoring"
+//        kubeConfig:
+//          inCluster: false
+//          context:
+//            name: "giantswarm-12345"
+//          secret:
+//            name: "giantswarm-12345"
+//            namespace: "giantswarm"
+//          userConfig:
+//            configMap:
+//              name: "prometheus-user-values"
+//              namespace: "monitoring"
+//
+//    status:
+// 	appVersion: "2.4.3" # Optional value from Chart.yaml with the version of the deployed app.
+//      release:
+//        lastDeployed: "2018-11-30T21:06:20Z"
+//        status: "DEPLOYED"
+//      version: "1.1.0" # Required value from Chart.yaml with the version of the chart.
+//
 type App struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -82,11 +122,11 @@ type AppSpec struct {
 	// Namespace is the namespace where the app should be deployed.
 	// e.g. monitoring
 	Namespace string `json:"namespace" yaml:"namespace"`
-	// Release is the version of the app that should be deployed.
-	// e.g. 1.0.0
-	Release string `json:"release" yaml:"release"`
 	// UserConfig is the user config to be applied when the app is deployed.
-	UserConfig AppSpecConfig `json:"userConfig" yaml:"userConfig"`
+	UserConfig AppSpecUserConfig `json:"userConfig" yaml:"userConfig"`
+	// Version is the version of the app that should be deployed.
+	// e.g. 1.0.0
+	Version string `json:"version" yaml:"version"`
 }
 
 type AppSpecConfig struct {
@@ -117,8 +157,19 @@ type AppSpecConfigSecret struct {
 }
 
 type AppSpecKubeConfig struct {
+	// InCluster is a flag for whether to use InCluster credentials. When true the
+	// context name and secret should not be set.
+	InCluster bool `json:"inCluster" yaml:"inCluster"`
+	// Context is the kubeconfig context.
+	Context AppSpecKubeConfigContext `json:"context" yaml:"context"`
 	// Secret references a secret containing the kubconfig.
 	Secret AppSpecKubeConfigSecret `json:"secret" yaml:"secret"`
+}
+
+type AppSpecKubeConfigContext struct {
+	// Name is the name of the kubeconfig context.
+	// e.g. giantswarm-12345.
+	Name string `json:"name" yaml:"name"`
 }
 
 type AppSpecKubeConfigSecret struct {
@@ -143,8 +194,8 @@ type AppSpecUserConfigConfigMap struct {
 	// Name is the name of the config map containing user values to apply,
 	// e.g. prometheus-user-values.
 	Name string `json:"name" yaml:"name"`
-	// Namespace is the namespace of the user values config map,
-	// e.g. monitoring.
+	// Namespace is the namespace of the user values config map on the control plane,
+	// e.g. 123ab.
 	Namespace string `json:"namespace" yaml:"namespace"`
 }
 
@@ -158,7 +209,28 @@ type AppSpecUserConfigSecret struct {
 }
 
 type AppStatus struct {
-	// Status is the status of the deployed app.
+	// AppVersion is the value of the AppVersion field in the Chart.yaml of the
+	// deployed app. This is an optional field with the version of the
+	// component being deployed.
+	// e.g. 0.21.0.
+	// https://docs.helm.sh/developing_charts/#the-chart-yaml-file
+	AppVersion string `json:"appVersion" yaml:"appVersion"`
+	// Release is the status of the Helm release for the deployed app.
+	Release AppStatusRelease `json:"release" yaml:"release"`
+	// Version is the value of the Version field in the Chart.yaml of the
+	// deployed app.
+	// e.g. 1.0.0.
+	Version string `json:"version" yaml:"version"`
+}
+
+type AppStatusRelease struct {
+	// LastDeployed is the time when the app was last deployed.
+	LastDeployed DeepCopyTime `json:"lastDeployed" yaml:"lastDeployed"`
+	// Reason is the description of the last status of helm release when the app is
+	// not installed successfully, e.g. deploy resource already exists.
+	Reason string `json:"reason,omitempty" yaml:"reason,omitempty"`
+	// Status is the status of the deployed app,
+	// e.g. DEPLOYED.
 	Status string `json:"status" yaml:"status"`
 }
 
