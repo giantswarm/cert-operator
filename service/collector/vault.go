@@ -22,7 +22,7 @@ const (
 
 var (
 	tokenExpireTimeDesc = prometheus.NewDesc(
-		prometheus.BuildFQName("cert_operator", "vault", "token_expire_time"),
+		prometheus.BuildFQName("cert_operator", "vault", "token_expire_time_seconds"),
 		"A metric of the expire time of Vault tokens as unix seconds.",
 		nil,
 		nil,
