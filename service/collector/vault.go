@@ -92,12 +92,12 @@ func expirationFromSecret(secret *vault.Secret) (time.Time, error) {
 
 	e, ok := value.(string)
 	if !ok {
-		return time.Time{}, microerror.Maskf(executionFailedError, "'%#v' must be string in order to collect metrics for the Vault token expiration", value)
+		return time.Time{}, microerror.Maskf(executionFailedError, "%#q must be string in order to collect metrics for the Vault token expiration", value)
 	}
 
 	split := strings.Split(e, ".")
 	if len(split) == 0 {
-		return time.Time{}, microerror.Maskf(executionFailedError, "'%#v' must have at least one item in order to collect metrics for the Vault token expiration", e)
+		return time.Time{}, microerror.Maskf(executionFailedError, "%#q must have at least one item in order to collect metrics for the Vault token expiration", e)
 	}
 
 	expiration, err := time.Parse(ExpireTimeLayout, split[0])
