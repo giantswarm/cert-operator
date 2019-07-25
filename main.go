@@ -9,16 +9,13 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/giantswarm/cert-operator/flag"
+	"github.com/giantswarm/cert-operator/pkg/project"
 	"github.com/giantswarm/cert-operator/server"
 	"github.com/giantswarm/cert-operator/service"
 )
 
 var (
-	description string     = "The cert-operator handles certificates for Kubernetes clusters running on Giantnetes."
-	f           *flag.Flag = flag.New()
-	gitCommit   string     = "n/a"
-	name        string     = "cert-operator"
-	source      string     = "https://github.com/giantswarm/cert-operator"
+	f *flag.Flag = flag.New()
 )
 
 func main() {
@@ -44,10 +41,11 @@ func main() {
 				Logger: newLogger,
 				Viper:  v,
 
-				Description: description,
-				GitCommit:   gitCommit,
-				ProjectName: name,
-				Source:      source,
+				Description: project.Description(),
+				GitCommit:   project.GitSHA(),
+				ProjectName: project.Name(),
+				Source:      project.Source(),
+				Version:     project.Version(),
 			}
 
 			newService, err = service.New(serviceConfig)
@@ -65,7 +63,7 @@ func main() {
 				Service: newService,
 				Viper:   v,
 
-				ProjectName: name,
+				ProjectName: project.Name(),
 			}
 
 			newServer, err = server.New(c)
@@ -84,10 +82,11 @@ func main() {
 			Logger:        newLogger,
 			ServerFactory: newServerFactory,
 
-			Description:    description,
-			GitCommit:      gitCommit,
-			Name:           name,
-			Source:         source,
+			Description:    project.Description(),
+			GitCommit:      project.GitSHA(),
+			Name:           project.Name(),
+			Source:         project.Source(),
+			Version:        project.Version(),
 			VersionBundles: service.NewVersionBundles(),
 		}
 
