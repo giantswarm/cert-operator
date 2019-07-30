@@ -50,7 +50,6 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 	// draining was done and the pods got removed we get an empty list here after
 	// the delete event got replayed. Then we just remove the secrets as usual.
 	if key.IsDeleted(customObject) {
-
 		if !r.checkCertType(customObject) {
 			r.logger.LogCtx(ctx, "level", "debug", "message", "do not supporting this cert type any longer.")
 			return secret, nil
