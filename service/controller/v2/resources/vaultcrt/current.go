@@ -51,7 +51,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 	// the delete event got replayed. Then we just remove the secrets as usual.
 	if key.IsDeleted(customObject) {
 		if !r.checkCertType(customObject) {
-			r.logger.LogCtx(ctx, "level", "debug", "message", "do not supporting this cert type any longer.")
+			r.logger.LogCtx(ctx, "level", "debug", "message", "unsupported cert type")
 			return secret, nil
 		}
 
