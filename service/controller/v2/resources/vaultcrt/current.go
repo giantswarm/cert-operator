@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
+	"github.com/giantswarm/certs"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/operatorkit/controller/context/finalizerskeptcontext"
 	"github.com/giantswarm/operatorkit/controller/context/resourcecanceledcontext"
@@ -49,6 +50,12 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 	// draining was done and the pods got removed we get an empty list here after
 	// the delete event got replayed. Then we just remove the secrets as usual.
 	if key.IsDeleted(customObject) {
+
+		if !r.checkCertType(customObject) {
+			r.logger.LogCtx(ctx, "level", "debug", "message", "do not supporting this cert type any longer.")
+			return nil, nil
+		}
+
 		n := key.ClusterNamespace(customObject)
 		list, err := r.k8sClient.CoreV1().Pods(n).List(metav1.ListOptions{})
 		if err != nil {
@@ -65,6 +72,16 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 	}
 
 	return secret, nil
+}
+
+func (r *Resource) checkCertType(customObject v1alpha1.CertConfig) bool {
+	c := certs.Cert(customObject.Spec.Cert.ClusterComponent)
+	for _, cert := range certs.AllCerts {
+		if cert == c {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *Resource) updateVersionBundleVersionGauge(ctx context.Context, customObject v1alpha1.CertConfig, gauge *prometheus.GaugeVec, secret *corev1.Secret) {
