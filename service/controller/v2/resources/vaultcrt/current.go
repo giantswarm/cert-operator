@@ -53,7 +53,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 
 		if !r.checkCertType(customObject) {
 			r.logger.LogCtx(ctx, "level", "debug", "message", "do not supporting this cert type any longer.")
-			return nil, nil
+			return secret, nil
 		}
 
 		n := key.ClusterNamespace(customObject)
