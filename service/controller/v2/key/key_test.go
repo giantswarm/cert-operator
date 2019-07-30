@@ -95,3 +95,19 @@ func TestOrganizationCapacity(t *testing.T) {
 		t.Errorf("customObject organizations changed by sorting an unrelated slice, expected %s, actual %s", expected, actual)
 	}
 }
+
+func TestClusterComponent(t *testing.T) {
+	expectedClusterComponent := "calico"
+
+	obj := v1alpha1.CertConfig{
+		Spec: v1alpha1.CertConfigSpec{
+			Cert: v1alpha1.CertConfigSpecCert{
+				ClusterComponent: "calico",
+			},
+		},
+	}
+
+	if ClusterComponent(obj) != expectedClusterComponent {
+		t.Fatalf("clusterComponent %#q, want %s", ClusterComponent(obj), expectedClusterComponent)
+	}
+}

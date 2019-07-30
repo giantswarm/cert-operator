@@ -24,6 +24,10 @@ func AltNames(customObject v1alpha1.CertConfig) []string {
 	return customObject.Spec.Cert.AltNames
 }
 
+func ClusterComponent(customObject v1alpha1.CertConfig) string {
+	return customObject.Spec.Cert.ClusterComponent
+}
+
 func ClusterID(customObject v1alpha1.CertConfig) string {
 	return customObject.Spec.Cert.ClusterID
 }

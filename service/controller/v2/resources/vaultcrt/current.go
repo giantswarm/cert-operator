@@ -53,7 +53,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		// If this customObject is not the cert we are supporting in certs library,
 		// we don't need to check for running pods.
 		if !r.checkCertType(customObject) {
-			r.logger.LogCtx(ctx, "level", "debug", "message", "unsupported cert type")
+			r.logger.LogCtx(ctx, "level", "debug", "message", "unsupported cert type %#q", key.ClusterComponent(customObject))
 			return secret, nil
 		}
 
@@ -77,7 +77,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 
 // checkCertType checks whether customObject is one of the Cert types we are supporting in certs library.
 func (r *Resource) checkCertType(customObject v1alpha1.CertConfig) bool {
-	c := certs.Cert(customObject.Spec.Cert.ClusterComponent)
+	c := certs.Cert(key.ClusterComponent(customObject))
 	for _, cert := range certs.AllCerts {
 		if cert == c {
 			return true
