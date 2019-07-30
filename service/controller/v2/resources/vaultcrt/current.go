@@ -50,6 +50,8 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 	// draining was done and the pods got removed we get an empty list here after
 	// the delete event got replayed. Then we just remove the secrets as usual.
 	if key.IsDeleted(customObject) {
+		// If this customObject is not the cert we are supporting in certs library,
+		// we don't need to check for running pods.
 		if !r.checkCertType(customObject) {
 			r.logger.LogCtx(ctx, "level", "debug", "message", "unsupported cert type")
 			return secret, nil
@@ -73,6 +75,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 	return secret, nil
 }
 
+// checkCertType checks whether customObject is one of the Cert types we are supporting in certs library.
 func (r *Resource) checkCertType(customObject v1alpha1.CertConfig) bool {
 	c := certs.Cert(customObject.Spec.Cert.ClusterComponent)
 	for _, cert := range certs.AllCerts {
