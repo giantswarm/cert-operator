@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -56,8 +57,16 @@ func NewVault(config VaultConfig) (*Vault, error) {
 }
 
 func (v *Vault) Collect(ch chan<- prometheus.Metric) error {
+	ctx := context.Background()
+
 	secret, err := v.vaultClient.Auth().Token().LookupSelf()
-	if err != nil {
+	if IsVaultAccess(err) {
+		v.logger.LogCtx(ctx, "level", "debug", "message", "vault not reachable")
+		v.logger.LogCtx(ctx, "level", "debug", "message", "vault upgrade in progress")
+		v.logger.LogCtx(ctx, "level", "debug", "message", "canceling collection")
+		return nil
+
+	} else if err != nil {
 		return microerror.Mask(err)
 	}
 

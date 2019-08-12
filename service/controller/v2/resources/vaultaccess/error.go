@@ -1,4 +1,4 @@
-package collector
+package vaultaccess
 
 import (
 	"strings"
@@ -34,7 +34,7 @@ var vaultAccessError = &microerror.Error{
 // IsVaultAccess asserts vaultAccessError. The matcher also asserts errors
 // caused by situations in which Vault is updated strategically and thus
 // temporarily replies with HTTP responses. In such cases we intend to cancel
-// collection and wait until Vault is fully operational again.
+// reconciliation and wait until Vault is fully operational again.
 //
 //     Get https://vault.g8s.amag.ch:8200/v1/sys/mounts: http: server gave HTTP response to HTTPS client
 //
