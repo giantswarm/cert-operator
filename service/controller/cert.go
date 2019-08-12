@@ -52,34 +52,6 @@ func NewCert(config CertConfig) (*Cert, error) {
 	if config.G8sClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "config.G8sClient must not be empty")
 	}
-	if config.K8sClient == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.K8sClient must not be empty")
-	}
-	if config.K8sExtClient == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.K8sExtClient must not be empty")
-	}
-	if config.Logger == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.Logger must not be empty")
-	}
-	if config.VaultClient == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.VaultClient must not be empty")
-	}
-
-	if config.CATTL == "" {
-		return nil, microerror.Maskf(invalidConfigError, "config.CATTL must not be empty")
-	}
-	if config.CommonNameFormat == "" {
-		return nil, microerror.Maskf(invalidConfigError, "config.CommonNameFormat must not be empty")
-	}
-	if config.ExpirationThreshold == 0 {
-		return nil, microerror.Maskf(invalidConfigError, "config.ExpirationThreshold must not be empty")
-	}
-	if config.Namespace == "" {
-		return nil, microerror.Maskf(invalidConfigError, "config.Namespace must not be empty")
-	}
-	if config.ProjectName == "" {
-		return nil, microerror.Maskf(invalidConfigError, "config.ProjectName must not be empty")
-	}
 
 	var err error
 
@@ -160,11 +132,12 @@ func NewCert(config CertConfig) (*Cert, error) {
 	var v2ResourceSet *controller.ResourceSet
 	{
 		c := v2.ResourceSetConfig{
-			K8sClient: config.K8sClient,
-			Logger:    config.Logger,
-			VaultCrt:  vaultCrt,
-			VaultPKI:  vaultPKI,
-			VaultRole: vaultRole,
+			K8sClient:   config.K8sClient,
+			Logger:      config.Logger,
+			VaultClient: config.VaultClient,
+			VaultCrt:    vaultCrt,
+			VaultPKI:    vaultPKI,
+			VaultRole:   vaultRole,
 
 			ExpirationThreshold: config.ExpirationThreshold,
 			Namespace:           config.Namespace,

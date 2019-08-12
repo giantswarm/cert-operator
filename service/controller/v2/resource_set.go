@@ -11,20 +11,23 @@ import (
 	"github.com/giantswarm/vaultcrt"
 	"github.com/giantswarm/vaultpki"
 	"github.com/giantswarm/vaultrole"
+	vaultapi "github.com/hashicorp/vault/api"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/giantswarm/cert-operator/service/controller/v2/key"
+	"github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultaccess"
 	vaultcrtresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultcrt"
 	vaultpkiresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultpki"
 	vaultroleresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultrole"
 )
 
 type ResourceSetConfig struct {
-	K8sClient kubernetes.Interface
-	Logger    micrologger.Logger
-	VaultCrt  vaultcrt.Interface
-	VaultPKI  vaultpki.Interface
-	VaultRole vaultrole.Interface
+	K8sClient   kubernetes.Interface
+	Logger      micrologger.Logger
+	VaultClient *vaultapi.Client
+	VaultCrt    vaultcrt.Interface
+	VaultPKI    vaultpki.Interface
+	VaultRole   vaultrole.Interface
 
 	ExpirationThreshold time.Duration
 	Namespace           string
@@ -32,45 +35,32 @@ type ResourceSetConfig struct {
 }
 
 func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
-	if config.K8sClient == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.K8sClient must not be empty")
-	}
-	if config.Logger == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.Logger must not be empty")
-	}
-	if config.VaultCrt == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.VaultCrt must not be empty")
-	}
-	if config.VaultPKI == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.VaultPKI must not be empty")
-	}
-	if config.VaultRole == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.VaultRole must not be empty")
-	}
-
-	if config.ExpirationThreshold == 0 {
-		return nil, microerror.Maskf(invalidConfigError, "config.ExpirationThreshold must not be empty")
-	}
-	if config.Namespace == "" {
-		return nil, microerror.Maskf(invalidConfigError, "config.Namespace must not be empty")
-	}
-	if config.ProjectName == "" {
-		return nil, microerror.Maskf(invalidConfigError, "config.ProjectName must not be empty")
-	}
-
 	var err error
+
+	var vaultAccessResource controller.Resource
+	{
+		c := vaultaccess.Config{
+			Logger:      config.Logger,
+			VaultClient: config.VaultClient,
+		}
+
+		vaultAccessResource, err = vaultaccess.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
 
 	var vaultCrtResource controller.Resource
 	{
-		c := vaultcrtresource.DefaultConfig()
+		c := vaultcrtresource.Config{
+			CurrentTimeFactory: func() time.Time { return time.Now() },
+			K8sClient:          config.K8sClient,
+			Logger:             config.Logger,
+			VaultCrt:           config.VaultCrt,
 
-		c.CurrentTimeFactory = func() time.Time { return time.Now() }
-		c.K8sClient = config.K8sClient
-		c.Logger = config.Logger
-		c.VaultCrt = config.VaultCrt
-
-		c.ExpirationThreshold = config.ExpirationThreshold
-		c.Namespace = config.Namespace
+			ExpirationThreshold: config.ExpirationThreshold,
+			Namespace:           config.Namespace,
+		}
 
 		ops, err := vaultcrtresource.New(c)
 		if err != nil {
@@ -103,10 +93,10 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 
 	var vaultRoleResource controller.Resource
 	{
-		c := vaultroleresource.DefaultConfig()
-
-		c.Logger = config.Logger
-		c.VaultRole = config.VaultRole
+		c := vaultroleresource.Config{
+			Logger:    config.Logger,
+			VaultRole: config.VaultRole,
+		}
 
 		ops, err := vaultroleresource.New(c)
 		if err != nil {
@@ -120,6 +110,7 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 	}
 
 	resources := []controller.Resource{
+		vaultAccessResource,
 		vaultPKIResource,
 		vaultRoleResource,
 		vaultCrtResource,
@@ -146,17 +137,12 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 	}
 
 	handlesFunc := func(obj interface{}) bool {
-		customObject, err := key.ToCustomObject(obj)
+		cr, err := key.ToCustomObject(obj)
 		if err != nil {
 			return false
 		}
 
-		if key.VersionBundleVersion(customObject) == VersionBundle().Version {
-			return true
-		}
-		// TODO remove this hack with the next version bundle version or as soon as
-		// all certconfigs obtain a real version bundle version.
-		if key.VersionBundleVersion(customObject) == "" {
+		if key.VersionBundleVersion(cr) == VersionBundle().Version {
 			return true
 		}
 
