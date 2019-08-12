@@ -62,6 +62,7 @@ func (v *Vault) Collect(ch chan<- prometheus.Metric) error {
 	secret, err := v.vaultClient.Auth().Token().LookupSelf()
 	if IsVaultAccess(err) {
 		v.logger.LogCtx(ctx, "level", "debug", "message", "vault not reachable")
+		v.logger.LogCtx(ctx, "level", "debug", "message", "vault upgrade in progress")
 		v.logger.LogCtx(ctx, "level", "debug", "message", "canceling collection")
 		return nil
 
