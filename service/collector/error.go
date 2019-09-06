@@ -36,7 +36,7 @@ var vaultAccessError = &microerror.Error{
 // temporarily replies with HTTP responses. In such cases we intend to cancel
 // collection and wait until Vault is fully operational again.
 //
-//     Get https://vault.g8s.amag.ch:8200/v1/sys/mounts: http: server gave HTTP response to HTTPS client
+//     Get https://vault.g8s.foo.bar:8200/v1/sys/mounts: http: server gave HTTP response to HTTPS client
 //
 func IsVaultAccess(err error) bool {
 	if err == nil {
