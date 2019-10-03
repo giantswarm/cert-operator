@@ -22,11 +22,11 @@
 
 
 [[constraint]]
-  branch = "kubernetes-1.15.4"
+  branch = "master"
   name = "github.com/giantswarm/apiextensions"
 
 [[constraint]]
-  branch = "kubernetes-1.15.4"
+  branch = "master"
   name = "github.com/giantswarm/certs"
 
 [[constraint]]
@@ -46,7 +46,7 @@
   name = "github.com/giantswarm/micrologger"
 
 [[constraint]]
-  branch = "kubernetes-1.15.4"
+  branch = "master"
   name = "github.com/giantswarm/operatorkit"
 
 [[constraint]]
@@ -54,7 +54,7 @@
   name = "github.com/giantswarm/vaultcrt"
 
 [[constraint]]
-  branch = "vault-1.0.3"
+  branch = "master"
   name = "github.com/giantswarm/vaultpki"
 
 [[constraint]]

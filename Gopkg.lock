@@ -50,15 +50,15 @@
   version = "v1.4.7"
 
 [[projects]]
-  branch = "master"
-  digest = "1:08188cf7ce7027b22e88cc23da27f17349a0ba7746271a60cbe0a70266c2346f"
+  digest = "1:2cd7915ab26ede7d95b8749e6b1f933f1c6d5398030684e6505940a10f31cfda"
   name = "github.com/ghodss/yaml"
   packages = ["."]
   pruneopts = "UT"
-  revision = "25d852aebe32c875e9c044af3eef9c7dc6bc777f"
+  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
+  version = "v1.0.0"
 
 [[projects]]
-  branch = "kubernetes-1.15.4"
+  branch = "master"
   digest = "1:fcb75264e7f1a4276044b71f706baf6b1eba4e619f3a3bc95f33c677cbe25f6c"
   name = "github.com/giantswarm/apiextensions"
   packages = [
@@ -76,7 +76,7 @@
     "pkg/clientset/versioned/typed/release/v1alpha1",
   ]
   pruneopts = "UT"
-  revision = "7f60ca086f8108992be7121cab8cdc955790026c"
+  revision = "b17ff25cb436672b4990e5a8e7b74a2d735f6535"
 
 [[projects]]
   branch = "master"
@@ -87,12 +87,12 @@
   revision = "4dd4911251929a0ac4c4f3d8c4bda482a9e09f30"
 
 [[projects]]
-  branch = "kubernetes-1.15.4"
-  digest = "1:6b71cb25bd75e67a3d1e7f33ee3a24952fdd7d4c1dd8a29102bb6c3b11dd7545"
+  branch = "master"
+  digest = "1:1277cd324153912fb762e7305ceedbc8e1e89bef9a3b320960a5f38dbf7f7358"
   name = "github.com/giantswarm/certs"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e1e44100aec67be07dad2c889453f068989dc54b"
+  revision = "776376d011031615b44d4080a0f2efaa301d6ddd"
 
 [[projects]]
   branch = "master"
@@ -159,7 +159,7 @@
   revision = "0926d9b7c5419173936b4556411a103bdf8d5966"
 
 [[projects]]
-  branch = "kubernetes-1.15.4"
+  branch = "master"
   digest = "1:a20261f33e19d5b869342e85f9c71eb6c41cd842ab14cc7ff3f916a223ff3aaf"
   name = "github.com/giantswarm/operatorkit"
   packages = [
@@ -181,7 +181,7 @@
     "resource/wrapper/retryresource",
   ]
   pruneopts = "UT"
-  revision = "994bfd4b64084d21fdf43018cbe75a0e293cb3e3"
+  revision = "c193ea196181c42e5c54f30ba2f2d6055b3742b2"
 
 [[projects]]
   branch = "master"
@@ -196,8 +196,8 @@
   revision = "21b9ab676cc3399ab1cbb4959c74bca5e90935ae"
 
 [[projects]]
-  branch = "vault-1.0.3"
-  digest = "1:4d58e8a1e764892b84e8306fd31d61267944364b264366ab9233c6aa73bc77d0"
+  branch = "master"
+  digest = "1:47d79c58d77f2fe0f2b854519cea057617737902e49c73e776076d602cd36ddb"
   name = "github.com/giantswarm/vaultpki"
   packages = [
     ".",
@@ -205,7 +205,7 @@
     "vaultpkitest",
   ]
   pruneopts = "UT"
-  revision = "e8c7cc0e0b97e44bff2e248a27f8a2315321f534"
+  revision = "26adccac513b4d9e2143a77630429ee7add866b6"
 
 [[projects]]
   branch = "master"
@@ -433,12 +433,12 @@
   version = "v1.0.3"
 
 [[projects]]
-  digest = "1:a0cefd27d12712af4b5018dc7046f245e1e3b5760e2e848c30b171b570708f9b"
+  digest = "1:78d28d5b84a26159c67ea51996a230da4bc07cac648adaae1dfb5fc0ec8e40d3"
   name = "github.com/imdario/mergo"
   packages = ["."]
   pruneopts = "UT"
-  revision = "7c29201646fa3de8506f701213473dd407f19646"
-  version = "v0.3.7"
+  revision = "1afb36080aec31e0d1528973ebe6721b191b0369"
+  version = "v0.3.8"
 
 [[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
@@ -680,7 +680,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "a832865fa7ada6126f4c6124ac49f71be71bff2a"
+  revision = "34f69633bfdcf9db92f698f8487115767eebef81"
 
 [[projects]]
   branch = "master"
@@ -696,7 +696,7 @@
     "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "c5a3c61f89f3ed696ec36b629ef1b97541165225"
+  revision = "2ec189313ef0a07735684caebd1ba8b8ebca456f"
 
 [[projects]]
   branch = "master"
@@ -719,14 +719,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7711a885664a85941a1d9d339f7f12c742cd8f88def90e74f89805508cfca97f"
+  digest = "1:5b617d7853b8c2432735f83315f16c7f463fdaf79a5fe165f5b8205931017d95"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "c990c680b611ac1aeb7d8f2af94a825f98d69720"
+  revision = "b397fe3ad8ed895c98fa54584f61835a88e65ff5"
 
 [[projects]]
   digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
@@ -794,12 +794,12 @@
   version = "v1.12.0"
 
 [[projects]]
-  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
+  digest = "1:59f10c1537d2199d9115d946927fe31165959a95190849c82ff11e05803528b0"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
-  version = "v2.2.2"
+  revision = "f221b8435cfb71e54062f6c6e99e9ade30b124d5"
+  version = "v2.2.4"
 
 [[projects]]
   digest = "1:d89afbf3588e87d2c9e6efdd5528d249b32d23a12fbd7ec324f3cb373c6fb76c"
@@ -1083,6 +1083,7 @@
     "github.com/giantswarm/operatorkit/controller/context/resourcecanceledcontext",
     "github.com/giantswarm/operatorkit/flag/service/kubernetes",
     "github.com/giantswarm/operatorkit/informer",
+    "github.com/giantswarm/operatorkit/resource",
     "github.com/giantswarm/operatorkit/resource/wrapper/metricsresource",
     "github.com/giantswarm/operatorkit/resource/wrapper/retryresource",
     "github.com/giantswarm/vaultcrt",
