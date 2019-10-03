@@ -67,7 +67,7 @@
 
 [[constraint]]
   name = "github.com/hashicorp/vault"
-  version = "=0.10.3"
+  version = "=1.0.3"
 
 [[constraint]]
   name = "github.com/prometheus/client_golang"
@@ -77,21 +77,21 @@
   name = "github.com/stretchr/testify"
   version = "=1.2.0"
 
-[[constraint]]
+[[override]]
   name = "k8s.io/api"
-  version = "kubernetes-1.13.2"
+  version = "kubernetes-1.15.4"
 
-[[constraint]]
+[[override]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.13.2"
+  version = "kubernetes-1.15.4"
 
-[[constraint]]
+[[override]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.13.2"
+  version = "kubernetes-1.15.4"
 
-[[constraint]]
+[[override]]
   name = "k8s.io/client-go"
-  version = "kubernetes-1.13.2"
+  version = "kubernetes-1.15.4"
 
 
 

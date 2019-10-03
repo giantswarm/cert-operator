@@ -6,6 +6,7 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/controller"
+	"github.com/giantswarm/operatorkit/resource"
 	"github.com/giantswarm/operatorkit/resource/wrapper/metricsresource"
 	"github.com/giantswarm/operatorkit/resource/wrapper/retryresource"
 	"github.com/giantswarm/vaultcrt"
@@ -37,7 +38,7 @@ type ResourceSetConfig struct {
 func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 	var err error
 
-	var vaultAccessResource controller.Resource
+	var vaultAccessResource resource.Interface
 	{
 		c := vaultaccess.Config{
 			Logger:      config.Logger,
@@ -50,7 +51,7 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 		}
 	}
 
-	var vaultCrtResource controller.Resource
+	var vaultCrtResource resource.Interface
 	{
 		c := vaultcrtresource.Config{
 			CurrentTimeFactory: func() time.Time { return time.Now() },
@@ -73,7 +74,7 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 		}
 	}
 
-	var vaultPKIResource controller.Resource
+	var vaultPKIResource resource.Interface
 	{
 		c := vaultpkiresource.Config{
 			Logger:   config.Logger,
@@ -91,7 +92,7 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 		}
 	}
 
-	var vaultRoleResource controller.Resource
+	var vaultRoleResource resource.Interface
 	{
 		c := vaultroleresource.Config{
 			Logger:    config.Logger,
@@ -109,7 +110,7 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 		}
 	}
 
-	resources := []controller.Resource{
+	resources := []resource.Interface{
 		vaultAccessResource,
 		vaultPKIResource,
 		vaultRoleResource,
