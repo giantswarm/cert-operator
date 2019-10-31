@@ -43,6 +43,7 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 	var cleaningResource resource.Interface
 	{
 		c := cleaning.Config{
+			G8sClient: config.G8sClinet,
 			K8sClient: config.K8sClient,
 			Logger:    config.Logger,
 		}
