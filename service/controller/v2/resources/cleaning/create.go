@@ -12,23 +12,23 @@ import (
 )
 
 func (r *Resource) EnsureCreated(ctx context.Context, obj interface{}) error {
-	customObject, err := key.ToCustomObject(obj)
+	cr, err := key.ToCustomObject(obj)
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	clusterID := key.ClusterID(customObject)
+	clusterID := key.ClusterID(cr)
 
 	_, err = r.k8sClient.CoreV1().Namespaces().Get(clusterID, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("cluster namespace %#q does not exist in CP", clusterID))
-		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("deleting %#q certconfig", customObject.GetName()))
+		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("deleting %#q certconfig", cr.GetName()))
 
-		err = r.g8sClient.CoreV1alpha1().CertConfigs(customObject.GetNamespace()).Delete(customObject.Name, &metav1.DeleteOptions{})
+		err = r.g8sClient.CoreV1alpha1().CertConfigs(cr.GetNamespace()).Delete(cr.Name, &metav1.DeleteOptions{})
 		if err != nil {
 			return microerror.Mask(err)
 		}
-		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("deleted %#q certconfig", customObject.GetName()))
+		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("deleted %#q certconfig", cr.GetName()))
 	} else if err != nil {
 		return microerror.Mask(err)
 	}
