@@ -3,6 +3,7 @@ package v2
 import (
 	"time"
 
+	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/controller"
@@ -16,6 +17,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/giantswarm/cert-operator/service/controller/v2/key"
+	"github.com/giantswarm/cert-operator/service/controller/v2/resources/cleaning"
 	"github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultaccess"
 	vaultcrtresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultcrt"
 	vaultpkiresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultpki"
@@ -23,6 +25,7 @@ import (
 )
 
 type ResourceSetConfig struct {
+	G8sClinet   versioned.Interface
 	K8sClient   kubernetes.Interface
 	Logger      micrologger.Logger
 	VaultClient *vaultapi.Client
@@ -37,6 +40,18 @@ type ResourceSetConfig struct {
 
 func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 	var err error
+	var cleaningResource resource.Interface
+	{
+		c := cleaning.Config{
+			K8sClient: config.K8sClient,
+			Logger:    config.Logger,
+		}
+
+		cleaningResource, err = cleaning.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
 
 	var vaultAccessResource resource.Interface
 	{
@@ -111,6 +126,7 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 	}
 
 	resources := []resource.Interface{
+		cleaningResource,
 		vaultAccessResource,
 		vaultPKIResource,
 		vaultRoleResource,
