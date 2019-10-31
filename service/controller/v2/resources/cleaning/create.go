@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/operatorkit/controller/context/reconciliationcanceledcontext"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -19,13 +18,6 @@ func (r *Resource) EnsureCreated(ctx context.Context, obj interface{}) error {
 	}
 
 	clusterID := key.ClusterID(customObject)
-
-	if key.IsDeleted(customObject) {
-		r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("certconfig %#q is going to be deleted", customObject.GetName()))
-		r.logger.LogCtx(ctx, "level", "debug", "message", "canceling reconciliation")
-		reconciliationcanceledcontext.SetCanceled(ctx)
-		return nil
-	}
 
 	_, err = r.k8sClient.CoreV1().Namespaces().Get(clusterID, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
