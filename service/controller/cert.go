@@ -132,6 +132,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 	var v2ResourceSet *controller.ResourceSet
 	{
 		c := v2.ResourceSetConfig{
+			G8sClinet:   config.G8sClient,
 			K8sClient:   config.K8sClient,
 			Logger:      config.Logger,
 			VaultClient: config.VaultClient,
