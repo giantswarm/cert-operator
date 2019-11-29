@@ -45,8 +45,8 @@
   branch = "master"
   name = "github.com/giantswarm/micrologger"
 
-[[constraint]]
-  branch = "master"
+[[override]]
+  branch = "cluster-controller"
   name = "github.com/giantswarm/operatorkit"
 
 [[constraint]]
@@ -92,6 +92,10 @@
 [[override]]
   name = "k8s.io/client-go"
   version = "kubernetes-1.15.4"
+
+[[override]]
+  source = "gopkg.in/fsnotify/fsnotify.v1"
+  name = "gopkg.in/fsnotify.v1"
 
 
 
