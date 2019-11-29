@@ -4,7 +4,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
@@ -77,7 +76,6 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	fmt.Printf("1\n")
 	var k8sClient *k8sclient.Clients
 	{
 		c := k8sclient.ClientsConfig{
@@ -87,13 +85,10 @@ func New(config Config) (*Service, error) {
 			RestConfig: restConfig,
 		}
 
-		fmt.Printf("2\n")
 		k8sClient, err = k8sclient.NewClients(c)
-		fmt.Printf("3\n")
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
-		fmt.Printf("4\n")
 	}
 
 	var vaultClient *vaultapi.Client
