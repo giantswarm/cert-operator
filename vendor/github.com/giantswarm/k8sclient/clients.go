@@ -1,6 +1,8 @@
 package k8sclient
 
 import (
+	"fmt"
+
 	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
@@ -56,6 +58,7 @@ func NewClients(config ClientsConfig) (*Clients, error) {
 
 	var err error
 
+	fmt.Printf("1 1\n")
 	var restConfig *rest.Config
 	{
 		if config.RestConfig != nil {
@@ -68,6 +71,7 @@ func NewClients(config ClientsConfig) (*Clients, error) {
 		}
 	}
 
+	fmt.Printf("1 2\n")
 	var extClient *apiextensionsclient.Clientset
 	{
 		c := rest.CopyConfig(restConfig)
@@ -77,6 +81,7 @@ func NewClients(config ClientsConfig) (*Clients, error) {
 			return nil, microerror.Mask(err)
 		}
 	}
+	fmt.Printf("1 3\n")
 
 	var crdClient *k8scrdclient.CRDClient
 	{
@@ -90,17 +95,22 @@ func NewClients(config ClientsConfig) (*Clients, error) {
 			return nil, microerror.Mask(err)
 		}
 	}
+	fmt.Printf("1 4\n")
 
 	var ctrlClient client.Client
 	{
+		fmt.Printf("1 5\n")
 		if config.AddToScheme != nil {
+			fmt.Printf("1 6\n")
 			// Extend the global client-go scheme which is used by all the tools under
 			// the hood. The scheme is required for the controller-runtime controller to
 			// be able to watch for runtime objects of a certain type.
 			err = config.AddToScheme(scheme.Scheme)
+			fmt.Printf("1 7\n")
 			if err != nil {
 				return nil, microerror.Mask(err)
 			}
+			fmt.Printf("1 8\n")
 		}
 
 		// Configure a dynamic rest mapper to the controller client so it can work
@@ -110,12 +120,16 @@ func NewClients(config ClientsConfig) (*Clients, error) {
 		// we want to separate client and manager. Thus we configure the client here
 		// properly on our own instead of relying on the manager to provide a
 		// client, which might change in the future.
+		fmt.Printf("1 9\n")
 		mapper, err := apiutil.NewDynamicRESTMapper(restConfig)
+		fmt.Printf("1 10\n")
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
 
+		fmt.Printf("1 11\n")
 		ctrlClient, err = client.New(rest.CopyConfig(restConfig), client.Options{Scheme: scheme.Scheme, Mapper: mapper})
+		fmt.Printf("1 12\n")
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -151,6 +165,7 @@ func NewClients(config ClientsConfig) (*Clients, error) {
 		}
 	}
 
+	fmt.Printf("1 13\n")
 	var restClient rest.Interface
 	{
 		// It would be cool to use rest.RESTClientFor here but it fails
@@ -161,6 +176,7 @@ func NewClients(config ClientsConfig) (*Clients, error) {
 		//
 		restClient = k8sClient.RESTClient()
 	}
+	fmt.Printf("1 14\n")
 
 	c := &Clients{
 		logger: config.Logger,
