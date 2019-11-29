@@ -4,29 +4,24 @@ import (
 	"time"
 
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
-	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
+	"github.com/giantswarm/k8sclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	"github.com/giantswarm/operatorkit/client/k8scrdclient"
 	"github.com/giantswarm/operatorkit/controller"
-	"github.com/giantswarm/operatorkit/informer"
 	"github.com/giantswarm/vaultcrt"
 	"github.com/giantswarm/vaultpki"
 	"github.com/giantswarm/vaultrole"
 	vaultapi "github.com/hashicorp/vault/api"
-	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/giantswarm/cert-operator/service/controller/v2"
 )
 
 type CertConfig struct {
-	G8sClient    versioned.Interface
-	K8sClient    kubernetes.Interface
-	K8sExtClient apiextensionsclient.Interface
-	Logger       micrologger.Logger
-	VaultClient  *vaultapi.Client
+	K8sClient   k8sclient.Interface
+	Logger      micrologger.Logger
+	VaultClient *vaultapi.Client
 
 	CATTL               string
 	CRDLabelSelector    string
@@ -49,24 +44,11 @@ type Cert struct {
 }
 
 func NewCert(config CertConfig) (*Cert, error) {
-	if config.G8sClient == nil {
-		return nil, microerror.Maskf(invalidConfigError, "config.G8sClient must not be empty")
+	if config.K8sClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "config.K8sClient must not be empty")
 	}
 
 	var err error
-
-	var crdClient *k8scrdclient.CRDClient
-	{
-		c := k8scrdclient.Config{
-			K8sExtClient: config.K8sExtClient,
-			Logger:       config.Logger,
-		}
-
-		crdClient, err = k8scrdclient.New(c)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
 
 	var vaultCrt vaultcrt.Interface
 	{
@@ -112,27 +94,10 @@ func NewCert(config CertConfig) (*Cert, error) {
 		}
 	}
 
-	var newInformer *informer.Informer
-	{
-		c := informer.Config{
-			Logger:  config.Logger,
-			Watcher: config.G8sClient.CoreV1alpha1().CertConfigs(""),
-
-			ListOptions:  config.newInformerListOptions(),
-			RateWait:     informer.DefaultRateWait,
-			ResyncPeriod: informer.DefaultResyncPeriod,
-		}
-
-		newInformer, err = informer.New(c)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
-
 	var v2ResourceSet *controller.ResourceSet
 	{
 		c := v2.ResourceSetConfig{
-			K8sClient:   config.K8sClient,
+			K8sClient:   config.K8sClient.K8sClient(),
 			Logger:      config.Logger,
 			VaultClient: config.VaultClient,
 			VaultCrt:    vaultCrt,
@@ -154,14 +119,15 @@ func NewCert(config CertConfig) (*Cert, error) {
 	{
 		c := controller.Config{
 			CRD:       v1alpha1.NewCertConfigCRD(),
-			CRDClient: crdClient,
-			Informer:  newInformer,
+			K8sClient: config.K8sClient,
 			Logger:    config.Logger,
 			Name:      config.ProjectName,
 			ResourceSets: []*controller.ResourceSet{
 				v2ResourceSet,
 			},
-			RESTClient: config.G8sClient.CoreV1alpha1().RESTClient(),
+			NewRuntimeObjectFunc: func() runtime.Object {
+				return new(v1alpha1.CertConfig)
+			},
 		}
 
 		operatorkitController, err = controller.New(c)
