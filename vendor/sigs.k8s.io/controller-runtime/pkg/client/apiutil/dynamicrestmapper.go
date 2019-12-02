@@ -17,7 +17,6 @@ limitations under the License.
 package apiutil
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -99,45 +98,32 @@ func WithCustomMapper(newMapper func() (meta.RESTMapper, error)) DynamicRESTMapp
 // RESTMapper dynamically discovers resource types at runtime. opts
 // configure the RESTMapper.
 func NewDynamicRESTMapper(cfg *rest.Config, opts ...DynamicRESTMapperOption) (meta.RESTMapper, error) {
-	fmt.Printf("1\n")
 	client, err := discovery.NewDiscoveryClientForConfig(cfg)
-	fmt.Printf("2\n")
 	if err != nil {
-		fmt.Printf("3\n")
 		return nil, err
 	}
-	fmt.Printf("4\n")
 	drm := &dynamicRESTMapper{
 		limiter: &dynamicLimiter{
 			rate.NewLimiter(rate.Limit(defaultRefillRate), defaultLimitSize),
 		},
 		newMapper: func() (meta.RESTMapper, error) {
-			fmt.Printf("4 1\n")
 			groupResources, err := restmapper.GetAPIGroupResources(client)
-			fmt.Printf("4 2\n")
 			if err != nil {
 				return nil, err
 			}
-			fmt.Printf("4 3\n")
 			return restmapper.NewDiscoveryRESTMapper(groupResources), nil
 		},
 	}
-	fmt.Printf("5\n")
 	for _, opt := range opts {
-		fmt.Printf("5 1\n")
 		if err = opt(drm); err != nil {
-			fmt.Printf("5 2\n")
 			return nil, err
 		}
-		fmt.Printf("5 3\n")
 	}
-	fmt.Printf("6\n")
 	if !drm.lazy {
 		if err := drm.setStaticMapper(); err != nil {
 			return nil, err
 		}
 	}
-	fmt.Printf("7\n")
 	return drm, nil
 }
 

@@ -104,14 +104,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:05cb6533a801e2a154f1d7dd3e6ed3c319d000a3958f8ce30832b079d60ffab2"
+  digest = "1:1acdd05d45c9b3027ff626812ca6b0c409a8db5cca7f08ee72358685e2610e46"
   name = "github.com/giantswarm/k8sclient"
   packages = [
     ".",
     "k8scrdclient",
   ]
   pruneopts = "UT"
-  revision = "8680e194c7eed1bb0121972ca46ca4b0396536fd"
+  revision = "f1e80322a86a661e7b11d5db4e5607052c04e586"
 
 [[projects]]
   branch = "master"
@@ -190,7 +190,7 @@
     "resource/wrapper/retryresource",
   ]
   pruneopts = "UT"
-  revision = "1403f9b635e745099c5eb43005bc607ecfbf68ae"
+  revision = "454f0a9e51b3d19631c82e8b02c816b6fd12d97c"
 
 [[projects]]
   branch = "master"
@@ -1175,9 +1175,9 @@
   analyzer-version = 1
   input-imports = [
     "github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1",
-    "github.com/giantswarm/apiextensions/pkg/clientset/versioned",
     "github.com/giantswarm/certs",
     "github.com/giantswarm/exporterkit/collector",
+    "github.com/giantswarm/k8sclient",
     "github.com/giantswarm/microendpoint/endpoint/healthz",
     "github.com/giantswarm/microendpoint/endpoint/version",
     "github.com/giantswarm/microendpoint/service/version",
@@ -1194,6 +1194,7 @@
     "github.com/giantswarm/operatorkit/controller/context/resourcecanceledcontext",
     "github.com/giantswarm/operatorkit/flag/service/kubernetes",
     "github.com/giantswarm/operatorkit/resource",
+    "github.com/giantswarm/operatorkit/resource/crud",
     "github.com/giantswarm/operatorkit/resource/wrapper/metricsresource",
     "github.com/giantswarm/operatorkit/resource/wrapper/retryresource",
     "github.com/giantswarm/vaultcrt",
@@ -1208,9 +1209,9 @@
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
     "k8s.io/api/core/v1",
-    "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
+    "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/fake",
     "k8s.io/client-go/rest",
