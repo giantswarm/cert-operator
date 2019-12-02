@@ -104,11 +104,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1acdd05d45c9b3027ff626812ca6b0c409a8db5cca7f08ee72358685e2610e46"
+  digest = "1:f7498cfdac5deb184a02acc5f5b69132365fc804feca1c15b0e2154207b22fcb"
   name = "github.com/giantswarm/k8sclient"
   packages = [
     ".",
     "k8scrdclient",
+    "k8srestconfig",
   ]
   pruneopts = "UT"
   revision = "f1e80322a86a661e7b11d5db4e5607052c04e586"
@@ -171,10 +172,9 @@
 
 [[projects]]
   branch = "cluster-controller"
-  digest = "1:ef76b0792b9617374eeeb0991a5ae3f0780c0575586d6c2bea51cd9f3fa00e36"
+  digest = "1:500ce20f84c3ba49aa9556d0619953c07c74cdacc84c77b696367b39e4c22c62"
   name = "github.com/giantswarm/operatorkit"
   packages = [
-    "client/k8srestconfig",
     "controller",
     "controller/context/finalizerskeptcontext",
     "controller/context/reconciliationcanceledcontext",
@@ -190,7 +190,7 @@
     "resource/wrapper/retryresource",
   ]
   pruneopts = "UT"
-  revision = "454f0a9e51b3d19631c82e8b02c816b6fd12d97c"
+  revision = "4005ce9bb88eb02a9143ff6e87027af686e44c58"
 
 [[projects]]
   branch = "master"
@@ -1178,6 +1178,7 @@
     "github.com/giantswarm/certs",
     "github.com/giantswarm/exporterkit/collector",
     "github.com/giantswarm/k8sclient",
+    "github.com/giantswarm/k8sclient/k8srestconfig",
     "github.com/giantswarm/microendpoint/endpoint/healthz",
     "github.com/giantswarm/microendpoint/endpoint/version",
     "github.com/giantswarm/microendpoint/service/version",
@@ -1187,7 +1188,6 @@
     "github.com/giantswarm/microkit/server",
     "github.com/giantswarm/micrologger",
     "github.com/giantswarm/micrologger/microloggertest",
-    "github.com/giantswarm/operatorkit/client/k8srestconfig",
     "github.com/giantswarm/operatorkit/controller",
     "github.com/giantswarm/operatorkit/controller/context/finalizerskeptcontext",
     "github.com/giantswarm/operatorkit/controller/context/reconciliationcanceledcontext",
