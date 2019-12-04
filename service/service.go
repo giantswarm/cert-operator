@@ -79,8 +79,10 @@ func New(config Config) (*Service, error) {
 	var k8sClient *k8sclient.Clients
 	{
 		c := k8sclient.ClientsConfig{
-			AddToScheme: v1alpha1.AddToScheme,
-			Logger:      config.Logger,
+			SchemeBuilder: k8sclient.SchemeBuilder{
+				v1alpha1.AddToScheme,
+			},
+			Logger: config.Logger,
 
 			RestConfig: restConfig,
 		}
