@@ -93,6 +93,10 @@
   name = "k8s.io/client-go"
   version = "kubernetes-1.15.4"
 
+[[override]]
+  source = "gopkg.in/fsnotify/fsnotify.v1"
+  name = "gopkg.in/fsnotify.v1"
+
 
 
 [prune]
