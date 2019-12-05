@@ -45,8 +45,8 @@
   branch = "master"
   name = "github.com/giantswarm/micrologger"
 
-[[override]]
-  branch = "cluster-controller"
+[[constraint]]
+  branch = "master"
   name = "github.com/giantswarm/operatorkit"
 
 [[constraint]]
