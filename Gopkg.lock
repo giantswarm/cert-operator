@@ -172,7 +172,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:500ce20f84c3ba49aa9556d0619953c07c74cdacc84c77b696367b39e4c22c62"
+  digest = "1:e3dcfca96177f8b713e76e0f15660b33afc5de3110b2cf6c0a801dbaac904a9f"
   name = "github.com/giantswarm/operatorkit"
   packages = [
     "controller",
@@ -190,7 +190,7 @@
     "resource/wrapper/retryresource",
   ]
   pruneopts = "UT"
-  revision = "978df0b0d925bd9c26ecd60bd8202c10c88beb3a"
+  revision = "bf8a82fcd8a27bdc37779a7e93f5f51ff0ed8822"
 
 [[projects]]
   branch = "master"
@@ -238,11 +238,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:672e0eb4d4982ab6bb53c51a7d874f81267806557cd611149b88e22feaecd494"
+  digest = "1:90fda7152f6ded9c45d67bee5f23f2d8f148eb15672f30030c095e08eccf02b0"
   name = "github.com/giantswarm/versionbundle"
   packages = ["."]
   pruneopts = "UT"
-  revision = "21f4b8d7441e7dc7de8b2db37f712a675cf83a70"
+  revision = "be95231628aed039183214a0e337bfe621e3072a"
 
 [[projects]]
   digest = "1:83a37f3bd4ccd13469775ef771e943e6c7cfaba6926decff6c83135e56512f08"
@@ -692,12 +692,12 @@
   version = "v1.0.5"
 
 [[projects]]
-  digest = "1:0b60fc944fb6a7b6c985832bd341bdb7ed8fe894fea330414e7774bb24652962"
+  digest = "1:2e1b3cb1c2de4bfff876b3764bf207ade21d41d9b1e6af0ba84591f4240bf455"
   name = "github.com/spf13/viper"
   packages = ["."]
   pruneopts = "UT"
-  revision = "72b022eb357a56469725dcd03918449e2278d02e"
-  version = "v1.5.0"
+  revision = "5ad4bc05cf581ee54efd78c7fd58202609d10857"
+  version = "v1.6.0"
 
 [[projects]]
   digest = "1:f851adbf061d78e8927a16c7f2e87d63f5f1a36f5485fdea01b8ab9d46af356c"
@@ -721,7 +721,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "0a08dada0ff98d02f3864a23ae8d27cb8fba5303"
+  revision = "e7c4368fe9ddd156b5f1463283cb51c5b400c373"
 
 [[projects]]
   branch = "master"
@@ -737,7 +737,7 @@
     "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "5ee1b9f4859acd2e99987ef94ec7a58427c53bef"
+  revision = "1ddd1de85cb0337b623b740a609d35817d516a8d"
 
 [[projects]]
   branch = "master"
@@ -853,6 +853,14 @@
   pruneopts = "UT"
   revision = "d2d2541c53f18d2a059457998ce2876cc8e67cbf"
   version = "v0.9.1"
+
+[[projects]]
+  digest = "1:591460fbfc463bda7071ac906bed19cbf64cffd5fcb80a6d1490e87b9dfad942"
+  name = "gopkg.in/ini.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "87e589f4917038ae250cff2446db7573f47e97ca"
+  version = "v1.51.0"
 
 [[projects]]
   digest = "1:41206f4d0410803e64cfb203f665330c3183988408cb532b56305a816a87bd99"
