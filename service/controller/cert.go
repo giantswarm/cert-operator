@@ -15,7 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/giantswarm/cert-operator/service/controller/v2"
+	v2 "github.com/giantswarm/cert-operator/service/controller/v2"
 )
 
 type CertConfig struct {

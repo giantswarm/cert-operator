@@ -1,8 +1,6 @@
 package k8sclient
 
 import (
-	"fmt"
-
 	"github.com/giantswarm/apiextensions/pkg/clientset/versioned"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
@@ -80,7 +78,6 @@ func NewClients(config ClientsConfig) (*Clients, error) {
 		}
 	}
 
-	fmt.Printf("1\n")
 	var crdClient *k8scrdclient.CRDClient
 	{
 		c := k8scrdclient.Config{
@@ -94,7 +91,6 @@ func NewClients(config ClientsConfig) (*Clients, error) {
 		}
 	}
 
-	fmt.Printf("2\n")
 	var ctrlClient client.Client
 	{
 		if config.SchemeBuilder != nil {
@@ -116,20 +112,17 @@ func NewClients(config ClientsConfig) (*Clients, error) {
 		// we want to separate client and manager. Thus we configure the client here
 		// properly on our own instead of relying on the manager to provide a
 		// client, which might change in the future.
-		fmt.Printf("3\n")
 		mapper, err := apiutil.NewDynamicRESTMapper(rest.CopyConfig(restConfig))
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
 
-		fmt.Printf("4\n")
 		ctrlClient, err = client.New(rest.CopyConfig(restConfig), client.Options{Scheme: scheme.Scheme, Mapper: mapper})
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
 	}
 
-	fmt.Printf("5\n")
 	var dynClient dynamic.Interface
 	{
 		c := rest.CopyConfig(restConfig)
@@ -140,7 +133,6 @@ func NewClients(config ClientsConfig) (*Clients, error) {
 		}
 	}
 
-	fmt.Printf("6\n")
 	var g8sClient *versioned.Clientset
 	{
 		c := rest.CopyConfig(restConfig)
