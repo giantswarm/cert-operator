@@ -7,3 +7,8 @@ pspName: cert-operator-psp
 
 userID: 1000
 groupID: 1000
+
+Installation:
+  V1:
+    Registry:
+      Domain: quay.io
