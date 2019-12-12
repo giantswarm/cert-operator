@@ -45,7 +45,7 @@ spec:
         runAsGroup: {{ .Values.groupID }}
       containers:
       - name: cert-operator
-        image: quay.io/giantswarm/cert-operator:[[ .SHA ]]
+        image: "{{ .Values.Installation.V1.Registry.Domain }}/giantswarm/cert-operator:[[ .SHA ]]"
         volumeMounts:
         - name: cert-operator-configmap
           mountPath: /var/run/cert-operator/configmap/

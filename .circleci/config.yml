@@ -1,4 +1,7 @@
-version: 2
+orbs:
+  architect: giantswarm/architect@0.4.5
+
+version: 2.1
 jobs:
   build:
     machine: true
@@ -9,11 +12,94 @@ jobs:
         wget -q $(curl -sS -H "Authorization: token $RELEASE_TOKEN" https://api.github.com/repos/giantswarm/architect/releases/latest | grep browser_download_url | head -n 1 | cut -d '"' -f 4)
         chmod +x ./architect
         ./architect version
+
+    - run: |
+        date +"%Y" > /tmp/year
+        date +"%m" > /tmp/month
+        date +"%d" > /tmp/day
+    - restore_cache:
+        keys:
+        - go-cache-v1-{{ checksum "/tmp/year" }}-{{ checksum "/tmp/month" }}-{{ checksum "/tmp/day" }}
+        - go-cache-v1-{{ checksum "/tmp/year" }}-{{ checksum "/tmp/month" }}
+        - go-cache-v1-{{ checksum "/tmp/year" }}
+
     - run: ./architect build
+
     - store_test_results:
         path: /tmp/results
+
+    - save_cache:
+        key: go-cache-v1-{{ checksum "/tmp/year" }}-{{ checksum "/tmp/month" }}-{{ checksum "/tmp/day" }}
+        paths:
+        - /tmp/go/cache
+
+    - persist_to_workspace:
+        root: .
+        paths:
+        - ./cert-operator
+        - ./architect
+
+  deploy:
+    machine: true
+    steps:
+    - checkout
+    - attach_workspace:
+        at: .
     - deploy:
         command: |
-          if [ "${CIRCLE_BRANCH}" == "master" ]; then
             ./architect deploy
-          fi
+
+workflows:
+  build:
+    jobs:
+      - build
+      - architect/push-to-docker-legacy:
+          name: push-cert-operator-to-quay
+          image: "quay.io/giantswarm/cert-operator"
+          username_envar: "QUAY_USERNAME"
+          password_envar: "QUAY_PASSWORD"
+          requires:
+            - build
+
+      - hold-push-cert-operator-to-aliyun-pr:
+          type: approval
+          requires:
+            - build
+          # Needed to prevent job from being triggered on master branch.
+          filters:
+            branches:
+              ignore: master
+
+      - architect/push-to-docker-legacy:
+          name: push-cert-operator-to-aliyun-pr
+          image: "registry-intl.cn-shanghai.aliyuncs.com/giantswarm/cert-operator"
+          username_envar: "ALIYUN_USERNAME"
+          password_envar: "ALIYUN_PASSWORD"
+          # Push to Aliyun should execute for non-master branches only once manually approved.
+          requires:
+            - hold-push-cert-operator-to-aliyun-pr
+          # Needed to prevent job being triggered for master branch.
+          filters:
+            branches:
+              ignore: master
+
+      # Push to Aliyun should execute without manual approval on master.
+      - architect/push-to-docker-legacy:
+          name: push-cert-operator-to-aliyun-master
+          image: "registry-intl.cn-shanghai.aliyuncs.com/giantswarm/cert-operator"
+          username_envar: "ALIYUN_USERNAME"
+          password_envar: "ALIYUN_PASSWORD"
+          requires:
+            - build
+          # Needed to trigger job only on merge to master.
+          filters:
+            branches:
+              only: master
+      - deploy:
+          name: deploy
+          requires:
+            - push-cert-operator-to-aliyun-master
+            - push-cert-operator-to-quay 
+          filters:
+            branches:
+              only: master
