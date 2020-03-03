@@ -43,6 +43,7 @@ type Service struct {
 	bootOnce          sync.Once
 	certController    *controller.Cert
 	operatorCollector *collector.Set
+	logger            micrologger.Logger
 }
 
 func New(config Config) (*Service, error) {
@@ -163,6 +164,7 @@ func New(config Config) (*Service, error) {
 		bootOnce:          sync.Once{},
 		certController:    certController,
 		operatorCollector: operatorCollector,
+		logger:            config.Logger,
 	}
 
 	return s, nil
@@ -172,5 +174,12 @@ func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
 		go s.certController.Boot(context.Background())
 		go s.operatorCollector.Boot(context.Background())
+		go s.CleanVault()
 	})
+}
+
+func (s *Service) CleanVault() {
+	//do some vault cleanup..
+	//TODO LH refactor this somewhere more consistent
+	s.logger.Log("level", "debug", "message", "service.CleanVault() - debug - start wiring")
 }
