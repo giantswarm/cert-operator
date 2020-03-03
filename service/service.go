@@ -4,6 +4,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/giantswarm/microendpoint/service/version"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+	"github.com/giantswarm/vaultpki"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/rest"
@@ -45,6 +47,7 @@ type Service struct {
 	certController    *controller.Cert
 	operatorCollector *collector.Set
 	logger            micrologger.Logger
+	vaultPKI          vaultpki.Interface
 }
 
 func New(config Config) (*Service, error) {
@@ -159,6 +162,23 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
+	//TODO LH temporary to see things working
+	var vaultPKI vaultpki.Interface
+	{
+		c := vaultpki.Config{
+			Logger:      config.Logger,
+			VaultClient: vaultClient,
+			CATTL:       config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CA.TTL),
+
+			CommonNameFormat: config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format),
+		}
+
+		vaultPKI, err = vaultpki.New(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
 	s := &Service{
 		Version: versionService,
 
@@ -166,6 +186,7 @@ func New(config Config) (*Service, error) {
 		certController:    certController,
 		operatorCollector: operatorCollector,
 		logger:            config.Logger,
+		vaultPKI:          vaultPKI,
 	}
 
 	return s, nil
@@ -175,18 +196,22 @@ func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
 		go s.certController.Boot(context.Background())
 		go s.operatorCollector.Boot(context.Background())
-		go s.CleanVault()
+		s.CleanVault()
 	})
 }
 
 func (s *Service) CleanVault() {
 	//do some vault cleanup..
 	//TODO LH refactor this somewhere more consistent
-	for {
-		select {
-		case <-time.After(24 * time.Second):
+	go func() {
+		for range time.Tick(24 * time.Second) {
+			s.logger.Log("level", "debug", "message", "service.CleanVault() - started")
+			backend, err := s.vaultPKI.GetBackend("test")
+			if err != nil {
+				microerror.Mask(err)
+			}
+			s.logger.Log("level", "debug", "message", fmt.Sprintf("backend : %+v", backend))
 
-			s.logger.Log("level", "debug", "message", "service.CleanVault() - debug - start wiring")
 		}
-	}
+	}()
 }
