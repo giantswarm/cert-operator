@@ -5,6 +5,7 @@ package service
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/k8sclient"
@@ -181,5 +182,11 @@ func (s *Service) Boot() {
 func (s *Service) CleanVault() {
 	//do some vault cleanup..
 	//TODO LH refactor this somewhere more consistent
-	s.logger.Log("level", "debug", "message", "service.CleanVault() - debug - start wiring")
+	for {
+		select {
+		case <-time.After(24 * time.Second):
+
+			s.logger.Log("level", "debug", "message", "service.CleanVault() - debug - start wiring")
+		}
+	}
 }
