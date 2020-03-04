@@ -17,6 +17,7 @@ import (
 	"github.com/giantswarm/vaultpki"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
 	clientvault "github.com/giantswarm/cert-operator/client/vault"
@@ -48,6 +49,7 @@ type Service struct {
 	operatorCollector *collector.Set
 	logger            micrologger.Logger
 	vaultPKI          vaultpki.Interface
+	k8sClient         *k8sclient.Clients
 }
 
 func New(config Config) (*Service, error) {
@@ -187,6 +189,7 @@ func New(config Config) (*Service, error) {
 		operatorCollector: operatorCollector,
 		logger:            config.Logger,
 		vaultPKI:          vaultPKI,
+		k8sClient:         k8sClient,
 	}
 
 	return s, nil
@@ -211,7 +214,12 @@ func (s *Service) CleanVault() {
 				microerror.Mask(err)
 			}
 			s.logger.Log("level", "debug", "message", fmt.Sprintf("backends : %+v", backends))
-
+			s.logger.Log("level", "debug", "message", "service.CleanVault() - lookup clusters")
+			clusters, err := s.k8sClient.G8sClient().InfrastructureV1alpha2().AWSClusters("giantswarm").List(metav1.ListOptions{})
+			if err != nil {
+				microerror.Mask(err)
+			}
+			s.logger.Log("level", "debug", "message", "clusters : %+v", clusters)
 		}
 	}()
 }
