@@ -206,11 +206,11 @@ func (s *Service) CleanVault() {
 	go func() {
 		for range time.Tick(24 * time.Second) {
 			s.logger.Log("level", "debug", "message", "service.CleanVault() - started")
-			backend, err := s.vaultPKI.GetBackend("test")
+			backends, err := s.vaultPKI.GetBackends()
 			if err != nil {
 				microerror.Mask(err)
 			}
-			s.logger.Log("level", "debug", "message", fmt.Sprintf("backend : %+v", backend))
+			s.logger.Log("level", "debug", "message", fmt.Sprintf("backends : %+v", backends))
 
 		}
 	}()

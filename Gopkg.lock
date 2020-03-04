@@ -216,8 +216,8 @@
   revision = "21b9ab676cc3399ab1cbb4959c74bca5e90935ae"
 
 [[projects]]
-  branch = "master"
-  digest = "1:47d79c58d77f2fe0f2b854519cea057617737902e49c73e776076d602cd36ddb"
+  branch = "add-get-backends"
+  digest = "1:931d36f3348fbea320be045b99d2eb810e4991f0914c2e9de345b1f4a2babb39"
   name = "github.com/giantswarm/vaultpki"
   packages = [
     ".",
@@ -225,7 +225,7 @@
     "vaultpkitest",
   ]
   pruneopts = "UT"
-  revision = "26adccac513b4d9e2143a77630429ee7add866b6"
+  revision = "062ac41871497b525ae314dcea1fce63ea931c17"
 
 [[projects]]
   branch = "master"

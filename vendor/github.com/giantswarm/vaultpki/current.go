@@ -45,6 +45,19 @@ func (p *VaultPKI) GetBackend(ID string) (*vaultapi.MountOutput, error) {
 	return mountOutput, nil
 }
 
+// GetBackends grabs all backends and returns them as a slice.
+func (p *VaultPKI) GetBackends() ([]*vaultapi.MountOutput, error) {
+	mounts, err := p.vaultClient.Sys().ListMounts()
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+	v := make([]*vaultapi.MountOutput, 0, len(mounts))
+	for _, value := range mounts {
+		v = append(v, value)
+	}
+	return v, nil
+}
+
 // GetCACertificate returns the public key of the root CA of the PKI backend
 // associated to the given ID, if any.
 func (p *VaultPKI) GetCACertificate(ID string) (string, error) {
