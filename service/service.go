@@ -219,7 +219,7 @@ func (s *Service) CleanVault() {
 			if err != nil {
 				microerror.Mask(err)
 			}
-			s.logger.Log("level", "debug", "message", "clusters : %+v", clusters)
+			s.logger.Log("level", "debug", "message", fmt.Sprintf("clusters : %+v", clusters))
 		}
 	}()
 }
