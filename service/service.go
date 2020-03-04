@@ -215,7 +215,7 @@ func (s *Service) CleanVault() {
 			}
 			s.logger.Log("level", "debug", "message", fmt.Sprintf("backends : %+v", backends))
 			s.logger.Log("level", "debug", "message", "service.CleanVault() - lookup clusters")
-			clusters, err := s.k8sClient.G8sClient().InfrastructureV1alpha2().AWSClusters("giantswarm").List(metav1.ListOptions{})
+			clusters, err := s.k8sClient.G8sClient().InfrastructureV1alpha2().AWSClusters("default").List(metav1.ListOptions{})
 			if err != nil {
 				microerror.Mask(err)
 			}
