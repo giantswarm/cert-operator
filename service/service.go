@@ -215,13 +215,11 @@ func (s *Service) CleanVault() {
 			}
 			s.logger.Log("level", "debug", "message", fmt.Sprintf("backends : %+v", backends))
 			s.logger.Log("level", "debug", "message", "service.CleanVault() - lookup clusters")
-			machineDeploymentList, err := s.k8sClient.G8sClient().InfrastructureV1alpha2().AWSMachineDeployments(metav1.NamespaceAll).List(metav1.ListOptions{})
-			//clusters, err := s.k8sClient.G8sClient().InfrastructureV1alpha2().AWSClusters(metav1.NamespaceAll).List(metav1.ListOptions{}) //TODO LH figure this should return everything ?
+			clusters, err := s.k8sClient.G8sClient().InfrastructureV1alpha2().AWSClusters(metav1.NamespaceAll).List(metav1.ListOptions{}) //TODO LH figure this should return everything ?
 			if err != nil {
 				microerror.Mask(err)
 			}
-			// s.logger.Log("level", "debug", "message", fmt.Sprintf("clusters : %+v", clusters))
-			s.logger.Log("level", "debug", "message", fmt.Sprintf("machine deployments : %+v", machineDeploymentList))
+			s.logger.Log("level", "debug", "message", fmt.Sprintf("clusters : %+v", clusters))
 		}
 	}()
 }
