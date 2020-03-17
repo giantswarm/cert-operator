@@ -21,9 +21,9 @@
 
 
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/apiextensions"
-  branch = "master"
+  version = "~0.1.0"
 
 [[constraint]]
   name = "github.com/giantswarm/certs"
@@ -41,41 +41,41 @@
   name = "github.com/giantswarm/microendpoint"
   branch = "master"
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/microerror"
-  branch = "master"
+  version = "~0.1.0"
 
 [[constraint]]
   name = "github.com/giantswarm/microkit"
   branch = "master"
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/micrologger"
-  branch = "master"
+  version = "~0.1.0"
 
 [[constraint]]
   name = "github.com/giantswarm/operatorkit"
   branch = "master"
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/vaultcrt"
-  branch = "master"
+  version = "~0.1.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/vaultpki"
-  branch = "master"
+  version = "~0.1.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/vaultrole"
-  branch = "master"
+  version = "~0.1.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/versionbundle"
-  branch = "master"
+  version = "~0.1.0"
 
 [[constraint]]
   name = "github.com/hashicorp/vault"
-  version = "=1.0.3"
+  version = "~1.0.0"
 
 [[constraint]]
   name = "github.com/prometheus/client_golang"
