@@ -195,7 +195,7 @@ func tenantClusterExists(k8sClient k8sclient.Interface, id string) (bool, error)
 	// We need to check for Node Pools clusters. These adhere to CAPI and do not
 	// have any AWSConfig CR anymore.
 	{
-		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceAll}, &apiv1alpha2.Cluster{})
+		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceDefault}, &apiv1alpha2.Cluster{})
 		if errors.IsNotFound(err) {
 			// fall through
 		} else if IsNoKind(err) {
@@ -209,7 +209,7 @@ func tenantClusterExists(k8sClient k8sclient.Interface, id string) (bool, error)
 
 	// We need to check for the legacy KVMConfig CRs on KVM environments.
 	{
-		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceAll}, &providerv1alpha1.KVMConfig{})
+		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceDefault}, &providerv1alpha1.KVMConfig{})
 		if errors.IsNotFound(err) {
 			// fall through
 		} else if IsNoKind(err) {
@@ -223,7 +223,7 @@ func tenantClusterExists(k8sClient k8sclient.Interface, id string) (bool, error)
 
 	// We need to check for the legacy AWSConfig CRs on AWS environments.
 	{
-		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceAll}, &providerv1alpha1.AWSConfig{})
+		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceDefault}, &providerv1alpha1.AWSConfig{})
 		if errors.IsNotFound(err) {
 			// fall through
 		} else if IsNoKind(err) {
@@ -237,7 +237,7 @@ func tenantClusterExists(k8sClient k8sclient.Interface, id string) (bool, error)
 
 	// We need to check for the legacy AzureConfig CRs on Azure environments.
 	{
-		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceAll}, &providerv1alpha1.AzureConfig{})
+		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceDefault}, &providerv1alpha1.AzureConfig{})
 		if errors.IsNotFound(err) {
 			// fall through
 		} else if IsNoKind(err) {
