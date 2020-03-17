@@ -219,7 +219,7 @@
   version = "v0.1.0"
 
 [[projects]]
-  digest = "1:196c0f3635e0505a0d6cca21d29ba5683ab17a492b4107cc088d00213afa0a1d"
+  digest = "1:89a18ea9c73695b502e50f79c258fd25319f999576445ecddf22d375726d577d"
   name = "github.com/giantswarm/vaultpki"
   packages = [
     ".",
@@ -227,8 +227,8 @@
     "vaultpkitest",
   ]
   pruneopts = "UT"
-  revision = "cee6c7fb13fa9becbb3785a35907a11cd774c164"
-  version = "v0.1.1"
+  revision = "a880d1f7d3e342bfdcca9a7df7e2624641a8e922"
+  version = "v0.1.2"
 
 [[projects]]
   digest = "1:1c445ddd8b8b1337a31c71a77b9d7cdb1ff99155873e9c6adfb98d5465c6425c"
@@ -719,7 +719,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "f7b00557c8c46a1ea4b035cae84f52028c2c0564"
+  revision = "1b76d66859c6111b3d5c3ea6600ea44dc188bf12"
 
 [[projects]]
   branch = "master"
