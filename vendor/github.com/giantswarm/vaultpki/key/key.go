@@ -10,6 +10,16 @@ func CommonName(ID string, commonNameFormat string) string {
 	return fmt.Sprintf(commonNameFormat, ID)
 }
 
+// ClusterIDFromMountPath aligns with the implementation details of IsMountPath
+// and expects a valid mount path to work properly. A valid mount path must look
+// something like the following, where "z4574" is the cluster ID.
+//
+//     pki-z4574/
+//
+func ClusterIDFromMountPath(path string) string {
+	return path[4:9]
+}
+
 func ListMountsPath(ID string) string {
 	return fmt.Sprintf("pki-%s/", ID)
 }

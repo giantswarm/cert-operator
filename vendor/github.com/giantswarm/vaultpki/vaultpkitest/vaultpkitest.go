@@ -39,6 +39,6 @@ func (p *VaultPKITest) GetCACertificate(ID string) (string, error) {
 	return "", nil
 }
 
-func (p *VaultPKITest) ListBackends() ([]*vaultapi.MountOutput, error) {
+func (p *VaultPKITest) ListBackends() (map[string]*vaultapi.MountOutput, error) {
 	return nil, nil
 }
