@@ -6,7 +6,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
+	corev1alpha1 "github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
+	providerv1alpha1 "github.com/giantswarm/apiextensions/pkg/apis/provider/v1alpha1"
 	"github.com/giantswarm/k8sclient"
 	"github.com/giantswarm/k8sclient/k8srestconfig"
 	"github.com/giantswarm/microendpoint/service/version"
@@ -15,6 +16,7 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/rest"
+	apiv1alpha2 "sigs.k8s.io/cluster-api/api/v1alpha2"
 
 	clientvault "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
@@ -80,7 +82,9 @@ func New(config Config) (*Service, error) {
 	{
 		c := k8sclient.ClientsConfig{
 			SchemeBuilder: k8sclient.SchemeBuilder{
-				v1alpha1.AddToScheme,
+				apiv1alpha2.AddToScheme,
+				corev1alpha1.AddToScheme,
+				providerv1alpha1.AddToScheme,
 			},
 			Logger: config.Logger,
 
