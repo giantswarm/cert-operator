@@ -2,23 +2,23 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:e8738596bf054a708e81e8637ba8d7ffd22cab0f8303583ced0a147332b06ef1"
+  digest = "1:701a5f5a7297ced0c7b9aeeba6a40ef47663b956d56e7acd09fe0d1c31eb1e4b"
   name = "github.com/giantswarm/microerror"
   packages = ["."]
   pruneopts = "UT"
-  revision = "cb07ec533b5032add513abb1c4a886d7a19ddc69"
+  revision = "e8fe0fa9c0097ca80d8b773e1d728843447f9233"
+  version = "v0.1.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:c4f855224acc710b203150c63a0920cd47612d52ebe21516f03653c9cb824f84"
+  digest = "1:20fe82d087077d505e906c36177da3edb09897430812a437adb1dac497dc4371"
   name = "github.com/giantswarm/micrologger"
   packages = [
     ".",
     "loggermeta",
   ]
   pruneopts = "UT"
-  revision = "0926d9b7c5419173936b4556411a103bdf8d5966"
+  revision = "c4d217562e3d493e3ff571707346a5a2653475cb"
+  version = "v0.1.1"
 
 [[projects]]
   digest = "1:0cfcded8689c2c964c223650009c5dd9e283c22d57f18f2335aafa16cc22acf1"
@@ -29,12 +29,12 @@
   version = "v0.6.0"
 
 [[projects]]
-  digest = "1:4062bc6de62d73e2be342243cf138cf499b34d558876db8d9430e2149388a4d8"
+  digest = "1:522a207de5459ab329732b5df6bb6dd7592da9fddf8a99e9f82609e370d82f9b"
   name = "github.com/go-logfmt/logfmt"
   packages = ["."]
   pruneopts = "UT"
-  revision = "07c9b44f60d7ffdfb7d8efe1ad539965737836dc"
-  version = "v0.4.0"
+  revision = "3be5f6aae7db841d31dc5e1b3bb7b4cff19200b3"
+  version = "v0.5.0"
 
 [[projects]]
   digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
@@ -69,14 +69,6 @@
   version = "v0.5.1"
 
 [[projects]]
-  digest = "1:cf6b61e1b4c26b0c7526cee4a0cee6d8302b17798af4b2a56a90eedac0aef11a"
-  name = "github.com/hashicorp/go-hclog"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "5ccdce08c75b6c7b37af61159f13f6a4f5e2e928"
-  version = "v0.9.2"
-
-[[projects]]
   digest = "1:f668349b83f7d779567c880550534addeca7ebadfdcf44b0b9c39be61864b4b7"
   name = "github.com/hashicorp/go-multierror"
   packages = ["."]
@@ -85,20 +77,20 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:c9bd9e636cf20dd4d888029496266e682dfed147ac6fb08006150d5073616eb9"
+  digest = "1:79b0e82add95217a03c78dd4576d9296fb229c0603af408fe7eebe5f14ad3094"
   name = "github.com/hashicorp/go-retryablehttp"
   packages = ["."]
   pruneopts = "UT"
-  revision = "6bb8533de58c768084f72589fcbb385719bc9dc5"
-  version = "v0.6.0"
+  revision = "eaff869a704e190d92996f23c23a4037cf2b0770"
+  version = "v0.6.4"
 
 [[projects]]
-  digest = "1:7b893c9e1181e224506c523777dea0d16f4bd20a7627b100cc800e14229f405c"
+  digest = "1:5c03dd01d17d6ed9aa1c490a2bfd270dab91d14e85b4640ebdb6511594a1accd"
   name = "github.com/hashicorp/go-rootcerts"
   packages = ["."]
   pruneopts = "UT"
-  revision = "df8e78a645e18d56ed7bb9ae10ffb8174ab892e2"
-  version = "v1.0.1"
+  revision = "98fadc2a5ba2ad2a534a179b352ecdfd1f4259aa"
+  version = "v1.0.2"
 
 [[projects]]
   digest = "1:8abc57884881876d02f467bb7d4ed7ce3a58dac3f8f7ba60579ce4ffc6afd7e1"
@@ -127,7 +119,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:2cd18ff5eb4c5702d3b5bf4a759a22c46c84178d63d2d0644d357305cb5b249e"
+  digest = "1:dc8b504ab398bfdb0f085321c572465aec1def1a7e8f8ae6fe2b3309d7d9e30f"
   name = "github.com/hashicorp/vault"
   packages = [
     "api",
@@ -139,8 +131,8 @@
     "helper/strutil",
   ]
   pruneopts = "UT"
-  revision = "f08b88029d959e1318746b188fecaad54468230b"
-  version = "v1.1.5"
+  revision = "85909e3373aa743c34a6a0ab59131f61fd9e8e43"
+  version = "v1.0.3"
 
 [[projects]]
   branch = "master"
@@ -149,14 +141,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "08cceb5d0b5331634b9826762a8fd53b29b86ad8"
-
-[[projects]]
-  branch = "master"
-  digest = "1:a64e323dc06b73892e5bb5d040ced475c4645d456038333883f58934abbf6f72"
-  name = "github.com/kr/logfmt"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
 
 [[projects]]
   digest = "1:5d231480e1c64a726869bc4142d270184c419749d34f167646baa21008eb0a79"
@@ -175,15 +159,15 @@
   version = "v1.1.2"
 
 [[projects]]
-  digest = "1:b5e6db1f0095a7427712ba7f5890d6c0cb6b61d6f9d76bc5a4e3d2344461e652"
+  digest = "1:0d21409d74019b65b488ecb02bed6d0f539d8d8563b86aac5734dfdbdf860cdf"
   name = "github.com/pierrec/lz4"
   packages = [
     ".",
     "internal/xxh32",
   ]
   pruneopts = "UT"
-  revision = "8ef35db8296124c4969aab929c16c91c3cb2c8a0"
-  version = "v2.2.6"
+  revision = "edce7c4c96dac9adc01d38b18fd2456a7c0c5773"
+  version = "v2.4.1"
 
 [[projects]]
   digest = "1:6baa565fe16f8657cf93469b2b8a6c61a277827734400d27e44d589547297279"
@@ -195,7 +179,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6caa22c7bce32bfbc9cea95ffd880ab0ebb2f305336a9a26dc94c2809e040cb4"
+  digest = "1:47e6734767091dca6d19b42e9a2e9c08fa36d038327ad9613ddab5575c6144ca"
   name = "golang.org/x/net"
   packages = [
     "http/httpguts",
@@ -204,7 +188,7 @@
     "idna",
   ]
   pruneopts = "UT"
-  revision = "74dc4d7220e7acc4e100824340f3e66577424772"
+  revision = "244492dfa37ae2ce87222fd06250a03160745faa"
 
 [[projects]]
   digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
@@ -233,11 +217,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9fdc2b55e8e0fafe4b41884091e51e77344f7dc511c5acedcfd98200003bff90"
+  digest = "1:a2f668c709f9078828e99cb1768cb02e876cb81030545046a32b54b2ac2a9ea8"
   name = "golang.org/x/time"
   packages = ["rate"]
   pruneopts = "UT"
-  revision = "9d24e82272b4f38b78bc8cff74fa936d31ccd8ef"
+  revision = "555d28b269f0569763d25dbe1a237ae74c6bcc82"
 
 [solve-meta]
   analyzer-name = "dep"

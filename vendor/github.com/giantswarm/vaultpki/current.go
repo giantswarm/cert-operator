@@ -74,3 +74,21 @@ func (p *VaultPKI) GetCACertificate(ID string) (string, error) {
 
 	return crt, nil
 }
+
+func (p *VaultPKI) ListBackends() ([]*vaultapi.MountOutput, error) {
+	mounts, err := p.vaultClient.Sys().ListMounts()
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
+	var list []*vaultapi.MountOutput
+	for k, v := range mounts {
+		if !key.IsMountPath(k) {
+			continue
+		}
+
+		list = append(list, v)
+	}
+
+	return list, nil
+}
