@@ -175,10 +175,10 @@ func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface
 		if !exists {
 			logger.Log("level", "debug", "message", fmt.Sprintf("deleting PKI backend for Tenant Cluster %#q", id))
 
-			//err := vaultPKI.DeleteBackend(id)
-			//if err != nil {
-			//	return microerror.Mask(err)
-			//}
+			err := vaultPKI.DeleteBackend(id)
+			if err != nil {
+				return microerror.Mask(err)
+			}
 
 			logger.Log("level", "debug", "message", fmt.Sprintf("deleted PKI backend for Tenant Cluster %#q", id))
 		}
