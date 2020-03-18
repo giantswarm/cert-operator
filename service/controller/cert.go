@@ -22,7 +22,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	apiv1alpha2 "sigs.k8s.io/cluster-api/api/v1alpha2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/giantswarm/cert-operator/pkg/label"
 	v2 "github.com/giantswarm/cert-operator/service/controller/v2"
 )
 
@@ -175,9 +177,25 @@ func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface
 		if !exists {
 			logger.Log("level", "debug", "message", fmt.Sprintf("deleting PKI backend for Tenant Cluster %#q", id))
 
-			err := vaultPKI.DeleteBackend(id)
-			if err != nil {
-				return microerror.Mask(err)
+			{
+				err := k8sClient.CtrlClient().DeleteAllOf(
+					context.Background(),
+					&corev1alpha1.CertConfig{},
+					client.MatchingLabels{label.Cluster: id},
+					client.InNamespace(metav1.NamespaceDefault),
+				)
+				if errors.IsNotFound(err) {
+					// fall through
+				} else if err != nil {
+					return microerror.Mask(err)
+				}
+			}
+
+			{
+				err := vaultPKI.DeleteBackend(id)
+				if err != nil {
+					return microerror.Mask(err)
+				}
 			}
 
 			logger.Log("level", "debug", "message", fmt.Sprintf("deleted PKI backend for Tenant Cluster %#q", id))
