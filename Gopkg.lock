@@ -177,7 +177,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e35bb8852e24edcf07a8ebf2f0a488ff21a8686ab105963a5d712c77e24bf005"
+  digest = "1:09657cd7e375a1ef822510b327bcf45fbe9967d47953112d675b829a6f5ebec1"
   name = "github.com/giantswarm/operatorkit"
   packages = [
     "controller",
@@ -196,7 +196,7 @@
     "resource/wrapper/retryresource",
   ]
   pruneopts = "UT"
-  revision = "748c399a1bba09ef0227617d1e313c2723e16c5f"
+  revision = "004c2323bedb966e92576e1855bfa4e31ff8aed6"
 
 [[projects]]
   branch = "master"
@@ -1142,7 +1142,7 @@
     "trace",
   ]
   pruneopts = "UT"
-  revision = "0a110f9eb7ab662220ed640640f50c4be9b6b485"
+  revision = "138672cc43f8470f6802e22baa03a8c20ada54bd"
 
 [[projects]]
   digest = "1:091322e5af94d021a181fb37b29e85889430697aa9ee49532c043b898c6568b3"
@@ -1208,6 +1208,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1",
+    "github.com/giantswarm/apiextensions/pkg/apis/provider/v1alpha1",
     "github.com/giantswarm/certs",
     "github.com/giantswarm/exporterkit/collector",
     "github.com/giantswarm/k8sclient",
@@ -1252,6 +1253,7 @@
     "k8s.io/client-go/kubernetes/fake",
     "k8s.io/client-go/rest",
     "sigs.k8s.io/cluster-api/api/v1alpha2",
+    "sigs.k8s.io/controller-runtime/pkg/client",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
