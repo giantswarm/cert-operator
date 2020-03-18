@@ -1,20 +1,30 @@
 package controller
 
 import (
+	"context"
+	"fmt"
 	"time"
 
-	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
+	corev1alpha1 "github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
+	providerv1alpha1 "github.com/giantswarm/apiextensions/pkg/apis/provider/v1alpha1"
 	"github.com/giantswarm/k8sclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/operatorkit/controller"
 	"github.com/giantswarm/vaultcrt"
 	"github.com/giantswarm/vaultpki"
+	"github.com/giantswarm/vaultpki/key"
 	"github.com/giantswarm/vaultrole"
 	vaultapi "github.com/hashicorp/vault/api"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	apiv1alpha2 "sigs.k8s.io/cluster-api/api/v1alpha2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/giantswarm/cert-operator/pkg/label"
 	v2 "github.com/giantswarm/cert-operator/service/controller/v2"
 )
 
@@ -118,7 +128,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 	var operatorkitController *controller.Controller
 	{
 		c := controller.Config{
-			CRD:       v1alpha1.NewCertConfigCRD(),
+			CRD:       corev1alpha1.NewCertConfigCRD(),
 			K8sClient: config.K8sClient,
 			Logger:    config.Logger,
 			Name:      config.ProjectName,
@@ -126,7 +136,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 				v2ResourceSet,
 			},
 			NewRuntimeObjectFunc: func() runtime.Object {
-				return new(v1alpha1.CertConfig)
+				return new(corev1alpha1.CertConfig)
 			},
 		}
 
@@ -140,5 +150,122 @@ func NewCert(config CertConfig) (*Cert, error) {
 		Controller: operatorkitController,
 	}
 
+	err = cleanupPKIBackends(config.Logger, config.K8sClient, vaultPKI)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
 	return c, nil
+}
+
+func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface, vaultPKI vaultpki.Interface) error {
+	mounts, err := vaultPKI.ListBackends()
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	logger.Log("level", "debug", "message", "cleaning up PKI backends")
+
+	for k, _ := range mounts {
+		id := key.ClusterIDFromMountPath(k)
+
+		exists, err := tenantClusterExists(k8sClient, id)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		if !exists {
+			logger.Log("level", "debug", "message", fmt.Sprintf("deleting PKI backend for Tenant Cluster %#q", id))
+
+			{
+				err := k8sClient.CtrlClient().DeleteAllOf(
+					context.Background(),
+					&corev1alpha1.CertConfig{},
+					client.MatchingLabels{label.Cluster: id},
+					client.InNamespace(metav1.NamespaceDefault),
+				)
+				if errors.IsNotFound(err) {
+					// fall through
+				} else if err != nil {
+					return microerror.Mask(err)
+				}
+			}
+
+			{
+				err := vaultPKI.DeleteBackend(id)
+				if err != nil {
+					return microerror.Mask(err)
+				}
+			}
+
+			logger.Log("level", "debug", "message", fmt.Sprintf("deleted PKI backend for Tenant Cluster %#q", id))
+		}
+	}
+
+	logger.Log("level", "debug", "message", "cleaned up PKI backends")
+
+	return nil
+}
+
+func tenantClusterExists(k8sClient k8sclient.Interface, id string) (bool, error) {
+	var err error
+
+	// We need to check for Node Pools clusters. These adhere to CAPI and do not
+	// have any AWSConfig CR anymore.
+	{
+		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceDefault}, &apiv1alpha2.Cluster{})
+		if errors.IsNotFound(err) {
+			// fall through
+		} else if IsNoKind(err) {
+			// fall through
+		} else if err != nil {
+			return false, microerror.Mask(err)
+		} else {
+			return true, nil
+		}
+	}
+
+	// We need to check for the legacy AWSConfig CRs on AWS environments.
+	{
+		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceDefault}, &providerv1alpha1.AWSConfig{})
+		if errors.IsNotFound(err) {
+			// fall through
+		} else if IsNoKind(err) {
+			// fall through
+		} else if err != nil {
+			return false, microerror.Mask(err)
+		} else {
+			return true, nil
+		}
+	}
+
+	// We need to check for the legacy AzureConfig CRs on Azure environments.
+	{
+		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceDefault}, &providerv1alpha1.AzureConfig{})
+		if errors.IsNotFound(err) {
+			// fall through
+		} else if IsNoKind(err) {
+			// fall through
+		} else if err != nil {
+			return false, microerror.Mask(err)
+		} else {
+			return true, nil
+		}
+	}
+
+	// We need to check for the legacy KVMConfig CRs on KVM environments.
+	{
+		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceDefault}, &providerv1alpha1.KVMConfig{})
+		if errors.IsNotFound(err) {
+			// fall through
+		} else if IsNoKind(err) {
+			// fall through
+		} else if err != nil {
+			return false, microerror.Mask(err)
+		} else {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

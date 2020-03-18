@@ -177,7 +177,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e35bb8852e24edcf07a8ebf2f0a488ff21a8686ab105963a5d712c77e24bf005"
+  digest = "1:09657cd7e375a1ef822510b327bcf45fbe9967d47953112d675b829a6f5ebec1"
   name = "github.com/giantswarm/operatorkit"
   packages = [
     "controller",
@@ -196,7 +196,7 @@
     "resource/wrapper/retryresource",
   ]
   pruneopts = "UT"
-  revision = "748c399a1bba09ef0227617d1e313c2723e16c5f"
+  revision = "004c2323bedb966e92576e1855bfa4e31ff8aed6"
 
 [[projects]]
   branch = "master"
@@ -941,7 +941,7 @@
   version = "kubernetes-1.16.3"
 
 [[projects]]
-  digest = "1:be351cc502067780105d5f692a4cfb0275c6f68e3accae569c64bb8d2dafe33c"
+  digest = "1:7a135c82b99ee6a377fc0929eb89a83efc6ccf4d461f73a343c075e34dcd7728"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/equality",
@@ -951,6 +951,7 @@
     "pkg/apis/meta/internalversion",
     "pkg/apis/meta/v1",
     "pkg/apis/meta/v1/unstructured",
+    "pkg/apis/meta/v1/validation",
     "pkg/apis/meta/v1beta1",
     "pkg/conversion",
     "pkg/conversion/queryparams",
@@ -1141,10 +1142,22 @@
     "trace",
   ]
   pruneopts = "UT"
-  revision = "0a110f9eb7ab662220ed640640f50c4be9b6b485"
+  revision = "138672cc43f8470f6802e22baa03a8c20ada54bd"
 
 [[projects]]
-  digest = "1:1467ce430fe64e79b42e62d087dbcc58aaaa6d862f92f5d4daae68545af8507e"
+  digest = "1:091322e5af94d021a181fb37b29e85889430697aa9ee49532c043b898c6568b3"
+  name = "sigs.k8s.io/cluster-api"
+  packages = [
+    "api/v1alpha2",
+    "errors",
+    "pkg/apis/deprecated/v1alpha1",
+  ]
+  pruneopts = "UT"
+  revision = "64775e28fec571220739a819819d019824fafd54"
+  version = "v0.2.10"
+
+[[projects]]
+  digest = "1:994c1277fb2527a27720a000dec94ffb194f5413ea4c32be8c40526270d9c168"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
     "pkg/builder",
@@ -1169,6 +1182,7 @@
     "pkg/reconcile",
     "pkg/recorder",
     "pkg/runtime/inject",
+    "pkg/scheme",
     "pkg/source",
     "pkg/source/internal",
     "pkg/webhook",
@@ -1194,6 +1208,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1",
+    "github.com/giantswarm/apiextensions/pkg/apis/provider/v1alpha1",
     "github.com/giantswarm/certs",
     "github.com/giantswarm/exporterkit/collector",
     "github.com/giantswarm/k8sclient",
@@ -1219,6 +1234,7 @@
     "github.com/giantswarm/vaultcrt",
     "github.com/giantswarm/vaultcrt/vaultcrttest",
     "github.com/giantswarm/vaultpki",
+    "github.com/giantswarm/vaultpki/key",
     "github.com/giantswarm/vaultpki/vaultpkitest",
     "github.com/giantswarm/vaultrole",
     "github.com/giantswarm/vaultrole/vaultroletest",
@@ -1229,11 +1245,15 @@
     "github.com/stretchr/testify/assert",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/errors",
+    "k8s.io/apimachinery/pkg/api/meta",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
+    "k8s.io/apimachinery/pkg/types",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/fake",
     "k8s.io/client-go/rest",
+    "sigs.k8s.io/cluster-api/api/v1alpha2",
+    "sigs.k8s.io/controller-runtime/pkg/client",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
