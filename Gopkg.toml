@@ -25,37 +25,37 @@
   name = "github.com/giantswarm/apiextensions"
   version = "~0.1.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/certs"
-  branch = "master"
+  version = "~0.1.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/exporterkit"
-  branch = "master"
+  version = "~0.1.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/k8sclient"
-  branch = "master"
+  version = "~0.1.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/microendpoint"
-  branch = "master"
+  version = "~0.1.0"
 
 [[override]]
   name = "github.com/giantswarm/microerror"
   version = "~0.1.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/microkit"
-  branch = "master"
+  version = "~0.1.0"
 
 [[override]]
   name = "github.com/giantswarm/micrologger"
   version = "~0.1.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/giantswarm/operatorkit"
-  branch = "master"
+  version = "~0.1.0"
 
 [[override]]
   name = "github.com/giantswarm/vaultcrt"
