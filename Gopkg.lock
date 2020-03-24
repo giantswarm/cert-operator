@@ -83,32 +83,31 @@
   version = "v0.1.1"
 
 [[projects]]
-  branch = "master"
   digest = "1:df7d76eb372d1e1739a53d84579ba1d82306223e25a98de86642690edc76ec8a"
   name = "github.com/giantswarm/backoff"
   packages = ["."]
   pruneopts = "UT"
   revision = "5a00f7bb987700c7c202cf2e44917e2b3b86d12b"
+  version = "v0.1.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:f8709bde2f393c17d894df98b3eb693ff74c154147d20fd24fe8e2bb6e17c146"
+  digest = "1:e0818af53e542e5ad38791514418ac53d151ef200918e91c38b8f045e63ac497"
   name = "github.com/giantswarm/certs"
   packages = ["."]
   pruneopts = "UT"
-  revision = "58e22ab521e0cf3c5ff764868ec18d98cf8cf9c7"
+  revision = "c575609a34fa13492a59aa0378eec19deba55141"
+  version = "v0.1.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:5164d17414266145c643e4997dacbc32e6e1ad552c3c70a78837f64d9a0140ea"
   name = "github.com/giantswarm/exporterkit"
   packages = ["collector"]
   pruneopts = "UT"
-  revision = "f0bfcc3891312fd674c9bdfb6ebeb744abca6cdc"
+  revision = "61853d141321dc7fbb40a45d1745fa5fab85afc7"
+  version = "v0.1.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:307a9bfc786be654dd4355147f5a7f9e024dcc3bfa16db8f98626a1bb91a6cae"
+  digest = "1:571879d6a4b9f5e5bc0f21236a42c78aad7a011d8aa5273329fa2c3548e7696e"
   name = "github.com/giantswarm/k8sclient"
   packages = [
     ".",
@@ -117,10 +116,10 @@
     "k8sversion",
   ]
   pruneopts = "UT"
-  revision = "ac9ba435f0b7b584dd07a5cbb9e05034460ca401"
+  revision = "3d89b4e3a990332d09442de0545cd22b67473fae"
+  version = "v0.1.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:a4aed1ecd42d811ea6ab995570be14a7e1d1fb7eaae45d76f6f2841d6124f7b8"
   name = "github.com/giantswarm/microendpoint"
   packages = [
@@ -130,7 +129,8 @@
     "service/version",
   ]
   pruneopts = "UT"
-  revision = "f65c434d637c8e4f2388ccfdbe3098237685a065"
+  revision = "f91fa28005bff806f4013d1dc7136da199e8e6a5"
+  version = "v0.1.0"
 
 [[projects]]
   digest = "1:701a5f5a7297ced0c7b9aeeba6a40ef47663b956d56e7acd09fe0d1c31eb1e4b"
@@ -141,7 +141,6 @@
   version = "v0.1.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:aa1c4f2b82faba1e7fb3d532d9c9edc7e4d46ad54a5231c10d0e03461feb624d"
   name = "github.com/giantswarm/microkit"
   packages = [
@@ -161,7 +160,8 @@
     "tls",
   ]
   pruneopts = "UT"
-  revision = "400bed3d70f1679e68413eb41e7b45461df9e306"
+  revision = "866ec4bc8b6e16bfd5765d143e5b2fec260a60fd"
+  version = "v0.1.0"
 
 [[projects]]
   digest = "1:4e616fe01d486048e77342e2c5e638f8744ec6da802335633740aafb057f50d8"
@@ -176,8 +176,7 @@
   version = "v0.1.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:09657cd7e375a1ef822510b327bcf45fbe9967d47953112d675b829a6f5ebec1"
+  digest = "1:b9df69a458f014f1e52a0683096aaebb5bcd951bdbd1542462ceadd47c0e6ec3"
   name = "github.com/giantswarm/operatorkit"
   packages = [
     "controller",
@@ -196,7 +195,8 @@
     "resource/wrapper/retryresource",
   ]
   pruneopts = "UT"
-  revision = "004c2323bedb966e92576e1855bfa4e31ff8aed6"
+  revision = "dd706952dc11009bcb15fa8ea95b35de759c1d3f"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
