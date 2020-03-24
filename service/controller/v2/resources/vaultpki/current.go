@@ -43,7 +43,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		} else {
 			r.logger.LogCtx(ctx, "level", "debug", "message", "found the root CA in the Vault PKI")
 
-			vaultPKIState.CACertificate = caCertificate
+			vaultPKIState.CACertificate = caCertificate.Certificate
 		}
 	}
 
