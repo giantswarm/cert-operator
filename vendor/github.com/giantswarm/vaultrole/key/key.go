@@ -1,7 +1,7 @@
 package key
 
 import (
-	"crypto/sha1"
+	"crypto/sha512"
 	"fmt"
 	"sort"
 	"strings"
@@ -74,7 +74,7 @@ func computeOrgHash(organizations []string) string {
 	sort.Strings(organizations)
 	s := strings.Join(organizations, ",")
 
-	h := sha1.New()
+	h := sha512.New()
 	h.Write([]byte(s))
 	bs := h.Sum(nil)
 
