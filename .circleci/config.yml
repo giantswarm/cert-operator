@@ -1,5 +1,5 @@
 orbs:
-  architect: giantswarm/architect@0.4.5
+  architect: giantswarm/architect@0.8.4
 
 version: 2.1
 jobs:
@@ -23,7 +23,9 @@ jobs:
         - go-cache-v1-{{ checksum "/tmp/year" }}-{{ checksum "/tmp/month" }}
         - go-cache-v1-{{ checksum "/tmp/year" }}
 
-    - run: ./architect build
+    - run:
+        name: Build using architect
+        command: ./architect build
 
     - store_test_results:
         path: /tmp/results
@@ -52,14 +54,40 @@ jobs:
 workflows:
   build:
     jobs:
-      - build
-      - architect/push-to-docker-legacy:
+      - architect/go-test-legacy:
+          name: test
+      # build binary
+      - build:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /^v.*/
+      # build and push docker image to quay
+      - architect/push-to-docker:
           name: push-cert-operator-to-quay
           image: "quay.io/giantswarm/cert-operator"
           username_envar: "QUAY_USERNAME"
           password_envar: "QUAY_PASSWORD"
           requires:
             - build
+          filters:
+            # Trigger the job also on git tag.
+            tags:
+              only: /^v.*/
+      # build and push helm chart to app catalog
+      - architect/push-to-app-catalog:
+          name: push-cert-operator-to-control-plane-app-catalog
+          app_catalog: "control-plane-catalog"
+          app_catalog_test: "control-plane-test-catalog"
+          chart: "cert-operator"
+          # Make sure docker image is successfully built.
+          requires:
+            - push-cert-operator-to-quay
+          filters:
+            # Trigger the job also on git tag.
+            tags:
+              only: /^v.*/
 
       - hold-push-cert-operator-to-aliyun-pr:
           type: approval
@@ -70,7 +98,7 @@ workflows:
             branches:
               ignore: master
 
-      - architect/push-to-docker-legacy:
+      - architect/push-to-docker:
           name: push-cert-operator-to-aliyun-pr
           image: "registry-intl.cn-shanghai.aliyuncs.com/giantswarm/cert-operator"
           username_envar: "ALIYUN_USERNAME"
@@ -84,7 +112,7 @@ workflows:
               ignore: master
 
       # Push to Aliyun should execute without manual approval on master.
-      - architect/push-to-docker-legacy:
+      - architect/push-to-docker:
           name: push-cert-operator-to-aliyun-master
           image: "registry-intl.cn-shanghai.aliyuncs.com/giantswarm/cert-operator"
           username_envar: "ALIYUN_USERNAME"
@@ -99,7 +127,7 @@ workflows:
           name: deploy
           requires:
             - push-cert-operator-to-aliyun-master
-            - push-cert-operator-to-quay 
+            - push-cert-operator-to-quay
           filters:
             branches:
               only: master
