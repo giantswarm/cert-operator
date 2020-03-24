@@ -34,7 +34,7 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 	if vaultPKIStateToCreate.CACertificate != "" {
 		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the root CA in the Vault PKI")
 
-		err := r.vaultPKI.CreateCA(key.ClusterID(customObject))
+		_, err := r.vaultPKI.CreateCA(key.ClusterID(customObject))
 		if err != nil {
 			return microerror.Mask(err)
 		}
