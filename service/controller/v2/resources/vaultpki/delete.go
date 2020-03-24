@@ -10,7 +10,7 @@ import (
 )
 
 func (r *Resource) NewDeletePatch(ctx context.Context, obj, currentState, desiredState interface{}) (*crud.Patch, error) {
-	delete, err := r.newDeleteChange(ctx, obj, currentState, desiredState)
+	delete, err := r.newDeleteChange(currentState, desiredState)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
@@ -32,22 +32,22 @@ func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteChange inte
 	}
 
 	if vaultPKIStateToDelete.Backend != nil || vaultPKIStateToDelete.CACertificate != "" {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "deleting the Vault PKI in the Vault API")
+		r.logger.LogCtx(ctx, "level", "debug", "message", "deleting the Vault PKI in the Vault API") // nolint: errcheck
 
 		err := r.vaultPKI.DeleteBackend(key.ClusterID(customObject))
 		if err != nil {
 			return microerror.Mask(err)
 		}
 
-		r.logger.LogCtx(ctx, "level", "debug", "message", "deleted the Vault PKI in the Vault API")
+		r.logger.LogCtx(ctx, "level", "debug", "message", "deleted the Vault PKI in the Vault API") // nolint: errcheck
 	} else {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "the Vault PKI does not need to be deleted from the Vault API")
+		r.logger.LogCtx(ctx, "level", "debug", "message", "the Vault PKI does not need to be deleted from the Vault API") // nolint: errcheck
 	}
 
 	return nil
 }
 
-func (r *Resource) newDeleteChange(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
+func (r *Resource) newDeleteChange(currentState, desiredState interface{}) (interface{}, error) {
 	_, err := toVaultPKIState(currentState)
 	if err != nil {
 		return nil, microerror.Mask(err)

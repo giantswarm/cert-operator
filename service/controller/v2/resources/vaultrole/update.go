@@ -16,7 +16,7 @@ func (r *Resource) ApplyUpdateChange(ctx context.Context, obj, updateChange inte
 	}
 
 	if roleToUpdate != nil {
-		r.logger.LogCtx(ctx, "debug", "updating the role in the Vault API")
+		r.logger.LogCtx(ctx, "debug", "updating the role in the Vault API") // nolint: errcheck
 
 		c := vaultrole.UpdateConfig{
 			AllowBareDomains: roleToUpdate.AllowBareDomains,
@@ -31,21 +31,21 @@ func (r *Resource) ApplyUpdateChange(ctx context.Context, obj, updateChange inte
 			return microerror.Mask(err)
 		}
 
-		r.logger.LogCtx(ctx, "debug", "updated the role in the Vault API")
+		r.logger.LogCtx(ctx, "debug", "updated the role in the Vault API") // nolint: errcheck
 	} else {
-		r.logger.LogCtx(ctx, "debug", "the role does not need to be updated in the Vault API")
+		r.logger.LogCtx(ctx, "debug", "the role does not need to be updated in the Vault API") // nolint: errcheck
 	}
 
 	return nil
 }
 
 func (r *Resource) NewUpdatePatch(ctx context.Context, obj, currentState, desiredState interface{}) (*crud.Patch, error) {
-	create, err := r.newCreateChange(ctx, obj, currentState, desiredState)
+	create, err := r.newCreateChange(ctx, currentState, desiredState)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
-	update, err := r.newUpdateChange(ctx, obj, currentState, desiredState)
+	update, err := r.newUpdateChange(ctx, currentState, desiredState)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
@@ -57,7 +57,7 @@ func (r *Resource) NewUpdatePatch(ctx context.Context, obj, currentState, desire
 	return patch, nil
 }
 
-func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
+func (r *Resource) newUpdateChange(ctx context.Context, currentState, desiredState interface{}) (interface{}, error) {
 	currentRole, err := toRole(currentState)
 	if err != nil {
 		return nil, microerror.Mask(err)
@@ -67,14 +67,14 @@ func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desir
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.LogCtx(ctx, "debug", "finding out if the role has to be updated")
+	r.logger.LogCtx(ctx, "debug", "finding out if the role has to be updated") // nolint: errcheck
 
 	var roleToUpdate *vaultrole.Role
 	if !reflect.DeepEqual(currentRole, desiredRole) {
 		roleToUpdate = desiredRole
 	}
 
-	r.logger.LogCtx(ctx, "debug", "found out if the role has to be updated")
+	r.logger.LogCtx(ctx, "debug", "found out if the role has to be updated") // nolint: errcheck
 
 	return roleToUpdate, nil
 }

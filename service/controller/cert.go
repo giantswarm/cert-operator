@@ -41,14 +41,6 @@ type CertConfig struct {
 	ProjectName         string
 }
 
-func (c CertConfig) newInformerListOptions() metav1.ListOptions {
-	listOptions := metav1.ListOptions{
-		LabelSelector: c.CRDLabelSelector,
-	}
-
-	return listOptions
-}
-
 type Cert struct {
 	*controller.Controller
 }
@@ -164,9 +156,9 @@ func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface
 		return microerror.Mask(err)
 	}
 
-	logger.Log("level", "debug", "message", "cleaning up PKI backends")
+	logger.Log("level", "debug", "message", "cleaning up PKI backends") // nolint: errcheck
 
-	for k, _ := range mounts {
+	for k := range mounts {
 		id := key.ClusterIDFromMountPath(k)
 
 		exists, err := tenantClusterExists(k8sClient, id)
@@ -175,7 +167,7 @@ func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface
 		}
 
 		if !exists {
-			logger.Log("level", "debug", "message", fmt.Sprintf("deleting PKI backend for Tenant Cluster %#q", id))
+			logger.Log("level", "debug", "message", fmt.Sprintf("deleting PKI backend for Tenant Cluster %#q", id)) // nolint: errcheck
 
 			{
 				err := k8sClient.CtrlClient().DeleteAllOf(
@@ -198,11 +190,11 @@ func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface
 				}
 			}
 
-			logger.Log("level", "debug", "message", fmt.Sprintf("deleted PKI backend for Tenant Cluster %#q", id))
+			logger.Log("level", "debug", "message", fmt.Sprintf("deleted PKI backend for Tenant Cluster %#q", id)) // nolint: errcheck
 		}
 	}
 
-	logger.Log("level", "debug", "message", "cleaned up PKI backends")
+	logger.Log("level", "debug", "message", "cleaned up PKI backends") // nolint: errcheck
 
 	return nil
 }

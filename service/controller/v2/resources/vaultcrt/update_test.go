@@ -342,7 +342,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 			c.VaultCrt = vaultcrttest.New()
 
 			c.ExpirationThreshold = 24 * time.Hour
-			c.Namespace = "default"
+			c.Namespace = DefaultNamespace
 
 			newResource, err = New(c)
 			if err != nil {
@@ -525,7 +525,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_hash(t *testing.T) {
 			c.VaultCrt = vaultcrttest.New()
 
 			c.ExpirationThreshold = 24 * time.Hour
-			c.Namespace = "default"
+			c.Namespace = DefaultNamespace
 
 			newResource, err = New(c)
 			if err != nil {

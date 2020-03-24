@@ -14,7 +14,7 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 	}
 
 	if roleToCreate != nil {
-		r.logger.LogCtx(ctx, "debug", "creating the role in the Vault API")
+		r.logger.LogCtx(ctx, "debug", "creating the role in the Vault API") // nolint: errcheck
 
 		c := vaultrole.CreateConfig{
 			AllowBareDomains: roleToCreate.AllowBareDomains,
@@ -29,15 +29,15 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 			return microerror.Mask(err)
 		}
 
-		r.logger.LogCtx(ctx, "debug", "created the role in the Vault API")
+		r.logger.LogCtx(ctx, "debug", "created the role in the Vault API") // nolint: errcheck
 	} else {
-		r.logger.LogCtx(ctx, "debug", "the role does not need to be created in the Vault API")
+		r.logger.LogCtx(ctx, "debug", "the role does not need to be created in the Vault API") // nolint: errcheck
 	}
 
 	return nil
 }
 
-func (r *Resource) newCreateChange(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
+func (r *Resource) newCreateChange(ctx context.Context, currentState, desiredState interface{}) (interface{}, error) {
 	currentRole, err := toRole(currentState)
 	if err != nil {
 		return nil, microerror.Mask(err)
@@ -47,14 +47,14 @@ func (r *Resource) newCreateChange(ctx context.Context, obj, currentState, desir
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.LogCtx(ctx, "debug", "finding out if the role has to be created")
+	r.logger.LogCtx(ctx, "debug", "finding out if the role has to be created") // nolint: errcheck
 
 	var roleToCreate *vaultrole.Role
 	if currentRole == nil {
 		roleToCreate = desiredRole
 	}
 
-	r.logger.LogCtx(ctx, "debug", "found out if the role has to be created")
+	r.logger.LogCtx(ctx, "debug", "found out if the role has to be created") // nolint: errcheck
 
 	return roleToCreate, nil
 }

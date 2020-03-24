@@ -24,10 +24,7 @@ func NewSet(config SetConfig) (*Set, error) {
 
 	var vaultCollector *Vault
 	{
-		c := VaultConfig{
-			Logger:      config.Logger,
-			VaultClient: config.VaultClient,
-		}
+		c := VaultConfig(config)
 
 		vaultCollector, err = NewVault(c)
 		if err != nil {

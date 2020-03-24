@@ -1,7 +1,7 @@
 package key
 
 import (
-	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 
@@ -50,8 +50,11 @@ func CustomObjectHash(customObject v1alpha1.CertConfig) (string, error) {
 		return "", microerror.Mask(err)
 	}
 
-	h := sha1.New()
-	h.Write(b)
+	h := sha256.New()
+	_, err = h.Write(b)
+	if err != nil {
+		return "", microerror.Mask(err)
+	}
 	bs := h.Sum(nil)
 
 	return fmt.Sprintf("%x", bs), nil

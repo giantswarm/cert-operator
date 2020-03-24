@@ -103,7 +103,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 		c.VaultCrt = vaultcrttest.New()
 
 		c.ExpirationThreshold = 24 * time.Hour
-		c.Namespace = "default"
+		c.Namespace = DefaultNamespace
 
 		newResource, err = New(c)
 		if err != nil {

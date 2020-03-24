@@ -14,6 +14,8 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
+const DefaultNamespace = "default"
+
 func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 	testCases := []struct {
 		Obj            interface{}
@@ -118,7 +120,7 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 		c.VaultCrt = vaultcrttest.New()
 
 		c.ExpirationThreshold = 24 * time.Hour
-		c.Namespace = "default"
+		c.Namespace = DefaultNamespace
 
 		newResource, err = New(c)
 		if err != nil {

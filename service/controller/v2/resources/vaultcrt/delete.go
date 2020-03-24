@@ -17,7 +17,7 @@ func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteChange inte
 	}
 
 	if secretToDelete != nil {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "deleting the sercet in the Kubernetes API")
+		r.logger.LogCtx(ctx, "level", "debug", "message", "deleting the sercet in the Kubernetes API") // nolint: errcheck
 
 		err = r.k8sClient.CoreV1().Secrets(r.namespace).Delete(secretToDelete.Name, &apismetav1.DeleteOptions{})
 		if apierrors.IsNotFound(err) {
@@ -26,16 +26,16 @@ func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteChange inte
 			return microerror.Mask(err)
 		}
 
-		r.logger.LogCtx(ctx, "level", "debug", "message", "deleted the sercet in the Kubernetes API")
+		r.logger.LogCtx(ctx, "level", "debug", "message", "deleted the sercet in the Kubernetes API") // nolint: errcheck
 	} else {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "the sercet does not need to be deleted from the Kubernetes API")
+		r.logger.LogCtx(ctx, "level", "debug", "message", "the sercet does not need to be deleted from the Kubernetes API") // nolint: errcheck
 	}
 
 	return nil
 }
 
 func (r *Resource) NewDeletePatch(ctx context.Context, obj, currentState, desiredState interface{}) (*crud.Patch, error) {
-	delete, err := r.newDeleteChange(ctx, obj, currentState, desiredState)
+	delete, err := r.newDeleteChange(ctx, currentState)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
@@ -46,20 +46,20 @@ func (r *Resource) NewDeletePatch(ctx context.Context, obj, currentState, desire
 	return patch, nil
 }
 
-func (r *Resource) newDeleteChange(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
+func (r *Resource) newDeleteChange(ctx context.Context, currentState interface{}) (interface{}, error) {
 	currentSecret, err := toSecret(currentState)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", "finding out if the secret has to be deleted")
+	r.logger.LogCtx(ctx, "level", "debug", "message", "finding out if the secret has to be deleted") // nolint: errcheck
 
 	var secretToDelete *apiv1.Secret
 	if currentSecret != nil {
 		secretToDelete = currentSecret
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", "found out if the secret has to be deleted")
+	r.logger.LogCtx(ctx, "level", "debug", "message", "found out if the secret has to be deleted") // nolint: errcheck
 
 	return secretToDelete, nil
 }

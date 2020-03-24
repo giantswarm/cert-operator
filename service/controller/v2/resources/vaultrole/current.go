@@ -15,7 +15,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.LogCtx(ctx, "debug", "looking for the role in the Vault API")
+	r.logger.LogCtx(ctx, "debug", "looking for the role in the Vault API") // nolint: errcheck
 
 	var role *vaultrole.Role
 	{
@@ -25,12 +25,12 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		}
 		result, err := r.vaultRole.Search(c)
 		if vaultrole.IsNotFound(err) {
-			r.logger.LogCtx(ctx, "debug", "did not find the role in the Vault API")
+			r.logger.LogCtx(ctx, "debug", "did not find the role in the Vault API") // nolint: errcheck
 			// fall through
 		} else if err != nil {
 			return nil, microerror.Mask(err)
 		} else {
-			r.logger.LogCtx(ctx, "debug", "found the role in the Vault API")
+			r.logger.LogCtx(ctx, "debug", "found the role in the Vault API") // nolint: errcheck
 			role = &result
 		}
 	}

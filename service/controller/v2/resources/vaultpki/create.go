@@ -19,35 +19,35 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 	}
 
 	if vaultPKIStateToCreate.Backend != nil {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the Vault PKI in the Vault API")
+		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the Vault PKI in the Vault API") // nolint: errcheck
 
 		err := r.vaultPKI.CreateBackend(key.ClusterID(customObject))
 		if err != nil {
 			return microerror.Mask(err)
 		}
 
-		r.logger.LogCtx(ctx, "level", "debug", "message", "created the Vault PKI in the Vault API")
+		r.logger.LogCtx(ctx, "level", "debug", "message", "created the Vault PKI in the Vault API") // nolint: errcheck
 	} else {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "the Vault PKI does not need to be created in the Vault API")
+		r.logger.LogCtx(ctx, "level", "debug", "message", "the Vault PKI does not need to be created in the Vault API") // nolint: errcheck
 	}
 
 	if vaultPKIStateToCreate.CACertificate != "" {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the root CA in the Vault PKI")
+		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the root CA in the Vault PKI") // nolint: errcheck
 
 		_, err := r.vaultPKI.CreateCA(key.ClusterID(customObject))
 		if err != nil {
 			return microerror.Mask(err)
 		}
 
-		r.logger.LogCtx(ctx, "level", "debug", "message", "created the root CA in the Vault PKI")
+		r.logger.LogCtx(ctx, "level", "debug", "message", "created the root CA in the Vault PKI") // nolint: errcheck
 	} else {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "the root CA does not need to be created in the Vault PKI")
+		r.logger.LogCtx(ctx, "level", "debug", "message", "the root CA does not need to be created in the Vault PKI") // nolint: errcheck
 	}
 
 	return nil
 }
 
-func (r *Resource) newCreateChange(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
+func (r *Resource) newCreateChange(ctx context.Context, currentState, desiredState interface{}) (interface{}, error) {
 	currentVaultPKIState, err := toVaultPKIState(currentState)
 	if err != nil {
 		return nil, microerror.Mask(err)
@@ -57,7 +57,7 @@ func (r *Resource) newCreateChange(ctx context.Context, obj, currentState, desir
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", "finding out if the Vault PKI has to be created")
+	r.logger.LogCtx(ctx, "level", "debug", "message", "finding out if the Vault PKI has to be created") // nolint: errcheck
 
 	var vaultPKIStateToCreate VaultPKIState
 	if currentVaultPKIState.Backend == nil {
@@ -67,7 +67,7 @@ func (r *Resource) newCreateChange(ctx context.Context, obj, currentState, desir
 		vaultPKIStateToCreate.CACertificate = desiredVaultPKIState.CACertificate
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", "found out if the Vault PKI has to be created")
+	r.logger.LogCtx(ctx, "level", "debug", "message", "found out if the Vault PKI has to be created") // nolint: errcheck
 
 	return vaultPKIStateToCreate, nil
 }

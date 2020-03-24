@@ -115,5 +115,8 @@ func main() {
 	daemonCommand.PersistentFlags().String(f.Service.Vault.Config.PKI.CA.TTL, "", "TTL used to generate a new Cluster CA.")
 	daemonCommand.PersistentFlags().String(f.Service.Vault.Config.PKI.CommonName.Format, "", "Common name used to generate a new Cluster CA.")
 
-	newCommand.CobraCommand().Execute()
+	err = newCommand.CobraCommand().Execute()
+	if err != nil {
+		panic(fmt.Sprintf("%#v\n", err))
+	}
 }

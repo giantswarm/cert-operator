@@ -24,20 +24,20 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", "looking for the secret in the Kubernetes API")
+	r.logger.LogCtx(ctx, "level", "debug", "message", "looking for the secret in the Kubernetes API") // nolint: errcheck
 
 	var secret *corev1.Secret
 	{
 		manifest, err := r.k8sClient.CoreV1().Secrets(r.namespace).Get(key.SecretName(customObject), metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
-			r.logger.LogCtx(ctx, "level", "debug", "message", "did not find the secret in the Kubernetes API")
+			r.logger.LogCtx(ctx, "level", "debug", "message", "did not find the secret in the Kubernetes API") // nolint: errcheck
 			// fall through
 		} else if err != nil {
 			return nil, microerror.Mask(err)
 		} else {
-			r.logger.LogCtx(ctx, "level", "debug", "message", "found the secret in the Kubernetes API")
+			r.logger.LogCtx(ctx, "level", "debug", "message", "found the secret in the Kubernetes API") // nolint: errcheck
 			secret = manifest
-			r.updateVersionBundleVersionGauge(ctx, customObject, versionBundleVersionGauge, secret)
+			r.updateVersionBundleVersionGauge(ctx, versionBundleVersionGauge, secret)
 		}
 	}
 
@@ -53,7 +53,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		// If this customObject is not the cert we are supporting in certs library,
 		// we don't need to check for running pods.
 		if !r.checkCertType(customObject) {
-			r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("unsupported cert type %#q", key.ClusterComponent(customObject)))
+			r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("unsupported cert type %#q", key.ClusterComponent(customObject))) // nolint: errcheck
 			return secret, nil
 		}
 
@@ -63,10 +63,10 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 			return nil, microerror.Mask(err)
 		}
 		if len(list.Items) != 0 {
-			r.logger.LogCtx(ctx, "level", "debug", "message", "cannot finish deletion of the secret due to existing pods")
+			r.logger.LogCtx(ctx, "level", "debug", "message", "cannot finish deletion of the secret due to existing pods") // nolint: errcheck
 			resourcecanceledcontext.SetCanceled(ctx)
 			finalizerskeptcontext.SetKept(ctx)
-			r.logger.LogCtx(ctx, "level", "debug", "message", "canceling resource for custom object")
+			r.logger.LogCtx(ctx, "level", "debug", "message", "canceling resource for custom object") // nolint: errcheck
 
 			return nil, nil
 		}
@@ -86,16 +86,16 @@ func (r *Resource) checkCertType(customObject v1alpha1.CertConfig) bool {
 	return false
 }
 
-func (r *Resource) updateVersionBundleVersionGauge(ctx context.Context, customObject v1alpha1.CertConfig, gauge *prometheus.GaugeVec, secret *corev1.Secret) {
+func (r *Resource) updateVersionBundleVersionGauge(ctx context.Context, gauge *prometheus.GaugeVec, secret *corev1.Secret) {
 	version, ok := secret.Annotations[VersionBundleVersionAnnotation]
 	if !ok {
-		r.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf("cannot update current version bundle version metric: annotation '%s' must not be empty", VersionBundleVersionAnnotation))
+		r.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf("cannot update current version bundle version metric: annotation '%s' must not be empty", VersionBundleVersionAnnotation)) // nolint: errcheck
 		return
 	}
 
 	split := strings.Split(version, ".")
 	if len(split) != 3 {
-		r.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf("cannot update current version bundle version metric: invalid version format, expected '<major>.<minor>.<patch>', got '%s'", version))
+		r.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf("cannot update current version bundle version metric: invalid version format, expected '<major>.<minor>.<patch>', got '%s'", version)) // nolint: errcheck
 		return
 	}
 

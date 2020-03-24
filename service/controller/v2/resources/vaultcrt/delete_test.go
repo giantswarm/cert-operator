@@ -102,7 +102,7 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 		c.VaultCrt = vaultcrttest.New()
 
 		c.ExpirationThreshold = 24 * time.Hour
-		c.Namespace = "default"
+		c.Namespace = DefaultNamespace
 
 		newResource, err = New(c)
 		if err != nil {
@@ -111,7 +111,7 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.newDeleteChange(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
+		result, err := newResource.newDeleteChange(context.TODO(), tc.CurrentState)
 		if err != nil {
 			t.Fatal("case", i, "expected", nil, "got", err)
 		}

@@ -1,7 +1,6 @@
 package vaultpki
 
 import (
-	"context"
 	"reflect"
 	"testing"
 
@@ -102,7 +101,7 @@ func Test_Resource_VaultPKI_NewDeleteChange(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.newDeleteChange(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
+		result, err := newResource.newDeleteChange(tc.CurrentState, tc.DesiredState)
 		if err != nil {
 			t.Fatal("case", i, "expected", nil, "got", err)
 		}
