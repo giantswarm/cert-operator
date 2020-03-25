@@ -13,7 +13,7 @@ workflows:
             tags:
               only: /^v.*/
 
-      - build
+      - architect/build
 
       - architect/push-to-docker-legacy:
           name: push-cert-operator-to-quay
