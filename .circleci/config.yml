@@ -40,7 +40,7 @@ workflows:
       - hold-push-cert-operator-to-aliyun-pr:
           type: approval
           requires:
-            - build
+            - go-build
           # Needed to prevent job from being triggered on master branch.
           filters:
             branches:
@@ -66,7 +66,7 @@ workflows:
           username_envar: "ALIYUN_USERNAME"
           password_envar: "ALIYUN_PASSWORD"
           requires:
-            - build
+            - go-build
           # Needed to trigger job only on merge to master.
           filters:
             branches:
