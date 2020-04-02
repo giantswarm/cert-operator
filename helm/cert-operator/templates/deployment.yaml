@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cert-operator
-  namespace: {{ .Values.namespace }}
+  name: {{ tpl .Values.resource.default.name  . }}
+  namespace: {{ tpl .Values.resource.default.namespace  . }}
   labels:
-    app: cert-operator
+    {{- include "cert-operator.labels" . | nindent 4 }}
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -12,24 +12,24 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: cert-operator
+      {{- include "cert-operator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: cert-operator
+        {{- include "cert-operator.selectorLabels" . | nindent 8 }}
       annotations:
         releasetime: {{ $.Release.Time }}
     spec:
       volumes:
       - name: cert-operator-configmap
         configMap:
-          name: cert-operator-configmap
+          name: {{ .Chart.Name }}
           items:
             - key: config.yaml
               path: config.yaml
       - name: cert-operator-secret
         secret:
-          secretName: cert-operator-secret
+          secretName: {{ .Chart.Name }}
           items:
             - key: secret.yaml
               path: secret.yaml
@@ -47,10 +47,10 @@ spec:
       - name: cert-operator
         image: "{{ .Values.Installation.V1.Registry.Domain }}/giantswarm/cert-operator:[[ .SHA ]]"
         volumeMounts:
-        - name: cert-operator-configmap
-          mountPath: /var/run/cert-operator/configmap/
-        - name: cert-operator-secret
-          mountPath: /var/run/cert-operator/secret/
+        - name: {{ .Chart.Name }}-configmap
+          mountPath: /var/run/{{ .Chart.Name }}/configmap/
+        - name: {{ .Chart.Name }}-secret
+          mountPath: /var/run/{{ .Chart.Name }}/secret/
         - name: certs
           mountPath: /etc/ssl/certs/ca-certificate.crt
         - name: ssl-certs
@@ -60,8 +60,8 @@ spec:
           containerPort: 8000
         args:
         - daemon
-        - --config.dirs=/var/run/cert-operator/configmap/
-        - --config.dirs=/var/run/cert-operator/secret/
+        - --config.dirs=/var/run/{{ .Chart.Name }}/configmap/
+        - --config.dirs=/var/run/{{ .Chart.Name }}/secret/
         - --config.files=config
         - --config.files=secret
         livenessProbe:
