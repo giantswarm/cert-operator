@@ -24,3 +24,9 @@ Installation:
       Kind: ""
     Registry:
       Domain: ""
+    Secret:
+      CertOperator:
+        Service:
+          Vault:
+            Config:
+              Token: ""
