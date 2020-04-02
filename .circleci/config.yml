@@ -71,11 +71,3 @@ workflows:
           filters:
             branches:
               only: master
-      - deploy:
-          name: deploy
-          requires:
-            - push-cert-operator-to-aliyun-master
-            - push-cert-operator-to-quay
-          filters:
-            branches:
-              only: master
