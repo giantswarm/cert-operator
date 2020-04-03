@@ -16,16 +16,16 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 	}
 
 	if secretToCreate != nil {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the secret in the Kubernetes API") // nolint: errcheck
+		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the secret in the Kubernetes API")
 
 		_, err := r.k8sClient.CoreV1().Secrets(r.namespace).Create(secretToCreate)
 		if err != nil {
 			return microerror.Mask(err)
 		}
 
-		r.logger.LogCtx(ctx, "level", "debug", "message", "created the secret in the Kubernetes API") // nolint: errcheck
+		r.logger.LogCtx(ctx, "level", "debug", "message", "created the secret in the Kubernetes API")
 	} else {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "the secret does not need to be created in the Kubernetes API") // nolint: errcheck
+		r.logger.LogCtx(ctx, "level", "debug", "message", "the secret does not need to be created in the Kubernetes API")
 	}
 
 	return nil
@@ -45,7 +45,7 @@ func (r *Resource) newCreateChange(ctx context.Context, obj, currentState, desir
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", "finding out if the secret has to be created") // nolint: errcheck
+	r.logger.LogCtx(ctx, "level", "debug", "message", "finding out if the secret has to be created")
 
 	var secretToCreate *apiv1.Secret
 	if currentSecret == nil {
@@ -60,7 +60,7 @@ func (r *Resource) newCreateChange(ctx context.Context, obj, currentState, desir
 		secretToCreate.StringData[key.KeyID] = k
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", "found out if the secret has to be created") // nolint: errcheck
+	r.logger.LogCtx(ctx, "level", "debug", "message", "found out if the secret has to be created")
 
 	return secretToCreate, nil
 }

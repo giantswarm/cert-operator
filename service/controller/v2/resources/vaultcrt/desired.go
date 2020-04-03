@@ -17,7 +17,7 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", "computing the desired secret") // nolint: errcheck
+	r.logger.LogCtx(ctx, "level", "debug", "message", "computing the desired secret")
 
 	hash, err := key.CustomObjectHash(customObject)
 	if err != nil {
@@ -44,7 +44,7 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		},
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", "computed the desired secret") // nolint: errcheck
+	r.logger.LogCtx(ctx, "level", "debug", "message", "computed the desired secret")
 
 	return secret, nil
 }

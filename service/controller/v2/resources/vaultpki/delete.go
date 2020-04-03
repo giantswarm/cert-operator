@@ -32,16 +32,16 @@ func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteChange inte
 	}
 
 	if vaultPKIStateToDelete.Backend != nil || vaultPKIStateToDelete.CACertificate != "" {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "deleting the Vault PKI in the Vault API") // nolint: errcheck
+		r.logger.LogCtx(ctx, "level", "debug", "message", "deleting the Vault PKI in the Vault API")
 
 		err := r.vaultPKI.DeleteBackend(key.ClusterID(customObject))
 		if err != nil {
 			return microerror.Mask(err)
 		}
 
-		r.logger.LogCtx(ctx, "level", "debug", "message", "deleted the Vault PKI in the Vault API") // nolint: errcheck
+		r.logger.LogCtx(ctx, "level", "debug", "message", "deleted the Vault PKI in the Vault API")
 	} else {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "the Vault PKI does not need to be deleted from the Vault API") // nolint: errcheck
+		r.logger.LogCtx(ctx, "level", "debug", "message", "the Vault PKI does not need to be deleted from the Vault API")
 	}
 
 	return nil

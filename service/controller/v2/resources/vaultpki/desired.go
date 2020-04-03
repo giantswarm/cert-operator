@@ -7,7 +7,7 @@ import (
 )
 
 func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interface{}, error) {
-	r.logger.LogCtx(ctx, "level", "debug", "message", "computing the desired Vault PKI") // nolint: errcheck
+	r.logger.LogCtx(ctx, "level", "debug", "message", "computing the desired Vault PKI")
 
 	// NOTE that we only define a sparse desired state. This is good enough
 	// because we only need a non-zero-value desired state to do the proper
@@ -23,7 +23,7 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		vaultPKIState.CACertificate = "placeholder"
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", "computed the desired Vault PKI") // nolint: errcheck
+	r.logger.LogCtx(ctx, "level", "debug", "message", "computed the desired Vault PKI")
 
 	return vaultPKIState, nil
 }

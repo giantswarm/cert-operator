@@ -156,7 +156,7 @@ func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface
 		return microerror.Mask(err)
 	}
 
-	logger.Log("level", "debug", "message", "cleaning up PKI backends") // nolint: errcheck
+	logger.Log("level", "debug", "message", "cleaning up PKI backends")
 
 	for k := range mounts {
 		id := key.ClusterIDFromMountPath(k)
@@ -167,7 +167,7 @@ func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface
 		}
 
 		if !exists {
-			logger.Log("level", "debug", "message", fmt.Sprintf("deleting PKI backend for Tenant Cluster %#q", id)) // nolint: errcheck
+			logger.Log("level", "debug", "message", fmt.Sprintf("deleting PKI backend for Tenant Cluster %#q", id))
 
 			{
 				err := k8sClient.CtrlClient().DeleteAllOf(
@@ -190,11 +190,11 @@ func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface
 				}
 			}
 
-			logger.Log("level", "debug", "message", fmt.Sprintf("deleted PKI backend for Tenant Cluster %#q", id)) // nolint: errcheck
+			logger.Log("level", "debug", "message", fmt.Sprintf("deleted PKI backend for Tenant Cluster %#q", id))
 		}
 	}
 
-	logger.Log("level", "debug", "message", "cleaned up PKI backends") // nolint: errcheck
+	logger.Log("level", "debug", "message", "cleaned up PKI backends")
 
 	return nil
 }

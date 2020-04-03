@@ -16,7 +16,7 @@ func (r *Resource) ApplyUpdateChange(ctx context.Context, obj, updateChange inte
 	}
 
 	if roleToUpdate != nil {
-		r.logger.LogCtx(ctx, "debug", "updating the role in the Vault API") // nolint: errcheck
+		r.logger.LogCtx(ctx, "debug", "updating the role in the Vault API")
 
 		c := vaultrole.UpdateConfig{
 			AllowBareDomains: roleToUpdate.AllowBareDomains,
@@ -31,9 +31,9 @@ func (r *Resource) ApplyUpdateChange(ctx context.Context, obj, updateChange inte
 			return microerror.Mask(err)
 		}
 
-		r.logger.LogCtx(ctx, "debug", "updated the role in the Vault API") // nolint: errcheck
+		r.logger.LogCtx(ctx, "debug", "updated the role in the Vault API")
 	} else {
-		r.logger.LogCtx(ctx, "debug", "the role does not need to be updated in the Vault API") // nolint: errcheck
+		r.logger.LogCtx(ctx, "debug", "the role does not need to be updated in the Vault API")
 	}
 
 	return nil
@@ -67,14 +67,14 @@ func (r *Resource) newUpdateChange(ctx context.Context, currentState, desiredSta
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.LogCtx(ctx, "debug", "finding out if the role has to be updated") // nolint: errcheck
+	r.logger.LogCtx(ctx, "debug", "finding out if the role has to be updated")
 
 	var roleToUpdate *vaultrole.Role
 	if !reflect.DeepEqual(currentRole, desiredRole) {
 		roleToUpdate = desiredRole
 	}
 
-	r.logger.LogCtx(ctx, "debug", "found out if the role has to be updated") // nolint: errcheck
+	r.logger.LogCtx(ctx, "debug", "found out if the role has to be updated")
 
 	return roleToUpdate, nil
 }

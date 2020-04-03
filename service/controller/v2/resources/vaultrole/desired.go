@@ -16,7 +16,7 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.LogCtx(ctx, "debug", "computing the desired role") // nolint: errcheck
+	r.logger.LogCtx(ctx, "debug", "computing the desired role")
 
 	TTL, err := time.ParseDuration(key.RoleTTL(customObject))
 	if err != nil {
@@ -32,7 +32,7 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		TTL:              TTL,
 	}
 
-	r.logger.LogCtx(ctx, "debug", "computed the desired role") // nolint: errcheck
+	r.logger.LogCtx(ctx, "debug", "computed the desired role")
 
 	return role, nil
 }

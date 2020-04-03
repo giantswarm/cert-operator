@@ -20,16 +20,16 @@ func (r *Resource) ApplyUpdateChange(ctx context.Context, obj, updateChange inte
 	}
 
 	if secretToUpdate != nil {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "updating the secret in the Kubernetes API") // nolint: errcheck
+		r.logger.LogCtx(ctx, "level", "debug", "message", "updating the secret in the Kubernetes API")
 
 		_, err := r.k8sClient.CoreV1().Secrets(r.namespace).Update(secretToUpdate)
 		if err != nil {
 			return microerror.Mask(err)
 		}
 
-		r.logger.LogCtx(ctx, "level", "debug", "message", "updated the secret in the Kubernetes API") // nolint: errcheck
+		r.logger.LogCtx(ctx, "level", "debug", "message", "updated the secret in the Kubernetes API")
 	} else {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "the secret does not need to be updated in the Kubernetes API") // nolint: errcheck
+		r.logger.LogCtx(ctx, "level", "debug", "message", "the secret does not need to be updated in the Kubernetes API")
 	}
 
 	return nil
@@ -67,7 +67,7 @@ func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desir
 		return nil, microerror.Mask(err)
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", "finding out if the secret has to be updated") // nolint: errcheck
+	r.logger.LogCtx(ctx, "level", "debug", "message", "finding out if the secret has to be updated")
 
 	var secretToUpdate *apiv1.Secret
 	{
@@ -96,7 +96,7 @@ func (r *Resource) newUpdateChange(ctx context.Context, obj, currentState, desir
 		}
 	}
 
-	r.logger.LogCtx(ctx, "level", "debug", "message", "found out if the secret has to be updated") // nolint: errcheck
+	r.logger.LogCtx(ctx, "level", "debug", "message", "found out if the secret has to be updated")
 
 	return secretToUpdate, nil
 }
