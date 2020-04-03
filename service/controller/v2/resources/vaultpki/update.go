@@ -8,7 +8,7 @@ import (
 )
 
 func (r *Resource) NewUpdatePatch(ctx context.Context, obj, currentState, desiredState interface{}) (*crud.Patch, error) {
-	create, err := r.newCreateChange(ctx, currentState, desiredState)
+	create, err := r.newCreateChange(ctx, obj, currentState, desiredState)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}

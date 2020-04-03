@@ -118,7 +118,7 @@ func Test_Resource_VaultRole_newCreateChange(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		result, err := newResource.newCreateChange(context.TODO(), tc.CurrentState, tc.DesiredState)
+		result, err := newResource.newCreateChange(context.TODO(), tc.Obj, tc.CurrentState, tc.DesiredState)
 		if err != nil {
 			t.Fatal("case", i, "expected", nil, "got", err)
 		}

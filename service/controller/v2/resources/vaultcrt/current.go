@@ -37,7 +37,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		} else {
 			r.logger.LogCtx(ctx, "level", "debug", "message", "found the secret in the Kubernetes API")
 			secret = manifest
-			r.updateVersionBundleVersionGauge(ctx, versionBundleVersionGauge, secret)
+			r.updateVersionBundleVersionGauge(ctx, customObject, versionBundleVersionGauge, secret)
 		}
 	}
 
@@ -86,7 +86,7 @@ func (r *Resource) checkCertType(customObject v1alpha1.CertConfig) bool {
 	return false
 }
 
-func (r *Resource) updateVersionBundleVersionGauge(ctx context.Context, gauge *prometheus.GaugeVec, secret *corev1.Secret) {
+func (r *Resource) updateVersionBundleVersionGauge(ctx context.Context, customObject v1alpha1.CertConfig, gauge *prometheus.GaugeVec, secret *corev1.Secret) {
 	version, ok := secret.Annotations[VersionBundleVersionAnnotation]
 	if !ok {
 		r.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf("cannot update current version bundle version metric: annotation '%s' must not be empty", VersionBundleVersionAnnotation))

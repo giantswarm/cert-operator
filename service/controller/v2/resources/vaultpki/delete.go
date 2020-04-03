@@ -10,7 +10,7 @@ import (
 )
 
 func (r *Resource) NewDeletePatch(ctx context.Context, obj, currentState, desiredState interface{}) (*crud.Patch, error) {
-	delete, err := r.newDeleteChange(currentState, desiredState)
+	delete, err := r.newDeleteChange(ctx, obj, currentState, desiredState)
 	if err != nil {
 		return nil, microerror.Mask(err)
 	}
@@ -47,7 +47,7 @@ func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteChange inte
 	return nil
 }
 
-func (r *Resource) newDeleteChange(currentState, desiredState interface{}) (interface{}, error) {
+func (r *Resource) newDeleteChange(ctx context.Context, obj, currentState, desiredState interface{}) (interface{}, error) {
 	_, err := toVaultPKIState(currentState)
 	if err != nil {
 		return nil, microerror.Mask(err)
