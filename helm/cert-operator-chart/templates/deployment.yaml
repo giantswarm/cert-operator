@@ -5,6 +5,7 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     app: cert-operator
+    version: {{ .Chart.Version }}
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -13,10 +14,12 @@ spec:
   selector:
     matchLabels:
       app: cert-operator
+      version: {{ .Chart.Version }}
   template:
     metadata:
       labels:
         app: cert-operator
+        version: {{ .Chart.Version }}
       annotations:
         releasetime: {{ $.Release.Time }}
     spec:
