@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cert-operator
-  namespace: {{ .Values.namespace }}
+  name: {{ include "resource.default.name" . }}
+  namespace: {{ include "resource.default.namespace" . }}
   labels:
-    app: cert-operator
+    {{- include "labels.common" . | nindent 4 }}
   annotations:
     prometheus.io/scrape: "true"
 spec:
   ports:
   - port: 8000
   selector:
-    app: cert-operator
+    {{- include "labels.selector" . | nindent 4 }}
