@@ -21,13 +21,13 @@ spec:
         releasetime: {{ $.Release.Time }}
     spec:
       volumes:
-      - name: {{ .Chart.Name }}-configmap
+      - name: {{ include "name" . }}-configmap
         configMap:
           name: {{ include "resource.default.name" . }}
           items:
             - key: config.yaml
               path: config.yaml
-      - name: {{ .Chart.Name }}-secret
+      - name: {{ include "name" . }}-secret
         secret:
           secretName: {{ include "resource.default.name" . }}
           items:
@@ -47,9 +47,9 @@ spec:
       - name: cert-operator
         image: "{{ .Values.Installation.V1.Registry.Domain }}/giantswarm/cert-operator:[[ .Version ]]"
         volumeMounts:
-        - name: {{ .Chart.Name }}-configmap
+        - name: {{ include "name" . }}-configmap
           mountPath: /var/run/cert-operator/configmap/
-        - name: {{ .Chart.Name }}-secret
+        - name: {{ include "name" . }}-secret
           mountPath: /var/run/cert-operator/secret/
         - name: certs
           mountPath: /etc/ssl/certs/ca-certificate.crt
