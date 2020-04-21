@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cert-operator-configmap
+  namespace: {{ .Values.namespace }}
+data:
+  config.yaml: |
+    server:
+      enable:
+        debug:
+          server: true
+      listen:
+        address: 'http://0.0.0.0:8000'
+    service:
+      crd:
+        labelSelector: '{{ .Values.Installation.V1.GiantSwarm.CertOperator.CRD.LabelSelector }}'
+      kubernetes:
+        address: ''
+        inCluster: true
+        tls:
+          caFile: ''
+          crtFile: ''
+          keyFile: ''
+      resource:
+        vaultCrt:
+          expirationThreshold: '2160h'
+          namespace: 'default'
+      vault:
+        config:
+          address: '{{ .Values.Installation.V1.Auth.Vault.Address }}'
+          pki:
+            ca:
+              ttl: '{{ .Values.Installation.V1.Auth.Vault.CA.TTL }}'
+            commonname:
+              format: '%s.{{ .Values.Installation.V1.Guest.Kubernetes.API.EndpointBase }}'
