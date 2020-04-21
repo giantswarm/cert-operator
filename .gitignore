@@ -1,4 +1,5 @@
 cert-operator
+!helm/cert-operator
 TODO
 !vendor/**
 
