@@ -1,7 +1,9 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ .Values.clusterRoleName }}
+  name: {{ include "resource.default.name" . }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
 rules:
   - apiGroups:
       - apiextensions.k8s.io
@@ -63,7 +65,7 @@ rules:
     resources:
       - configmaps
     resourceNames:
-      - cert-operator-configmap
+      - {{ include "resource.default.name" . }}
     verbs:
       - get
   - nonResourceURLs:
@@ -74,20 +76,24 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.clusterRoleBindingName }}
+  name: {{ include "resource.default.name" . }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
 subjects:
   - kind: ServiceAccount
-    name: cert-operator
-    namespace: {{ .Values.namespace }}
+    name: {{ include "resource.default.name" . }}
+    namespace: {{ include "resource.default.namespace" . }}
 roleRef:
   kind: ClusterRole
-  name: {{ .Values.clusterRoleName }}
+  name: {{ include "resource.default.name" . }}
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ .Values.clusterRoleNamePSP }}
+  name: {{ include "resource.psp.name" . }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
 rules:
   - apiGroups:
       - extensions
@@ -96,17 +102,19 @@ rules:
     verbs:
       - use
     resourceNames:
-      - cert-operator-psp
+      - {{ include "resource.psp.name" . }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.clusterRoleBindingNamePSP }}
+  name: {{ include "resource.psp.name" . }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
 subjects:
   - kind: ServiceAccount
-    name: cert-operator
-    namespace: {{ .Values.namespace }}
+    name: {{ include "resource.default.name" . }}
+    namespace: {{ include "resource.default.namespace" . }}
 roleRef:
   kind: ClusterRole
-  name: {{ .Values.clusterRoleNamePSP }}
+  name: {{ include "resource.psp.name" . }}
   apiGroup: rbac.authorization.k8s.io

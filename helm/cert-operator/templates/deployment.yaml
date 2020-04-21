@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cert-operator
-  namespace: {{ .Values.namespace }}
+  name: {{ include "resource.default.name" . }}
+  namespace: {{ include "resource.default.namespace" . }}
   labels:
-    app: cert-operator
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -12,24 +12,24 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: cert-operator
+      {{- include "labels.selector" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: cert-operator
+        {{- include "labels.selector" . | nindent 8 }}
       annotations:
         releasetime: {{ $.Release.Time }}
     spec:
       volumes:
-      - name: cert-operator-configmap
+      - name: {{ .Chart.Name }}-configmap
         configMap:
-          name: cert-operator-configmap
+          name: {{ include "resource.default.name" . }}
           items:
             - key: config.yaml
               path: config.yaml
-      - name: cert-operator-secret
+      - name: {{ .Chart.Name }}-secret
         secret:
-          secretName: cert-operator-secret
+          secretName: {{ include "resource.default.name" . }}
           items:
             - key: secret.yaml
               path: secret.yaml
@@ -39,7 +39,7 @@ spec:
       - name: ssl-certs
         hostPath:
           path: /etc/ssl/certs/
-      serviceAccountName: cert-operator
+      serviceAccountName: {{ include "resource.default.name" . }}
       securityContext:
         runAsUser: {{ .Values.userID }}
         runAsGroup: {{ .Values.groupID }}
@@ -47,9 +47,9 @@ spec:
       - name: cert-operator
         image: "{{ .Values.Installation.V1.Registry.Domain }}/giantswarm/cert-operator:[[ .Version ]]"
         volumeMounts:
-        - name: cert-operator-configmap
+        - name: {{ .Chart.Name }}-configmap
           mountPath: /var/run/cert-operator/configmap/
-        - name: cert-operator-secret
+        - name: {{ .Chart.Name }}-secret
           mountPath: /var/run/cert-operator/secret/
         - name: certs
           mountPath: /etc/ssl/certs/ca-certificate.crt
