@@ -1,4 +1,3 @@
-// nolint: goconst
 package vaultcrt
 
 import (
@@ -119,7 +118,7 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 		c.VaultCrt = vaultcrttest.New()
 
 		c.ExpirationThreshold = 24 * time.Hour
-		c.Namespace = "default"
+		c.Namespace = "default" // nolint: goconst
 
 		newResource, err = New(c)
 		if err != nil {
