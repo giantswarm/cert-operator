@@ -172,6 +172,7 @@ func New(config Config) (*Service, error) {
 	return s, nil
 }
 
+// nolint: errcheck
 func (s *Service) Boot() {
 	s.bootOnce.Do(func() {
 		go s.certController.Boot(context.Background())

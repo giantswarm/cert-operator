@@ -1,7 +1,7 @@
 package key
 
 import (
-	"crypto/sha1"
+	"crypto/sha1" // nolint: gosec
 	"encoding/json"
 	"fmt"
 
@@ -44,6 +44,7 @@ func CrtTTL(customObject v1alpha1.CertConfig) string {
 	return customObject.Spec.Cert.TTL
 }
 
+// nolint: gosec
 func CustomObjectHash(customObject v1alpha1.CertConfig) (string, error) {
 	b, err := json.Marshal(customObject.Spec.Cert)
 	if err != nil {
@@ -51,7 +52,9 @@ func CustomObjectHash(customObject v1alpha1.CertConfig) (string, error) {
 	}
 
 	h := sha1.New()
-	h.Write(b)
+	if _, err := h.Write(b); err != nil {
+		return "", err
+	}
 	bs := h.Sum(nil)
 
 	return fmt.Sprintf("%x", bs), nil

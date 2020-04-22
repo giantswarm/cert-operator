@@ -41,14 +41,6 @@ type CertConfig struct {
 	ProjectName         string
 }
 
-func (c CertConfig) newInformerListOptions() metav1.ListOptions {
-	listOptions := metav1.ListOptions{
-		LabelSelector: c.CRDLabelSelector,
-	}
-
-	return listOptions
-}
-
 type Cert struct {
 	*controller.Controller
 }
@@ -166,7 +158,7 @@ func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface
 
 	logger.Log("level", "debug", "message", "cleaning up PKI backends")
 
-	for k, _ := range mounts {
+	for k := range mounts {
 		id := key.ClusterIDFromMountPath(k)
 
 		exists, err := tenantClusterExists(k8sClient, id)
