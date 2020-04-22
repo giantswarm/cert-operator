@@ -9,12 +9,12 @@ workflows:
       - architect/go-build:
           name: go-build
           binary: cert-operator
-          resource_class: large
           filters:
             tags:
               only: /^v.*/
 
       - architect/push-to-docker:
+          context: architect
           name: push-cert-operator-to-quay
           image: "quay.io/giantswarm/cert-operator"
           username_envar: "QUAY_USERNAME"
@@ -26,6 +26,7 @@ workflows:
               only: /^v.*/
 
       - architect/push-to-docker:
+          context: architect
           name: push-cert-operator-to-aliyun
           image: "registry-intl.cn-shanghai.aliyuncs.com/giantswarm/cert-operator"
           username_envar: "ALIYUN_USERNAME"
@@ -38,6 +39,7 @@ workflows:
               only: /^v.*/
 
       - architect/push-to-app-catalog:
+          context: architect
           name: push-cert-operator-to-control-plane-app-catalog
           app_catalog: "control-plane-catalog"
           app_catalog_test: "control-plane-test-catalog"
@@ -49,10 +51,37 @@ workflows:
             tags:
               only: /^v.*/
 
-      - architect/push-to-app-collection:
+      - architect/push-to-aws-app-collection:
+          context: architect
           name: push-cert-operator-to-aws-app-collection
           app_name: "cert-operator"
           app_collection_repo: "aws-app-collection"
+          requires:
+            - push-cert-operator-to-control-plane-app-catalog
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-kvm-app-collection:
+          context: architect
+          name: push-cert-operator-to-kvm-app-collection
+          app_name: "cert-operator"
+          app_collection_repo: "kvm-app-collection"
+          requires:
+            - push-cert-operator-to-control-plane-app-catalog
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-azure-app-collection:
+          context: architect
+          name: push-cert-operator-to-azure-app-collection
+          app_name: "cert-operator"
+          app_collection_repo: "azure-app-collection"
           requires:
             - push-cert-operator-to-control-plane-app-catalog
           filters:
