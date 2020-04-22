@@ -51,7 +51,7 @@ workflows:
             tags:
               only: /^v.*/
 
-      - architect/push-to-aws-app-collection:
+      - architect/push-to-app-collection:
           context: architect
           name: push-cert-operator-to-aws-app-collection
           app_name: "cert-operator"
@@ -64,7 +64,7 @@ workflows:
             tags:
               only: /^v.*/
 
-      - architect/push-to-kvm-app-collection:
+      - architect/push-to-app-collection:
           context: architect
           name: push-cert-operator-to-kvm-app-collection
           app_name: "cert-operator"
@@ -77,7 +77,7 @@ workflows:
             tags:
               only: /^v.*/
 
-      - architect/push-to-azure-app-collection:
+      - architect/push-to-app-collection:
           context: architect
           name: push-cert-operator-to-azure-app-collection
           app_name: "cert-operator"
