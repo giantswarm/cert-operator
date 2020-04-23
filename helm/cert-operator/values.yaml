@@ -1,6 +1,8 @@
 project:
   branch: "[[ .Branch ]]"
   commit: "[[ .SHA ]]"
+image:
+  tag: "[[ .Version ]]"
 userID: 1000
 groupID: 1000
 Installation:
