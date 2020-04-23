@@ -10,7 +10,7 @@ const (
 	// AllowSubdomains defines whether to allow the generated root CA of the PKI
 	// backend to allow sub domains as common names.
 	AllowSubdomains = true
-	Name            = "vaultrolev2"
+	Name            = "vaultrole"
 )
 
 type Config struct {
