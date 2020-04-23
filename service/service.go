@@ -8,7 +8,6 @@ import (
 
 	corev1alpha1 "github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	providerv1alpha1 "github.com/giantswarm/apiextensions/pkg/apis/provider/v1alpha1"
-	"github.com/giantswarm/cert-operator/pkg/project"
 	"github.com/giantswarm/k8sclient"
 	"github.com/giantswarm/k8sclient/k8srestconfig"
 	"github.com/giantswarm/microendpoint/service/version"
@@ -22,6 +21,7 @@ import (
 
 	clientvault "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
+	"github.com/giantswarm/cert-operator/pkg/project"
 	"github.com/giantswarm/cert-operator/service/collector"
 	"github.com/giantswarm/cert-operator/service/controller"
 )
