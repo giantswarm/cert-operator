@@ -1,105 +1,91 @@
-orbs:
-  architect: giantswarm/architect@0.4.5
-
 version: 2.1
-jobs:
-  build:
-    machine: true
-    steps:
-    - checkout
 
-    - run: |
-        wget -q $(curl -sS -H "Authorization: token $RELEASE_TOKEN" https://api.github.com/repos/giantswarm/architect/releases/latest | grep browser_download_url | head -n 1 | cut -d '"' -f 4)
-        chmod +x ./architect
-        ./architect version
-
-    - run: |
-        date +"%Y" > /tmp/year
-        date +"%m" > /tmp/month
-        date +"%d" > /tmp/day
-    - restore_cache:
-        keys:
-        - go-cache-v1-{{ checksum "/tmp/year" }}-{{ checksum "/tmp/month" }}-{{ checksum "/tmp/day" }}
-        - go-cache-v1-{{ checksum "/tmp/year" }}-{{ checksum "/tmp/month" }}
-        - go-cache-v1-{{ checksum "/tmp/year" }}
-
-    - run: ./architect build
-
-    - store_test_results:
-        path: /tmp/results
-
-    - save_cache:
-        key: go-cache-v1-{{ checksum "/tmp/year" }}-{{ checksum "/tmp/month" }}-{{ checksum "/tmp/day" }}
-        paths:
-        - /tmp/go/cache
-
-    - persist_to_workspace:
-        root: .
-        paths:
-        - ./cert-operator
-        - ./architect
-
-  deploy:
-    machine: true
-    steps:
-    - checkout
-    - attach_workspace:
-        at: .
-    - deploy:
-        command: |
-            ./architect deploy
+orbs:
+  architect: giantswarm/architect@0.8.12
 
 workflows:
   build:
     jobs:
-      - build
-      - architect/push-to-docker-legacy:
+      - architect/go-build:
+          name: go-build
+          binary: cert-operator
+          filters:
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-docker:
+          context: architect
           name: push-cert-operator-to-quay
           image: "quay.io/giantswarm/cert-operator"
           username_envar: "QUAY_USERNAME"
           password_envar: "QUAY_PASSWORD"
           requires:
-            - build
-
-      - hold-push-cert-operator-to-aliyun-pr:
-          type: approval
-          requires:
-            - build
-          # Needed to prevent job from being triggered on master branch.
+            - go-build
           filters:
-            branches:
-              ignore: master
+            tags:
+              only: /^v.*/
 
-      - architect/push-to-docker-legacy:
-          name: push-cert-operator-to-aliyun-pr
-          image: "registry-intl.cn-shanghai.aliyuncs.com/giantswarm/cert-operator"
-          username_envar: "ALIYUN_USERNAME"
-          password_envar: "ALIYUN_PASSWORD"
-          # Push to Aliyun should execute for non-master branches only once manually approved.
-          requires:
-            - hold-push-cert-operator-to-aliyun-pr
-          # Needed to prevent job being triggered for master branch.
-          filters:
-            branches:
-              ignore: master
-
-      # Push to Aliyun should execute without manual approval on master.
-      - architect/push-to-docker-legacy:
-          name: push-cert-operator-to-aliyun-master
+      - architect/push-to-docker:
+          context: architect
+          name: push-cert-operator-to-aliyun
           image: "registry-intl.cn-shanghai.aliyuncs.com/giantswarm/cert-operator"
           username_envar: "ALIYUN_USERNAME"
           password_envar: "ALIYUN_PASSWORD"
           requires:
-            - build
-          # Needed to trigger job only on merge to master.
+            - go-build
           filters:
-            branches:
-              only: master
-      - deploy:
-          name: deploy
+            # Trigger the job also on git tag.
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-catalog:
+          context: architect
+          name: push-cert-operator-to-control-plane-app-catalog
+          app_catalog: "control-plane-catalog"
+          app_catalog_test: "control-plane-test-catalog"
+          chart: "cert-operator"
           requires:
-            - push-cert-operator-to-aliyun-master
-            - push-cert-operator-to-quay 
+            - push-cert-operator-to-aliyun
+            - push-cert-operator-to-quay
+          filters:
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-collection:
+          context: architect
+          name: push-cert-operator-to-aws-app-collection
+          app_name: "cert-operator"
+          app_collection_repo: "aws-app-collection"
+          requires:
+            - push-cert-operator-to-control-plane-app-catalog
           filters:
             branches:
-              only: master
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-collection:
+          context: architect
+          name: push-cert-operator-to-kvm-app-collection
+          app_name: "cert-operator"
+          app_collection_repo: "kvm-app-collection"
+          requires:
+            - push-cert-operator-to-control-plane-app-catalog
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+
+      - architect/push-to-app-collection:
+          context: architect
+          name: push-cert-operator-to-azure-app-collection
+          app_name: "cert-operator"
+          app_collection_repo: "azure-app-collection"
+          requires:
+            - push-cert-operator-to-control-plane-app-catalog
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/

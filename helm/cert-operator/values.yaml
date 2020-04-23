@@ -1,6 +1,8 @@
+project:
+  branch: "[[ .Branch ]]"
+  commit: "[[ .SHA ]]"
 userID: 1000
 groupID: 1000
-
 Installation:
   V1:
     Registry:
