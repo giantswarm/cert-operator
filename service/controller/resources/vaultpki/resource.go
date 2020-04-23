@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	Name = "vaultpkiv2"
+	Name = "vaultpki"
 )
 
 type Config struct {

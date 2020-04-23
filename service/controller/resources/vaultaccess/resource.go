@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	Name = "vaultaccessv2"
+	Name = "vaultaccess"
 )
 
 type Config struct {

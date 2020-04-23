@@ -17,7 +17,7 @@ const (
 	// AllowSubDomains defines whether to allow the generated root CA of the PKI
 	// backend to allow sub domains as common names.
 	AllowSubDomains = true
-	Name            = "vaultcrtv2"
+	Name            = "vaultcrt"
 	// ConfigHashAnnotation is the annotation key used to track the hash
 	// representation of the cert config. This is used to identify changes of the
 	// config to trigger renewals.
