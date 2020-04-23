@@ -1,4 +1,4 @@
-package v2
+package controller
 
 import (
 	"time"
@@ -16,11 +16,11 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/giantswarm/cert-operator/service/controller/v2/key"
-	"github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultaccess"
-	vaultcrtresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultcrt"
-	vaultpkiresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultpki"
-	vaultroleresource "github.com/giantswarm/cert-operator/service/controller/v2/resources/vaultrole"
+	"github.com/giantswarm/cert-operator/service/controller/key"
+	"github.com/giantswarm/cert-operator/service/controller/resources/vaultaccess"
+	vaultcrtresource "github.com/giantswarm/cert-operator/service/controller/resources/vaultcrt"
+	vaultpkiresource "github.com/giantswarm/cert-operator/service/controller/resources/vaultpki"
+	vaultroleresource "github.com/giantswarm/cert-operator/service/controller/resources/vaultrole"
 )
 
 type ResourceSetConfig struct {

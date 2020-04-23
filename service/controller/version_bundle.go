@@ -1,4 +1,4 @@
-package v2
+package controller
 
 import (
 	"github.com/giantswarm/versionbundle"
