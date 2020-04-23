@@ -10,7 +10,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/giantswarm/cert-operator/service/controller/v2/key"
+	"github.com/giantswarm/cert-operator/service/controller/key"
 )
 
 const (
