@@ -8,11 +8,13 @@ import (
 
 	corev1alpha1 "github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	providerv1alpha1 "github.com/giantswarm/apiextensions/pkg/apis/provider/v1alpha1"
+	"github.com/giantswarm/cert-operator/pkg/project"
 	"github.com/giantswarm/k8sclient"
 	"github.com/giantswarm/k8sclient/k8srestconfig"
 	"github.com/giantswarm/microendpoint/service/version"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+	"github.com/giantswarm/versionbundle"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/rest"
@@ -152,7 +154,7 @@ func New(config Config) (*Service, error) {
 			Name:           config.ProjectName,
 			Source:         config.Source,
 			Version:        config.Version,
-			VersionBundles: NewVersionBundles(),
+			VersionBundles: []versionbundle.Bundle{project.NewVersionBundle()},
 		}
 
 		versionService, err = version.New(c)
