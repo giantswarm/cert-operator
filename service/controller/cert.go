@@ -25,7 +25,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/cert-operator/pkg/label"
-	v2 "github.com/giantswarm/cert-operator/service/controller/v2"
 )
 
 type CertConfig struct {
@@ -96,9 +95,9 @@ func NewCert(config CertConfig) (*Cert, error) {
 		}
 	}
 
-	var v2ResourceSet *controller.ResourceSet
+	var ResourceSet *controller.ResourceSet
 	{
-		c := v2.ResourceSetConfig{
+		c := ResourceSetConfig{
 			K8sClient:   config.K8sClient.K8sClient(),
 			Logger:      config.Logger,
 			VaultClient: config.VaultClient,
@@ -111,7 +110,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 			ProjectName:         config.ProjectName,
 		}
 
-		v2ResourceSet, err = v2.NewResourceSet(c)
+		ResourceSet, err = NewResourceSet(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -125,7 +124,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 			Logger:    config.Logger,
 			Name:      config.ProjectName,
 			ResourceSets: []*controller.ResourceSet{
-				v2ResourceSet,
+				ResourceSet,
 			},
 			NewRuntimeObjectFunc: func() runtime.Object {
 				return new(corev1alpha1.CertConfig)

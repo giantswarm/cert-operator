@@ -6,6 +6,7 @@ import (
 	"github.com/giantswarm/microkit/command"
 	microserver "github.com/giantswarm/microkit/server"
 	"github.com/giantswarm/micrologger"
+	"github.com/giantswarm/versionbundle"
 	"github.com/spf13/viper"
 
 	"github.com/giantswarm/cert-operator/flag"
@@ -87,7 +88,7 @@ func main() {
 			Name:           project.Name(),
 			Source:         project.Source(),
 			Version:        project.Version(),
-			VersionBundles: service.NewVersionBundles(),
+			VersionBundles: []versionbundle.Bundle{project.NewVersionBundle()},
 		}
 
 		newCommand, err = command.New(c)
