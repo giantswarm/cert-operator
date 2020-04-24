@@ -16,6 +16,7 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/giantswarm/cert-operator/pkg/project"
 	"github.com/giantswarm/cert-operator/service/controller/key"
 	"github.com/giantswarm/cert-operator/service/controller/resources/vaultaccess"
 	vaultcrtresource "github.com/giantswarm/cert-operator/service/controller/resources/vaultcrt"
@@ -144,7 +145,7 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 			return false
 		}
 
-		if key.VersionBundleVersion(cr) == VersionBundle().Version {
+		if key.VersionBundleVersion(cr) == project.NewVersionBundle().Version {
 			return true
 		}
 

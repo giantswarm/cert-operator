@@ -1,10 +1,10 @@
-package controller
+package project
 
 import (
 	"github.com/giantswarm/versionbundle"
 )
 
-func VersionBundle() versionbundle.Bundle {
+func NewVersionBundle() versionbundle.Bundle {
 	return versionbundle.Bundle{
 		Changelogs: []versionbundle.Changelog{
 			{
@@ -19,7 +19,7 @@ func VersionBundle() versionbundle.Bundle {
 				Version: "0.10.3",
 			},
 		},
-		Name:    "cert-operator",
-		Version: "0.1.0",
+		Name:    Name(),
+		Version: Version(),
 	}
 }

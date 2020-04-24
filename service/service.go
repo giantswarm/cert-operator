@@ -13,6 +13,7 @@ import (
 	"github.com/giantswarm/microendpoint/service/version"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+	"github.com/giantswarm/versionbundle"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/rest"
@@ -20,6 +21,7 @@ import (
 
 	clientvault "github.com/giantswarm/cert-operator/client/vault"
 	"github.com/giantswarm/cert-operator/flag"
+	"github.com/giantswarm/cert-operator/pkg/project"
 	"github.com/giantswarm/cert-operator/service/collector"
 	"github.com/giantswarm/cert-operator/service/controller"
 )
@@ -152,7 +154,7 @@ func New(config Config) (*Service, error) {
 			Name:           config.ProjectName,
 			Source:         config.Source,
 			Version:        config.Version,
-			VersionBundles: NewVersionBundles(),
+			VersionBundles: []versionbundle.Bundle{project.NewVersionBundle()},
 		}
 
 		versionService, err = version.New(c)
