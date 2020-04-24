@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
+	"github.com/giantswarm/cert-operator/pkg/label"
 	"github.com/giantswarm/certs"
 	"github.com/giantswarm/microerror"
 )
@@ -99,4 +100,8 @@ func ToCustomObject(v interface{}) (v1alpha1.CertConfig, error) {
 
 func VersionBundleVersion(customObject v1alpha1.CertConfig) string {
 	return customObject.Spec.VersionBundle.Version
+}
+
+func OperatorVersion(getter LabelsGetter) string {
+	return getter.GetLabels()[label.OperatorVersion]
 }
