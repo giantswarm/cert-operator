@@ -98,10 +98,6 @@ func ToCustomObject(v interface{}) (v1alpha1.CertConfig, error) {
 	return customObject, nil
 }
 
-func VersionBundleVersion(customObject v1alpha1.CertConfig) string {
-	return customObject.Spec.VersionBundle.Version
-}
-
 func OperatorVersion(getter LabelsGetter) string {
 	return getter.GetLabels()[label.OperatorVersion]
 }
