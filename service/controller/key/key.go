@@ -89,7 +89,7 @@ func SecretLabels(customObject v1alpha1.CertConfig) map[string]string {
 	cert := certs.Cert(customObject.Spec.Cert.ClusterComponent)
 	labels := certs.K8sLabels(ClusterID(customObject), cert)
 
-	labels[managedByLabel] = project.Name()
+	labels[label.ManagedByLabel] = project.Name()
 
 	return labels
 }

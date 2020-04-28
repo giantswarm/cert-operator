@@ -28,8 +28,6 @@ const (
 	// UpdateTimestampLayout is the time layout used to format and parse the
 	// update timestamps tracked in the annotations of the Kubernetes secrets.
 	UpdateTimestampLayout = "2006-01-02T15:04:05.000000Z"
-	// managedByLabel is used to flag resources create by this operator.
-	managedByLabel = "giantswarm.io/managed-by"
 )
 
 type Config struct {
