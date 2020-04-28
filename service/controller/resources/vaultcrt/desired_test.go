@@ -9,6 +9,7 @@ import (
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
+	"github.com/google/go-cmp/cmp"
 	apiv1 "k8s.io/api/core/v1"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -118,7 +119,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 		}
 		secret := result.(*apiv1.Secret)
 		if !reflect.DeepEqual(tc.ExpectedSecret, secret) {
-			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedSecret, secret)
+			t.Fatalf("case %d unexpected result\n%s", i, cmp.Diff(tc.ExpectedSecret, secret))
 		}
 	}
 }
