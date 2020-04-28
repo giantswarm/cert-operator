@@ -16,7 +16,6 @@ require (
 	github.com/giantswarm/vaultpki v0.2.0
 	github.com/giantswarm/vaultrole v0.2.0
 	github.com/giantswarm/versionbundle v0.2.0
-	github.com/google/go-cmp v0.4.0
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/prometheus/client_golang v1.5.1
 	github.com/spf13/viper v1.6.2
