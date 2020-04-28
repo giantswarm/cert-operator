@@ -44,6 +44,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 						"clusterComponent":          "api",
 						"giantswarm.io/cluster":     "foobar",
 						"giantswarm.io/certificate": "api",
+						"giantswarm.io/managed-by":  "cert-operator",
 					},
 				},
 				StringData: map[string]string{
@@ -79,6 +80,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 						"clusterComponent":          "worker",
 						"giantswarm.io/cluster":     "al9qy",
 						"giantswarm.io/certificate": "worker",
+						"giantswarm.io/managed-by":  "cert-operator",
 					},
 				},
 				StringData: map[string]string{
