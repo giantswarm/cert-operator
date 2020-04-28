@@ -145,7 +145,7 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 			return false
 		}
 
-		if key.VersionBundleVersion(cr) == project.NewVersionBundle().Version {
+		if key.OperatorVersion(&cr) == project.Version() {
 			return true
 		}
 

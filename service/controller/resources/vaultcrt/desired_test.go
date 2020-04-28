@@ -9,6 +9,7 @@ import (
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
+	"github.com/google/go-cmp/cmp"
 	apiv1 "k8s.io/api/core/v1"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -36,15 +37,15 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "foobar-api",
 					Annotations: map[string]string{
-						ConfigHashAnnotation:           "394f594f5cf6a2deb9abc6f0e322d887557d4a8e",
-						UpdateTimestampAnnotation:      (time.Time{}).Format(UpdateTimestampLayout),
-						VersionBundleVersionAnnotation: "0.1.0",
+						ConfigHashAnnotation:      "394f594f5cf6a2deb9abc6f0e322d887557d4a8e",
+						UpdateTimestampAnnotation: (time.Time{}).Format(UpdateTimestampLayout),
 					},
 					Labels: map[string]string{
 						"clusterID":                 "foobar",
 						"clusterComponent":          "api",
 						"giantswarm.io/cluster":     "foobar",
 						"giantswarm.io/certificate": "api",
+						"giantswarm.io/managed-by":  "cert-operator",
 					},
 				},
 				StringData: map[string]string{
@@ -72,15 +73,15 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "al9qy-worker",
 					Annotations: map[string]string{
-						ConfigHashAnnotation:           "d240dfb0f9dc171ce6dda44b0e55227896247cb9",
-						UpdateTimestampAnnotation:      (time.Time{}).Format(UpdateTimestampLayout),
-						VersionBundleVersionAnnotation: "0.2.0",
+						ConfigHashAnnotation:      "d240dfb0f9dc171ce6dda44b0e55227896247cb9",
+						UpdateTimestampAnnotation: (time.Time{}).Format(UpdateTimestampLayout),
 					},
 					Labels: map[string]string{
 						"clusterID":                 "al9qy",
 						"clusterComponent":          "worker",
 						"giantswarm.io/cluster":     "al9qy",
 						"giantswarm.io/certificate": "worker",
+						"giantswarm.io/managed-by":  "cert-operator",
 					},
 				},
 				StringData: map[string]string{
@@ -118,7 +119,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 		}
 		secret := result.(*apiv1.Secret)
 		if !reflect.DeepEqual(tc.ExpectedSecret, secret) {
-			t.Fatalf("case %d expected %#v got %#v", i, tc.ExpectedSecret, secret)
+			t.Fatalf("case %d unexpected result\n%s", i, cmp.Diff(tc.ExpectedSecret, secret))
 		}
 	}
 }

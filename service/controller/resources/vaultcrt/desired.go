@@ -31,9 +31,8 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		ObjectMeta: apismetav1.ObjectMeta{
 			Name: key.SecretName(customObject),
 			Annotations: map[string]string{
-				ConfigHashAnnotation:           hash,
-				UpdateTimestampAnnotation:      r.currentTimeFactory().In(time.UTC).Format(UpdateTimestampLayout),
-				VersionBundleVersionAnnotation: key.VersionBundleVersion(customObject),
+				ConfigHashAnnotation:      hash,
+				UpdateTimestampAnnotation: r.currentTimeFactory().In(time.UTC).Format(UpdateTimestampLayout),
 			},
 			Labels: key.SecretLabels(customObject),
 		},
