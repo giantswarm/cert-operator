@@ -8,9 +8,6 @@ import (
 	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/certs"
 	"github.com/giantswarm/microerror"
-
-	"github.com/giantswarm/cert-operator/pkg/label"
-	"github.com/giantswarm/cert-operator/pkg/project"
 )
 
 const (
@@ -87,11 +84,7 @@ func SecretName(customObject v1alpha1.CertConfig) string {
 
 func SecretLabels(customObject v1alpha1.CertConfig) map[string]string {
 	cert := certs.Cert(customObject.Spec.Cert.ClusterComponent)
-	labels := certs.K8sLabels(ClusterID(customObject), cert)
-
-	labels[label.ManagedByLabel] = project.Name()
-
-	return labels
+	return certs.K8sLabels(ClusterID(customObject), cert)
 }
 
 func ToCustomObject(v interface{}) (v1alpha1.CertConfig, error) {
@@ -104,6 +97,6 @@ func ToCustomObject(v interface{}) (v1alpha1.CertConfig, error) {
 	return customObject, nil
 }
 
-func OperatorVersion(getter LabelsGetter) string {
-	return getter.GetLabels()[label.OperatorVersion]
+func VersionBundleVersion(customObject v1alpha1.CertConfig) string {
+	return customObject.Spec.VersionBundle.Version
 }
