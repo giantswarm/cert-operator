@@ -119,7 +119,6 @@ func NewCert(config CertConfig) (*Cert, error) {
 	var operatorkitController *controller.Controller
 	{
 		c := controller.Config{
-			CRD:       corev1alpha1.NewCertConfigCRD(),
 			K8sClient: config.K8sClient,
 			Logger:    config.Logger,
 			Name:      config.ProjectName,
