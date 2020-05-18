@@ -18,7 +18,7 @@ require (
 	github.com/giantswarm/versionbundle v0.2.0
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/prometheus/client_golang v1.6.0
-	github.com/spf13/viper v1.6.2
+	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.4.0
 	k8s.io/api v0.17.2
 	k8s.io/apimachinery v0.17.2
