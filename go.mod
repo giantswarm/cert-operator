@@ -3,7 +3,7 @@ module github.com/giantswarm/cert-operator
 go 1.13
 
 require (
-	github.com/giantswarm/apiextensions v0.2.0
+	github.com/giantswarm/apiextensions v0.3.10
 	github.com/giantswarm/certs v0.2.0
 	github.com/giantswarm/exporterkit v0.2.0
 	github.com/giantswarm/k8sclient v0.2.0
