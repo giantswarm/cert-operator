@@ -76,16 +76,3 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v.*/
-
-      - architect/push-to-app-collection:
-          context: architect
-          name: push-cert-operator-to-azure-app-collection
-          app_name: "cert-operator"
-          app_collection_repo: "azure-app-collection"
-          requires:
-            - push-cert-operator-to-control-plane-app-catalog
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
