@@ -5,6 +5,11 @@ image:
   tag: "[[ .Version ]]"
 userID: 1000
 groupID: 1000
+
+k8sJwtToVaultToken:
+  name: giantswarm/k8s-jwt-to-vault-token
+  tag: 0.1.0
+
 Installation:
   V1:
     Registry:
