@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `k8s-jwt-to-vault-token` init container to ensure *vault* token secret exists.
+
 ## [0.1.0] 2020-05-15
 
 ### Changed

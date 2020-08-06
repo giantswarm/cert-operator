@@ -27,12 +27,6 @@ spec:
           items:
             - key: config.yaml
               path: config.yaml
-      - name: {{ include "name" . }}-secret
-        secret:
-          secretName: {{ include "resource.default.name" . }}
-          items:
-            - key: secret.yaml
-              path: secret.yaml
       - name: certs
         hostPath:
           path: /etc/ssl/certs/ca-certificates.crt
@@ -43,14 +37,21 @@ spec:
       securityContext:
         runAsUser: {{ .Values.userID }}
         runAsGroup: {{ .Values.groupID }}
+      initContainers:
+      - args:
+        - --vault-address={{ .Values.Installation.V1.Auth.Vault.Address }}
+        - --vault-role=cert-operator
+        - --vault-token-secret-name={{ include "resource.default.name" . }}-vault-token
+        - --vault-token-secret-namespace={{ include "resource.default.namespace" . }}
+        image: "{{ .Values.Installation.V1.Registry.Domain }}/{{ .Values.k8sJwtToVaultTokenImage.name}}:{{ .Values.k8sJwtToVaultTokenImage.tag }}"
+        imagePullPolicy: Always
+        name: ensure-vault-token
       containers:
       - name: cert-operator
         image: "{{ .Values.Installation.V1.Registry.Domain }}/giantswarm/cert-operator:{{ .Values.image.tag }}"
         volumeMounts:
         - name: {{ include "name" . }}-configmap
           mountPath: /var/run/cert-operator/configmap/
-        - name: {{ include "name" . }}-secret
-          mountPath: /var/run/cert-operator/secret/
         - name: certs
           mountPath: /etc/ssl/certs/ca-certificate.crt
         - name: ssl-certs
@@ -64,6 +65,13 @@ spec:
         - --config.dirs=/var/run/cert-operator/secret/
         - --config.files=config
         - --config.files=secret
+        - --service.vault.token=$(VAULT_TOKEN)
+        env:
+        - name: VAULT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: token
+              name: {{ include "resource.default.name" . }}-vault-token
         livenessProbe:
           httpGet:
             path: /healthz
