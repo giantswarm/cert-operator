@@ -46,7 +46,7 @@ spec:
       initContainers:
       - args:
         - --vault-address={{ .Values.Installation.V1.Auth.Vault.Address }}
-        - --vault-policy=cert-operator
+        - --vault-role=cert-operator
         - --vault-token-secret-name={{ include "resource.default.name" . }}-vault-token
         - --vault-token-secret-namespace={{ include "resource.default.namespace" . }}
         image: "{{ .Values.Installation.V1.Registry.Domain }}/{{ .Values.k8sJwtToVaultToken.name}}:{{ .Values.k8sJwtToVaultToken.tag }}"
