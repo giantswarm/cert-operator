@@ -65,7 +65,7 @@ spec:
         - --config.dirs=/var/run/cert-operator/secret/
         - --config.files=config
         - --config.files=secret
-        - --service.vault.token=$(VAULT_TOKEN)
+        - --service.vault.config.token=$(VAULT_TOKEN)
         env:
         - name: VAULT_TOKEN
           valueFrom:
