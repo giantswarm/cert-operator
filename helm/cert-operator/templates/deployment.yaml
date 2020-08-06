@@ -49,7 +49,7 @@ spec:
         - --vault-policy=cert-operator
         - --vault-token-secret-name={{ include "resource.default.name" . }}-vault-token
         - --vault-token-secret-namespace={{ include "resource.default.namespace" . }}
-        image: "{{ .Values.Installation.V1.Registry.Domain }}/{{ .Values.k8sJwtToVaultToken.name}}:{{ .Values.k8sJwtToVaultToken.tag }}"
+        image: "{{ .Values.Installation.V1.Registry.Domain }}/{{ .Values.k8sJwtToVaultTokenImage.name}}:{{ .Values.k8sJwtToVaultTokenImage.tag }}"
         imagePullPolicy: Always
         name: ensure-vault-token
       containers:
