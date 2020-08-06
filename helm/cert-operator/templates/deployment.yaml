@@ -43,6 +43,15 @@ spec:
       securityContext:
         runAsUser: {{ .Values.userID }}
         runAsGroup: {{ .Values.groupID }}
+      initContainers:
+      - args:
+        - --vault-address={{ .Values.Installation.V1.Auth.Vault.Address }}
+        - --vault-policy=cert-operator
+        - --vault-token-secret-name={{ include "resource.default.name" . }}-vault-token
+        - --vault-token-secret-namespace={{ include "resource.default.namespace" . }}
+        image: "{{ .Values.Installation.V1.Registry.Domain }}/{{ .Values.k8sJwtToVaultToken.name}}:{{ .Values.k8sJwtToVaultToken.tag }}"
+        imagePullPolicy: Always
+        name: ensure-vault-token
       containers:
       - name: cert-operator
         image: "{{ .Values.Installation.V1.Registry.Domain }}/giantswarm/cert-operator:{{ .Values.image.tag }}"
@@ -64,6 +73,13 @@ spec:
         - --config.dirs=/var/run/cert-operator/secret/
         - --config.files=config
         - --config.files=secret
+        - --service.vault.token=$(VAULT_TOKEN)
+        env:
+        - name: VAULT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: token
+              name: {{ include "resource.default.name" . }}-vault-token
         livenessProbe:
           httpGet:
             path: /healthz
