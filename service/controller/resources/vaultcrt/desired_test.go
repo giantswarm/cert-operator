@@ -36,7 +36,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "foobar-api",
 					Annotations: map[string]string{
-						ConfigHashAnnotation:           "394f594f5cf6a2deb9abc6f0e322d887557d4a8e",
+						ConfigHashAnnotation:           "001ad3d32b3f7d64e00ec0a3d5592fbb791849c2",
 						UpdateTimestampAnnotation:      (time.Time{}).Format(UpdateTimestampLayout),
 						VersionBundleVersionAnnotation: "0.1.0",
 					},
@@ -72,7 +72,7 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "al9qy-worker",
 					Annotations: map[string]string{
-						ConfigHashAnnotation:           "d240dfb0f9dc171ce6dda44b0e55227896247cb9",
+						ConfigHashAnnotation:           "4bf7b5296ba01161f182de54b243e1400ae6660e",
 						UpdateTimestampAnnotation:      (time.Time{}).Format(UpdateTimestampLayout),
 						VersionBundleVersionAnnotation: "0.2.0",
 					},
