@@ -119,7 +119,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Ensure non-reference version
-        id: non_ref-version
+        id: non_ref_version
         run: |
           if [[ "${{ needs.gather_facts.outputs.version }}" =~ ^[0-9]+.[0-9]+.[0-9]+-[0-9]+$ ]]; then
             echo ::set-output name=nonrefversion::true
