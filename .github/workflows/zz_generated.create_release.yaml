@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-18.04
     outputs:
       project_go_path: ${{ steps.get_project_go_path.outputs.path }}
+      ref_version: ${{ steps.ref_version.outputs.refversion }}
       version: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Get version
@@ -115,7 +116,7 @@ jobs:
   update_project_go:
     name: Update project.go
     runs-on: ubuntu-18.04
-    if: ${{ needs.gather_facts.outputs.version != '' && needs.gather_facts.outputs.project_go_path != ''  && needs.gather_facts.ref_version.outputs.refversion != 'true' }}
+    if: ${{ needs.gather_facts.outputs.version != '' && needs.gather_facts.outputs.project_go_path != ''  && needs.gather_facts.outputs.ref_version != 'true' }}
     needs:
       - gather_facts
       - install_semver
@@ -170,7 +171,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
       - name: Ensure correct version in project.go
-        if: ${{ needs.gather_facts.outputs.project_go_path != '' && needs.gather_facts.ref_version.outputs.refversion != 'true' }} 
+        if: ${{ needs.gather_facts.outputs.project_go_path != '' && needs.gather_facts.outputs.ref_version != 'true' }} 
         run: |
           file="${{ needs.gather_facts.outputs.project_go_path }}"
           version="${{ needs.gather_facts.outputs.version }}"
