@@ -118,8 +118,15 @@ jobs:
           echo "::add-path::/opt/bin"
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Ensure non-reference version
+        id: non_ref-version
+        run: |
+          if [[ "${{ needs.gather_facts.outputs.version }}" =~ ^[0-9]+.[0-9]+.[0-9]+-[0-9]+$ ]]; then
+            echo ::set-output name=nonrefversion::true
+          fi
       - name: Update project.go
         id: update_project_go
+        if: steps.non_ref_version.outputs.nonrefversion != 'true'
         run: |
           file="${{ needs.gather_facts.outputs.project_go_path }}"
           version="${{ needs.gather_facts.outputs.version }}"
@@ -157,13 +164,13 @@ jobs:
         with:
           ref: ${{ github.sha }}
       - name: Ensure non-reference version
-        id: non-reference-version
+        id: non_ref_version
         run: |
           if [[ "${{ needs.gather_facts.outputs.version }}" =~ ^[0-9]+.[0-9]+.[0-9]+-[0-9]+$ ]]; then
             echo ::set-output name=nonrefversion::true
           fi
       - name: Ensure correct version in project.go
-        if: ${{ needs.gather_facts.outputs.project_go_path != ''}} && steps.non-reference-version.outputs.nonrefversion != 'true'
+        if: ${{ needs.gather_facts.outputs.project_go_path != ''}} && steps.non_reference_version.outputs.nonrefversion != 'true'
         run: |
           file="${{ needs.gather_facts.outputs.project_go_path }}"
           version="${{ needs.gather_facts.outputs.version }}"
