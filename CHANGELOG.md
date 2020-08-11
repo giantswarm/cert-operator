@@ -9,16 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0-2] - 2020-08-11
 
-## [0.1.0-2] - 2020-08-11
-
 ### Fixed
 
 - Skip validation of reference versions like `0.1.0-1`.
-
-## [0.1.0-2] - 2020-08-11
-
-### Fixed
-
 - Continue to export vault token expiration time as 0 when lookup fails.
 
 ### Changed
