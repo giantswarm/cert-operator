@@ -109,7 +109,7 @@ jobs:
   update_project_go:
     name: Update project.go
     runs-on: ubuntu-18.04
-    if: ${{ needs.gather_facts.outputs.version != '' && needs.gather_facts.outputs.project_go_path != ''}}
+    if: ${{ needs.gather_facts.outputs.version != '' && needs.gather_facts.outputs.project_go_path != ''  && need.gather_facts.ref_version.outputs.refversion != 'true' }}
     needs:
       - gather_facts
       - install_semver
@@ -127,7 +127,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Update project.go
         id: update_project_go
-        if: need.gather_facts.ref_version.outputs.refversion != 'true'
         run: |
           file="${{ needs.gather_facts.outputs.project_go_path }}"
           version="${{ needs.gather_facts.outputs.version }}"
@@ -165,7 +164,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
       - name: Ensure correct version in project.go
-        if: ${{ needs.gather_facts.outputs.project_go_path != ''}} && needs.gather_facts.ref_version.outputs.refversion != 'true'
+        if: ${{ needs.gather_facts.outputs.project_go_path != '' && needs.gather_facts.ref_version.outputs.refversion != 'true' }} 
         run: |
           file="${{ needs.gather_facts.outputs.project_go_path }}"
           version="${{ needs.gather_facts.outputs.version }}"
