@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Skip vaidation of reference versions like `0.1.0-1`.
+- Skip validation of reference versions like `0.1.0-1`.
 
 ## [0.1.0-2] - 2020-08-11
 
