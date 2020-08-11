@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Continue to export vault token expiration time as 0 when lookup fails.
+
 ### Changed
 
 - Update `apiextensions` to `0.4.1` version.

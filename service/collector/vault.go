@@ -72,6 +72,13 @@ func (v *Vault) Collect(ch chan<- prometheus.Metric) error {
 
 	expiration, err := expirationFromSecret(secret)
 	if err != nil {
+		// Handle corner cases, when token already expired or there are some other Vault issues.
+		// If unable to get real expiration time, set it to 0 (equal to 1970-01-01T00:00:00).
+		ch <- prometheus.MustNewConstMetric(
+			tokenExpireTimeDesc,
+			prometheus.GaugeValue,
+			0,
+		)
 		return microerror.Mask(err)
 	}
 
