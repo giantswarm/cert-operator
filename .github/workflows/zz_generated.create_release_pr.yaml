@@ -67,7 +67,7 @@ jobs:
       DIR: "/opt/cache"
       IMAGE: "quay.io/giantswarm/architect"
       IMAGE_PATH: "/usr/bin/architect"
-      VERSION: "1.2.0"
+      VERSION: "2.1.2"
     outputs:
       cache_key: "${{ steps.get_cache_key.outputs.cache_key }}"
     steps:
