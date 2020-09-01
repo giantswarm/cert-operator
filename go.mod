@@ -20,9 +20,9 @@ require (
 	github.com/prometheus/client_golang v1.7.1
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
-	k8s.io/api v0.17.8
-	k8s.io/apimachinery v0.17.8
-	k8s.io/client-go v0.17.8
-	sigs.k8s.io/cluster-api v0.3.8
-	sigs.k8s.io/controller-runtime v0.5.9
+	k8s.io/api v0.17.9
+	k8s.io/apimachinery v0.17.9
+	k8s.io/client-go v0.17.9
+	sigs.k8s.io/cluster-api v0.3.9
+	sigs.k8s.io/controller-runtime v0.5.10
 )
