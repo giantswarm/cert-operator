@@ -203,13 +203,23 @@ func tenantClusterExists(k8sClient k8sclient.Interface, id string) (bool, error)
 	// We need to check for Node Pools clusters. These adhere to CAPI and do not
 	// have any AWSConfig CR anymore.
 	{
-		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceDefault}, &apiv1alpha2.Cluster{})
+		crs := &apiv1alpha2.ClusterList{}
+
+		var labelSelector client.MatchingLabels
+		{
+			labelSelector = make(map[string]string)
+			labelSelector[label.Cluster] = id
+		}
+
+		err := k8sClient.CtrlClient().List(context.Background(), crs, labelSelector)
 		if errors.IsNotFound(err) {
 			// fall through
 		} else if IsNoKind(err) {
 			// fall through
 		} else if err != nil {
 			return false, microerror.Mask(err)
+		} else if len(crs.Items) < 1 {
+			// fall through
 		} else {
 			return true, nil
 		}
