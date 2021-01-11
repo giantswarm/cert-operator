@@ -159,15 +159,14 @@ github.com/giantswarm/k8sclient v0.2.0/go.mod h1:tUgUynwKgMnjnN2PldGmxJW6+8eZn2p
 github.com/giantswarm/microendpoint v0.2.0 h1:xCAqAVRjTw/4ifEuBeNavALdbQsLk6+k/ukzdy0GWZE=
 github.com/giantswarm/microendpoint v0.2.0/go.mod h1:SSkSp4Q4iSW7vwkil+/E3IXy9Q8To8vXmT5VCg24RDg=
 github.com/giantswarm/microerror v0.2.0/go.mod h1:1YtJq/m7Vlq1Y6NP7B+SODOKCGlG7e5wctV2OoE9n34=
-github.com/giantswarm/microerror v0.2.1/go.mod h1:1YtJq/m7Vlq1Y6NP7B+SODOKCGlG7e5wctV2OoE9n34=
 github.com/giantswarm/microerror v0.3.0 h1:V/9cXlIEddNGaRYiA0vYJmgM2+sTQy+k8M7kVjOy4XM=
 github.com/giantswarm/microerror v0.3.0/go.mod h1:g8oCEMFAoEs70riRRmj9+6eiz7SqNxYl+2OfxFh1po0=
 github.com/giantswarm/microkit v0.2.0/go.mod h1:1vDHFUN+ZsUahZJ2hgZxcU7nG35Rj484t8Y5akhdRIM=
 github.com/giantswarm/microkit v0.2.2 h1:BNK55FyS+AXls6mH+81Iloo3z2+FRWqeEz2jYb7ZUhc=
 github.com/giantswarm/microkit v0.2.2/go.mod h1:XCj0vA/+jHiM03XDMlcWuvYdgZQyNS3O7ZVHDOUCYA8=
 github.com/giantswarm/micrologger v0.3.1/go.mod h1:PjAgtcJ922ZMX/Aa05IPi0bdYvOj2P7pZ7+6dBShMQs=
-github.com/giantswarm/micrologger v0.4.0 h1:2EpnX86HKpqUNY8C4qbB2SzniB4bgES8Cd/mYrVyOrI=
-github.com/giantswarm/micrologger v0.4.0/go.mod h1:xsD5laBXORMy/P34IHZMK0y/D1gTkYtASUL4gUm5KN4=
+github.com/giantswarm/micrologger v0.5.0 h1:/f2knkyf4bZw3L5F48R7VENiEKPb3Sjnzrg46+Ja5vk=
+github.com/giantswarm/micrologger v0.5.0/go.mod h1:J/jbt7A8eixqE40yq4JY8Hdbs/qeboe2FjHlq05UWjA=
 github.com/giantswarm/operatorkit v0.2.1 h1:AgDq8MGs8J947+Y0BCQTvz+H3JxKhNyFlD6W84iShKg=
 github.com/giantswarm/operatorkit v0.2.1/go.mod h1:i/yHa01y+d67ZzZBOck56CcZLkbRIx89ZqAoK46+Bjs=
 github.com/giantswarm/to v0.2.0 h1:qZj0DUnjUcI/7ajwIVtT6mwmSYQm8g0qBvAPCoS1ZF8=
