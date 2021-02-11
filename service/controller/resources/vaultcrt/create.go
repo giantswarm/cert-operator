@@ -5,6 +5,7 @@ import (
 
 	"github.com/giantswarm/microerror"
 	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/giantswarm/cert-operator/service/controller/key"
 )
@@ -18,7 +19,7 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 	if secretToCreate != nil {
 		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the secret in the Kubernetes API")
 
-		_, err := r.k8sClient.CoreV1().Secrets(r.namespace).Create(secretToCreate)
+		_, err := r.k8sClient.CoreV1().Secrets(r.namespace).Create(ctx, secretToCreate, metav1.CreateOptions{})
 		if err != nil {
 			return microerror.Mask(err)
 		}

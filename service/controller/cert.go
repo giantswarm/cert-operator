@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	corev1alpha1 "github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
-	providerv1alpha1 "github.com/giantswarm/apiextensions/pkg/apis/provider/v1alpha1"
-	"github.com/giantswarm/k8sclient"
+	corev1alpha1 "github.com/giantswarm/apiextensions/v3/pkg/apis/core/v1alpha1"
+	providerv1alpha1 "github.com/giantswarm/apiextensions/v3/pkg/apis/provider/v1alpha1"
+	"github.com/giantswarm/k8sclient/v5/pkg/k8sclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	"github.com/giantswarm/operatorkit/controller"
+	"github.com/giantswarm/operatorkit/v4/pkg/controller"
+	"github.com/giantswarm/operatorkit/v4/pkg/resource"
 	"github.com/giantswarm/vaultcrt"
 	"github.com/giantswarm/vaultpki"
 	"github.com/giantswarm/vaultpki/key"
@@ -95,7 +96,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 		}
 	}
 
-	var ResourceSet *controller.ResourceSet
+	var resources []resource.Interface
 	{
 		c := ResourceSetConfig{
 			K8sClient:   config.K8sClient.K8sClient(),
@@ -110,7 +111,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 			ProjectName:         config.ProjectName,
 		}
 
-		ResourceSet, err = NewResourceSet(c)
+		resources, err = NewResourceSet(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -122,9 +123,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 			K8sClient: config.K8sClient,
 			Logger:    config.Logger,
 			Name:      config.ProjectName,
-			ResourceSets: []*controller.ResourceSet{
-				ResourceSet,
-			},
+			Resources: resources,
 			NewRuntimeObjectFunc: func() runtime.Object {
 				return new(corev1alpha1.CertConfig)
 			},

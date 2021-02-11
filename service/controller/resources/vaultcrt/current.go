@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
-	"github.com/giantswarm/certs"
+	"github.com/giantswarm/apiextensions/v3/pkg/apis/core/v1alpha1"
+	"github.com/giantswarm/certs/v3/pkg/certs"
 	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/operatorkit/controller/context/finalizerskeptcontext"
-	"github.com/giantswarm/operatorkit/controller/context/resourcecanceledcontext"
+	"github.com/giantswarm/operatorkit/v4/pkg/controller/context/finalizerskeptcontext"
+	"github.com/giantswarm/operatorkit/v4/pkg/controller/context/resourcecanceledcontext"
 	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -28,7 +28,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 
 	var secret *corev1.Secret
 	{
-		manifest, err := r.k8sClient.CoreV1().Secrets(r.namespace).Get(key.SecretName(customObject), metav1.GetOptions{})
+		manifest, err := r.k8sClient.CoreV1().Secrets(r.namespace).Get(ctx, key.SecretName(customObject), metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			r.logger.LogCtx(ctx, "level", "debug", "message", "did not find the secret in the Kubernetes API")
 			// fall through
@@ -58,7 +58,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		}
 
 		n := key.ClusterNamespace(customObject)
-		list, err := r.k8sClient.CoreV1().Pods(n).List(metav1.ListOptions{})
+		list, err := r.k8sClient.CoreV1().Pods(n).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -78,7 +78,22 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 // checkCertType checks whether customObject is one of the Cert types we are supporting in certs library.
 func (r *Resource) checkCertType(customObject v1alpha1.CertConfig) bool {
 	c := certs.Cert(key.ClusterComponent(customObject))
-	for _, cert := range certs.AllCerts {
+	// Temporary - removed from certs, need to figure out what to do with this long term
+	var AllCerts = []certs.Cert{
+		certs.APICert,
+		certs.AppOperatorAPICert,
+		certs.AWSOperatorAPICert,
+		certs.CalicoEtcdClientCert,
+		certs.ClusterOperatorAPICert,
+		certs.EtcdCert,
+		certs.FlanneldEtcdClientCert,
+		certs.InternalAPICert,
+		certs.NodeOperatorCert,
+		certs.PrometheusCert,
+		certs.ServiceAccountCert,
+		certs.WorkerCert,
+	}
+	for _, cert := range AllCerts {
 		if cert == c {
 			return true
 		}
