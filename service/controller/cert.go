@@ -20,12 +20,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	apiv1alpha2 "sigs.k8s.io/cluster-api/api/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/cert-operator/pkg/label"
+	"github.com/giantswarm/cert-operator/pkg/project"
 )
 
 type CertConfig struct {
@@ -124,6 +126,9 @@ func NewCert(config CertConfig) (*Cert, error) {
 			Logger:    config.Logger,
 			Name:      config.ProjectName,
 			Resources: resources,
+			Selector: labels.SelectorFromSet(map[string]string{
+				label.OperatorVersion: project.Version(),
+			}),
 			NewRuntimeObjectFunc: func() runtime.Object {
 				return new(corev1alpha1.CertConfig)
 			},
