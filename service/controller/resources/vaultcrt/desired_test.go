@@ -12,6 +12,8 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
+
+	"github.com/giantswarm/cert-operator/pkg/project"
 )
 
 func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
@@ -22,13 +24,15 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 		// Test 0 ensures the desired state is always the same placeholder state.
 		{
 			Obj: &v1alpha1.CertConfig{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Labels: map[string]string{
+						"cert-operator.giantswarm.io/version": project.Version(),
+					},
+				},
 				Spec: v1alpha1.CertConfigSpec{
 					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID:        "foobar",
 						ClusterComponent: "api",
-					},
-					VersionBundle: v1alpha1.CertConfigSpecVersionBundle{
-						Version: "0.1.0",
 					},
 				},
 			},
@@ -36,15 +40,13 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "foobar-api",
 					Annotations: map[string]string{
-						ConfigHashAnnotation:           "001ad3d32b3f7d64e00ec0a3d5592fbb791849c2",
-						UpdateTimestampAnnotation:      (time.Time{}).Format(UpdateTimestampLayout),
-						VersionBundleVersionAnnotation: "0.1.0",
+						ConfigHashAnnotation:      "001ad3d32b3f7d64e00ec0a3d5592fbb791849c2",
+						UpdateTimestampAnnotation: (time.Time{}).Format(UpdateTimestampLayout),
 					},
 					Labels: map[string]string{
-						"clusterID":                 "foobar",
-						"clusterComponent":          "api",
-						"giantswarm.io/cluster":     "foobar",
-						"giantswarm.io/certificate": "api",
+						"giantswarm.io/cluster":               "foobar",
+						"giantswarm.io/certificate":           "api",
+						"cert-operator.giantswarm.io/version": project.Version(),
 					},
 				},
 				StringData: map[string]string{
@@ -58,13 +60,15 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 		// Test 1 is the same as 0 but with a different custom object.
 		{
 			Obj: &v1alpha1.CertConfig{
+				ObjectMeta: apismetav1.ObjectMeta{
+					Labels: map[string]string{
+						"cert-operator.giantswarm.io/version": project.Version(),
+					},
+				},
 				Spec: v1alpha1.CertConfigSpec{
 					Cert: v1alpha1.CertConfigSpecCert{
 						ClusterID:        "al9qy",
 						ClusterComponent: "worker",
-					},
-					VersionBundle: v1alpha1.CertConfigSpecVersionBundle{
-						Version: "0.2.0",
 					},
 				},
 			},
@@ -72,15 +76,13 @@ func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
 				ObjectMeta: apismetav1.ObjectMeta{
 					Name: "al9qy-worker",
 					Annotations: map[string]string{
-						ConfigHashAnnotation:           "4bf7b5296ba01161f182de54b243e1400ae6660e",
-						UpdateTimestampAnnotation:      (time.Time{}).Format(UpdateTimestampLayout),
-						VersionBundleVersionAnnotation: "0.2.0",
+						ConfigHashAnnotation:      "4bf7b5296ba01161f182de54b243e1400ae6660e",
+						UpdateTimestampAnnotation: (time.Time{}).Format(UpdateTimestampLayout),
 					},
 					Labels: map[string]string{
-						"clusterID":                 "al9qy",
-						"clusterComponent":          "worker",
-						"giantswarm.io/cluster":     "al9qy",
-						"giantswarm.io/certificate": "worker",
+						"giantswarm.io/cluster":               "al9qy",
+						"giantswarm.io/certificate":           "worker",
+						"cert-operator.giantswarm.io/version": project.Version(),
 					},
 				},
 				StringData: map[string]string{

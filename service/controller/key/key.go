@@ -8,6 +8,8 @@ import (
 	"github.com/giantswarm/apiextensions/v3/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/certs/v3/pkg/certs"
 	"github.com/giantswarm/microerror"
+
+	"github.com/giantswarm/cert-operator/pkg/label"
 )
 
 const (
@@ -66,6 +68,10 @@ func IPSANs(customObject v1alpha1.CertConfig) []string {
 
 func IsDeleted(customObject v1alpha1.CertConfig) bool {
 	return customObject.GetDeletionTimestamp() != nil
+}
+
+func OperatorVersion(customObject v1alpha1.CertConfig) string {
+	return customObject.Labels[label.OperatorVersion]
 }
 
 func Organizations(customObject v1alpha1.CertConfig) []string {

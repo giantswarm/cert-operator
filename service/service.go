@@ -13,7 +13,6 @@ import (
 	"github.com/giantswarm/microendpoint/service/version"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	"github.com/giantswarm/versionbundle"
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/rest"
@@ -149,12 +148,11 @@ func New(config Config) (*Service, error) {
 	var versionService *version.Service
 	{
 		c := version.Config{
-			Description:    config.Description,
-			GitCommit:      config.GitCommit,
-			Name:           config.ProjectName,
-			Source:         config.Source,
-			Version:        config.Version,
-			VersionBundles: []versionbundle.Bundle{project.NewVersionBundle()},
+			Description: project.Description(),
+			GitCommit:   project.GitSHA(),
+			Name:        project.Name(),
+			Source:      project.Source(),
+			Version:     project.Version(),
 		}
 
 		versionService, err = version.New(c)

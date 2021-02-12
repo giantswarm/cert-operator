@@ -8,6 +8,8 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/giantswarm/cert-operator/pkg/label"
+	"github.com/giantswarm/cert-operator/pkg/project"
 	"github.com/giantswarm/cert-operator/service/controller/key"
 )
 
@@ -24,6 +26,10 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		return nil, microerror.Mask(err)
 	}
 
+	// Add standard cert labels as well as our operator version
+	labels := key.SecretLabels(customObject)
+	labels[label.OperatorVersion] = project.Version()
+
 	// NOTE that the actual secret content here is left blank because only the
 	// issuer backend, e.g. Vault, can generate certificates. This has to be
 	// considered when computing the create, delete and update state.
@@ -31,11 +37,10 @@ func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interf
 		ObjectMeta: apismetav1.ObjectMeta{
 			Name: key.SecretName(customObject),
 			Annotations: map[string]string{
-				ConfigHashAnnotation:           hash,
-				UpdateTimestampAnnotation:      r.currentTimeFactory().In(time.UTC).Format(UpdateTimestampLayout),
-				VersionBundleVersionAnnotation: key.VersionBundleVersion(customObject),
+				ConfigHashAnnotation:      hash,
+				UpdateTimestampAnnotation: r.currentTimeFactory().In(time.UTC).Format(UpdateTimestampLayout),
 			},
-			Labels: key.SecretLabels(customObject),
+			Labels: labels,
 		},
 		StringData: map[string]string{
 			key.CAID:  "",
