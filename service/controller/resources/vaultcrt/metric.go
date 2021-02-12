@@ -7,7 +7,6 @@ import (
 const (
 	PrometheusNamespace = "cert_operator"
 	PrometheusSubsystem = "vaultcrt_resource"
-	// VersionBundleVersionAnnotation = "giantswarm.io/version-bundle-version"
 )
 
 var versionGauge = prometheus.NewGaugeVec(

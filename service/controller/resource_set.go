@@ -136,33 +136,6 @@ func NewResourceSet(config ResourceSetConfig) ([]resource.Interface, error) {
 		}
 	}
 
-	// handlesFunc := func(obj interface{}) bool {
-	// 	cr, err := key.ToCustomObject(obj)
-	// 	if err != nil {
-	// 		return false
-	// 	}
-
-	// 	if key.VersionBundleVersion(cr) == project.NewVersionBundle().Version {
-	// 		return true
-	// 	}
-
-	// 	return false
-	// }
-
-	// var resource resource.Interface
-	// {
-	// 	c := controller.Config{
-	// 		// Handles:   handlesFunc,
-	// 		Logger:    config.Logger,
-	// 		Resources: resources,
-	// 	}
-
-	// 	resource, err = controller.New(c)
-	// 	if err != nil {
-	// 		return nil, microerror.Mask(err)
-	// 	}
-	// }
-
 	return resources, nil
 }
 
