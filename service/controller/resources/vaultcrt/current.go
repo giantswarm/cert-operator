@@ -15,6 +15,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/giantswarm/cert-operator/pkg/label"
 	"github.com/giantswarm/cert-operator/service/controller/key"
 )
 
@@ -37,7 +38,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 		} else {
 			r.logger.LogCtx(ctx, "level", "debug", "message", "found the secret in the Kubernetes API")
 			secret = manifest
-			r.updateVersionBundleVersionGauge(ctx, customObject, versionBundleVersionGauge, secret)
+			r.updateVersionGauge(ctx, customObject, versionGauge, secret)
 		}
 	}
 
@@ -101,16 +102,16 @@ func (r *Resource) checkCertType(customObject v1alpha1.CertConfig) bool {
 	return false
 }
 
-func (r *Resource) updateVersionBundleVersionGauge(ctx context.Context, customObject v1alpha1.CertConfig, gauge *prometheus.GaugeVec, secret *corev1.Secret) {
-	version, ok := secret.Annotations[VersionBundleVersionAnnotation]
+func (r *Resource) updateVersionGauge(ctx context.Context, customObject v1alpha1.CertConfig, gauge *prometheus.GaugeVec, secret *corev1.Secret) {
+	version, ok := secret.Labels[label.OperatorVersion]
 	if !ok {
-		r.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf("cannot update current version bundle version metric: annotation '%s' must not be empty", VersionBundleVersionAnnotation))
+		r.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf("cannot update current version bundle version metric: label '%s' must not be empty", label.OperatorVersion))
 		return
 	}
 
 	split := strings.Split(version, ".")
 	if len(split) != 3 {
-		r.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf("cannot update current version bundle version metric: invalid version format, expected '<major>.<minor>.<patch>', got '%s'", version))
+		r.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf("cannot update current version metric: invalid version format, expected '<major>.<minor>.<patch>', got '%s'", version))
 		return
 	}
 

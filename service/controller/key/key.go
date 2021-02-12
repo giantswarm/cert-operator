@@ -8,8 +8,6 @@ import (
 	"github.com/giantswarm/apiextensions/v3/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/certs/v3/pkg/certs"
 	"github.com/giantswarm/microerror"
-
-	"github.com/giantswarm/cert-operator/pkg/label"
 )
 
 const (
@@ -70,10 +68,6 @@ func IsDeleted(customObject v1alpha1.CertConfig) bool {
 	return customObject.GetDeletionTimestamp() != nil
 }
 
-func OperatorVersion(customObject v1alpha1.CertConfig) string {
-	return customObject.Labels[label.OperatorVersion]
-}
-
 func Organizations(customObject v1alpha1.CertConfig) []string {
 	a := []string{customObject.Spec.Cert.ClusterComponent}
 	return append(a, customObject.Spec.Cert.Organizations...)
@@ -101,8 +95,4 @@ func ToCustomObject(v interface{}) (v1alpha1.CertConfig, error) {
 	customObject := *customObjectPointer
 
 	return customObject, nil
-}
-
-func VersionBundleVersion(customObject v1alpha1.CertConfig) string {
-	return customObject.Spec.VersionBundle.Version
 }
