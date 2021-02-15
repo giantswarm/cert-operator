@@ -79,22 +79,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 // checkCertType checks whether customObject is one of the Cert types we are supporting in certs library.
 func (r *Resource) checkCertType(customObject v1alpha1.CertConfig) bool {
 	c := certs.Cert(key.ClusterComponent(customObject))
-	// Temporary - removed from certs, need to figure out what to do with this long term
-	var AllCerts = []certs.Cert{
-		certs.APICert,
-		certs.AppOperatorAPICert,
-		certs.AWSOperatorAPICert,
-		certs.CalicoEtcdClientCert,
-		certs.ClusterOperatorAPICert,
-		certs.EtcdCert,
-		certs.FlanneldEtcdClientCert,
-		certs.InternalAPICert,
-		certs.NodeOperatorCert,
-		certs.PrometheusCert,
-		certs.ServiceAccountCert,
-		certs.WorkerCert,
-	}
-	for _, cert := range AllCerts {
+	for _, cert := range certs.AllCerts {
 		if cert == c {
 			return true
 		}
