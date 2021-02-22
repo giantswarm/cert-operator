@@ -5,19 +5,16 @@ import (
 
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	"github.com/giantswarm/operatorkit/controller"
-	"github.com/giantswarm/operatorkit/resource"
-	"github.com/giantswarm/operatorkit/resource/crud"
-	"github.com/giantswarm/operatorkit/resource/wrapper/metricsresource"
-	"github.com/giantswarm/operatorkit/resource/wrapper/retryresource"
+	"github.com/giantswarm/operatorkit/v4/pkg/resource"
+	"github.com/giantswarm/operatorkit/v4/pkg/resource/crud"
+	"github.com/giantswarm/operatorkit/v4/pkg/resource/wrapper/metricsresource"
+	"github.com/giantswarm/operatorkit/v4/pkg/resource/wrapper/retryresource"
 	"github.com/giantswarm/vaultcrt"
 	"github.com/giantswarm/vaultpki"
 	"github.com/giantswarm/vaultrole"
 	vaultapi "github.com/hashicorp/vault/api"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/giantswarm/cert-operator/pkg/project"
-	"github.com/giantswarm/cert-operator/service/controller/key"
 	"github.com/giantswarm/cert-operator/service/controller/resources/vaultaccess"
 	vaultcrtresource "github.com/giantswarm/cert-operator/service/controller/resources/vaultcrt"
 	vaultpkiresource "github.com/giantswarm/cert-operator/service/controller/resources/vaultpki"
@@ -37,7 +34,7 @@ type ResourceSetConfig struct {
 	ProjectName         string
 }
 
-func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
+func NewResourceSet(config ResourceSetConfig) ([]resource.Interface, error) {
 	var err error
 
 	var vaultAccessResource resource.Interface
@@ -139,34 +136,7 @@ func NewResourceSet(config ResourceSetConfig) (*controller.ResourceSet, error) {
 		}
 	}
 
-	handlesFunc := func(obj interface{}) bool {
-		cr, err := key.ToCustomObject(obj)
-		if err != nil {
-			return false
-		}
-
-		if key.VersionBundleVersion(cr) == project.NewVersionBundle().Version {
-			return true
-		}
-
-		return false
-	}
-
-	var resourceSet *controller.ResourceSet
-	{
-		c := controller.ResourceSetConfig{
-			Handles:   handlesFunc,
-			Logger:    config.Logger,
-			Resources: resources,
-		}
-
-		resourceSet, err = controller.NewResourceSet(c)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
-	}
-
-	return resourceSet, nil
+	return resources, nil
 }
 
 func toCRUDResource(logger micrologger.Logger, v crud.Interface) (*crud.Resource, error) {

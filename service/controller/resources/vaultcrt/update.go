@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
-	"github.com/giantswarm/certs"
+	"github.com/giantswarm/apiextensions/v3/pkg/apis/core/v1alpha1"
+	"github.com/giantswarm/certs/v3/pkg/certs"
 	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/operatorkit/resource/crud"
+	"github.com/giantswarm/operatorkit/v4/pkg/resource/crud"
 	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/giantswarm/cert-operator/service/controller/key"
 )
@@ -22,7 +23,7 @@ func (r *Resource) ApplyUpdateChange(ctx context.Context, obj, updateChange inte
 	if secretToUpdate != nil {
 		r.logger.LogCtx(ctx, "level", "debug", "message", "updating the secret in the Kubernetes API")
 
-		_, err := r.k8sClient.CoreV1().Secrets(r.namespace).Update(secretToUpdate)
+		_, err := r.k8sClient.CoreV1().Secrets(r.namespace).Update(ctx, secretToUpdate, metav1.UpdateOptions{})
 		if err != nil {
 			return microerror.Mask(err)
 		}

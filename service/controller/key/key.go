@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
-	"github.com/giantswarm/certs"
+	"github.com/giantswarm/apiextensions/v3/pkg/apis/core/v1alpha1"
+	"github.com/giantswarm/certs/v3/pkg/certs"
 	"github.com/giantswarm/microerror"
 )
 
@@ -95,8 +95,4 @@ func ToCustomObject(v interface{}) (v1alpha1.CertConfig, error) {
 	customObject := *customObjectPointer
 
 	return customObject, nil
-}
-
-func VersionBundleVersion(customObject v1alpha1.CertConfig) string {
-	return customObject.Spec.VersionBundle.Version
 }
