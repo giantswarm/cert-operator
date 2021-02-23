@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update Kubernetes dependencies to 1.18 versions.
+- Reconcile `CertConfig`s based on their `cert-operator.giantswarm.io/version` label.
+
+### Removed
+
+- Stop using the `VersionBundle` version.
+
 ### Added
 
 - Add network policy resource.

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/giantswarm/apiextensions/pkg/apis/core/v1alpha1"
+	"github.com/giantswarm/apiextensions/v3/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultrole"
 	"github.com/giantswarm/vaultrole/vaultroletest"
