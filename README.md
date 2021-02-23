@@ -2,8 +2,8 @@
 
 # cert-operator
 
-Cert Operator creates/configure/manages certificates for Kubernetes clusters
-running on Giantnetes.
+Cert Operator creates, configures, and manages certificates for Kubernetes clusters
+running on the Giant Swarm platform.
 
 
 ## Prerequisites
