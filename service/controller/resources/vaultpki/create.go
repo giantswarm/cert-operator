@@ -2,6 +2,7 @@ package vaultpki
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/giantswarm/microerror"
 
@@ -27,6 +28,15 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 		}
 
 		r.logger.LogCtx(ctx, "level", "debug", "message", "created the Vault PKI in the Vault API")
+
+		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the etcd Vault PKI in the Vault API")
+
+		err = r.vaultPKI.CreateBackend(fmt.Sprintf("%s-etcd", key.ClusterID(customObject)))
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		r.logger.LogCtx(ctx, "level", "debug", "message", "created the etcd Vault PKI in the Vault API")
 	} else {
 		r.logger.LogCtx(ctx, "level", "debug", "message", "the Vault PKI does not need to be created in the Vault API")
 	}
@@ -40,6 +50,16 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 		}
 
 		r.logger.LogCtx(ctx, "level", "debug", "message", "created the root CA in the Vault PKI")
+
+		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the etcd root CA in the Vault PKI")
+
+		_, err = r.vaultPKI.CreateCA(key.ClusterID(customObject))
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		r.logger.LogCtx(ctx, "level", "debug", "message", "created the etcd root CA in the Vault PKI")
+
 	} else {
 		r.logger.LogCtx(ctx, "level", "debug", "message", "the root CA does not need to be created in the Vault PKI")
 	}
