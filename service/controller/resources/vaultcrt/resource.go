@@ -1,9 +1,11 @@
 package vaultcrt
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/giantswarm/apiextensions/v3/pkg/apis/core/v1alpha1"
+	"github.com/giantswarm/certs/v3/pkg/certs"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	"github.com/giantswarm/vaultcrt"
@@ -103,10 +105,32 @@ func (r *Resource) Name() string {
 }
 
 func (r *Resource) issueCertificate(customObject v1alpha1.CertConfig) (string, string, string, error) {
+	var pkiID string
+	{
+		switch customObject.Spec.Cert.ClusterComponent {
+		case string(certs.EtcdCert):
+			fallthrough
+		case string(certs.Etcd1Cert):
+			fallthrough
+		case string(certs.Etcd2Cert):
+			fallthrough
+		case string(certs.Etcd3Cert):
+			fallthrough
+		case string(certs.CalicoEtcdClientCert):
+			fallthrough
+		case string(certs.FlanneldEtcdClientCert):
+			fallthrough
+		case string(certs.PrometheusEtcdClientCert):
+			pkiID = fmt.Sprintf("%s-etcd", key.ClusterID(customObject))
+		default:
+			pkiID = key.ClusterID(customObject)
+		}
+	}
+
 	c := vaultcrt.CreateConfig{
 		AltNames:      key.AltNames(customObject),
 		CommonName:    key.CommonName(customObject),
-		ID:            key.ClusterID(customObject),
+		ID:            pkiID,
 		IPSANs:        key.IPSANs(customObject),
 		Organizations: key.Organizations(customObject),
 		TTL:           key.CrtTTL(customObject),
