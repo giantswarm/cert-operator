@@ -20,23 +20,21 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 	}
 
 	if vaultPKIStateToCreate.Backend != nil {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the Vault PKI in the Vault API")
-
-		err := r.vaultPKI.CreateBackend(key.ClusterID(customObject))
-		if err != nil {
-			return microerror.Mask(err)
+		ids := []string{
+			key.ClusterID(customObject),
+			fmt.Sprintf("%s-etcd", key.ClusterID(customObject)),
 		}
 
-		r.logger.LogCtx(ctx, "level", "debug", "message", "created the Vault PKI in the Vault API")
+		for _, id := range ids {
+			r.logger.Debugf(ctx, "creating the Vault PKI %s in the Vault API", id)
 
-		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the etcd Vault PKI in the Vault API")
+			err := r.vaultPKI.CreateBackend(id)
+			if err != nil {
+				return microerror.Mask(err)
+			}
 
-		err = r.vaultPKI.CreateBackend(fmt.Sprintf("%s-etcd", key.ClusterID(customObject)))
-		if err != nil {
-			return microerror.Mask(err)
+			r.logger.Debugf(ctx, "created the Vault PKI %s in the Vault API", id)
 		}
-
-		r.logger.LogCtx(ctx, "level", "debug", "message", "created the etcd Vault PKI in the Vault API")
 	} else {
 		r.logger.LogCtx(ctx, "level", "debug", "message", "the Vault PKI does not need to be created in the Vault API")
 	}

@@ -2,6 +2,7 @@ package vaultrole
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/vaultrole"
@@ -14,22 +15,29 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 	}
 
 	if roleToCreate != nil {
-		r.logger.LogCtx(ctx, "debug", "creating the role in the Vault API")
-
-		c := vaultrole.CreateConfig{
-			AllowBareDomains: roleToCreate.AllowBareDomains,
-			AllowSubdomains:  roleToCreate.AllowSubdomains,
-			AltNames:         roleToCreate.AltNames,
-			ID:               roleToCreate.ID,
-			Organizations:    roleToCreate.Organizations,
-			TTL:              roleToCreate.TTL.String(),
-		}
-		err = r.vaultRole.Create(c)
-		if err != nil {
-			return microerror.Mask(err)
+		ids := []string{
+			roleToCreate.ID,
+			fmt.Sprintf("%s-etcd", roleToCreate.ID),
 		}
 
-		r.logger.LogCtx(ctx, "debug", "created the role in the Vault API")
+		for _, id := range ids {
+			r.logger.Debugf(ctx, "creating the role in the Vault API for PKI %s", id)
+
+			c := vaultrole.CreateConfig{
+				AllowBareDomains: roleToCreate.AllowBareDomains,
+				AllowSubdomains:  roleToCreate.AllowSubdomains,
+				AltNames:         roleToCreate.AltNames,
+				ID:               id,
+				Organizations:    roleToCreate.Organizations,
+				TTL:              roleToCreate.TTL.String(),
+			}
+			err = r.vaultRole.Create(c)
+			if err != nil {
+				return microerror.Mask(err)
+			}
+
+			r.logger.Debugf(ctx, "created the role in the Vault API for PKI %s", id)
+		}
 	} else {
 		r.logger.LogCtx(ctx, "debug", "the role does not need to be created in the Vault API")
 	}
