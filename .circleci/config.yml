@@ -45,7 +45,6 @@ workflows:
           app_catalog_test: "control-plane-test-catalog"
           chart: "cert-operator"
           requires:
-            - push-cert-operator-to-aliyun
             - push-cert-operator-to-quay
           filters:
             tags:
