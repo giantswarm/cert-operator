@@ -2,10 +2,11 @@ package vaultrole
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/vaultrole"
+
+	"github.com/giantswarm/cert-operator/service/controller/key"
 )
 
 func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange interface{}) error {
@@ -15,11 +16,7 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 	}
 
 	if roleToCreate != nil {
-		ids := []string{
-			roleToCreate.ID,
-			fmt.Sprintf("%s-etcd", roleToCreate.ID),
-		}
-
+		ids := key.PKIIdsForCluster(roleToCreate.ID)
 		for _, id := range ids {
 			r.logger.Debugf(ctx, "creating the role in the Vault API for PKI %s", id)
 

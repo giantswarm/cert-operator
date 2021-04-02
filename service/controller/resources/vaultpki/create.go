@@ -2,7 +2,6 @@ package vaultpki
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/giantswarm/microerror"
 
@@ -19,10 +18,7 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 		return microerror.Mask(err)
 	}
 
-	ids := []string{
-		key.ClusterID(customObject),
-		fmt.Sprintf("%s-etcd", key.ClusterID(customObject)),
-	}
+	ids := key.PKIIdsForCluster(key.ClusterID(customObject))
 
 	if vaultPKIStateToCreate.Backend != nil {
 		for _, id := range ids {
