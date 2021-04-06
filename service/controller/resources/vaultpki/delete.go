@@ -2,6 +2,7 @@ package vaultpki
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/operatorkit/v4/pkg/resource/crud"
@@ -34,15 +35,22 @@ func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteChange inte
 	if vaultPKIStateToDelete.Backend != nil || vaultPKIStateToDelete.CACertificate != "" {
 		ids := key.PKIIdsForCluster(key.ClusterID(customObject))
 
+		var err error
+
 		for _, id := range ids {
 			r.logger.Debugf(ctx, "deleting the Vault PKI %s in the Vault API", id)
 
-			err := r.vaultPKI.DeleteBackend(id)
+			err = r.vaultPKI.DeleteBackend(id)
 			if err != nil {
-				return microerror.Mask(err)
+				r.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf("Error deleting vault PKI backend %s: %s", id, err))
+				continue
 			}
 
 			r.logger.Debugf(ctx, "deleted the Vault PKI %s in the Vault API", id)
+		}
+
+		if err != nil {
+			return microerror.Mask(err)
 		}
 	} else {
 		r.logger.LogCtx(ctx, "level", "debug", "message", "the Vault PKIs does not need to be deleted from the Vault API")
