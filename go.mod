@@ -18,7 +18,7 @@ require (
 	github.com/hashicorp/vault/api v1.1.0
 	github.com/prometheus/client_golang v1.10.0
 	github.com/spf13/viper v1.7.1
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	k8s.io/api v0.18.15
 	k8s.io/apimachinery v0.18.15
 	k8s.io/client-go v0.18.15
