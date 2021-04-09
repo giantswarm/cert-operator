@@ -73,6 +73,15 @@ func Organizations(customObject v1alpha1.CertConfig) []string {
 	return append(a, customObject.Spec.Cert.Organizations...)
 }
 
+func PKIIdsForCluster(clusterID string) []string {
+	ids := []string{
+		clusterID,
+		fmt.Sprintf("%s-etcd", clusterID),
+	}
+
+	return ids
+}
+
 func RoleTTL(customObject v1alpha1.CertConfig) string {
 	return customObject.Spec.Cert.TTL
 }

@@ -18,28 +18,34 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 		return microerror.Mask(err)
 	}
 
+	ids := key.PKIIdsForCluster(key.ClusterID(customObject))
+
 	if vaultPKIStateToCreate.Backend != nil {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the Vault PKI in the Vault API")
+		for _, id := range ids {
+			r.logger.Debugf(ctx, "creating the Vault PKI %s in the Vault API", id)
 
-		err := r.vaultPKI.CreateBackend(key.ClusterID(customObject))
-		if err != nil {
-			return microerror.Mask(err)
+			err := r.vaultPKI.CreateBackend(id)
+			if err != nil {
+				return microerror.Mask(err)
+			}
+
+			r.logger.Debugf(ctx, "created the Vault PKI %s in the Vault API", id)
 		}
-
-		r.logger.LogCtx(ctx, "level", "debug", "message", "created the Vault PKI in the Vault API")
 	} else {
 		r.logger.LogCtx(ctx, "level", "debug", "message", "the Vault PKI does not need to be created in the Vault API")
 	}
 
 	if vaultPKIStateToCreate.CACertificate != "" {
-		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the root CA in the Vault PKI")
+		for _, id := range ids {
+			r.logger.Debugf(ctx, "creating the root CA for %s in the Vault PKI", id)
 
-		_, err := r.vaultPKI.CreateCA(key.ClusterID(customObject))
-		if err != nil {
-			return microerror.Mask(err)
+			_, err := r.vaultPKI.CreateCA(id)
+			if err != nil {
+				return microerror.Mask(err)
+			}
+
+			r.logger.Debugf(ctx, "created the root CA for %s in the Vault PKI", id)
 		}
-
-		r.logger.LogCtx(ctx, "level", "debug", "message", "created the root CA in the Vault PKI")
 	} else {
 		r.logger.LogCtx(ctx, "level", "debug", "message", "the root CA does not need to be created in the Vault PKI")
 	}
