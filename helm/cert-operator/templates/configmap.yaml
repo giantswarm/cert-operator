@@ -13,7 +13,7 @@ data:
         address: 'http://0.0.0.0:8000'
     service:
       crd:
-        labelSelector: '{{ .Values.Installation.V1.GiantSwarm.CertOperator.CRD.LabelSelector }}'
+        labelSelector: ''
       kubernetes:
         address: ''
         inCluster: true
@@ -27,9 +27,9 @@ data:
           namespace: 'default'
       vault:
         config:
-          address: '{{ .Values.Installation.V1.Auth.Vault.Address }}'
+          address: '{{ .Values.vault.address }}'
           pki:
             ca:
-              ttl: '{{ .Values.Installation.V1.Auth.Vault.CA.TTL }}'
+              ttl: '{{ .Values.vault.ca.ttl }}'
             commonname:
-              format: '%s.{{ .Values.Installation.V1.Guest.Kubernetes.API.EndpointBase }}'
+              format: '%s.{{ .Values.workloadCluster.kubernetes.api.endpointBase }}'
