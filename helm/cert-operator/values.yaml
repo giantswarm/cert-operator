@@ -19,7 +19,7 @@ registry:
 vault:
   address: ""
   ca:
-    ttl: "4320h"
+    ttl: "87600h"
 
 workloadCluster:
   kubernetes:
