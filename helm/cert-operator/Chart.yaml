@@ -8,4 +8,4 @@ description: >-
 home: https://github.com/giantswarm/cert-operator
 annotations:
   application.giantswarm.io/team: "ludacris"
-  config.giantswarm.io/version: cert-operator
+  config.giantswarm.io/version: 1.x.x
