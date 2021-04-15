@@ -39,16 +39,16 @@ spec:
         runAsGroup: {{ .Values.groupID }}
       initContainers:
       - args:
-        - --vault-address={{ .Values.Installation.V1.Auth.Vault.Address }}
+        - --vault-address={{ .Values.vault.address }}
         - --vault-role=cert-operator
         - --vault-token-secret-name={{ include "resource.default.name" . }}-vault-token
         - --vault-token-secret-namespace={{ include "resource.default.namespace" . }}
-        image: "{{ .Values.Installation.V1.Registry.Domain }}/{{ .Values.k8sJwtToVaultTokenImage.name}}:{{ .Values.k8sJwtToVaultTokenImage.tag }}"
+        image: "{{ .Values.registry.domain }}/{{ .Values.k8sJwtToVaultTokenImage.name}}:{{ .Values.k8sJwtToVaultTokenImage.tag }}"
         imagePullPolicy: Always
         name: ensure-vault-token
       containers:
       - name: cert-operator
-        image: "{{ .Values.Installation.V1.Registry.Domain }}/giantswarm/cert-operator:{{ .Values.image.tag }}"
+        image: "{{ .Values.registry.domain }}/giantswarm/cert-operator:{{ .Values.image.tag }}"
         volumeMounts:
         - name: {{ include "name" . }}-configmap
           mountPath: /var/run/cert-operator/configmap/
