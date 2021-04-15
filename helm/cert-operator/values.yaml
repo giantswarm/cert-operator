@@ -6,6 +6,9 @@ image:
 userID: 1000
 groupID: 1000
 
+crd:
+  labelSelector: ""
+
 k8sJwtToVaultTokenImage:
   name: giantswarm/k8s-jwt-to-vault-token
   tag: 0.1.0
