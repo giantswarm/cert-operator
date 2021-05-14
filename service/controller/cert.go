@@ -19,7 +19,6 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -176,7 +175,6 @@ func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface
 					context.Background(),
 					&corev1alpha1.CertConfig{},
 					client.MatchingLabels{label.Cluster: id},
-					client.InNamespace(metav1.NamespaceDefault),
 				)
 				if errors.IsNotFound(err) {
 					// fall through

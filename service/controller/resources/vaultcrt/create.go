@@ -17,9 +17,13 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 	}
 
 	if secretToCreate != nil {
+		customObject, err := key.ToCustomObject(obj)
+		if err != nil {
+			return microerror.Mask(err)
+		}
 		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the secret in the Kubernetes API")
 
-		_, err := r.k8sClient.CoreV1().Secrets(r.namespace).Create(ctx, secretToCreate, metav1.CreateOptions{})
+		_, err = r.k8sClient.CoreV1().Secrets(customObject.GetNamespace()).Create(ctx, secretToCreate, metav1.CreateOptions{})
 		if err != nil {
 			return microerror.Mask(err)
 		}
