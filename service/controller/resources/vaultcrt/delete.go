@@ -8,6 +8,8 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/giantswarm/cert-operator/service/controller/key"
 )
 
 func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteChange interface{}) error {
@@ -17,9 +19,13 @@ func (r *Resource) ApplyDeleteChange(ctx context.Context, obj, deleteChange inte
 	}
 
 	if secretToDelete != nil {
+		customObject, err := key.ToCustomObject(obj)
+		if err != nil {
+			return microerror.Mask(err)
+		}
 		r.logger.LogCtx(ctx, "level", "debug", "message", "deleting the sercet in the Kubernetes API")
 
-		err = r.k8sClient.CoreV1().Secrets(r.namespace).Delete(ctx, secretToDelete.Name, apismetav1.DeleteOptions{})
+		err = r.k8sClient.CoreV1().Secrets(customObject.GetNamespace()).Delete(ctx, secretToDelete.Name, apismetav1.DeleteOptions{})
 		if apierrors.IsNotFound(err) {
 			// fall through
 		} else if err != nil {

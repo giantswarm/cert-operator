@@ -29,7 +29,7 @@ func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interf
 
 	var secret *corev1.Secret
 	{
-		manifest, err := r.k8sClient.CoreV1().Secrets(r.namespace).Get(ctx, key.SecretName(customObject), metav1.GetOptions{})
+		manifest, err := r.k8sClient.CoreV1().Secrets(customObject.GetNamespace()).Get(ctx, key.SecretName(customObject), metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			r.logger.LogCtx(ctx, "level", "debug", "message", "did not find the secret in the Kubernetes API")
 			// fall through
