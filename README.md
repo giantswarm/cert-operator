@@ -34,6 +34,7 @@ Currently, `cert-operator` handles creation of kubeconfigs for workload cluster 
 | AWS        | >= 1.0.1 | >= 3.6.1  |
 | all others | >= 1.0.1  | >= 0.24.1 |
 | all others | < 1.0.1  | < 0.24.0* |
+
 \* cert-operator v1.0.0 and cluster-operator v0.24.0 have known issues. Use v1.0.1 or v0.24.1 instead.
 
 Prior to version 1.0.0, `cert-operator` reconciled based on the `spec.versionBundle.version` field of the `CertConfig` CR.
