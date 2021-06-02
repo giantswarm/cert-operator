@@ -5,6 +5,16 @@
 Cert Operator creates, configures, and manages certificates for Kubernetes clusters
 running on the Giant Swarm platform.
 
+Most of the functionality currently provided by this project is now supported natively by Kubernetes' Cluster API (CAPI). As we move more platform functionality to use CAPI workflows, this project will eventually be deprecated.
+
+## About
+
+`cert-operator` is responsible for provisioning certificates used by components of the Giant Swarm platform. It reconciles [`CertConfig` Custom Resources](https://docs.giantswarm.io/ui-api/management-api/crd/certconfigs.core.giantswarm.io/) (CRs) and configures Hashicorp `vault` accordingly. For a given `CertConfig`, `cert-operator` ensures:
+- `vault` is accessible
+- the necessary `vault` PKI backend is created 
+- a root CA for the associated workload cluster is created using the PKI backend
+
+Secrets are then created in the management cluster containing the certificates, signed by the root CA, used for establishing connections with and within the workload cluster.
 
 ## Prerequisites
 
