@@ -19,11 +19,11 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/spf13/viper v1.8.0
 	github.com/stretchr/testify v1.7.0
-	k8s.io/api v0.18.19
-	k8s.io/apimachinery v0.18.19
-	k8s.io/client-go v0.18.19
+	k8s.io/api v0.21.1
+	k8s.io/apimachinery v0.21.1
+	k8s.io/client-go v0.21.1
 	sigs.k8s.io/cluster-api v0.3.19
-	sigs.k8s.io/controller-runtime v0.6.4
+	sigs.k8s.io/controller-runtime v0.9.0
 )
 
 replace (
