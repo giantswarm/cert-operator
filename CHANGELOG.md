@@ -7,11 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Manage Secrets in the same namespace in which CertConfigs are found.
-
 ### Changed
 
 - Adjust helm chart to be used with `config-controller`.
+- Replace `jwt-go` with `golang-jwt/jwt`.
+- Manage Secrets in the same namespace in which CertConfigs are found.
+
 ## [1.0.1] - 2021-02-23
 
 ### Fixed
