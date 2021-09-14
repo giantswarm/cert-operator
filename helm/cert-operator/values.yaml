@@ -16,8 +16,10 @@ k8sJwtToVaultTokenImage:
 registry:
   domain: docker.io
 
-vault:
+resource:
   expirationThreshold: "2160h"
+
+vault:
   address: ""
   ca:
     ttl: "87600h"
