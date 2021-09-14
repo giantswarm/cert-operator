@@ -23,7 +23,7 @@ data:
           keyFile: ''
       resource:
         vaultCrt:
-          expirationThreshold: '{{ .Values.resource.expirationThreshold }}}'
+          expirationThreshold: '{{ .Values.resource.expirationThreshold }}'
           namespace: 'default'
       vault:
         config:
