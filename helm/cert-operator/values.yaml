@@ -17,6 +17,7 @@ registry:
   domain: docker.io
 
 vault:
+  expirationThreshold: "2160h"
   address: ""
   ca:
     ttl: "87600h"
