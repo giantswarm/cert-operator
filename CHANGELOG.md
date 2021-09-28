@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2021-09-28
+
 ### Changed
 
 - Adjust helm chart to be used with `config-controller`.
@@ -67,7 +69,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First release.
 
-[Unreleased]: https://github.com/giantswarm/cert-operator/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/giantswarm/cert-operator/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/giantswarm/cert-operator/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/giantswarm/cert-operator/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/giantswarm/cert-operator/compare/v0.1.0-2...v1.0.0
 [0.1.0-2]: https://github.com/giantswarm/cert-operator/compare/v0.1.0-1...v0.1.0-2
