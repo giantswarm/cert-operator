@@ -9,6 +9,7 @@ import (
 	"github.com/giantswarm/vaultcrt"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/cert-operator/service/controller/key"
 )
@@ -32,6 +33,7 @@ const (
 
 type Config struct {
 	CurrentTimeFactory func() time.Time
+	CtrlClient         client.Client
 	K8sClient          kubernetes.Interface
 	Logger             micrologger.Logger
 	VaultCrt           vaultcrt.Interface
@@ -43,6 +45,7 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		CurrentTimeFactory: nil,
+		CtrlClient:         nil,
 		K8sClient:          nil,
 		Logger:             nil,
 		VaultCrt:           nil,
@@ -54,6 +57,7 @@ func DefaultConfig() Config {
 
 type Resource struct {
 	currentTimeFactory func() time.Time
+	ctrlClient         client.Client
 	k8sClient          kubernetes.Interface
 	logger             micrologger.Logger
 	vaultCrt           vaultcrt.Interface
@@ -65,6 +69,9 @@ type Resource struct {
 func New(config Config) (*Resource, error) {
 	if config.K8sClient == nil {
 		return nil, microerror.Maskf(invalidConfigError, "config.K8sClient must not be empty")
+	}
+	if config.CtrlClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "config.CtrlClient must not be empty")
 	}
 	if config.CurrentTimeFactory == nil {
 		return nil, microerror.Maskf(invalidConfigError, "config.CurrentTimeFactory must not be empty")
@@ -85,6 +92,7 @@ func New(config Config) (*Resource, error) {
 
 	r := &Resource{
 		currentTimeFactory: config.CurrentTimeFactory,
+		ctrlClient:         config.CtrlClient,
 		k8sClient:          config.K8sClient,
 		logger: config.Logger.With(
 			"resource", Name,

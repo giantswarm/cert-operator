@@ -100,6 +100,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 	var resources []resource.Interface
 	{
 		c := ResourceSetConfig{
+			CtrlClient:  config.K8sClient.CtrlClient(),
 			K8sClient:   config.K8sClient.K8sClient(),
 			Logger:      config.Logger,
 			VaultClient: config.VaultClient,

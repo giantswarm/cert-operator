@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add check to ensure that the `Cluster` resource is in the same namespace as the `certConfig` before creating the secret there.
+
 ## [1.1.0] - 2021-09-28
 
 ### Changed
