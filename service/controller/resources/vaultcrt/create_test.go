@@ -115,7 +115,7 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 	{
 		c := DefaultConfig()
 		scheme := runtime.NewScheme()
-		apiv1alpha2.AddToScheme(scheme)
+		_ = apiv1alpha2.AddToScheme(scheme)
 
 		c.CurrentTimeFactory = func() time.Time { return time.Time{} }
 		c.K8sClient = fake.NewSimpleClientset()
