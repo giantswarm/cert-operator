@@ -8,7 +8,7 @@ import (
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	apiv1alpha2 "sigs.k8s.io/cluster-api/api/v1alpha2"
+	apiv1alpha3 "sigs.k8s.io/cluster-api/api/v1alpha3"
 
 	"github.com/giantswarm/cert-operator/service/controller/key"
 )
@@ -26,7 +26,7 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 		}
 
 		r.logger.LogCtx(ctx, "level", "debug", "message", "finding cluster resource")
-		cluster := &apiv1alpha2.Cluster{}
+		cluster := &apiv1alpha3.Cluster{}
 		err = r.ctrlClient.Get(ctx, types.NamespacedName{
 			Namespace: customObject.Namespace,
 			Name:      key.ClusterID(customObject)},
