@@ -32,7 +32,7 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 			Name:      key.ClusterID(customObject)},
 			cluster)
 		if apimeta.IsNoMatchError(err) {
-			// fall through if the cluster CRD is not installed
+			// fall through if the cluster CRD is not installed. This is the case in KVM installations, we ignore them for now.
 		} else if err != nil {
 			return microerror.Maskf(notFoundError, "Could not find cluster %s in namespace %s.",
 				key.ClusterID(customObject),
