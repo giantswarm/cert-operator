@@ -25,7 +25,7 @@ workflows:
             tags:
               only: /^v.*/
 
-    - architect/push-to-docker:
+      - architect/push-to-docker:
           context: "architect"
           name: push-cert-operator-to-docker
           image: "docker.io/giantswarm/cert-operator"
