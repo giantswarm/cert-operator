@@ -14,7 +14,7 @@ k8sJwtToVaultTokenImage:
   tag: 0.1.0
 
 registry:
-  domain: docker.io
+  domain: quay.io
 
 resource:
   expirationThreshold: "2160h"
