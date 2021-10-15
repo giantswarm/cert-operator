@@ -11,7 +11,10 @@ import (
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
 	apiv1 "k8s.io/api/core/v1"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
+	apiv1alpha2 "sigs.k8s.io/cluster-api/api/v1alpha2"
+	fakectrl "sigs.k8s.io/controller-runtime/pkg/client/fake" //nolint:staticcheck // v0.6.4 has a deprecation on pkg/client/fake that was removed in later versions
 )
 
 func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
@@ -95,9 +98,12 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 	var newResource *Resource
 	{
 		c := DefaultConfig()
+		scheme := runtime.NewScheme()
+		_ = apiv1alpha2.AddToScheme(scheme)
 
 		c.CurrentTimeFactory = func() time.Time { return time.Time{} }
 		c.K8sClient = fake.NewSimpleClientset()
+		c.CtrlClient = fakectrl.NewFakeClientWithScheme(scheme)
 		c.Logger = microloggertest.New()
 		c.VaultCrt = vaultcrttest.New()
 

@@ -13,6 +13,15 @@ func IsMissingAnnotation(err error) bool {
 	return microerror.Cause(err) == missingAnnotationError
 }
 
+var notFoundError = &microerror.Error{
+	Kind: "notFoundError",
+}
+
+// IsNotFound asserts notFoundError.
+func IsNotFound(err error) bool {
+	return microerror.Cause(err) == notFoundError
+}
+
 var invalidConfigError = &microerror.Error{
 	Kind: "invalidConfigError",
 }

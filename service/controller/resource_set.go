@@ -14,6 +14,7 @@ import (
 	"github.com/giantswarm/vaultrole"
 	vaultapi "github.com/hashicorp/vault/api"
 	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/cert-operator/service/controller/resources/vaultaccess"
 	vaultcrtresource "github.com/giantswarm/cert-operator/service/controller/resources/vaultcrt"
@@ -23,6 +24,7 @@ import (
 
 type ResourceSetConfig struct {
 	K8sClient   kubernetes.Interface
+	CtrlClient  client.Client
 	Logger      micrologger.Logger
 	VaultClient *vaultapi.Client
 	VaultCrt    vaultcrt.Interface
@@ -55,6 +57,7 @@ func NewResourceSet(config ResourceSetConfig) ([]resource.Interface, error) {
 		c := vaultcrtresource.Config{
 			CurrentTimeFactory: func() time.Time { return time.Now() },
 			K8sClient:          config.K8sClient,
+			CtrlClient:         config.CtrlClient,
 			Logger:             config.Logger,
 			VaultCrt:           config.VaultCrt,
 
