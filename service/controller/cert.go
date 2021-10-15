@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	apiv1alpha2 "sigs.k8s.io/cluster-api/api/v1alpha2"
+	apiv1alpha3 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/cert-operator/pkg/label"
@@ -206,7 +206,7 @@ func tenantClusterExists(k8sClient k8sclient.Interface, id string) (bool, error)
 	// We need to check for Node Pools clusters. These adhere to CAPI and do not
 	// have any AWSConfig CR anymore.
 	{
-		crs := &apiv1alpha2.ClusterList{}
+		crs := &apiv1alpha3.ClusterList{}
 
 		var labelSelector client.MatchingLabels
 		{
@@ -223,20 +223,6 @@ func tenantClusterExists(k8sClient k8sclient.Interface, id string) (bool, error)
 			return false, microerror.Mask(err)
 		} else if len(crs.Items) < 1 {
 			// fall through
-		} else {
-			return true, nil
-		}
-	}
-
-	// We need to check for the legacy AWSConfig CRs on AWS environments.
-	{
-		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceDefault}, &providerv1alpha1.AWSConfig{})
-		if errors.IsNotFound(err) {
-			// fall through
-		} else if IsNoKind(err) {
-			// fall through
-		} else if err != nil {
-			return false, microerror.Mask(err)
 		} else {
 			return true, nil
 		}

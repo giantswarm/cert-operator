@@ -40,7 +40,6 @@ rules:
   - apiGroups:
       - provider.giantswarm.io
     resources:
-      - awsconfigs
       - azureconfigs
       - kvmconfigs
     verbs:
