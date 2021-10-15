@@ -35,8 +35,8 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 			// fall through if the cluster CRD is not installed
 		} else if err != nil {
 			return microerror.Maskf(notFoundError, "Could not find cluster %s in namespace %s.",
-				customObject.Namespace,
-				key.ClusterID(customObject))
+				key.ClusterID(customObject),
+				customObject.Namespace)
 		}
 
 		r.logger.LogCtx(ctx, "level", "debug", "message", "creating the secret in the Kubernetes API")
