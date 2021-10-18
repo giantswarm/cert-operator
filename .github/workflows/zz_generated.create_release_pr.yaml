@@ -69,7 +69,7 @@ jobs:
           binary: "architect"
           version: "3.4.0"
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.5
       - name: Prepare release changes
         run: |
           architect prepare-release ${{ env.architect_flags }} --version "${{ needs.gather_facts.outputs.version }}"
