@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-3] - 2021-12-16
+
 ### Fixed
 
 - Backported feature from newer releases to lookup AWS clusters from all namespaces rather than from default only to avoid PKI from being deleted.
@@ -42,9 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First release.
 
-[Unreleased]: https://github.com/giantswarm/cert-operator/compare/v0.1.0-2...HEAD
-[0.1.0-2]: https://github.com/giantswarm/cert-operator/compare/v0.1.0-2...v0.1.0-2
-[0.1.0-2]: https://github.com/giantswarm/cert-operator/compare/v0.1.0-2...v0.1.0-2
+[Unreleased]: https://github.com/giantswarm/cert-operator/compare/v0.1.0-3...HEAD
+[0.1.0-3]: https://github.com/giantswarm/cert-operator/compare/v0.1.0-2...v0.1.0-3
 [0.1.0-2]: https://github.com/giantswarm/cert-operator/compare/v0.1.0-1...v0.1.0-2
 [0.1.0-1]: https://github.com/giantswarm/cert-operator/compare/v0.1.0...v0.1.0-1
 [0.1.0]: https://github.com/giantswarm/cert-operator/releases/tag/v0.1.0
