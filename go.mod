@@ -26,3 +26,9 @@ require (
 	sigs.k8s.io/cluster-api v0.3.8
 	sigs.k8s.io/controller-runtime v0.5.9
 )
+
+replace (
+	github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
+	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt v3.2.1+incompatible
+	github.com/gogo/protobuf v1.3.1 => github.com/gogo/protobuf v1.3.2
+)
