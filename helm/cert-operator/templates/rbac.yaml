@@ -36,6 +36,7 @@ rules:
       - clusters
     verbs:
       - get
+      - list
   - apiGroups:
       - provider.giantswarm.io
     resources:
