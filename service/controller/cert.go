@@ -19,12 +19,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	apiv1alpha2 "sigs.k8s.io/cluster-api/api/v1alpha2"
+	apiv1alpha3 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/cert-operator/pkg/label"
+	"github.com/giantswarm/cert-operator/pkg/project"
 )
 
 type CertConfig struct {
@@ -121,13 +123,16 @@ func NewCert(config CertConfig) (*Cert, error) {
 		c := controller.Config{
 			K8sClient: config.K8sClient,
 			Logger:    config.Logger,
-			Name:      config.ProjectName,
-			ResourceSets: []*controller.ResourceSet{
-				ResourceSet,
-			},
 			NewRuntimeObjectFunc: func() runtime.Object {
 				return new(corev1alpha1.CertConfig)
 			},
+			ResourceSets: []*controller.ResourceSet{
+				ResourceSet,
+			},
+			Selector: labels.SelectorFromSet(map[string]string{
+				label.OperatorVersion: project.Version(),
+			}),
+			Name: config.ProjectName,
 		}
 
 		operatorkitController, err = controller.New(c)
@@ -203,13 +208,23 @@ func tenantClusterExists(k8sClient k8sclient.Interface, id string) (bool, error)
 	// We need to check for Node Pools clusters. These adhere to CAPI and do not
 	// have any AWSConfig CR anymore.
 	{
-		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceDefault}, &apiv1alpha2.Cluster{})
+		crs := &apiv1alpha3.ClusterList{}
+
+		var labelSelector client.MatchingLabels
+		{
+			labelSelector = make(map[string]string)
+			labelSelector[label.Cluster] = id
+		}
+
+		err := k8sClient.CtrlClient().List(context.Background(), crs, labelSelector)
 		if errors.IsNotFound(err) {
 			// fall through
 		} else if IsNoKind(err) {
 			// fall through
 		} else if err != nil {
 			return false, microerror.Mask(err)
+		} else if len(crs.Items) < 1 {
+			// fall through
 		} else {
 			return true, nil
 		}

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Backported feature from newer releases to lookup AWS clusters from all namespaces rather than from default only to avoid PKI from being deleted.
+
 ## [0.1.0-2] - 2020-08-11
 
 ### Fixed
