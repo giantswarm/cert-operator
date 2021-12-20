@@ -8,7 +8,7 @@ import (
 )
 
 func (r *Resource) EnsureCreated(ctx context.Context, obj interface{}) error {
-	_, err := r.vaultClient.Auth().Token().LookupSelf()
+	_, err := r.vaultClient.Auth().Token().RenewSelf(0)
 	if IsVaultAccess(err) {
 		r.logger.LogCtx(ctx, "level", "debug", "message", "vault not reachable")
 		r.logger.LogCtx(ctx, "level", "debug", "message", "vault upgrade in progress")

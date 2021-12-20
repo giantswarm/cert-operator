@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use `RenewSelf` instead of `LookupSelf` to prevent expiration of `Vault token`.
+
 ## [1.2.0] - 2021-10-15
 
 ### Changed
