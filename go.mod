@@ -5,19 +5,19 @@ go 1.13
 require (
 	github.com/giantswarm/apiextensions/v3 v3.39.0
 	github.com/giantswarm/certs/v3 v3.1.1
-	github.com/giantswarm/exporterkit v0.2.1
+	github.com/giantswarm/exporterkit v1.0.0
 	github.com/giantswarm/k8sclient/v5 v5.12.0
-	github.com/giantswarm/microendpoint v0.2.0
-	github.com/giantswarm/microerror v0.3.0
-	github.com/giantswarm/microkit v0.2.2
-	github.com/giantswarm/micrologger v0.5.0
+	github.com/giantswarm/microendpoint v1.0.0
+	github.com/giantswarm/microerror v0.4.0
+	github.com/giantswarm/microkit v1.0.0
+	github.com/giantswarm/micrologger v0.6.0
 	github.com/giantswarm/operatorkit/v4 v4.3.1
 	github.com/giantswarm/vaultcrt v0.2.0
 	github.com/giantswarm/vaultpki v0.2.0
 	github.com/giantswarm/vaultrole v0.2.0
 	github.com/hashicorp/vault/api v1.1.0
 	github.com/prometheus/client_golang v1.11.0
-	github.com/spf13/viper v1.9.0
+	github.com/spf13/viper v1.10.0
 	github.com/stretchr/testify v1.7.0
 	k8s.io/api v0.18.19
 	k8s.io/apimachinery v0.18.19
