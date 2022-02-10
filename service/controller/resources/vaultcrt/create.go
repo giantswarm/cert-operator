@@ -2,6 +2,7 @@ package vaultcrt
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/giantswarm/microerror"
 	apiv1 "k8s.io/api/core/v1"
@@ -34,6 +35,7 @@ func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange inte
 		if apimeta.IsNoMatchError(err) {
 			// fall through if the cluster CRD is not installed. This is the case in KVM installations, we ignore them for now.
 		} else if err != nil {
+			fmt.Printf("TEST: %v\n", err)
 			return microerror.Maskf(notFoundError, "Could not find cluster %s in namespace %s.",
 				key.ClusterID(customObject),
 				customObject.Namespace)
