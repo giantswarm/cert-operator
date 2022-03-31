@@ -103,7 +103,7 @@ func Test_Resource_VaultCrt_newDeleteChange(t *testing.T) {
 
 		c.CurrentTimeFactory = func() time.Time { return time.Time{} }
 		c.K8sClient = fake.NewSimpleClientset()
-		c.CtrlClient = fakectrl.NewFakeClientWithScheme(scheme)
+		c.CtrlClient = fakectrl.NewClientBuilder().WithScheme(scheme).Build()
 		c.Logger = microloggertest.New()
 		c.VaultCrt = vaultcrttest.New()
 

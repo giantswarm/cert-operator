@@ -343,7 +343,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_expiration(t *testing.T) {
 
 			c.CurrentTimeFactory = func() time.Time { return tc.CurrentTime }
 			c.K8sClient = fake.NewSimpleClientset()
-			c.CtrlClient = fakectrl.NewFakeClientWithScheme(scheme)
+			c.CtrlClient = fakectrl.NewClientBuilder().WithScheme(scheme).Build()
 			c.Logger = microloggertest.New()
 			c.VaultCrt = vaultcrttest.New()
 
@@ -529,7 +529,7 @@ func Test_Resource_VaultCrt_shouldCertBeRenewed_hash(t *testing.T) {
 
 			c.CurrentTimeFactory = func() time.Time { return time.Time{} }
 			c.K8sClient = fake.NewSimpleClientset()
-			c.CtrlClient = fakectrl.NewFakeClientWithScheme(scheme)
+			c.CtrlClient = fakectrl.NewClientBuilder().WithScheme(scheme).Build()
 			c.Logger = microloggertest.New()
 			c.VaultCrt = vaultcrttest.New()
 
