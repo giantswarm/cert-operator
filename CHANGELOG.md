@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Use v1beta1 CAPI CRDs.
 - Bump `giantswarm/apiextensions` to `v6.0.0`.
 - Bump `giantswarm/exporterkit` to `v1.0.0`.
 - Bump `giantswarm/microendpoint` to `v1.0.0`.

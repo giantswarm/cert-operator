@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
-	apiv1alpha3 "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/cert-operator/pkg/label"
@@ -205,7 +205,7 @@ func tenantClusterExists(k8sClient k8sclient.Interface, id string) (bool, error)
 	// We need to check for Node Pools clusters. These adhere to CAPI and do not
 	// have any AWSConfig CR anymore.
 	{
-		crs := &apiv1alpha3.ClusterList{}
+		crs := &capi.ClusterList{}
 
 		var labelSelector client.MatchingLabels
 		{

@@ -13,7 +13,7 @@ import (
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
-	apiv1alpha3 "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 	fakectrl "sigs.k8s.io/controller-runtime/pkg/client/fake" //nolint:staticcheck // v0.6.4 has a deprecation on pkg/client/fake that was removed in later versions
 )
 
@@ -115,7 +115,7 @@ func Test_Resource_VaultCrt_newCreateChange(t *testing.T) {
 	{
 		c := DefaultConfig()
 		scheme := runtime.NewScheme()
-		_ = apiv1alpha3.AddToScheme(scheme)
+		_ = capi.AddToScheme(scheme)
 
 		c.CurrentTimeFactory = func() time.Time { return time.Time{} }
 		c.K8sClient = fake.NewSimpleClientset()
