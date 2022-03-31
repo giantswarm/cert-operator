@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	corev1alpha1 "github.com/giantswarm/apiextensions/v3/pkg/apis/core/v1alpha1"
-	providerv1alpha1 "github.com/giantswarm/apiextensions/v3/pkg/apis/provider/v1alpha1"
-	"github.com/giantswarm/k8sclient/v5/pkg/k8sclient"
+	corev1alpha1 "github.com/giantswarm/apiextensions/v6/pkg/apis/core/v1alpha1"
+	providerv1alpha1 "github.com/giantswarm/apiextensions/v6/pkg/apis/provider/v1alpha1"
+	"github.com/giantswarm/k8sclient/v7/pkg/k8sclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	"github.com/giantswarm/operatorkit/v4/pkg/controller"
-	"github.com/giantswarm/operatorkit/v4/pkg/resource"
+	"github.com/giantswarm/operatorkit/v7/pkg/controller"
+	"github.com/giantswarm/operatorkit/v7/pkg/resource"
 	"github.com/giantswarm/vaultcrt"
 	"github.com/giantswarm/vaultpki"
 	"github.com/giantswarm/vaultpki/key"
@@ -20,9 +20,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	apiv1alpha3 "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/cert-operator/pkg/label"
@@ -129,7 +128,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 			Selector: labels.SelectorFromSet(map[string]string{
 				label.OperatorVersion: project.Version(),
 			}),
-			NewRuntimeObjectFunc: func() runtime.Object {
+			NewRuntimeObjectFunc: func() client.Object {
 				return new(corev1alpha1.CertConfig)
 			},
 		}
@@ -206,7 +205,7 @@ func tenantClusterExists(k8sClient k8sclient.Interface, id string) (bool, error)
 	// We need to check for Node Pools clusters. These adhere to CAPI and do not
 	// have any AWSConfig CR anymore.
 	{
-		crs := &apiv1alpha3.ClusterList{}
+		crs := &capi.ClusterList{}
 
 		var labelSelector client.MatchingLabels
 		{
@@ -223,20 +222,6 @@ func tenantClusterExists(k8sClient k8sclient.Interface, id string) (bool, error)
 			return false, microerror.Mask(err)
 		} else if len(crs.Items) < 1 {
 			// fall through
-		} else {
-			return true, nil
-		}
-	}
-
-	// We need to check for the legacy AzureConfig CRs on Azure environments.
-	{
-		err = k8sClient.CtrlClient().Get(context.Background(), types.NamespacedName{Name: id, Namespace: corev1.NamespaceDefault}, &providerv1alpha1.AzureConfig{})
-		if errors.IsNotFound(err) {
-			// fall through
-		} else if IsNoKind(err) {
-			// fall through
-		} else if err != nil {
-			return false, microerror.Mask(err)
 		} else {
 			return true, nil
 		}

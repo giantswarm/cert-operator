@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use v1beta1 CAPI CRDs.
+- Bump `giantswarm/apiextensions` to `v6.0.0`.
+- Bump `giantswarm/exporterkit` to `v1.0.0`.
+- Bump `giantswarm/microendpoint` to `v1.0.0`.
+- Bump `giantswarm/microerror` to `v0.4.0`.
+- Bump `giantswarm/microkit` to `v1.0.0`.
+- Bump `giantswarm/micrologger` to `v0.6.0`.
+- Bump `giantswarm/k8sclient` to `v7.0.1`.
+- Bump `giantswarm/operatorkit` to `v7.0.1`.
+- Bump k8s dependencies to `v0.22.2`.
+- Bump `controller-runtime` to `v0.10.3`.
+
 ## [1.3.0] - 2022-01-03
 
 ### Changed
