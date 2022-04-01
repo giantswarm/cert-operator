@@ -8,10 +8,10 @@ import (
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/viper"
 
-	"github.com/giantswarm/cert-operator/flag"
-	"github.com/giantswarm/cert-operator/pkg/project"
-	"github.com/giantswarm/cert-operator/server"
-	"github.com/giantswarm/cert-operator/service"
+	"github.com/giantswarm/cert-operator/v2/flag"
+	"github.com/giantswarm/cert-operator/v2/pkg/project"
+	"github.com/giantswarm/cert-operator/v2/server"
+	"github.com/giantswarm/cert-operator/v2/service"
 )
 
 var (

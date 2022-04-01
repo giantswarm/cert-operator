@@ -11,7 +11,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/giantswarm/cert-operator/service/controller/key"
+	"github.com/giantswarm/cert-operator/v2/service/controller/key"
 )
 
 const (

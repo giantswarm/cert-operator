@@ -7,7 +7,7 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 
-	"github.com/giantswarm/cert-operator/flag"
+	"github.com/giantswarm/cert-operator/v2/flag"
 )
 
 type Config struct {

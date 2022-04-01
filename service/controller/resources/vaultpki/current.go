@@ -6,7 +6,7 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/vaultpki"
 
-	"github.com/giantswarm/cert-operator/service/controller/key"
+	"github.com/giantswarm/cert-operator/v2/service/controller/key"
 )
 
 func (r *Resource) GetCurrentState(ctx context.Context, obj interface{}) (interface{}, error) {
