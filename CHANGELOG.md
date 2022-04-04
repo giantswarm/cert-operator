@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2022-04-04
+
 ### Fixed
 
 - Bump go module major version.
@@ -105,7 +107,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First release.
 
-[Unreleased]: https://github.com/giantswarm/cert-operator/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/giantswarm/cert-operator/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/giantswarm/cert-operator/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/giantswarm/cert-operator/compare/v1.3.0...v2.0.0
 [1.3.0]: https://github.com/giantswarm/cert-operator/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/giantswarm/cert-operator/compare/v1.1.0...v1.2.0
