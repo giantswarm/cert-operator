@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 
-	"github.com/giantswarm/cert-operator/service/controller/key"
+	"github.com/giantswarm/cert-operator/v2/service/controller/key"
 )
 
 func (r *Resource) ApplyCreateChange(ctx context.Context, obj, createChange interface{}) error {

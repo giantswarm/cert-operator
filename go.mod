@@ -1,4 +1,4 @@
-module github.com/giantswarm/cert-operator
+module github.com/giantswarm/cert-operator/v2
 
 go 1.17
 

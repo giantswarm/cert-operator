@@ -8,9 +8,9 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	apismetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/giantswarm/cert-operator/pkg/label"
-	"github.com/giantswarm/cert-operator/pkg/project"
-	"github.com/giantswarm/cert-operator/service/controller/key"
+	"github.com/giantswarm/cert-operator/v2/pkg/label"
+	"github.com/giantswarm/cert-operator/v2/pkg/project"
+	"github.com/giantswarm/cert-operator/v2/service/controller/key"
 )
 
 func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interface{}, error) {
