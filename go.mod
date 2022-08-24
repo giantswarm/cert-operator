@@ -10,7 +10,7 @@ require (
 	github.com/giantswarm/microendpoint v1.0.0
 	github.com/giantswarm/microerror v0.4.0
 	github.com/giantswarm/microkit v1.0.0
-	github.com/giantswarm/micrologger v0.6.0
+	github.com/giantswarm/micrologger v1.0.0
 	github.com/giantswarm/operatorkit/v7 v7.0.1
 	github.com/giantswarm/vaultcrt v0.2.0
 	github.com/giantswarm/vaultpki v0.2.0
@@ -46,7 +46,7 @@ require (
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
-	github.com/go-logr/logr v0.4.0 // indirect
+	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
