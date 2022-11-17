@@ -121,10 +121,10 @@ func NewCert(config CertConfig) (*Cert, error) {
 	var operatorkitController *controller.Controller
 	{
 		c := controller.Config{
-			K8sClient: config.K8sClient,
-			Logger:    config.Logger,
-			Name:      config.ProjectName,
-			Resources: resources,
+			K8sClient:    config.K8sClient,
+			Logger:       config.Logger,
+			Name:         config.ProjectName,
+			Resources:    resources,
 			ResyncPeriod: 60 * time.Minute,
 			Selector: labels.SelectorFromSet(map[string]string{
 				label.OperatorVersion: project.Version(),
