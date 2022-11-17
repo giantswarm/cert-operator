@@ -125,6 +125,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 			Logger:    config.Logger,
 			Name:      config.ProjectName,
 			Resources: resources,
+			ResyncPeriod: 60 * time.Minute,
 			Selector: labels.SelectorFromSet(map[string]string{
 				label.OperatorVersion: project.Version(),
 			}),
