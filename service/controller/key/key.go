@@ -4,6 +4,7 @@ import (
 	"crypto/sha1" // nolint: gosec
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/giantswarm/apiextensions/v6/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/certs/v3/pkg/certs"
@@ -69,7 +70,11 @@ func IsDeleted(customObject v1alpha1.CertConfig) bool {
 }
 
 func Organizations(customObject v1alpha1.CertConfig) []string {
-	a := []string{customObject.Spec.Cert.ClusterComponent}
+	a := make([]string, 0)
+
+	if !strings.HasPrefix(customObject.Spec.Cert.ClusterComponent, "kubeconfig") {
+		a = append(a, customObject.Spec.Cert.ClusterComponent)
+	}
 	return append(a, customObject.Spec.Cert.Organizations...)
 }
 
