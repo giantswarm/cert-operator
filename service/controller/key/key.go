@@ -72,6 +72,11 @@ func IsDeleted(customObject v1alpha1.CertConfig) bool {
 func Organizations(customObject v1alpha1.CertConfig) []string {
 	a := make([]string, 0)
 
+	// See https://github.com/giantswarm/giantswarm/issues/24722
+	// `kubectl-gs login` creates a kubeconfig with ClusterComponent set to something like
+	// "kubeconfig-<random uid>". Since the organizations field is used to calculate the name
+	// of the PKI role on vault, this lead to the generation of one role for every kubeconfig request.
+	// To avoid that, we want to avoid the random string to be part of the organizations.
 	if !strings.HasPrefix(customObject.Spec.Cert.ClusterComponent, "kubeconfig") {
 		a = append(a, customObject.Spec.Cert.ClusterComponent)
 	}
