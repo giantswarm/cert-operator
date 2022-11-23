@@ -125,6 +125,8 @@ func NewCert(config CertConfig) (*Cert, error) {
 		} else {
 			selector = label.AppVersionSelector()
 		}
+
+		config.Logger.Debugf(context.Background(), "Watching CertConfigs with selector %v", selector)
 	}
 
 	var operatorkitController *controller.Controller
