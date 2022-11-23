@@ -4,6 +4,7 @@ import (
 	"crypto/sha1" // nolint: gosec
 	"encoding/json"
 	"fmt"
+	"regexp"
 
 	"github.com/giantswarm/apiextensions/v6/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/certs/v3/pkg/certs"
@@ -69,8 +70,19 @@ func IsDeleted(customObject v1alpha1.CertConfig) bool {
 }
 
 func Organizations(customObject v1alpha1.CertConfig) []string {
-	a := []string{customObject.Spec.Cert.ClusterComponent}
-	return append(a, customObject.Spec.Cert.Organizations...)
+	a := make([]string, 0)
+	a = append(a, customObject.Spec.Cert.Organizations...)
+
+	// See https://github.com/giantswarm/giantswarm/issues/24722
+	// `kubectl-gs login` creates a kubeconfig with ClusterComponent set to something like
+	// "<16 chars random base16 string>". Since the organizations field is used to calculate the name
+	// of the PKI role on vault, this lead to the generation of one role for every kubeconfig request.
+	// To avoid that, we want to avoid the random string to be part of the organizations.
+	matched, err := regexp.MatchString(`^[a-f0-9]{16}$`, customObject.Spec.Cert.ClusterComponent)
+	if customObject.Spec.Cert.ClusterComponent != "" && (len(a) == 0 || err != nil || !matched) {
+		a = append(a, customObject.Spec.Cert.ClusterComponent)
+	}
+	return a
 }
 
 func RoleTTL(customObject v1alpha1.CertConfig) string {
