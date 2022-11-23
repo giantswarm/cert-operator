@@ -12,6 +12,8 @@ data:
       listen:
         address: 'http://0.0.0.0:8000'
     service:
+      app:
+        unique: {{ include "resource.app.unique" . }}
       crd:
         labelSelector: '{{ .Values.crd.labelSelector }}'
       kubernetes:

@@ -25,7 +25,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/cert-operator/v2/pkg/label"
-	"github.com/giantswarm/cert-operator/v2/pkg/project"
 )
 
 type CertConfig struct {
@@ -33,6 +32,7 @@ type CertConfig struct {
 	Logger      micrologger.Logger
 	VaultClient *vaultapi.Client
 
+	UniqueApp           bool
 	CATTL               string
 	CRDLabelSelector    string
 	CommonNameFormat    string
@@ -118,6 +118,15 @@ func NewCert(config CertConfig) (*Cert, error) {
 		}
 	}
 
+	var selector labels.Selector
+	{
+		if config.UniqueApp {
+			selector = label.KubeconfigSelector()
+		} else {
+			selector = label.AppVersionSelector()
+		}
+	}
+
 	var operatorkitController *controller.Controller
 	{
 		c := controller.Config{
@@ -125,9 +134,7 @@ func NewCert(config CertConfig) (*Cert, error) {
 			Logger:    config.Logger,
 			Name:      config.ProjectName,
 			Resources: resources,
-			Selector: labels.SelectorFromSet(map[string]string{
-				label.OperatorVersion: project.Version(),
-			}),
+			Selector:  selector,
 			NewRuntimeObjectFunc: func() client.Object {
 				return new(corev1alpha1.CertConfig)
 			},

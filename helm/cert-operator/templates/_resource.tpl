@@ -22,3 +22,11 @@ room for such suffix.
 {{- define "resource.default.namespace" -}}
 giantswarm
 {{- end -}}
+
+{{/*
+The deployment of cert-operator for management cluster reconciles a special certconfig
+CR version of 0.0.0.
+*/}}
+{{- define "resource.app.unique" -}}
+{{- if eq $.Chart.Name $.Release.Name }}true{{ else }}false{{ end }}
+{{- end -}}

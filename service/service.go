@@ -118,6 +118,7 @@ func New(config Config) (*Service, error) {
 			Logger:      config.Logger,
 			VaultClient: vaultClient,
 
+			UniqueApp:           config.Viper.GetBool(config.Flag.Service.App.Unique),
 			CATTL:               config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CA.TTL),
 			CRDLabelSelector:    config.Viper.GetString(config.Flag.Service.CRD.LabelSelector),
 			CommonNameFormat:    config.Viper.GetString(config.Flag.Service.Vault.Config.PKI.CommonName.Format),

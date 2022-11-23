@@ -27,3 +27,9 @@ func Source() string {
 func Version() string {
 	return version
 }
+
+// ManagementClusterAppVersion is always 0.0.0 for management cluster app CRs. These CRs
+// are processed by app-operator-unique which always runs the latest version.
+func ManagementClusterAppVersion() string {
+	return "0.0.0"
+}
