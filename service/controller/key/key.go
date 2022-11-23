@@ -81,6 +81,7 @@ func Organizations(customObject v1alpha1.CertConfig) []string {
 	if customObject.Spec.Cert.ClusterComponent != "" && (len(customObject.Spec.Cert.Organizations) == 0 || err != nil || !matched) {
 		a = append(a, customObject.Spec.Cert.ClusterComponent)
 	}
+
 	return append(a, customObject.Spec.Cert.Organizations...)
 }
 

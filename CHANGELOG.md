@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add possibility to run cert-operator as a unique app, reconciling special version '0.0.0'.
+
 ### Fixed
 
 - Avoid including certconfig UID in organizations for kubeconfig requests.
