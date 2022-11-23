@@ -16,10 +16,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/giantswarm/cert-operator/v2/service/controller/resources/vaultaccess"
-	vaultcrtresource "github.com/giantswarm/cert-operator/v2/service/controller/resources/vaultcrt"
-	vaultpkiresource "github.com/giantswarm/cert-operator/v2/service/controller/resources/vaultpki"
-	vaultroleresource "github.com/giantswarm/cert-operator/v2/service/controller/resources/vaultrole"
+	"github.com/giantswarm/cert-operator/v3/service/controller/resources/vaultaccess"
+	vaultcrtresource "github.com/giantswarm/cert-operator/v3/service/controller/resources/vaultcrt"
+	vaultpkiresource "github.com/giantswarm/cert-operator/v3/service/controller/resources/vaultpki"
+	vaultroleresource "github.com/giantswarm/cert-operator/v3/service/controller/resources/vaultrole"
 )
 
 type ResourceSetConfig struct {

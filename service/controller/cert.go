@@ -24,7 +24,7 @@ import (
 	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/giantswarm/cert-operator/v2/pkg/label"
+	"github.com/giantswarm/cert-operator/v3/pkg/label"
 )
 
 type CertConfig struct {

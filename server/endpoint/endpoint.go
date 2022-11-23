@@ -6,7 +6,7 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 
-	"github.com/giantswarm/cert-operator/v2/service"
+	"github.com/giantswarm/cert-operator/v3/service"
 )
 
 // Config represents the configuration used to create a endpoint.

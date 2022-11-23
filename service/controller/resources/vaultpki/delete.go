@@ -6,7 +6,7 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/operatorkit/v7/pkg/resource/crud"
 
-	"github.com/giantswarm/cert-operator/v2/service/controller/key"
+	"github.com/giantswarm/cert-operator/v3/service/controller/key"
 )
 
 func (r *Resource) NewDeletePatch(ctx context.Context, obj, currentState, desiredState interface{}) (*crud.Patch, error) {

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/giantswarm/cert-operator/v2/flag/service/vault/config/pki"
+	"github.com/giantswarm/cert-operator/v3/flag/service/vault/config/pki"
 )
 
 type Config struct {
