@@ -111,3 +111,79 @@ func TestClusterComponent(t *testing.T) {
 		t.Fatalf("clusterComponent %#q, want %s", ClusterComponent(obj), expectedClusterComponent)
 	}
 }
+
+func TestOrganizations(t *testing.T) {
+	tests := []struct {
+		name         string
+		customObject v1alpha1.CertConfig
+		want         []string
+	}{
+		{
+			name: "Single cluster component",
+			customObject: v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
+						ClusterComponent: "etcd",
+						Organizations:    nil,
+					},
+				},
+			},
+			want: []string{"etcd"},
+		},
+		{
+			name: "Cluster component and legit organization",
+			customObject: v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
+						ClusterComponent: "etcd",
+						Organizations:    []string{"system:masters"},
+					},
+				},
+			},
+			want: []string{"etcd", "system:masters"},
+		},
+		{
+			name: "Random cluster component and legit organization",
+			customObject: v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
+						ClusterComponent: "73ce775d904da53e",
+						Organizations:    []string{"system:masters"},
+					},
+				},
+			},
+			want: []string{"system:masters"},
+		},
+		{
+			name: "Random cluster component but no organization",
+			customObject: v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
+						ClusterComponent: "73ce775d904da53e",
+						Organizations:    nil,
+					},
+				},
+			},
+			want: []string{"73ce775d904da53e"},
+		},
+		{
+			name: "Empty cluster component",
+			customObject: v1alpha1.CertConfig{
+				Spec: v1alpha1.CertConfigSpec{
+					Cert: v1alpha1.CertConfigSpecCert{
+						ClusterComponent: "",
+						Organizations:    []string{"system:masters"},
+					},
+				},
+			},
+			want: []string{"system:masters"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Organizations(tt.customObject); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Organizations() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
