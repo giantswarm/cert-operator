@@ -12,8 +12,8 @@ import (
 	"github.com/giantswarm/micrologger"
 	"github.com/spf13/viper"
 
-	"github.com/giantswarm/cert-operator/v2/server/endpoint"
-	"github.com/giantswarm/cert-operator/v2/service"
+	"github.com/giantswarm/cert-operator/v3/server/endpoint"
+	"github.com/giantswarm/cert-operator/v3/service"
 )
 
 type Config struct {

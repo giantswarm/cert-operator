@@ -7,7 +7,7 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/vaultrole"
 
-	"github.com/giantswarm/cert-operator/v2/service/controller/key"
+	"github.com/giantswarm/cert-operator/v3/service/controller/key"
 )
 
 func (r *Resource) GetDesiredState(ctx context.Context, obj interface{}) (interface{}, error) {

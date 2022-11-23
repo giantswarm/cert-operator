@@ -18,11 +18,11 @@ import (
 	"k8s.io/client-go/rest"
 	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 
-	clientvault "github.com/giantswarm/cert-operator/v2/client/vault"
-	"github.com/giantswarm/cert-operator/v2/flag"
-	"github.com/giantswarm/cert-operator/v2/pkg/project"
-	"github.com/giantswarm/cert-operator/v2/service/collector"
-	"github.com/giantswarm/cert-operator/v2/service/controller"
+	clientvault "github.com/giantswarm/cert-operator/v3/client/vault"
+	"github.com/giantswarm/cert-operator/v3/flag"
+	"github.com/giantswarm/cert-operator/v3/pkg/project"
+	"github.com/giantswarm/cert-operator/v3/service/collector"
+	"github.com/giantswarm/cert-operator/v3/service/controller"
 )
 
 type Config struct {

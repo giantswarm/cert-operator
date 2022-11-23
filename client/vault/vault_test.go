@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/giantswarm/cert-operator/v2/flag"
+	"github.com/giantswarm/cert-operator/v3/flag"
 )
 
 func TestNewClient(t *testing.T) {

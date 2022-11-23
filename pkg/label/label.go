@@ -3,7 +3,7 @@ package label
 import (
 	"k8s.io/apimachinery/pkg/labels"
 
-	"github.com/giantswarm/cert-operator/v2/pkg/project"
+	"github.com/giantswarm/cert-operator/v3/pkg/project"
 )
 
 const (

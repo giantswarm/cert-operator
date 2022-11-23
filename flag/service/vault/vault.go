@@ -1,7 +1,7 @@
 package vault
 
 import (
-	"github.com/giantswarm/cert-operator/v2/flag/service/vault/config"
+	"github.com/giantswarm/cert-operator/v3/flag/service/vault/config"
 )
 
 type Vault struct {

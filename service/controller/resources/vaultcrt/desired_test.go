@@ -16,7 +16,7 @@ import (
 	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 	fakectrl "sigs.k8s.io/controller-runtime/pkg/client/fake" //nolint:staticcheck // v0.6.4 has a deprecation on pkg/client/fake that was removed in later versions
 
-	"github.com/giantswarm/cert-operator/v2/pkg/project"
+	"github.com/giantswarm/cert-operator/v3/pkg/project"
 )
 
 func Test_Resource_VaultCrt_GetDesiredState(t *testing.T) {
