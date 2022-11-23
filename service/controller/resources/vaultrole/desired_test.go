@@ -45,8 +45,8 @@ func Test_Resource_VaultRole_GetDesiredState(t *testing.T) {
 				},
 				ID: "al9qy",
 				Organizations: []string{
-					"system:masters",
 					"api",
+					"system:masters",
 				},
 				TTL: 24 * time.Hour,
 			},

@@ -140,7 +140,7 @@ func TestOrganizations(t *testing.T) {
 					},
 				},
 			},
-			want: []string{"system:masters", "etcd"},
+			want: []string{"etcd", "system:masters"},
 		},
 		{
 			name: "Random cluster component and legit organization",
