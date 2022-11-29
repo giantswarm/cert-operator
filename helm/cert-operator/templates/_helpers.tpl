@@ -22,7 +22,7 @@ app: {{ include "name" . | quote }}
 app.giantswarm.io/branch: {{ .Values.project.branch | quote }}
 app.giantswarm.io/commit: {{ .Values.project.commit | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+app.kubernetes.io/version: "{{ .Chart.AppVersion }}{{- if eq $.Chart.Name $.Release.Name }}-unique{{ end }}"
 helm.sh/chart: {{ include "chart" . | quote }}
 {{- end -}}
 
