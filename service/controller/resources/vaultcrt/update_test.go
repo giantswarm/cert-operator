@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/giantswarm/apiextensions/v6/pkg/apis/core/v1alpha1"
-	"github.com/giantswarm/certs/v3/pkg/certs"
+	"github.com/giantswarm/certs/v4/pkg/certs"
 	"github.com/giantswarm/micrologger/microloggertest"
 	"github.com/giantswarm/vaultcrt/vaultcrttest"
 	apiv1 "k8s.io/api/core/v1"
