@@ -4,14 +4,14 @@ go 1.19
 
 require (
 	github.com/giantswarm/apiextensions/v6 v6.4.1
-	github.com/giantswarm/certs/v3 v3.1.1
+	github.com/giantswarm/certs/v4 v4.0.0
 	github.com/giantswarm/exporterkit v1.0.0
 	github.com/giantswarm/k8sclient/v7 v7.0.1
 	github.com/giantswarm/microendpoint v1.0.0
 	github.com/giantswarm/microerror v0.4.0
 	github.com/giantswarm/microkit v1.0.0
 	github.com/giantswarm/micrologger v1.0.0
-	github.com/giantswarm/operatorkit/v7 v7.1.0
+	github.com/giantswarm/operatorkit/v8 v8.0.0
 	github.com/giantswarm/vaultcrt v0.2.0
 	github.com/giantswarm/vaultpki v0.2.0
 	github.com/giantswarm/vaultrole v0.2.0
