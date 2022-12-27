@@ -1,17 +1,17 @@
 module github.com/giantswarm/cert-operator/v3
 
-go 1.18
+go 1.19
 
 require (
 	github.com/giantswarm/apiextensions/v6 v6.4.1
-	github.com/giantswarm/certs/v3 v3.1.1
+	github.com/giantswarm/certs/v4 v4.0.0
 	github.com/giantswarm/exporterkit v1.0.0
 	github.com/giantswarm/k8sclient/v7 v7.0.1
 	github.com/giantswarm/microendpoint v1.0.0
 	github.com/giantswarm/microerror v0.4.0
 	github.com/giantswarm/microkit v1.0.0
 	github.com/giantswarm/micrologger v1.0.0
-	github.com/giantswarm/operatorkit/v7 v7.1.0
+	github.com/giantswarm/operatorkit/v8 v8.0.0
 	github.com/giantswarm/vaultcrt v0.2.0
 	github.com/giantswarm/vaultpki v0.2.0
 	github.com/giantswarm/vaultrole v0.2.0
@@ -145,9 +145,8 @@ require (
 )
 
 replace (
-	github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
-	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt v3.2.1+incompatible
-	github.com/go-ldap/ldap/v3 => github.com/go-ldap/ldap/v3 v3.4.2
+	github.com/coreos/etcd => github.com/coreos/etcd v3.3.27+incompatible
+	github.com/go-ldap/ldap/v3 => github.com/go-ldap/ldap/v3 v3.4.4
 	github.com/gogo/protobuf v1.3.1 => github.com/gogo/protobuf v1.3.2
-	github.com/nats-io/nats-server/v2 => github.com/nats-io/nats-server/v2 v2.9.7
+	github.com/nats-io/nats-server/v2 => github.com/nats-io/nats-server/v2 v2.9.10
 )
