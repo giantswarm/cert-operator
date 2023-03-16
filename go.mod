@@ -145,8 +145,6 @@ require (
 )
 
 replace (
-	github.com/coreos/etcd => github.com/coreos/etcd v3.3.27+incompatible
 	github.com/go-ldap/ldap/v3 => github.com/go-ldap/ldap/v3 v3.4.4
-	github.com/gogo/protobuf v1.3.1 => github.com/gogo/protobuf v1.3.2
 	github.com/nats-io/nats-server/v2 => github.com/nats-io/nats-server/v2 v2.9.10
 )
