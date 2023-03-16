@@ -145,6 +145,6 @@ require (
 )
 
 replace (
-	github.com/go-ldap/ldap/v3 => github.com/go-ldap/ldap/v3 v3.4.4
-	github.com/nats-io/nats-server/v2 => github.com/nats-io/nats-server/v2 v2.9.10
+	github.com/go-ldap/ldap/v3 v3.1.10 => github.com/go-ldap/ldap/v3 v3.4.4
+	github.com/nats-io/nats-server/v2 v2.5.0 => github.com/nats-io/nats-server/v2 v2.9.10
 )
