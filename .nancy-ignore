@@ -1,15 +1,13 @@
-# pkg:golang/github.com/hashicorp/consul/api@v1.15.3
-CVE-2022-29153 until=2023-02-01
+# hashicorp/consul/sdk and /api are not intended for public use and won't receive future releases.
+# Waiting for upstream to move away from it.
+CVE-2022-29153 until=2024-03-14
+CVE-2021-41803 until=2024-03-14
 
-# pkg:golang/github.com/hashicorp/consul/sdk@v0.3.0
-CVE-2022-29153 until=2023-02-01
+# Non-CVE findings, added with 1 year of exception time.
+# If these stay open for more than a year, we might have unmaintained dependencies.
+sonatype-2021-1485 until=2024-03-14
+sonatype-2022-6522 until=2024-03-14
 
 # github.com/nats-io/jwt
-CVE-2020-26892 until=2023-02-01
-CVE-2021-3127 until=2023-02-01
-
-# github.com/urfave/negroni v1.0.0
-sonatype-2021-1485 until=2023-02-01
-
-sonatype-2022-6522
-CVE-2022-41717
+CVE-2020-26892 until=2024-03-14
+CVE-2021-3127 until=2024-03-14
