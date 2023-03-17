@@ -37,6 +37,9 @@ spec:
       securityContext:
         runAsUser: {{ .Values.userID }}
         runAsGroup: {{ .Values.groupID }}
+        {{- with .Values.podSecurityContext }}
+          {{- . | toYaml | nindent 8 }}
+        {{- end }}
       initContainers:
       - args:
         - --vault-address={{ .Values.vault.address }}
@@ -84,6 +87,10 @@ spec:
             port: 8000
           initialDelaySeconds: 15
           timeoutSeconds: 1
+        securityContext:
+          {{- with .Values.securityContext }}
+            {{- . | toYaml | nindent 10 }}
+          {{- end }}
         resources:
           requests:
             cpu: 100m
