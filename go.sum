@@ -135,8 +135,8 @@ github.com/fsnotify/fsnotify v1.6.0/go.mod h1:sl3t1tCWJFWoRz9R8WJCbQihKKwmorjAbS
 github.com/getsentry/sentry-go v0.15.0 h1:CP9bmA7pralrVUedYZsmIHWpq/pBtXTSew7xvVpfLaA=
 github.com/getsentry/sentry-go v0.15.0/go.mod h1:RZPJKSw+adu8PBNygiri/A98FqVr2HtRckJk9XVxJ9I=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
-github.com/giantswarm/apiextensions/v6 v6.4.1 h1:s8Y6SjBI0fFDPOooZl9wMnU3Ah4zfxsl1VutlhPvMiI=
-github.com/giantswarm/apiextensions/v6 v6.4.1/go.mod h1:Wgc2Rx8YAYF2HidjabEvhsj5ADL+RteIC86ofulY+YE=
+github.com/giantswarm/apiextensions/v6 v6.5.0 h1:zCzZjB5nKQqINZr+HNONEuHHjuXx6kiXPDZxAVYfVAY=
+github.com/giantswarm/apiextensions/v6 v6.5.0/go.mod h1:Wgc2Rx8YAYF2HidjabEvhsj5ADL+RteIC86ofulY+YE=
 github.com/giantswarm/backoff v1.0.0 h1:1oeTvyPsm1tJrHlSmfxbIWuoCNWPOkWJCb8kfLvE2T0=
 github.com/giantswarm/backoff v1.0.0/go.mod h1:l/WqbggvG5Ndxxws0LUgVEvP5E82Qj5/PF8SMip/1QM=
 github.com/giantswarm/certs/v4 v4.0.0 h1:kaxovkDF2fiXxkLNB8WZ/RLyYdNctSfFM7VhNqka9t4=
