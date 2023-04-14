@@ -11,3 +11,4 @@ sonatype-2022-6522 until=2024-03-14
 # github.com/nats-io/jwt
 CVE-2020-26892 until=2024-03-14
 CVE-2021-3127 until=2024-03-14
+CVE-2020-8561
