@@ -1,0 +1,20 @@
+kind: PolicyException
+metadata:
+  name: {{ include "resource.default.name" . }}-exceptions
+  namespace: {{ include "resource.default.namespace" . }}
+spec:
+  exceptions:
+  - policyName: restrict-volume-types
+    ruleNames:
+    - restricted-volumes
+    - autogen-restricted-volumes
+  match:
+    any:
+    - resources:
+        kinds:
+        - Deployment 
+        - Pod
+        namespaces:
+        - {{ include "resource.default.name" . }}
+        names:
+        - {{ include "resource.default.name" . }}*
