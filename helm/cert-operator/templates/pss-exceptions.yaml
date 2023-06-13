@@ -1,3 +1,4 @@
+apiVersion: kyverno.io/v2alpha1
 kind: PolicyException
 metadata:
   name: {{ include "resource.default.name" . }}-exceptions
