@@ -47,4 +47,4 @@ securityContext:
   initContainers:
     capabilities:
       drop:
-      - ALL    
+      - ALL
