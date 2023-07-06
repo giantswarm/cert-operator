@@ -49,6 +49,10 @@ spec:
         image: "{{ .Values.registry.domain }}/{{ .Values.k8sJwtToVaultTokenImage.name}}:{{ .Values.k8sJwtToVaultTokenImage.tag }}"
         imagePullPolicy: Always
         name: ensure-vault-token
+        securityContext:
+          {{- with .Values.securityContext }}
+            {{- . | toYaml | nindent 10 }}
+          {{- end }}
       containers:
       - name: cert-operator
         image: "{{ .Values.registry.domain }}/giantswarm/cert-operator:{{ .Values.image.tag }}"

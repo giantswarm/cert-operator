@@ -16,6 +16,6 @@ spec:
         - Deployment 
         - Pod
         namespaces:
-        - {{ include "resource.default.name" . }}
+        - {{ include "resource.default.namespace" . }}
         names:
         - {{ include "resource.default.name" . }}*
