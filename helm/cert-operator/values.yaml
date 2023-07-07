@@ -31,10 +31,21 @@ workloadCluster:
 
 # Add seccomp to pod security context
 podSecurityContext:
+  runAsNonRoot: true
   seccompProfile:
     type: RuntimeDefault
 
 # Add seccomp to container security context
 securityContext:
-  seccompProfile:
-    type: RuntimeDefault
+  default:
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+    capabilities:
+      drop:
+      - ALL
+  initContainers:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
