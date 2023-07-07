@@ -50,7 +50,7 @@ spec:
         imagePullPolicy: Always
         name: ensure-vault-token
         securityContext:
-          {{- with .Values.securityContext }}
+          {{- with .Values.securityContext.initContainers }}
             {{- . | toYaml | nindent 10 }}
           {{- end }}
       containers:
@@ -92,7 +92,7 @@ spec:
           initialDelaySeconds: 15
           timeoutSeconds: 1
         securityContext:
-          {{- with .Values.securityContext }}
+          {{- with .Values.securityContext.default }}
             {{- . | toYaml | nindent 10 }}
           {{- end }}
         resources:

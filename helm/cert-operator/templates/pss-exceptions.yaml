@@ -9,6 +9,10 @@ spec:
     ruleNames:
     - restricted-volumes
     - autogen-restricted-volumes
+  - policyName: disallow-host-path
+    ruleNames:
+    - host-path
+    - autogen-host-path
   match:
     any:
     - resources:
