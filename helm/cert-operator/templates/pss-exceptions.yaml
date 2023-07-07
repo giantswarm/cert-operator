@@ -17,7 +17,7 @@ spec:
     any:
     - resources:
         kinds:
-        - Deployment 
+        - Deployment
         - Pod
         - ReplicaSet
         namespaces:
