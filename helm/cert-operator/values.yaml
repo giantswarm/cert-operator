@@ -34,6 +34,7 @@ provider:
 
 # Add seccomp to pod security context
 podSecurityContext:
+  runAsNonRoot: true
   seccompProfile:
     type: RuntimeDefault
 
@@ -41,6 +42,18 @@ podSecurityContext:
 securityContext:
   seccompProfile:
     type: RuntimeDefault
+  default:
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+    capabilities:
+      drop:
+      - ALL
+  initContainers:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
 
 serviceMonitor:
   enabled: true
