@@ -5,10 +5,11 @@ metadata:
   namespace: {{ include "resource.default.namespace" . }}
   labels:
     {{- include "labels.common" . | nindent 4 }}
-  annotations:
-    prometheus.io/scrape: "true"
 spec:
   ports:
-  - port: 8000
+  - name: http
+    port: 8000
+    protocol: TCP
+    targetPort: http
   selector:
     {{- include "labels.selector" . | nindent 4 }}

@@ -23,6 +23,8 @@ app.giantswarm.io/branch: {{ .Values.project.branch | quote }}
 app.giantswarm.io/commit: {{ .Values.project.commit | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
 app.kubernetes.io/version: "{{ .Chart.AppVersion }}{{- if eq $.Chart.Name $.Release.Name }}-unique{{ end }}"
+{{- $regexToFind := printf "- provider:\\s%s\n\\s*team:\\s(.+)" .Values.provider.kind }}
+application.giantswarm.io/team: {{ index .Chart.Annotations "application.giantswarm.io/owners" | regexFind $regexToFind | replace (printf "- provider: %s\n" .Values.provider.kind) "" | replace "team: " "" | nospace }}
 helm.sh/chart: {{ include "chart" . | quote }}
 {{- end -}}
 

@@ -29,6 +29,9 @@ workloadCluster:
     api:
       endpointBase: ""
 
+provider:
+  kind: "aws"
+
 # Add seccomp to pod security context
 podSecurityContext:
   runAsNonRoot: true
@@ -49,3 +52,10 @@ securityContext:
     capabilities:
       drop:
       - ALL
+
+serviceMonitor:
+  enabled: true
+  # -- (duration) Prometheus scrape interval.
+  interval: "60s"
+  # -- (duration) Prometheus scrape timeout.
+  scrapeTimeout: "45s"
