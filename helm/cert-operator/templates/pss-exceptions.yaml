@@ -13,14 +13,30 @@ spec:
     ruleNames:
     - host-path
     - autogen-host-path
+  - policyName: disallow-capabilities-strict
+    ruleNames:
+    - disallow-capabilities
+    - autogen-disallow-capabilities
+  - policyName: disallow-privilege-escalation
+    ruleNames:
+    - privilege-escalation
+    - autogen-privilege-escalation
+  - policyName: require-run-as-nonroot
+    ruleNames:
+    - run-as-non-root
+    - autogen-run-as-non-root
+  - policyName: restrict-seccomp-strict
+    ruleNames:
+    - check-seccomp-strict
+    - autogen-check-seccomp-strict
   match:
     any:
     - resources:
         kinds:
         - Deployment
-        - Pod
         - ReplicaSet
+        - Pod
         namespaces:
         - {{ include "resource.default.namespace" . }}
         names:
-        - {{ include "resource.default.name" . }}*
+        - {{ .Chart.Name }}*
