@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.2.0] - 2023-07-17
 
+### Fixed
+
+- Expand policy expception to cover old deployments.
+
 ## [3.1.0] - 2023-07-11
 
 ### Added
