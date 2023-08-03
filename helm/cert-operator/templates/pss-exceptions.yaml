@@ -15,8 +15,10 @@ spec:
     - autogen-host-path
   - policyName: disallow-capabilities-strict
     ruleNames:
-    - disallow-capabilities
-    - autogen-disallow-capabilities
+    - adding-capabilities-strict
+    - autogen-adding-capabilities-strict
+    - require-drop-all
+    - autogen-require-drop-all
   - policyName: disallow-privilege-escalation
     ruleNames:
     - privilege-escalation
