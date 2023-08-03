@@ -5,7 +5,7 @@ var (
 	gitSHA             = "n/a"
 	name        string = "cert-operator"
 	source      string = "https://github.com/giantswarm/cert-operator"
-	version            = "3.2.1"
+	version            = "3.2.2-dev"
 )
 
 func Description() string {
