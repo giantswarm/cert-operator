@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/giantswarm/cert-operator.svg?style=shield)](https://circleci.com/gh/giantswarm/cert-operator) [![Docker Repository on Quay](https://quay.io/repository/giantswarm/cert-operator/status "Docker Repository on Quay")](https://quay.io/repository/giantswarm/cert-operator)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/giantswarm/cert-operator/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/giantswarm/cert-operator/tree/master)
 
 # cert-operator
 
