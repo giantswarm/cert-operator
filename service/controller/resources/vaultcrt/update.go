@@ -7,7 +7,7 @@ import (
 	"github.com/giantswarm/apiextensions/v6/pkg/apis/core/v1alpha1"
 	"github.com/giantswarm/certs/v4/pkg/certs"
 	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/operatorkit/v8/pkg/resource/crud"
+	"github.com/giantswarm/operatorkit/v7/pkg/resource/crud"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 

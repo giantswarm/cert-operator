@@ -1,6 +1,6 @@
 module github.com/giantswarm/cert-operator/v3
 
-go 1.19
+go 1.21
 
 require (
 	github.com/giantswarm/apiextensions/v6 v6.5.0
@@ -11,7 +11,7 @@ require (
 	github.com/giantswarm/microerror v0.4.0
 	github.com/giantswarm/microkit v1.0.0
 	github.com/giantswarm/micrologger v1.0.0
-	github.com/giantswarm/operatorkit/v8 v8.0.0
+	github.com/giantswarm/operatorkit/v7 v7.0.0
 	github.com/giantswarm/vaultcrt v0.2.0
 	github.com/giantswarm/vaultpki v0.2.0
 	github.com/giantswarm/vaultrole v0.2.0
@@ -96,13 +96,13 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	golang.org/x/crypto v0.5.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/oauth2 v0.5.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.2.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
