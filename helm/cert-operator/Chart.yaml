@@ -15,3 +15,4 @@ annotations:
     - provider: kvm
       team: rocket
   config.giantswarm.io/version: 1.x.x
+  application.giantswarm.io/team: phoenix
