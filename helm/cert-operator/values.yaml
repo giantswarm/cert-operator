@@ -14,7 +14,7 @@ k8sJwtToVaultTokenImage:
   tag: 0.1.0
 
 registry:
-  domain: docker.io
+  domain: gsoci.azurecr.io
 
 resource:
   expirationThreshold: "2160h"
@@ -46,12 +46,12 @@ securityContext:
       type: RuntimeDefault
     capabilities:
       drop:
-      - ALL
+        - ALL
   initContainers:
     allowPrivilegeEscalation: false
     capabilities:
       drop:
-      - ALL
+        - ALL
 
 serviceMonitor:
   enabled: true
