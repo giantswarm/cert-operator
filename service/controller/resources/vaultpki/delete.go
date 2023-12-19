@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/giantswarm/microerror"
-	"github.com/giantswarm/operatorkit/v7/pkg/resource/crud"
+	"github.com/giantswarm/operatorkit/v8/pkg/resource/crud"
 
 	"github.com/giantswarm/cert-operator/v3/service/controller/key"
 )
