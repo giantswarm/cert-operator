@@ -19,8 +19,8 @@ Common labels
 {{- define "labels.common" -}}
 app: {{ include "name" . | quote }}
 {{ include "labels.selector" . }}
-app.giantswarm.io/branch: {{ .Values.project.branch | quote }}
-app.giantswarm.io/commit: {{ .Values.project.commit | quote }}
+application.giantswarm.io/branch: {{ .Values.project.branch | quote }}
+application.giantswarm.io/commit: {{ .Values.project.commit | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
 app.kubernetes.io/version: "{{ .Chart.AppVersion }}{{- if eq $.Chart.Name $.Release.Name }}-unique{{ end }}"
 {{- $regexToFind := printf "- provider:\\s%s\n\\s*team:\\s(.+)" .Values.provider.kind }}
