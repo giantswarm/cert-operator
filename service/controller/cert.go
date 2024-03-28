@@ -154,7 +154,8 @@ func NewCert(config CertConfig) (*Cert, error) {
 
 	err = cleanupPKIBackends(config.Logger, config.K8sClient, vaultPKI)
 	if err != nil {
-		return nil, microerror.Mask(err)
+		// We don't want a cleanup error to prevent the controller from starting.
+		config.Logger.Log("level", "error", "message", "failed to clean up PKI backends", "stack", fmt.Sprintf("%#v", err))
 	}
 
 	return c, nil
@@ -167,6 +168,8 @@ func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface
 	}
 
 	logger.Log("level", "debug", "message", "cleaning up PKI backends")
+
+	var latestError *error
 
 	for k := range mounts {
 		id := key.ClusterIDFromMountPath(k)
@@ -188,19 +191,27 @@ func cleanupPKIBackends(logger micrologger.Logger, k8sClient k8sclient.Interface
 				if errors.IsNotFound(err) {
 					// fall through
 				} else if err != nil {
-					return microerror.Mask(err)
+					latestError = &err
+					logger.Log("level", "error", "message", fmt.Sprintf("error deleting certconfigs for Tenant Cluster %#q", id))
+					continue
 				}
 			}
 
 			{
 				err := vaultPKI.DeleteBackend(id)
 				if err != nil {
-					return microerror.Mask(err)
+					latestError = &err
+					logger.Log("level", "error", "message", fmt.Sprintf("error deleting PKI backend for Tenant Cluster %#q", id))
+					continue
 				}
 			}
 
 			logger.Log("level", "debug", "message", fmt.Sprintf("deleted PKI backend for Tenant Cluster %#q", id))
 		}
+	}
+
+	if latestError != nil {
+		return microerror.Mask(*latestError)
 	}
 
 	logger.Log("level", "debug", "message", "cleaned up PKI backends")
