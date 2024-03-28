@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Avoid exiting with a failure at startup time if the PKI cleanup fails.
+
 ## [3.3.0] - 2024-03-26
 
 ### Added
