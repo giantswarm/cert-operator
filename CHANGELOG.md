@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- [Backport] Add global.podSecurityStandards.enforced value for PSS migration.
+- [Backport] Avoid exiting with a failure at startup time if the PKI cleanup fails.
+
 ## [3.0.1] - 2022-11-29
 
 ### Fixed
