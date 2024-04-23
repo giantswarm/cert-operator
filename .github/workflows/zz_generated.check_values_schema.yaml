@@ -1,49 +1,53 @@
 # DO NOT EDIT. Generated with:
 #
-#    devctl@4.23.0
+#    devctl@6.23.3
 #
-name: 'Check if values schema file has been updated'
-on: pull_request
+name: 'Values and schema'
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+    paths:
+      - 'helm/**/values.yaml'         # default helm chart values
+      - 'helm/**/values.schema.json'  # schema
+      - 'helm/**/ci/ci-values.yaml'   # overrides for CI (can contain required entries)
+
+  push: {}
 
 jobs:
   check:
-    name: 'Check values.yaml and its schema in PR'
+    name: 'validate values.yaml against values.schema.json'
     runs-on: ubuntu-latest
     steps:
-      - name: 'Checkout'
-        uses: actions/checkout@v3
-      - name: 'Check if values.schema.json was updated'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Install validator
         run: |
-          VALUES_FILE_CHANGED="false"
-          SCHEMA_FILE_CHANGED="false"
+          wget -q -O ${HOME}/yajsv https://github.com/neilpa/yajsv/releases/download/v1.4.1/yajsv.linux.amd64
+          chmod +x ${HOME}/yajsv
 
-          base_ref=${GITHUB_BASE_REF##*/}
-          head_ref=${GITHUB_HEAD_REF##*/}
+      - name: 'Check if values.yaml is a valid instance of values.schema.json'
+        run: |
+          for chart_yaml in helm/*/Chart.yaml; do
+            helm_dir="${chart_yaml%/Chart.yaml}"
 
-          echo "Comparing ${base_ref}...${head_ref}"
-
-          changed_files=$(gh api repos/{owner}/{repo}/compare/${base_ref}...${head_ref} --jq ".files[] | .filename")
-
-          if grep -q "values.schema.json" <<< $(git ls-tree -r --name-only ${GITHUB_SHA}); then
-
-            if grep -q "values.yaml" <<< "${changed_files}" ; then
-              VALUES_FILE_CHANGED="true"
+            if [ ! -f ${helm_dir}/values.schema.json ]; then
+              echo "Skipping validation for '${helm_dir}' folder, because 'values.schema.json' does not exist..."
+              continue
             fi
 
-            if grep -q "values.schema.json" <<< "${changed_files}" ; then
-              SCHEMA_FILE_CHANGED="true"
+            values=${helm_dir}/values.yaml
+            if [ -f ${helm_dir}/ci/ci-values.yaml ]; then
+              # merge ci-values.yaml into values.yaml (providing required values)
+              echo -e "\nMerged values:\n=============="
+              yq '. *= load("'${helm_dir}'/ci/ci-values.yaml")' ${helm_dir}/values.yaml | tee ${helm_dir}/combined-values.yaml
+              echo -e "\n==============\n"
+              values=${helm_dir}/combined-values.yaml
             fi
 
-            if [ $VALUES_FILE_CHANGED != $SCHEMA_FILE_CHANGED ]; then
-              echo "FAILED: values.yaml was updated but values.schema.json hasn't been regenerated"
-              echo "Please refer to this document: https://intranet.giantswarm.io/docs/organizational-structure/teams/cabbage/app-updates/helm-values-schema/"
-              exit 1
-            fi
-
-            echo "PASSED: values.yaml and values.schema.json both appear to have been updated"
-            exit 0
-          fi
-
-          echo "INFO: values.schema.json not present in this repo - nothing to do"
+            ${HOME}/yajsv -s ${helm_dir}/values.schema.json ${values}
+          done
