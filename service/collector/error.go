@@ -12,8 +12,7 @@ import (
 // This error should never be matched against and therefore there is no matcher
 // implement. For further information see:
 //
-//     https://github.com/giantswarm/fmt/blob/master/go/errors.md#matching-errors
-//
+//	https://github.com/giantswarm/fmt/blob/master/go/errors.md#matching-errors
 var executionFailedError = &microerror.Error{
 	Kind: "executionFailedError",
 }
@@ -36,8 +35,7 @@ var vaultAccessError = &microerror.Error{
 // temporarily replies with HTTP responses. In such cases we intend to cancel
 // collection and wait until Vault is fully operational again.
 //
-//     Get https://vault.g8s.foo.bar:8200/v1/sys/mounts: http: server gave HTTP response to HTTPS client
-//
+//	Get https://vault.g8s.foo.bar:8200/v1/sys/mounts: http: server gave HTTP response to HTTPS client
 func IsVaultAccess(err error) bool {
 	if err == nil {
 		return false
