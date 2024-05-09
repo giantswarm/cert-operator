@@ -16,7 +16,7 @@ require (
 	github.com/giantswarm/vaultpki v0.2.0
 	github.com/giantswarm/vaultrole v0.2.0
 	github.com/hashicorp/vault/api v1.12.2
-	github.com/prometheus/client_golang v1.19.0
+	github.com/prometheus/client_golang v1.19.1
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
 	k8s.io/api v0.25.4
@@ -109,7 +109,7 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/resty.v1 v1.12.0 // indirect
