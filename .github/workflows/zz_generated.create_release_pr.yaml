@@ -1,6 +1,8 @@
 # DO NOT EDIT. Generated with:
 #
-#    devctl@6.23.3
+#    devctl
+#
+#    https://github.com/giantswarm/devctl/blob/1a381db95a01773e471818a4ce56ad16ad5d6111/pkg/gen/input/workflows/internal/file/create_release_pr.yaml.template
 #
 name: Create Release PR
 on:
@@ -152,7 +154,7 @@ jobs:
           binary: "architect"
           version: "6.11.0"
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           ref: ${{ needs.gather_facts.outputs.branch }}
       - name: Prepare release changes
